@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import config  # noqa: E402
 from models.cvae import (  # noqa: E402
-    CVAE, cvae_loss, cvae_loss_importance,
+    CVAE, cvae_loss, cvae_loss_importance, make_importance_loss,
     load_selected_masks, make_loaders,
     generate_ideal_masks,
     load_importance_maps,
@@ -58,6 +58,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--importance_name", type=str, default="importance.pt",
                    help="importance map filename in each pattern dir "
                         "(e.g. importance_aligned.pt for column-aligned maps)")
+    p.add_argument("--loss", choices=["mse", "bce"], default="mse",
+                   help="importance loss function (mse or bce)")
+    p.add_argument("--reduction", choices=["mean", "sum"], default="mean",
+                   help="per-pixel reduction: mean (over all elements) or "
+                        "sum (over mask dim, averaged per sample)")
+    p.add_argument("--top_frac", type=float, default=0.0,
+                   help="keep only the lowest-val_loss top fraction of "
+                        "importance maps per pattern (0 = all maps)")
     p.add_argument("--ckpt_root", type=Path, default=config.CKPT_DIR)
     p.add_argument("--out_dir", type=Path, default=config.CVAE_DIR)
     p.add_argument("--k_active", type=int, default=0,
@@ -243,14 +251,16 @@ def do_train(args) -> None:
         elif args.importance_maps:
             x, y, info = load_importance_maps(
                 args.patterns, args.ckpt_root,
-                importance_name=args.importance_name)
+                importance_name=args.importance_name,
+                top_frac=(args.top_frac if args.top_frac > 0 else None))
         else:
             x, y, info = load_selected_masks(args.patterns, args.ckpt_root)
         importance_mode = args.importance_maps
         train_loader, val_loader, _, _ = make_loaders(
             x, y, config.CVAE_VAL_FRACTION, args.batch_size, args.seed)
 
-        loss_fn = cvae_loss_importance if importance_mode else cvae_loss
+        loss_fn = (make_importance_loss(args.loss, args.reduction)
+                   if importance_mode else cvae_loss)
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print(f"[cvae] using {device}", flush=True)
@@ -312,6 +322,9 @@ def do_train(args) -> None:
             "hidden": args.hidden,
             "beta": args.beta,
             "epochs": args.epochs,
+            "loss": args.loss,
+            "reduction": args.reduction,
+            "top_frac": args.top_frac,
             "best_val_loss": best_val,
             "n_train": len(train_loader.dataset),
             "n_val": len(val_loader.dataset),

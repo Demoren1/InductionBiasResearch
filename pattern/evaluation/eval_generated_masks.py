@@ -41,6 +41,10 @@ def build_parser():
     p.add_argument("--gpu_id", type=int, default=None)
     p.add_argument("--num_gpus", type=int, default=1)
     p.add_argument("--patterns", type=str, nargs="+", default=None)
+    p.add_argument("--cvae_ckpt", type=Path, default=config.CVAE_DIR / "cvae_best.pt",
+                   help="path to the CVAE state dict to evaluate")
+    p.add_argument("--out_suffix", type=str, default="",
+                   help="suffix appended to eval_results output filenames")
     return p
 
 
@@ -98,11 +102,11 @@ def main():
                     if i % args.num_gpus == args.gpu_id]
         suffix = f"_gpu{args.gpu_id}"
         print(f"[eval] gpu {args.gpu_id}/{args.num_gpus} -> {patterns}", flush=True)
+    suffix = f"{suffix}{args.out_suffix}"
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     cvae = CVAE(config.MASK_DIM, config.LATENT_DIM, config.CVAE_HIDDEN)
-    cvae.load_state_dict(torch.load(config.CVAE_DIR / "cvae_best.pt",
-                                    weights_only=True))
+    cvae.load_state_dict(torch.load(args.cvae_ckpt, weights_only=True))
     cvae.to(device).eval()
 
     mean_imp = MeanImportance()

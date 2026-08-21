@@ -250,12 +250,67 @@ def cvae_loss_importance(logits: torch.Tensor, importance: torch.Tensor,
     return total, recon, kl
 
 
+def make_importance_loss(loss: str, reduction: str):
+    """Build an importance-map loss callable.
+
+    Returns f(logits, importance, mu, logvar, beta) -> (total, recon, kl).
+
+    loss="mse": pred = sigmoid(logits) (tanh if config.SIGNED_IMPORTANCE,
+        matching cvae_loss_importance), recon = MSE(pred, importance).
+    loss="bce": recon = BCE_with_logits(logits, importance); importance
+        targets are soft labels in [0, 1], which is valid for BCE.
+
+    reduction="mean": recon averaged over all elements (as cvae_loss_importance).
+    reduction="sum": recon summed over the mask dim (dim=-1) and averaged
+        over the batch: F.mse_loss(..., reduction="none").sum(dim=-1).mean()
+        (same for BCE with logits).
+
+    kl is identical to the existing definition. total = recon + beta * kl.
+    """
+    if loss not in ("mse", "bce"):
+        raise ValueError(f"loss must be 'mse' or 'bce', got {loss!r}")
+    if reduction not in ("mean", "sum"):
+        raise ValueError(f"reduction must be 'mean' or 'sum', got {reduction!r}")
+
+    def f(logits: torch.Tensor, importance: torch.Tensor,
+          mu: torch.Tensor, logvar: torch.Tensor,
+          beta: float = 1.0) -> tuple:
+        if loss == "bce":
+            if reduction == "mean":
+                recon = F.binary_cross_entropy_with_logits(
+                    logits, importance, reduction="mean")
+            else:
+                recon = F.binary_cross_entropy_with_logits(
+                    logits, importance, reduction="none").sum(dim=-1).mean()
+        else:  # mse
+            if config.SIGNED_IMPORTANCE:
+                pred = torch.tanh(logits)
+            else:
+                pred = torch.sigmoid(logits)
+            if reduction == "mean":
+                recon = F.mse_loss(pred, importance, reduction="mean")
+            else:
+                recon = F.mse_loss(pred, importance,
+                                   reduction="none").sum(dim=-1).mean()
+        kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(),
+                              dim=-1).mean()
+        total = recon + beta * kl
+        return total, recon, kl
+
+    return f
+
+
 def load_importance_maps(patterns: list[str], ckpt_root,
-                         importance_name: str = "importance.pt") -> tuple:
+                         importance_name: str = "importance.pt",
+                         top_frac: float | None = None) -> tuple:
     """Load per-pattern importance maps (continuous [0,1] entries).
 
     importance_name: filename in each pattern dir, e.g. "importance.pt" for
     the raw |W1|*mask maps or "importance_aligned.pt" for column-aligned maps.
+
+    top_frac: if set (e.g. 0.1), keep only the lowest-val_loss round(n *
+    top_frac) maps per pattern (at least 1), sorted by the stored val_loss.
+    Default None keeps all maps (unchanged behavior).
     """
     x_parts, y_parts, info = [], [], []
     for pat in patterns:
@@ -265,11 +320,19 @@ def load_importance_maps(patterns: list[str], ckpt_root,
         d = torch.load(path, weights_only=True)
         imp = d["importance"]
         n = imp.size(0)
-        x_parts.append(imp.reshape(n, -1).float())
-        y_parts.append(_pattern_to_y(pat, n))
-        info.append({"pattern": pat, "n_masks": n,
+        if top_frac is not None:
+            n_keep = max(1, round(n * top_frac))
+            val_loss = d["val_loss"]
+            idx = torch.argsort(val_loss)[:n_keep]
+            imp = imp[idx]
+            print(f"[cvae] pattern={pat}: {n_keep}/{n} maps "
+                  f"(top {top_frac:.0%} by val_loss)")
+        x_parts.append(imp.reshape(imp.size(0), -1).float())
+        y_parts.append(_pattern_to_y(pat, imp.size(0)))
+        info.append({"pattern": pat, "n_masks": imp.size(0),
                      "sparsity": 0.0})  # importance, not binary
-        print(f"[cvae] pattern={pat}: {n} importance maps")
+        if top_frac is None:
+            print(f"[cvae] pattern={pat}: {n} importance maps")
     return torch.cat(x_parts), torch.cat(y_parts), info
 
 

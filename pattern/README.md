@@ -39,8 +39,22 @@ single 4-bit pattern-detection task and whether a CVAE can learn the inductive b
 - Unconditional — the mask is shared across all patterns (no condition vector).
 - TRAIN patterns (all 16): `0000 0001 0010 0011 0100 0101 0110 0111
   1000 1001 1010 1011 1100 1101 1110 1111`
-- Re-run from step 03 (importance must be recomputed unsigned): run **03, 04, 05**.
+- Default input: **raw importance maps** (`importance.pt`, unsigned, range [0, 1]),
+  no alignment — see step 03.
+- Configurable loss via env vars: `CVAE_LOSS` (`mse`|`bce`), `CVAE_REDUCTION`
+  (`mean`|`sum`), `CVAE_BETA`, `CVAE_IMPORTANCE` (see `scripts/04_train_cvae.sh`).
+- Re-run from step 03 (importance must be recomputed raw): run **03, 04, 05**.
   Step 02 checkpoints stay valid.
+
+### Alignment (optional, not part of the default pipeline)
+
+Alignment is a separate, manual step. Step 03 and the whole default pipeline use
+the **raw** `importance.pt` maps. If you want aligned maps instead, run e.g.
+`python evaluation/align_importance.py --method window` (or `refmatch`,
+`selfalign`, `gold`) after step 03, which writes e.g.
+`outputs/checkpoints/pattern_{pat}/importance_win.pt`, and point the train step
+at it: `CVAE_IMPORTANCE=importance_win.pt`. The default pipeline never calls
+`align_importance.py`.
 
 ## Pipeline
 
@@ -55,9 +69,29 @@ GPU_IDS="0 1 2 3" bash scripts/05_eval.sh
 
 - `01` generates validation data + data plots.
 - `02` trains the masked MLPs per pattern on multiple GPUs.
-- `03` selects best masks per pattern and computes importance maps.
-- `04` trains/samples the CVAE (single GPU) + regressor baseline.
+- `03` selects the best 10% masks per pattern and computes the raw importance
+  maps (`importance.pt`); alignment is not run (manual/optional, see above).
+- `04` trains/samples the CVAE (single GPU) on raw importance maps +
+  regressor baseline.
 - `05` evaluates.
+
+## Loss/beta sweep
+
+Compares VAE loss configurations on the **raw** importance maps to test whether
+the VAE collapse is caused by a KL/recon cost mismatch vs permutation
+inference: MSE-mean (baseline), MSE-mean with lower β (0.1, 0.016, 0.001), and
+BCE-sum (β=1.0). Each variant is trained into `outputs/cvae_sweep/<name>` and
+evaluated downstream on a small pattern subset
+(`outputs/eval/eval_results_sweep_<name>.json`).
+
+```bash
+GPU_IDS="0" bash scripts/06_loss_sweep.sh
+```
+
+Tunable: `EPOCHS` (default 80), `EVAL_STEPS` (2000), `EVAL_N_MASKS` (32),
+`EVAL_PATTERNS` ("0000 0110 1001 1111"), `GPU_IDS` ("0"). Reference numbers
+(FINDINGS.md): baseline VAE ≈ 0.79, random ≈ 0.89, ideal ≈ 0.93 downstream
+accuracy — a good variant should beat the 0.79 baseline.
 
 ## Outputs
 

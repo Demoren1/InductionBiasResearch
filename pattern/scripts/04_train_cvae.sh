@@ -6,7 +6,9 @@ CVAE_EPOCHS="${CVAE_EPOCHS:-80}"
 CVAE_BETA="${CVAE_BETA:-1.0}"
 CVAE_MODE="${CVAE_MODE:-importance_maps}"   # or "selected" for binary masks
 CVAE_K_ACTIVE="${CVAE_K_ACTIVE:-}"
-CVAE_IMPORTANCE="${CVAE_IMPORTANCE:-importance_win.pt}"   # default = window-aligned maps
+CVAE_IMPORTANCE="${CVAE_IMPORTANCE:-importance.pt}"   # raw importance maps (no alignment)
+CVAE_LOSS="${CVAE_LOSS:-mse}"                          # importance loss: mse|bce
+CVAE_REDUCTION="${CVAE_REDUCTION:-mean}"               # per-pixel reduction: mean|sum
 GPU_IDS="${GPU_IDS:-0}"
 # ===================
 # Train an unconditional VAE on |W| importance maps from all patterns. The
@@ -17,6 +19,9 @@ GPU_IDS="${GPU_IDS:-0}"
 #     GPU_IDS="2" bash scripts/04_train_cvae.sh
 #   or (default: first card):
 #     bash scripts/04_train_cvae.sh
+#
+# Raw importance maps by default (alignment was removed from the pipeline; run
+# align_importance.py manually if you want aligned maps as CVAE_IMPORTANCE).
 #
 # Requires: outputs/checkpoints/pattern_{pat}/best10pct.pt and
 #           outputs/checkpoints/pattern_{pat}/importance.pt
@@ -34,6 +39,7 @@ echo "Train patterns: ${TRAIN_PATTERNS}"
 # 1) train
 CUDA_VISIBLE_DEVICES="$GPU_IDS" python models/train_cvae.py --mode train \
   --epochs "$CVAE_EPOCHS" --beta "$CVAE_BETA" \
+  --loss "$CVAE_LOSS" --reduction "$CVAE_REDUCTION" \
   --patterns $TRAIN_PATTERNS $EXTRA \
   --importance_name "$CVAE_IMPORTANCE"
 
