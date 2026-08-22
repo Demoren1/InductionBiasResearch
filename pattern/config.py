@@ -14,8 +14,8 @@ def all_pattern_strings() -> list[str]:
 
 PATTERNS = all_pattern_strings()  # '0000'..'1111'
 
-CVAE_TRAIN_PATTERNS = ["0000", "0011", "0101", "0110", "1001", "1010", "1100", "1111"]
-CVAE_TEST_PATTERNS  = ["0001", "0010", "0100", "0111", "1000", "1011", "1101", "1110"]
+CVAE_TRAIN_PATTERNS = PATTERNS
+CVAE_TEST_PATTERNS: list[str] = []
 
 N_VAL_SAMPLES = 2048
 VAL_BATCH_SIZE = 256

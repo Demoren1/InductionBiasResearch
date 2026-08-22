@@ -8,15 +8,15 @@ Two figures are written to outputs/plots/importance/:
 
   1) importance_row_profile.png  -- 4x4 small multiples, one panel per pattern.
      x = input position 0..SEQ_LEN-1, y = mean importance per position
-     (averaged over the hidden dimension and over all trained MLPs).  TRAIN
-     patterns are drawn green, TEST patterns orange.  Faint vertical ticks mark
+     (averaged over the hidden dimension and over all trained MLPs). Faint
+     vertical ticks mark
      the N_WINDOWS sliding-window start positions, so one can see whether the
      mass concentrates on the local 4-tap windows (Toeplitz band) or spreads
      over the whole sequence.
 
   2) importance_maps_mean.png  -- 4x4 grid of the mean importance map
      (SEQ_LEN x H) per pattern, viridis 0..1 with a shared colorbar; the title
-     is the pattern string plus T/E.  Toeplitz bands become visible when the
+     is the pattern string. Toeplitz bands become visible when the
      learned masks align with the sliding-window support.
 """
 
@@ -36,17 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config  # noqa: E402
 
 NCOLS = 4
-TRAIN_COLOR = "#1a7f37"     # green
-TEST_COLOR = "#e07b00"      # orange
-
-
-def split_tag(pat: str) -> tuple:
-    """Return ("TRAIN"|"TEST", color) for a pattern."""
-    if pat in config.CVAE_TRAIN_PATTERNS:
-        return "TRAIN", TRAIN_COLOR
-    if pat in config.CVAE_TEST_PATTERNS:
-        return "TEST", TEST_COLOR
-    return "UNSEEN", "#555555"
+PATTERN_COLOR = "#1a7f37"
 
 
 def row_profile(pat: str) -> torch.Tensor:
@@ -72,22 +62,19 @@ def plot_row_profiles() -> Path:
                              sharex=True, sharey=True)
     pos = np.arange(config.SEQ_LEN)
 
-    # Faint vertical ticks at the N_WINDOWS sliding-window start positions.
     win_starts = np.arange(config.N_WINDOWS)
 
     for i, pat in enumerate(config.PATTERNS):
         ax = axes.flat[i]
         prof = row_profile(pat).numpy()
-        tag, color = split_tag(pat)
-        ax.plot(pos, prof, "o-", color=color, linewidth=1.6, markersize=3)
+        ax.plot(pos, prof, "o-", color=PATTERN_COLOR, linewidth=1.6, markersize=3)
         for ws in win_starts:
             ax.axvline(ws, color="0.6", linestyle="--", linewidth=0.6,
                        alpha=0.5)
-        ax.set_title(f"{pat} [{tag[0]}]", fontsize=9, color=color)
+        ax.set_title(pat, fontsize=9, color=PATTERN_COLOR)
         ax.set_xticks(range(config.SEQ_LEN))
         ax.grid(alpha=0.3)
 
-    # Hide any unused panels.
     for ax in axes.flat[n:]:
         ax.axis("off")
 
@@ -98,7 +85,7 @@ def plot_row_profiles() -> Path:
     for ax in axes[:, 0]:
         ax.set_ylabel("mean importance")
     fig.suptitle("Mean importance vs input position per pattern "
-                 "(dashed = sliding-window starts; T=green, E=orange)")
+                 "(dashed = sliding-window starts)")
     fig.tight_layout()
 
     out = config.PLOT_IMPORTANCE_DIR / "importance_row_profile.png"
@@ -126,9 +113,8 @@ def plot_importance_maps_mean() -> Path:
     for i, pat in enumerate(config.PATTERNS):
         ax = axes.flat[i]
         m = mean_map(pat)
-        tag, color = split_tag(pat)
         im = ax.imshow(m, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
-        ax.set_title(f"{pat} [{tag[0]}]", fontsize=9, color=color)
+        ax.set_title(pat, fontsize=9, color=PATTERN_COLOR)
         ax.set_xticks(range(config.H))
         ax.set_yticks(range(config.SEQ_LEN))
 

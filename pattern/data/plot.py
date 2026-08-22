@@ -3,7 +3,7 @@
 These plots live under outputs/plots/data/ and are meant to be inspected by
 humans to build intuition about:
   * what each 4-bit pattern looks like,
-  * the CVAE train/test pattern split,
+  * the 16 binary patterns,
   * the sliding-window (Toeplitz) structure of the gold filters and masks,
   * where in a sequence the pattern can appear (5 possible window offsets).
 """
@@ -21,17 +21,13 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import config  # noqa: E402
-from generate import gold_first_layer  # noqa: E402
+from data.generate import gold_first_layer  # noqa: E402
 
-TRAIN = set(config.CVAE_TRAIN_PATTERNS)
-TEST = set(config.CVAE_TEST_PATTERNS)
-
-TRAIN_COLOR = "tab:green"
-TEST_COLOR = "tab:orange"
+PATTERN_COLOR = "tab:green"
 
 
-def _group_color(pat: str) -> str:
-    return TRAIN_COLOR if pat in TRAIN else TEST_COLOR
+def pattern_color() -> str:
+    return PATTERN_COLOR
 
 
 def _pattern_bits_row(pat: str) -> list:
@@ -45,16 +41,12 @@ def plot_patterns_overview() -> Path:
         bits = [_pattern_bits_row(pat)]
         ax.imshow(bits, cmap="Greys", vmin=0, vmax=1,
                   aspect="auto", interpolation="nearest")
-        ax.set_title(pat, color=_group_color(pat), fontsize=13, fontweight="bold")
-        ax.spines[:].set_color(_group_color(pat))
+        ax.set_title(pat, color=pattern_color(), fontsize=13, fontweight="bold")
+        ax.spines[:].set_color(pattern_color())
         ax.spines[:].set_linewidth(2.5)
         ax.set_xticks([])
         ax.set_yticks([])
-    fig.suptitle(
-        "16 length-4 bit patterns  (green = CVAE TRAIN, orange = CVAE TEST)\n"
-        "train: 0000 0011 0101 0110 1001 1010 1100 1111\n"
-        "test : 0001 0010 0100 0111 1000 1011 1101 1110",
-        fontsize=13)
+    fig.suptitle("16 length-4 bit patterns", fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.92))
     out = config.PLOT_DATA_DIR / "patterns_overview.png"
     fig.savefig(out, dpi=140)
@@ -77,7 +69,7 @@ def plot_examples(pat: str, n_pos: int = 8, n_neg: int = 8) -> Path:
     ax.set_title(
         f"pattern {pat}   (n={config.N_VAL_SAMPLES}, "
         f"pos_fraction={y.mean().item():.3f})",
-        color=_group_color(pat), fontweight="bold")
+        color=pattern_color(), fontweight="bold")
     ax.set_xticks(range(config.SEQ_LEN))
     ax.set_xticklabels(range(config.SEQ_LEN))
     ax.set_xlabel("input position")
@@ -114,7 +106,7 @@ def plot_gold_filters() -> Path:
         W = gold_first_layer(pat)
         im = ax.imshow(W.numpy(), cmap="RdBu_r", vmin=-1, vmax=1,
                        aspect="auto", interpolation="nearest")
-        ax.set_title(pat, color=_group_color(pat), fontsize=12, fontweight="bold")
+        ax.set_title(pat, color=pattern_color(), fontsize=12, fontweight="bold")
         ax.set_xticks(range(config.SEQ_LEN))
         ax.set_xticklabels(range(config.SEQ_LEN))
         ax.set_yticks(range(config.N_WINDOWS))
@@ -123,7 +115,7 @@ def plot_gold_filters() -> Path:
         ax.set_ylabel("window start")
     for ax in axes[-1, :]:
         ax.set_xlabel("input position")
-    fig.suptitle("Gold first-layer filters  (green = CVAE TRAIN, orange = TEST)\n"
+    fig.suptitle("Gold first-layer filters\n"
                  "row w holds +pattern on columns [w, w+PATTERN_LEN)",
                  fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
@@ -154,8 +146,8 @@ def plot_match_positions(patterns=("0000", "0101", "1111", "1011")) -> Path:
         starts = match_start_positions(pat)
         bins = list(range(0, config.N_WINDOWS + 1))
         ax.hist(starts.numpy(), bins=bins, align="left", rwidth=0.85,
-                color=_group_color(pat), edgecolor="black")
-        ax.set_title(f"pattern {pat}", color=_group_color(pat), fontweight="bold")
+                color=pattern_color(), edgecolor="black")
+        ax.set_title(f"pattern {pat}", color=pattern_color(), fontweight="bold")
         ax.set_xticks(range(config.N_WINDOWS))
         ax.set_xticklabels(range(config.N_WINDOWS))
         ax.set_xlabel("match start position")

@@ -4,8 +4,8 @@
 # by a KL/recon cost mismatch (lower beta) vs permutation inference (BCE-sum).
 #
 # Usage:
-#   GPU_IDS="0" bash scripts/06_loss_sweep.sh
-#   EPOCHS=120 EVAL_N_MASKS=64 bash scripts/06_loss_sweep.sh
+#   GPU_IDS="0" bash scripts/loss_sweep.sh
+#   EPOCHS=120 EVAL_N_MASKS=64 bash scripts/loss_sweep.sh
 #
 # Requires: outputs/checkpoints/pattern_{pat}/importance.pt and
 #           outputs/eval/det_reg.pt

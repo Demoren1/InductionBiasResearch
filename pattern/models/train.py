@@ -99,6 +99,8 @@ def main() -> None:
 
         base_seed = int(args.pattern, 2) * 1_000_003 + global_start * 7
         masks = distinct_masks[mask_of_global[global_start:global_start + n_here]]
+        torch.manual_seed(base_seed)
+        torch.cuda.manual_seed_all(base_seed)
         model = BatchedMaskedMLP(n_here, config.SEQ_LEN, config.H).to(dev)
         model.load_masks(masks)
 

@@ -8,36 +8,25 @@ from models.cvae import load_importance_maps
 
 
 class MeanImportance:
+    """Build top-k masks from mean importance maps."""
+
     def __init__(self):
         self._means = {}
 
     def _load(self, pat):
-        # Load mean importance from pattern_dir(pat)/importance.pt
         d = torch.load(config.pattern_dir(pat) / "importance.pt",
                        weights_only=True)
-        return d["importance"].mean(dim=0)  # (L,H)
+        return d["importance"].mean(dim=0)
+
+    def _mean_for(self, pat: str) -> torch.Tensor:
+        key = "all" if config.CVAE_COND_DIM == 0 else pat
+        if key not in self._means:
+            patterns = config.PATTERNS if key == "all" else [pat]
+            self._means[key] = torch.stack([self._load(p) for p in patterns]).mean(dim=0)
+        return self._means[key]
 
     def __call__(self, pat, k_active):
-        if config.CVAE_COND_DIM == 0:
-            # Unconditional: average ALL available pattern maps (shared
-            # support). Ignore pat except as a cache key "all".
-            if "all" not in self._means:
-                if pat in self._means:
-                    # stale entry from a previous conditional call
-                    self._means.pop(pat, None)
-                all_pats = config.PATTERNS
-                parts = [self._load(p) for p in all_pats]
-                self._means["all"] = torch.stack(parts).mean(dim=0)
-            mean = self._means["all"]
-        else:
-            if pat not in self._means:
-                try:
-                    self._means[pat] = self._load(pat)
-                except FileNotFoundError:
-                    parts = [self._load(p)
-                             for p in config.CVAE_TRAIN_PATTERNS]
-                    self._means[pat] = torch.stack(parts).mean(dim=0)
-            mean = self._means[pat]
+        mean = self._mean_for(pat)
         p = mean.flatten().abs() if config.SIGNED_IMPORTANCE \
             else mean.flatten()
         _, top = p.topk(k_active)
@@ -47,6 +36,8 @@ class MeanImportance:
 
 
 class DetRegressor(nn.Module):
+    """Predict an importance map from a pattern condition."""
+
     def __init__(self, hidden=256):
         super().__init__()
         self.net = nn.Sequential(
@@ -56,15 +47,13 @@ class DetRegressor(nn.Module):
         )
 
     def forward(self, cond):
-        return self.net(cond)  # logits (N, MASK_DIM)
+        return self.net(cond)
 
     @torch.no_grad()
     def mask(self, pat, k_active, device=None):
         if device is None:
             device = next(self.parameters()).device
         if config.CVAE_COND_DIM == 0:
-            # Unconditional: net still takes a (1,4) input but we feed a
-            # dummy zeros cond so it learns a constant (shared) map.
             c = torch.zeros(1, 4, device=device)
         elif isinstance(pat, str):
             c = config.pattern_to_pm1(pat).view(1, 4).to(device)
@@ -86,16 +75,12 @@ def train_det_reg(epochs=100, lr=1e-3, batch_size=256):
     """Train the deterministic regressor on all training importance maps."""
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"[det_reg] using {device}")
-    x, y, _ = load_importance_maps(config.CVAE_TRAIN_PATTERNS,
+    x, y, _ = load_importance_maps(config.PATTERNS,
                                    config.CKPT_DIR)
-    # x: (N, MASK_DIM), y: (N, 4) +-1 pattern condition
     x = x.float()
     y = y.float()
     if config.CVAE_COND_DIM == 0:
-        # Unconditional: fit a constant function (same as the mean map), so
-        # the pattern condition is ignored by zeroing the targets.
         y = torch.zeros_like(y)
-    # Split train/val
     n_val = int(x.size(0) * 0.15)
     perm = torch.randperm(x.size(0))
     tr_idx, va_idx = perm[n_val:], perm[:n_val]
@@ -125,10 +110,12 @@ def train_det_reg(epochs=100, lr=1e-3, batch_size=256):
             vl = nn.functional.mse_loss(pred, x[va_idx])
         if vl < best:
             best = vl
-            torch.save(model.state_dict(), save_path)
+            torch.save({name: value.detach().cpu()
+                        for name, value in model.state_dict().items()}, save_path)
         if ep % 20 == 0:
             print(f"[det_reg] ep {ep}: val_mse={vl.item():.5f}")
-    model.load_state_dict(torch.load(save_path))
+    model.load_state_dict(torch.load(save_path, weights_only=True,
+                                     map_location=device))
     return model
 
 

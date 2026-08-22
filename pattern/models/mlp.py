@@ -17,11 +17,12 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import config  # noqa: E402
+from data.generate import make_dataset  # noqa: E402
 
 
 def generate_masks(n_mlps: int, in_dim: int, hidden: int, p: float,
                    seed: int) -> torch.Tensor:
-    """Return a binary tensor (n_mlps, in_dim, hidden) with == p ones."""
+    """Return seeded Bernoulli masks with activation probability p."""
     g = torch.Generator().manual_seed(seed)
     m = (torch.rand(n_mlps, in_dim, hidden, generator=g) < p).float()
     return m
@@ -53,6 +54,7 @@ class BatchedMaskedMLP(nn.Module):
     def val_loss(self, x_val: torch.Tensor, y_val: torch.Tensor,
                  val_batch: int) -> torch.Tensor:
         """Per-MLP BCE-with-logits over the validation set -> (n_mlps,)."""
+        was_training = self.training
         self.eval()
         losses = []
         with torch.no_grad():
@@ -64,12 +66,13 @@ class BatchedMaskedMLP(nn.Module):
                 l = F.binary_cross_entropy_with_logits(
                     pred, target, reduction="none").mean(dim=0)
                 losses.append(l)
-        self.train()
+        self.train(was_training)
         return torch.stack(losses, dim=0).mean(dim=0)
 
     def val_acc(self, x_val: torch.Tensor, y_val: torch.Tensor,
                 val_batch: int) -> torch.Tensor:
         """Per-MLP accuracy (logits > 0) -> (n_mlps,)."""
+        was_training = self.training
         self.eval()
         correct = []
         total = 0
@@ -81,7 +84,7 @@ class BatchedMaskedMLP(nn.Module):
                 target = yb.unsqueeze(1).expand_as(pred)
                 correct.append((pred == target).float().sum(dim=0))
                 total += xb.size(0)
-        self.train()
+        self.train(was_training)
         return torch.stack(correct, dim=0).sum(dim=0) / total
 
     @staticmethod
@@ -91,29 +94,6 @@ class BatchedMaskedMLP(nn.Module):
 
 
 def get_train_batch(pat: str, batch_size: int, seed: int) -> tuple:
-    """On-the-fly classification batch for one pattern.
-
-    x: (B, SEQ_LEN) +-1, y: (B,) 0/1 float.
-    """
-    g = torch.Generator().manual_seed(seed)
-    pat_bits = torch.tensor([float(c) for c in pat])
-    x01 = torch.randint(0, 2, (batch_size, config.SEQ_LEN), generator=g).float()
-    windows = x01.unfold(1, config.PATTERN_LEN, 1)
-    y = (windows == pat_bits.view(1, 1, -1)).all(dim=2).any(dim=1).float()
-
-    n_pos = int(y.sum().item())
-    target_pos = round(config.POS_FRACTION * batch_size)
-    need = target_pos - n_pos
-    if need > 0:
-        neg_idx = torch.nonzero(y == 0).squeeze(1)
-        if neg_idx.numel() > 0:
-            perm = torch.randperm(neg_idx.numel(), generator=g)[:need]
-            inject_idx = neg_idx[perm]
-            starts = torch.randint(0, config.N_WINDOWS, (inject_idx.numel(),),
-                                   generator=g)
-            for idx, start in zip(inject_idx.tolist(), starts.tolist()):
-                x01[idx, start:start + config.PATTERN_LEN] = pat_bits
-                y[idx] = 1.0
-
-    x = 2.0 * x01 - 1.0
-    return x, y
+    """Return one seeded on-the-fly training batch."""
+    data = make_dataset(pat, batch_size, seed, config.POS_FRACTION)
+    return data["x"], data["y"]

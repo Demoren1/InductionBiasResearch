@@ -2,6 +2,11 @@
 
 Дата: 2026-08-21. Контекст: продолжение `FINDINGS.md`, раздел baseline (VAE на невыровненных importance-картах даёт downstream acc 0.79, ниже random 0.89).
 
+> Историческая оговорка: до исправления семплера VAE в `models/cvae.py` один latent
+> в `sample_topk` размножался на все `n_masks`. Поэтому приведённые ниже CVAE-метрики
+> измеряют несколько обучений MLP на одной маске, а не среднее по независимым VAE-маскам.
+> Код исправлен; итоговые сравнения вариантов нужно повторить с независимыми latent samples.
+
 ## 1. TL;DR
 
 - Вопрос: провал baseline вызван **(а)** экономикой KL vs recon (лечится β↓ или заменой MSE→BCE) или **(б)** невозможностью вывести перестановку из шумной карты?
@@ -21,7 +26,7 @@
 - Новые флаги: `models/train_cvae.py --loss {mse,bce} --reduction {mean,sum}`; лосс-фабрика `make_importance_loss` в `models/cvae.py`.
   - `reduction=sum` = сумма по пикселям, среднее по батчу (recon в nats/сэмпл);
   - `reduction=mean` = среднее по всем элементам (старое поведение).
-- Свип: `scripts/06_loss_sweep.sh` (список вариантов переопределяется env `VARIANTS`). Оценка: `evaluation/eval_generated_masks.py --cvae_ckpt <ckpt> --out_suffix <suffix>`, паттерны `0000 0110 1001 1111`, 2000 шагов, 32 маски на метод.
+- Свип: `scripts/loss_sweep.sh` (список вариантов переопределяется env `VARIANTS`). Оценка: `evaluation/eval_generated_masks.py --cvae_ckpt <ckpt> --out_suffix <suffix>`, паттерны `0000 0110 1001 1111`, 2000 шагов, 32 маски на метод.
 - Окружение `ras`, GPU 3: обучение 14 вариантов ≈ 8.5 мин + оценка ≈ 15 мин.
 
 ## 3. Результаты свипа (14 вариантов)
@@ -136,7 +141,7 @@ Per-паттерн: z лучший на **14/16** паттернах (исклю
 4. **Кросс-протокольный контекст**: z-опт одна маска 0.9186 ≈ среднее 64 сэмплированных cvae-масок пайплайна 0.9205 (полный val-протокол, раздел 3.2) — bilevel-поиск находит одну маску не хуже среднего по 64 prior-сэмплам и лучше центра prior-режима.
 5. **Ранний скептицизм опровергнут**: рассуждения времён FINDINGS («коллапснувший декодер точечно обучен — z-оптимизация экстраполирует в необученные области») не подтвердились для **НЕ-коллапснувшего** декодера: многообразие достаточно гладкое для градиентного поиска (согласуется с непрерывным морфингом из раздела 5.2).
 
-Артефакты: `evaluation/optimize_z.py`, `outputs/eval/zopt_results.json`, `outputs/eval/zopt_masks.pt` (режим `z`: обученный z, p_map, бинарная маска по 16 паттернам), `outputs/plots/z_analysis/zopt_masks.png`; логи — `/tmp/zopt_{z,free,z0,master}.log`.
+Артефакты: `evaluation/optimize_z.py`, `outputs/eval/zopt_results.json`, `outputs/eval/zopt_masks.pt` (по каждому режиму: параметр поиска, `p_map`, бинарная маска и структурные метрики по 16 паттернам), `outputs/plots/z_analysis/zopt_masks_{z,z0,free}.png` и `zopt_toeplitz_{z,z0,free}.png`; логи — `/tmp/zopt_{z,free,z0,master}.log`.
 
 Команды воспроизведения:
 ```
@@ -145,7 +150,7 @@ CUDA_VISIBLE_DEVICES=<g> python evaluation/optimize_z.py --mode free
 CUDA_VISIBLE_DEVICES=<g> python evaluation/optimize_z.py --mode z0
 ```
 
-**Сохранённые маски и их теплицевость.** Режим `z` (детерминированный, fixed seeds) теперь дополнительно сохраняет артефакты: `outputs/eval/zopt_masks.pt` — dict по 16 паттернам с обученным латентом `z` (32,), непрерывной картой `p_map` (8,8) и бинарной top-32 маской `binary_mask` (8,8) + финальные test-статистики; фигура `outputs/plots/z_analysis/zopt_masks.png` — 4×4 сетка бинарных масок с best-perm IoU в заголовках. Диагностика (best-perm выравнивание через `align_map` к `ideal_mask`):
+**Сохранённые маски и их теплицевость.** Каждый режим (`z`, `z0`, `free`) сохраняет в `outputs/eval/zopt_masks.pt` dict по 16 паттернам с параметром поиска, непрерывной картой `p_map` (8,8), бинарной top-32 маской `binary_mask` (8,8), test-статистиками и диагностикой структуры. Фигуры `outputs/plots/z_analysis/zopt_masks_<mode>.png` дают 4×4 сетку матриц, а `zopt_toeplitz_<mode>.png` — распределение окон, покрытие строк и best-permutation IoU. Диагностика использует выравнивание через `align_map` к `ideal_mask`:
 
 | метрика | bilevel z (16 масок) | сэмплы bce_sum_b0.1 (5.1) | сэмплы bce_sum_b0.1_top10 (5.1) |
 |---|---|---|---|
@@ -304,8 +309,8 @@ Wrap-up Q&A по бинаризованным маскам из `zopt_masks.pt` 
 
 ```
 conda activate ras
-GPU_IDS="<free>" bash scripts/06_loss_sweep.sh
-VARIANTS="name|loss|reduction|beta ..." bash scripts/06_loss_sweep.sh   # свои списки
+GPU_IDS="<free>" bash scripts/loss_sweep.sh
+VARIANTS="name|loss|reduction|beta ..." bash scripts/loss_sweep.sh   # свои списки
 python evaluation/latent_diagnostics.py --ckpt outputs/cvae_sweep/<name>/cvae_best.pt --tag _<name>
 CUDA_VISIBLE_DEVICES=<g> python evaluation/eval_generated_masks.py --cvae_ckpt outputs/cvae_sweep/bce_sum_b0.1/cvae_best.pt --patterns 0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 --steps 2000 --n_masks 64 --out_suffix _full_bce_sum_b0.1   # полный eval на 16 паттернах (то же для mse_b0.003: --out_suffix _full_mse_b0.003)
 ```
@@ -336,7 +341,7 @@ CUDA_VISIBLE_DEVICES=<g> python evaluation/eval_generated_masks.py --cvae_ckpt o
 - **Ключевые чекпоинты**: `outputs/cvae_sweep/<variant>/cvae_best.pt` — 14 вариантов свипа; **текущий лучший — `bce_sum_b0.1_top10` (acc 0.9205, `outputs/cvae_sweep/bce_sum_b0.1_top10/cvae_best.pt`)**; нефильтрованный лидер — `bce_sum_b0.1` (0.9002). `outputs/cvae/` — старая selfalign-модель, **не трогать**.
 - **Новый флаг фильтрации карт**: `--top_frac 0.1` в `models/train_cvae.py` — обучение только на топ-10% importance-карт (минимальный val_loss); фильтрация в `load_importance_maps` из `models/cvae.py`. Прогнать полный 16-паттерн eval обязательно (`n_masks=64`).
 - **Метрики downstream**: `evaluation/eval_generated_masks.py`; референсы по 16 паттернам: random ~0.889, top10% ~0.925, ideal ~0.929; метрика — средний val acc; финальные цифры — `n_masks=64`.
-- **Bilevel-оптимизация z**: `evaluation/optimize_z.py --mode {z,free,z0}` — обучает латент через замороженный декодер (`outputs/cvae_sweep/bce_sum_b0.1_top10/cvae_best.pt`) под downstream val BCE (bilevel: 300 warm-up шагов с отцепленной маской + 100 живых, внешний Adam lr 0.05, grad clip 10; `--mode free` — контроль без декодера, 64 logits; `--mode z0` — prior-режим z=0 без оптимизации). Результаты: `outputs/eval/zopt_results.json` (mean/std test acc, test_bce, final_val_loss, z_norm по 16 паттернам). Итог: z 0.9186 > z0 0.9011; free переобучается на val (0.8694). Одно-масочный протокол (8 MLP × 1 маска, test = половина val) НЕ сравнивать с таблицами 3.1/3.2. Режим `z` дополнительно сохраняет обученные маски в `outputs/eval/zopt_masks.pt` (z, p_map, binary_mask на паттерн) + фигура `outputs/plots/z_analysis/zopt_masks.png` — bilevel-маски теплицевее сэмплированных (mean best-perm IoU 0.684, окна 0–3 сбалансированы, окно 4 недоиспользуется).
+- **Bilevel-оптимизация z**: `evaluation/optimize_z.py --mode {z,free,z0}` — обучает латент через замороженный декодер (`outputs/cvae/cvae_best.pt`) под downstream val BCE (bilevel: 300 warm-up шагов с отцепленной маской + 100 живых, внешний Adam lr 0.05, grad clip 10; `--mode free` — контроль без декодера, 64 logits; `--mode z0` — prior-режим z=0 без оптимизации). Результаты: `outputs/eval/zopt_results.json` (mean/std test acc, test_bce, final_val_loss, z_norm и структурные метрики по 16 паттернам). Одно-масочный протокол (8 MLP × 1 маска, test = половина val) НЕ сравнивать с таблицами 3.1/3.2. Все режимы сохраняют маски в `outputs/eval/zopt_masks.pt`; фигуры `zopt_masks_<mode>.png` и `zopt_toeplitz_<mode>.png` показывают матрицы и Toeplitz-диагностику.
 - **Правдоподобие масок**: `evaluation/mask_plausibility.py --ckpt <path> --tag _<name>` — IWAE (K=64) по категориям (real top-10/bottom-90, generated continuous/binary, random, gold+perms). Осторожно: likelihood под моделью ≠ качество маски (см. 5.3) — бинаризованные маски неправдоподобны, а шумные bottom-90 наоборот «правдоподобны».
 - **Окружение**: `conda activate ras`; GPU выбирать по `nvidia-smi` (GPU 3 обычно свободен, GPU 0 занят); **НЕ трогать** `outputs/cvae`, `outputs/eval/eval_results.json`, `outputs/checkpoints`; результаты писать с суффиксами (`--out_suffix`).
 - **Главная механика провала (кратко)**: постериорный коллапс из-за масштаба KL vs recon; лечится β↓ (MSE: граница β ∈ (0.01, 0.003]) либо большим весом recon (BCE-sum при β ≤ 0.1); остаточный разрыв до ideal — шумный вывод перестановок (латент «давленный», перекос в окно 0).

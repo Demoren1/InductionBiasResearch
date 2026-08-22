@@ -45,11 +45,13 @@ def build_parser():
                    help="path to the CVAE state dict to evaluate")
     p.add_argument("--out_suffix", type=str, default="",
                    help="suffix appended to eval_results output filenames")
+    p.add_argument("--seed", type=int, default=config.CVAE_SEED,
+                   help="random seed for model initialization and VAE samples")
     return p
 
 
 def masks_for_method(pat, method, n, cvae, device, mean_imp=None,
-                     det_reg=None):
+                     det_reg=None, generator=None):
     k_active = config.K_ACTIVE
     if method == "random":
         return generate_masks(n, config.SEQ_LEN, config.H, config.P,
@@ -59,7 +61,7 @@ def masks_for_method(pat, method, n, cvae, device, mean_imp=None,
         return m.to(device)
     if method == "cvae":
         pm1 = config.pattern_to_pm1(pat).view(1, 4).to(device)
-        m = cvae.sample_topk(pm1, n, k_active)
+        m = cvae.sample_topk(pm1, n, k_active, generator=generator)
         return m.reshape(n, config.SEQ_LEN, config.H).to(device)
     if method == "mean_imp":
         base = mean_imp(pat, k_active)
@@ -93,6 +95,7 @@ def train_and_eval(masks, pat, steps, batch_size, lr, x_val, y_val):
 def main():
     args = build_parser().parse_args()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    torch.manual_seed(args.seed)
 
     patterns = args.patterns if args.patterns else list(config.PATTERNS)
 
@@ -106,16 +109,21 @@ def main():
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     cvae = CVAE(config.MASK_DIM, config.LATENT_DIM, config.CVAE_HIDDEN)
-    cvae.load_state_dict(torch.load(args.cvae_ckpt, weights_only=True))
+    cvae.load_state_dict(torch.load(args.cvae_ckpt, weights_only=True,
+                                    map_location=device))
     cvae.to(device).eval()
 
     mean_imp = MeanImportance()
     det_reg = DetRegressor()
-    det_reg.load_state_dict(torch.load(OUT_DIR / "det_reg.pt", weights_only=True))
+    det_reg.load_state_dict(torch.load(OUT_DIR / "det_reg.pt", weights_only=True,
+                                       map_location=device))
     det_reg.to(device).eval()
 
     results = {}
     for pat in patterns:
+        pattern_seed = args.seed + int(pat, 2)
+        torch.manual_seed(pattern_seed)
+        sample_generator = torch.Generator(device=device).manual_seed(pattern_seed)
         val = make_dataset(pat, config.N_VAL_SAMPLES,
                             seed=1000 + int(pat, 2), pos_fraction=config.POS_FRACTION)
         x_val, y_val = val["x"].to(device), val["y"].to(device)
@@ -133,7 +141,8 @@ def main():
                 masks = d["masks"][:args.n_masks].to(device)
             else:
                 masks = masks_for_method(pat, method, args.n_masks, cvae,
-                                          device, mean_imp, det_reg)
+                                          device, mean_imp, det_reg,
+                                          sample_generator)
             methods_and_masks.append((method, masks))
 
         all_masks = torch.cat([m for _, m in methods_and_masks], dim=0)
@@ -172,7 +181,6 @@ def plot_results(results):
     config.ensure_plot_dirs()
     order = ["random", "mean_imp", "det_reg", "cvae", "top10%", "ideal"]
     patterns = config.PATTERNS
-    train_set = set(config.CVAE_TRAIN_PATTERNS)
     n_methods = len(order)
     width = 0.8 / n_methods
 
@@ -188,15 +196,11 @@ def plot_results(results):
             hatch = "" if True else "//"
             ax.bar(x + (i - (n_methods - 1) / 2) * width, vals, width,
                    label=m, hatch=hatch if m == "ideal" else "")
-        for xi, pat in enumerate(patterns):
-            ax.annotate("T" if pat in train_set else "E",
-                        (xi, 0.02), ha="center", fontsize=7,
-                        color="green" if pat in train_set else "orange")
         ax.set_xticks(x)
         ax.set_xticklabels(patterns, rotation=45)
         if logscale:
             ax.set_yscale("log")
-        ax.set_xlabel("pattern (T=train, E=eval/test)")
+        ax.set_xlabel("pattern")
         ax.set_ylabel(ylabel)
         ax.set_title(f"Generated vs ideal vs random masks ({metric})")
         ax.legend(fontsize=8)

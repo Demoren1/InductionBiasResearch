@@ -79,18 +79,12 @@ def topk_ioU(x: torch.Tensor, gold: torch.Tensor, k: int) -> float:
     return inter / union if union > 0 else 0.0
 
 
-def align_map(m: torch.Tensor, gold: torch.Tensor) -> torch.Tensor:
-    """Align columns of a single (L, H) map to gold (L, H) columns.
-
-    cost[i, j] = -(m[:, i] @ gold[:, j]); hungarian minimizes total cost so
-    it maximizes total overlap. Returns m_aligned where
-    aligned[:, col_ind[i]] = m[:, i].
-    """
-    cost = -(m.float()[:, :, None] * gold.float()[:, None, :]).sum(dim=0)
-    # cost is (H, H): row i = original map col i, col j = gold col j.
+def column_assignment(m: torch.Tensor, reference: torch.Tensor) -> tuple:
+    """Match map columns to reference columns by maximum overlap."""
+    cost = -(m.float()[:, :, None] * reference.float()[:, None, :]).sum(dim=0)
     if _HAVE_SCIPY:
         row_ind, col_ind = linear_sum_assignment(cost.numpy())
-    else:  # greedy fallback (should not happen)
+    else:
         row_ind, col_ind = [], []
         used = set()
         for i in range(cost.shape[0]):
@@ -101,6 +95,12 @@ def align_map(m: torch.Tensor, gold: torch.Tensor) -> torch.Tensor:
             row_ind.append(i)
             col_ind.append(j)
             used.add(j)
+    return cost, row_ind, col_ind
+
+
+def align_map(m: torch.Tensor, gold: torch.Tensor) -> torch.Tensor:
+    """Reorder a map's columns into the reference ordering."""
+    _, row_ind, col_ind = column_assignment(m, gold)
     aligned = torch.empty_like(m)
     aligned[:, col_ind] = m[:, row_ind]
     return aligned
@@ -113,29 +113,21 @@ def load_importance(pat: str) -> torch.Tensor:
     return d["importance"].float()
 
 
-def align_map_score(m: torch.Tensor, ref: torch.Tensor):
-    """Align a single (L, H) map to ref (L, H) columns; return (aligned, score).
+def save_aligned(pat: str, name: str, importance: torch.Tensor) -> Path:
+    """Save aligned maps while preserving source evaluation metadata."""
+    source = torch.load(config.pattern_dir(pat) / "importance.pt",
+                        weights_only=True)
+    payload = {key: source[key] for key in ("pattern", "n_mlps", "val_loss", "val_acc")
+               if key in source}
+    payload["importance"] = importance
+    path = config.pattern_dir(pat) / name
+    torch.save(payload, path)
+    return path
 
-    Hungarian cost c[i, j] = -(m[:, i] @ ref[:, j]); linear_sum_assignment
-    minimizes total cost, i.e. maximizes total column overlap. score is the
-    total column overlap (higher = better) and equals
-    float(-c[row_ind, col_ind].sum()).
-    """
-    cost = -(m.float()[:, :, None] * ref.float()[:, None, :]).sum(dim=0)
-    # cost is (H, H): row i = original map col i, col j = ref col j.
-    if _HAVE_SCIPY:
-        row_ind, col_ind = linear_sum_assignment(cost.numpy())
-    else:  # greedy fallback (should not happen)
-        row_ind, col_ind = [], []
-        used = set()
-        for i in range(cost.shape[0]):
-            j = (-cost[i]).argmax().item()
-            while j in used:
-                cost[i, j] = float("-inf")
-                j = (-cost[i]).argmax().item()
-            row_ind.append(i)
-            col_ind.append(j)
-            used.add(j)
+
+def align_map_score(m: torch.Tensor, ref: torch.Tensor):
+    """Return a reference-aligned map and its matching score."""
+    cost, row_ind, col_ind = column_assignment(m, ref)
     aligned = torch.empty_like(m)
     aligned[:, col_ind] = m[:, row_ind]
     score = float(-cost[row_ind, col_ind].sum())
@@ -170,8 +162,7 @@ def run_gold() -> None:
         pa = pearson(mean_after, gold)
         ia = topk_ioU(mean_after, gold, k)
 
-        out = config.pattern_dir(pat) / "importance_aligned.pt"
-        torch.save({"pattern": pat, "importance": aligned}, out)
+        out = save_aligned(pat, "importance_aligned.pt", aligned)
 
         rows.append((pat, pb, ib, pa, ia))
         print(f"[align] {pat}: BEFORE pearson={pb:.4f} iou={ib:.4f} | "
@@ -212,7 +203,7 @@ def run_window() -> None:
         if out_path.exists():
             old = torch.load(out_path, weights_only=True)["importance"]
             note = "unchanged" if torch.equal(out, old) else "changed"
-        torch.save({"pattern": pat, "importance": out}, out_path)
+        save_aligned(pat, "importance_win.pt", out)
         print(f"[window] {pat}: {note} -> {out_path}", flush=True)
     print("[window] saved importance_win.pt (all patterns)", flush=True)
 
@@ -357,8 +348,7 @@ def run_selfalign(top_frac: float = TOP_FRAC, n_iters: int = N_ITERS,
         aligned = torch.empty_like(X)
         for m_i in range(n_keep):
             aligned[m_i], _ = align_map_score(X[m_i], Rb)
-        out = config.pattern_dir(pat) / "importance_selfalign.pt"
-        torch.save({"pattern": pat, "importance": aligned}, out)
+        out = save_aligned(pat, "importance_selfalign.pt", aligned)
         aligned_pool.append(aligned)
         print(f"[selfalign] saved {out} ({n_keep} maps, top-frac)",
               flush=True)
@@ -421,8 +411,7 @@ def run_refmatch() -> None:
         pa = pearson(mean_after, gold)
         ia = topk_ioU(mean_after, gold, k)
 
-        out = config.pattern_dir(pat) / "importance_refmatch.pt"
-        torch.save({"pattern": pat, "importance": aligned}, out)
+        out = save_aligned(pat, "importance_refmatch.pt", aligned)
 
         rows.append((pat, pb, ib, pa, ia))
         print(f"[refmatch] {pat}: BEFORE pearson={pb:.4f} iou={ib:.4f} | "

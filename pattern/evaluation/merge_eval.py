@@ -2,6 +2,7 @@
 
 import json
 import sys
+import argparse
 from pathlib import Path
 
 import matplotlib
@@ -16,16 +17,25 @@ import config  # noqa: E402
 from evaluation.eval_generated_masks import plot_results  # noqa: E402
 
 
+def load_partial_results(path_pt: Path, path_json: Path) -> dict:
+    """Load one worker result, preferring the tensor artifact."""
+    if path_pt.exists():
+        return torch.load(path_pt, weights_only=True)
+    if path_json.exists():
+        return json.loads(path_json.read_text())
+    raise FileNotFoundError(f"Missing evaluation result: {path_pt} or {path_json}")
+
+
 def main():
+    parser = argparse.ArgumentParser(description="Merge one evaluation run.")
+    parser.add_argument("--num_gpus", type=int, default=1)
+    args = parser.parse_args()
     out_dir = config.EVAL_DIR
     merged = {}
-    for f in sorted(out_dir.glob("eval_results_gpu*.pt")):
-        d = torch.load(f, weights_only=True)
-        merged.update(d)
-    for f in sorted(out_dir.glob("eval_results_gpu*.json")):
-        with open(f) as fh:
-            d = json.load(fh)
-        merged.update({k: v for k, v in d.items() if k not in merged})
+    for gpu_id in range(args.num_gpus):
+        stem = out_dir / f"eval_results_gpu{gpu_id}"
+        merged.update(load_partial_results(stem.with_suffix(".pt"),
+                                           stem.with_suffix(".json")))
 
     torch.save(merged, out_dir / "eval_results.pt")
     with open(out_dir / "eval_results.json", "w") as fh:

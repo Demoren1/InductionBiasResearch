@@ -9,6 +9,8 @@ returns an empty (N, 0) tensor, keeping the encoder/decoder signatures and
 call sites unchanged so callers may still pass a dummy pattern tensor.
 """
 
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -51,6 +53,15 @@ class CVAE(nn.Module):
             return patterns_pm1.new_zeros(n, 0)
         return patterns_pm1.float().clone()
 
+    def prior_inputs(self, patterns_pm1: torch.Tensor, n_per: int,
+                     generator: torch.Generator | None = None) -> tuple:
+        """Return independent prior latents and repeated conditions."""
+        c = self.condition(patterns_pm1)
+        n_total = c.size(0) * n_per
+        z = torch.randn(n_total, self.latent_dim, device=c.device,
+                        generator=generator)
+        return z, c.repeat_interleave(n_per, dim=0)
+
     def encode(self, x: torch.Tensor, c: torch.Tensor) -> tuple:
         h = F.relu(self.enc_fc1(torch.cat([x, c], dim=-1)))
         h = F.relu(self.enc_fc2(h))
@@ -66,6 +77,11 @@ class CVAE(nn.Module):
         h = F.relu(self.dec_fc1(torch.cat([z, c], dim=-1)))
         h = F.relu(self.dec_fc2(h))
         return self.dec_out(h)
+
+    def importance(self, logits: torch.Tensor) -> torch.Tensor:
+        """Map decoder logits to non-negative importance values."""
+        return torch.tanh(logits).abs() if config.SIGNED_IMPORTANCE \
+            else torch.sigmoid(logits)
 
     def forward(self, x: torch.Tensor,
                 patterns_pm1: torch.Tensor) -> tuple:
@@ -88,7 +104,7 @@ class CVAE(nn.Module):
         reconstructions.
         """
         logits, _, _ = self.forward(x, patterns_pm1)
-        return (torch.sigmoid(logits) > 0.5).float()
+        return (self.importance(logits) > 0.5).float()
 
     @torch.no_grad()
     def prob(self, x: torch.Tensor,
@@ -100,7 +116,7 @@ class CVAE(nn.Module):
         c = self.condition(patterns_pm1)
         mu, _ = self.encode(x, c)
         logits = self.decode(mu, c)
-        return torch.sigmoid(logits)
+        return self.importance(logits)
 
     @torch.no_grad()
     def reconstruct_sample(self, x: torch.Tensor,
@@ -122,18 +138,9 @@ class CVAE(nn.Module):
         top-k positions vary across the n_per masks.  If SIGNED_IMPORTANCE,
         importance = |tanh(logits)|; otherwise sigmoid(logits).
         """
-        c = self.condition(patterns_pm1)                     # (N, cond_dim)
-        z = torch.randn(c.size(0), self.latent_dim,
-                        device=c.device, generator=generator)
-        z = z.unsqueeze(1).expand(-1, n_per, -1).reshape(
-            -1, self.latent_dim)
-        c = c.unsqueeze(1).expand(-1, n_per, -1).reshape(
-            c.size(0) * n_per, self.cond_dim)
+        z, c = self.prior_inputs(patterns_pm1, n_per, generator)
         logits = self.decode(z, c)
-        if config.SIGNED_IMPORTANCE:
-            p = torch.tanh(logits).abs()
-        else:
-            p = torch.sigmoid(logits)
+        p = self.importance(logits)
         _, top = p.topk(k_active, dim=-1)
         out = torch.zeros_like(p)
         out.scatter_(-1, top, 1.0)
@@ -150,10 +157,7 @@ class CVAE(nn.Module):
         c = self.condition(patterns_pm1)                     # (N, cond_dim)
         z = torch.zeros(c.size(0), self.latent_dim, device=c.device)
         logits = self.decode(z, c)
-        if config.SIGNED_IMPORTANCE:
-            p = torch.tanh(logits).abs()
-        else:
-            p = torch.sigmoid(logits)
+        p = self.importance(logits)
         _, top = p.topk(k_active, dim=-1)
         out = torch.zeros_like(p)
         out.scatter_(-1, top, 1.0)
@@ -167,24 +171,23 @@ class CVAE(nn.Module):
         Masks are drawn from Bernoulli(p) with p = sigmoid(decoder logits),
         not thresholded, so the sampled sparsity matches the data (~p_active).
         """
-        c = self.condition(patterns_pm1)                     # (N, cond_dim)
-        z = torch.randn(c.size(0), self.latent_dim,
-                        device=c.device, generator=generator)
-        z = z.unsqueeze(1).expand(-1, n_per, -1).reshape(
-            -1, self.latent_dim)
-        c = c.unsqueeze(1).expand(-1, n_per, -1).reshape(
-            c.size(0) * n_per, self.cond_dim)
+        z, c = self.prior_inputs(patterns_pm1, n_per, generator)
         logits = self.decode(z, c)
-        p = torch.sigmoid(logits)
+        p = self.importance(logits)
         return torch.bernoulli(p, generator=generator)
+
+
+def kl_divergence(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
+    """Return mean KL(q(z|x) || N(0, I))."""
+    return -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=-1).mean()
 
 
 def cvae_loss(logits: torch.Tensor, x: torch.Tensor,
               mu: torch.Tensor, logvar: torch.Tensor,
               beta: float = 1.0) -> tuple:
-    """Return (total, recon_bce, kl) as (dim-0 scalar) tensors."""
+    """Return total, reconstruction BCE, and KL."""
     recon = F.binary_cross_entropy_with_logits(logits, x, reduction="mean")
-    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=-1).mean()
+    kl = kl_divergence(mu, logvar)
     total = recon + beta * kl
     return total, recon, kl
 
@@ -195,6 +198,11 @@ def _pattern_to_y(pat: str, n: int) -> torch.Tensor:
     return pm1.unsqueeze(0).expand(n, -1)
 
 
+def checkpoint_file(ckpt_root, pattern: str, name: str) -> Path:
+    """Return a pattern-specific checkpoint path."""
+    return Path(ckpt_root) / f"pattern_{pattern}" / name
+
+
 def load_selected_masks(patterns: list[str], ckpt_root) -> tuple:
     """Load best10pct masks from each pattern dir.
 
@@ -203,7 +211,7 @@ def load_selected_masks(patterns: list[str], ckpt_root) -> tuple:
     """
     x_parts, y_parts, info = [], [], []
     for pat in patterns:
-        path = config.pattern_dir(pat) / "best10pct.pt"
+        path = checkpoint_file(ckpt_root, pat, "best10pct.pt")
         if not path.exists():
             raise FileNotFoundError(
                 f"Runs scripts/03_select.sh first: missing {path}")
@@ -227,27 +235,10 @@ def make_loaders(x, y, val_fraction, batch_size, seed) -> tuple:
     val_idx, train_idx = perm[:n_val], perm[n_val:]
     train_ds = TensorDataset(x[train_idx], y[train_idx])
     val_ds = TensorDataset(x[val_idx], y[val_idx])
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
+                              generator=g)
     val_loader = DataLoader(val_ds, batch_size=batch_size)
     return train_loader, val_loader, train_idx, val_idx
-
-
-def cvae_loss_importance(logits: torch.Tensor, importance: torch.Tensor,
-                         mu: torch.Tensor, logvar: torch.Tensor,
-                         beta: float = 1.0) -> tuple:
-    """MSE loss on continuous importance targets.
-
-    If targets are in [0, 1] (unsigned): sigmoid(logits).
-    If targets are in [-1, 1] (signed): tanh(logits).
-    """
-    if config.SIGNED_IMPORTANCE:
-        pred = torch.tanh(logits)
-    else:
-        pred = torch.sigmoid(logits)
-    recon = F.mse_loss(pred, importance, reduction="mean")
-    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=-1).mean()
-    total = recon + beta * kl
-    return total, recon, kl
 
 
 def make_importance_loss(loss: str, reduction: str):
@@ -255,12 +246,12 @@ def make_importance_loss(loss: str, reduction: str):
 
     Returns f(logits, importance, mu, logvar, beta) -> (total, recon, kl).
 
-    loss="mse": pred = sigmoid(logits) (tanh if config.SIGNED_IMPORTANCE,
-        matching cvae_loss_importance), recon = MSE(pred, importance).
+    loss="mse": pred = sigmoid(logits) (tanh if config.SIGNED_IMPORTANCE),
+        recon = MSE(pred, importance).
     loss="bce": recon = BCE_with_logits(logits, importance); importance
         targets are soft labels in [0, 1], which is valid for BCE.
 
-    reduction="mean": recon averaged over all elements (as cvae_loss_importance).
+    reduction="mean": recon averaged over all elements.
     reduction="sum": recon summed over the mask dim (dim=-1) and averaged
         over the batch: F.mse_loss(..., reduction="none").sum(dim=-1).mean()
         (same for BCE with logits).
@@ -292,8 +283,7 @@ def make_importance_loss(loss: str, reduction: str):
             else:
                 recon = F.mse_loss(pred, importance,
                                    reduction="none").sum(dim=-1).mean()
-        kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(),
-                              dim=-1).mean()
+        kl = kl_divergence(mu, logvar)
         total = recon + beta * kl
         return total, recon, kl
 
@@ -314,7 +304,7 @@ def load_importance_maps(patterns: list[str], ckpt_root,
     """
     x_parts, y_parts, info = [], [], []
     for pat in patterns:
-        path = config.pattern_dir(pat) / importance_name
+        path = checkpoint_file(ckpt_root, pat, importance_name)
         if not path.exists():
             raise FileNotFoundError(f"Run evaluation/importance.py first: {path}")
         d = torch.load(path, weights_only=True)

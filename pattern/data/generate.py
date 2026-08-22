@@ -25,46 +25,40 @@ import config  # noqa: E402
 
 
 def contains_pattern(x01: torch.Tensor, pat_bits: torch.Tensor) -> torch.Tensor:
-    """(n,) bool -- True where a row of x01 contains pat_bits as a substring.
-
-    x01: (n, L) 0/1
-    pat_bits: (PATTERN_LEN,) 0/1
-    """
+    """Return whether each binary sequence contains the pattern."""
     k = config.PATTERN_LEN
-    windows = x01.unfold(1, k, 1)                 # (n, L-k+1, k)
+    windows = x01.unfold(1, k, 1)
     pat = pat_bits.view(1, 1, k).to(x01.dtype)
-    match = (windows == pat).all(dim=2)           # (n, L-k+1)
+    match = (windows == pat).all(dim=2)
     return match.any(dim=1)
+
+
+def inject_positive_examples(x01: torch.Tensor, y: torch.Tensor,
+                             pat_bits: torch.Tensor, target_fraction: float,
+                             generator: torch.Generator) -> torch.Tensor:
+    """Inject the pattern into negatives until the target positive fraction."""
+    target = round(target_fraction * x01.size(0))
+    missing = max(0, target - int(y.sum().item()))
+    negatives = torch.nonzero(y == 0).squeeze(1)
+    selected = negatives[torch.randperm(negatives.numel(), generator=generator)[:missing]]
+    starts = torch.randint(config.N_WINDOWS, (selected.numel(),), generator=generator)
+    for index, start in zip(selected.tolist(), starts.tolist()):
+        x01[index, start:start + config.PATTERN_LEN] = pat_bits
+    return contains_pattern(x01, pat_bits).float()
 
 
 def make_dataset(pat: str, n_samples: int, seed: int,
                  pos_fraction: float = 0.5) -> dict:
-    """Return {"x": (n, L) +/-1, "y": (n,) 0/1, "pattern": pat,
-               "pattern_pm1": (PATTERN_LEN,) +/-1}."""
+    """Create a seeded, balanced pattern-classification dataset."""
+    if not 0.0 <= pos_fraction <= 1.0:
+        raise ValueError("pos_fraction must be in [0, 1]")
     g = torch.Generator().manual_seed(seed)
     pat_bits = config.pattern_to_bits(pat)
 
     x01 = torch.randint(0, 2, (n_samples, config.SEQ_LEN), generator=g).to(torch.float)
     y = contains_pattern(x01, pat_bits).to(torch.float)
-
-    # Rebalance toward pos_fraction by injecting the pattern at a random
-    # window offset into randomly chosen negative sequences.
-    n_pos = int(y.sum().item())
-    target_pos = round(pos_fraction * n_samples)
-    need = target_pos - n_pos
-    if need > 0:
-        neg_idx = torch.nonzero(y == 0).squeeze(1)
-        if neg_idx.numel() > 0:
-            perm = torch.randperm(neg_idx.numel(), generator=g)[:need]
-            inject_idx = neg_idx[perm]
-            starts = torch.randint(0, config.N_WINDOWS, (inject_idx.numel(),),
-                                   generator=g)
-            for r, (idx, start) in enumerate(zip(inject_idx.tolist(),
-                                                 starts.tolist())):
-                x01[idx, start:start + config.PATTERN_LEN] = pat_bits
-                y[idx] = 1.0
-
-    x = 2.0 * x01 - 1.0  # 0 -> -1, 1 -> +1
+    y = inject_positive_examples(x01, y, pat_bits, pos_fraction, g)
+    x = 2.0 * x01 - 1.0
     return {
         "x": x,
         "y": y,
@@ -74,10 +68,7 @@ def make_dataset(pat: str, n_samples: int, seed: int,
 
 
 def gold_first_layer(pat: str) -> torch.Tensor:
-    """(N_WINDOWS, SEQ_LEN) = (5, 8).
-
-    W[i, i:i+PATTERN_LEN] = pattern_to_pm1(pat); zeros elsewhere.
-    """
+    """Return the matched-filter weights for every input window."""
     W = torch.zeros(config.N_WINDOWS, config.SEQ_LEN)
     pm1 = config.pattern_to_pm1(pat)
     for i in range(config.N_WINDOWS):
@@ -86,12 +77,7 @@ def gold_first_layer(pat: str) -> torch.Tensor:
 
 
 def ideal_mask(hidden: int | None = None) -> torch.Tensor:
-    """(SEQ_LEN, H) binary.
-
-    Hidden unit h is assigned window (h % N_WINDOWS) and has ones on rows
-    [w : w+PATTERN_LEN] of column h. This is the Toeplitz / sliding-window
-    support (pattern-independent).
-    """
+    """Return the pattern-independent Toeplitz support mask."""
     if hidden is None:
         hidden = config.H
     m = torch.zeros(config.SEQ_LEN, hidden, dtype=torch.long)

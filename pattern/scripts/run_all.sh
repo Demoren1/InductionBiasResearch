@@ -4,6 +4,7 @@ export GPU_IDS="${GPU_IDS:-0 1 2 3}"
 export TRAIN_STEPS="${TRAIN_STEPS:-2000}"
 export CVAE_EPOCHS="${CVAE_EPOCHS:-80}"
 export EVAL_STEPS="${EVAL_STEPS:-2000}"
+RUN_Z_OPT="${RUN_Z_OPT:-1}"
 set -euo pipefail
 cd "$(dirname "$0")/.."
 echo "==> 1/5 Generating data + plots"
@@ -12,13 +13,18 @@ echo "==> 2/5 Training masked MLPs (GPU_IDS=${GPU_IDS})"
 bash scripts/02_train.sh
 echo "==> 3/5 Selecting best 10% + importance maps"
 bash scripts/03_select.sh
-echo "==> 4/5 Training CVAE on raw importance maps + det_reg baseline"
+echo "==> 4/5 Training CVAE on top-10% raw importance maps + det_reg baseline"
 GPU_IDS="${GPU_IDS%% *}" bash scripts/04_train_cvae.sh
 echo "==> 5/5 Evaluating generated masks"
 bash scripts/05_eval.sh
+if [ "$RUN_Z_OPT" = "1" ]; then
+  echo "==> Optimizing z through the frozen CVAE"
+  GPU_IDS="${GPU_IDS%% *}" bash scripts/07_optimize_z.sh
+fi
 echo
 echo "Pipeline finished."
 echo "  plots     : outputs/plots/"
 echo "  weights   : outputs/checkpoints/"
 echo "  cvae      : outputs/cvae/"
 echo "  eval      : outputs/eval/"
+echo "  z-opt     : RUN_Z_OPT=1 bash scripts/run_all.sh"
