@@ -1,8 +1,8 @@
 # Pattern-in-Sequence Experiment
 
 Independent sub-experiment of the root MA(k,s) project in this repo. It studies a
-single 4-bit pattern-detection task and whether a CVAE can learn the inductive bias
-(the pattern-dependent structure of the network) from the trained networks' structure.
+family of 4-bit pattern-detection tasks and whether a VAE can learn their shared,
+pattern-independent structural bias from trained networks.
 
 ## Task
 
@@ -95,6 +95,22 @@ Tunable: `EPOCHS` (default 80), `EVAL_STEPS` (2000), `EVAL_N_MASKS` (32),
 `EVAL_PATTERNS` ("0000 0110 1001 1111"), `GPU_IDS` ("0"). Reference numbers
 (FINDINGS.md): baseline VAE ≈ 0.79, random ≈ 0.89, ideal ≈ 0.93 downstream
 accuracy — a good variant should beat the 0.79 baseline.
+
+## Held-out task OOD evaluation
+
+The leakage-safe OOD protocol samples 12 patterns for meta-training and holds
+out the remaining four from the VAE and all learned baselines. Fresh masked
+MLPs are then trained and evaluated only on the held-out tasks. The headline
+comparison uses fixed-cardinality `random_exact32`, matching the CVAE masks.
+
+```bash
+SPLIT_SEED=42 GPU_ID=3 bash scripts/09_ood.sh
+```
+
+Five fixed random splits (`42..46`) give CVAE accuracy **0.9086** versus
+**0.8821** for `random_exact32`: OOD transfer gain **+0.0266 ± 0.0046** across
+splits, positive in all five. See `OOD_RESULTS.md` for the full protocol,
+per-split results, caveats, and aggregation command.
 
 ## Outputs
 

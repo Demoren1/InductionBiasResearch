@@ -29,21 +29,24 @@ def load_partial_results(path_pt: Path, path_json: Path) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Merge one evaluation run.")
     parser.add_argument("--num_gpus", type=int, default=1)
+    parser.add_argument("--out_suffix", type=str, default="")
     args = parser.parse_args()
     out_dir = config.EVAL_DIR
     merged = {}
     for gpu_id in range(args.num_gpus):
-        stem = out_dir / f"eval_results_gpu{gpu_id}"
+        stem = out_dir / f"eval_results_gpu{gpu_id}{args.out_suffix}"
         merged.update(load_partial_results(stem.with_suffix(".pt"),
                                            stem.with_suffix(".json")))
 
-    torch.save(merged, out_dir / "eval_results.pt")
-    with open(out_dir / "eval_results.json", "w") as fh:
+    out_pt = out_dir / f"eval_results{args.out_suffix}.pt"
+    out_json = out_dir / f"eval_results{args.out_suffix}.json"
+    torch.save(merged, out_pt)
+    with open(out_json, "w") as fh:
         json.dump(merged, fh, indent=2)
-    print(f"[merge] {len(merged)} entries -> {out_dir / 'eval_results.json'}")
+    print(f"[merge] {len(merged)} entries -> {out_json}")
 
     config.ensure_plot_dirs()
-    plot_results(merged)
+    plot_results(merged, args.out_suffix)
 
 
 if __name__ == "__main__":

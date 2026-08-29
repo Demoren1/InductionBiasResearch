@@ -28,6 +28,20 @@ def generate_masks(n_mlps: int, in_dim: int, hidden: int, p: float,
     return m
 
 
+def generate_fixed_sparsity_masks(n_masks: int, in_dim: int, hidden: int,
+                                  k_active: int, seed: int) -> torch.Tensor:
+    """Uniformly sample masks with exactly k_active active entries."""
+    total = in_dim * hidden
+    if not 0 <= k_active <= total:
+        raise ValueError("k_active must be between 0 and in_dim * hidden")
+    generator = torch.Generator().manual_seed(seed)
+    masks = torch.zeros(n_masks, total)
+    for index in range(n_masks):
+        active = torch.randperm(total, generator=generator)[:k_active]
+        masks[index, active] = 1.0
+    return masks.reshape(n_masks, in_dim, hidden)
+
+
 class BatchedMaskedMLP(nn.Module):
     """n_mlps MLPs trained simultaneously."""
 

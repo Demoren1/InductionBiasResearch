@@ -1,7 +1,7 @@
 """Evaluate how well CVAE-generated masks work on the pattern task.
 
 For every pattern, train masked MLPs (BCE) with masks from several sources:
-  random, ideal (Toeplitz), cvae, mean_imp, det_reg, top10%.
+  random, random_exact32, ideal (Toeplitz), cvae, mean_imp, det_reg, top10%.
 
 Report per-method val BCE and val accuracy.
 """
@@ -25,11 +25,14 @@ from data.generate import make_dataset, ideal_mask  # noqa: E402
 from evaluation.baselines import DetRegressor, MeanImportance  # noqa: E402
 from models.cvae import CVAE  # noqa: E402
 from models.mlp import (  # noqa: E402
-    BatchedMaskedMLP, generate_masks, get_train_batch,
+    BatchedMaskedMLP, generate_fixed_sparsity_masks, generate_masks,
+    get_train_batch,
 )
 
 OUT_DIR = config.EVAL_DIR
 BASE_METHODS = ["random", "ideal", "cvae", "mean_imp", "det_reg"]
+ALL_METHODS = ["random", "random_exact32", "ideal", "cvae", "mean_imp",
+               "det_reg", "top10%"]
 
 
 def build_parser():
@@ -41,21 +44,46 @@ def build_parser():
     p.add_argument("--gpu_id", type=int, default=None)
     p.add_argument("--num_gpus", type=int, default=1)
     p.add_argument("--patterns", type=str, nargs="+", default=None)
+    p.add_argument("--methods", nargs="+", choices=ALL_METHODS, default=None,
+                   help="methods to evaluate. Supplying this list does not add "
+                        "the held-out top10%% oracle implicitly")
     p.add_argument("--cvae_ckpt", type=Path, default=config.CVAE_DIR / "cvae_best.pt",
                    help="path to the CVAE state dict to evaluate")
     p.add_argument("--out_suffix", type=str, default="",
                    help="suffix appended to eval_results output filenames")
     p.add_argument("--seed", type=int, default=config.CVAE_SEED,
                    help="random seed for model initialization and VAE samples")
+    p.add_argument("--include_exact32", action="store_true",
+                   help="add a uniform fixed-cardinality random baseline")
+    p.add_argument("--prior_patterns", nargs="+", default=None,
+                   help="meta-train patterns pooled by mean_imp (default: all)")
+    p.add_argument("--train_patterns", nargs="+", default=None,
+                   help="meta-train patterns used for det_reg; checked against "
+                        "new-format checkpoint metadata when available")
+    p.add_argument("--importance_name", type=str, default="importance.pt",
+                   help="importance-map filename used by mean_imp")
+    p.add_argument("--top_frac", type=float, default=0.0,
+                   help="lowest-val-loss fraction per prior task for mean_imp "
+                        "(0 keeps all maps)")
+    p.add_argument("--det_reg_checkpoint", "--det_reg_ckpt",
+                   dest="det_reg_checkpoint", type=Path, default=None,
+                   help="det_reg checkpoint (default: <out_dir>/det_reg.pt)")
+    p.add_argument("--out_dir", type=Path, default=OUT_DIR,
+                   help="directory for evaluation results (and plots for an "
+                        "explicit non-default directory)")
     return p
 
 
 def masks_for_method(pat, method, n, cvae, device, mean_imp=None,
-                     det_reg=None, generator=None):
+                     det_reg=None, generator=None, exact_seed=0):
     k_active = config.K_ACTIVE
     if method == "random":
         return generate_masks(n, config.SEQ_LEN, config.H, config.P,
                                seed=int(pat, 2) * 1000 + 1).to(device)
+    if method == "random_exact32":
+        return generate_fixed_sparsity_masks(
+            n, config.SEQ_LEN, config.H, k_active,
+            seed=exact_seed + int(pat, 2) * 1000 + 2).to(device)
     if method == "ideal":
         m = ideal_mask().unsqueeze(0).expand(n, -1, -1)
         return m.to(device)
@@ -92,9 +120,29 @@ def train_and_eval(masks, pat, steps, batch_size, lr, x_val, y_val):
     return vl, va
 
 
+def _load_det_reg(checkpoint: Path, device, expected_patterns=None):
+    """Load both legacy state_dict-only and provenance-aware checkpoints."""
+    payload = torch.load(checkpoint, weights_only=True, map_location=device)
+    state_dict = payload.get("state_dict", payload)
+    stored_patterns = payload.get("patterns") if isinstance(payload, dict) else None
+    if expected_patterns is not None and stored_patterns is not None:
+        if list(expected_patterns) != list(stored_patterns):
+            raise ValueError(
+                "det_reg checkpoint provenance does not match --train_patterns: "
+                f"checkpoint={stored_patterns}, requested={list(expected_patterns)}")
+    elif expected_patterns is not None and stored_patterns is None:
+        print("[eval] warning: legacy det_reg checkpoint has no train-pattern "
+              "metadata; --train_patterns cannot be verified", flush=True)
+    model = DetRegressor()
+    model.load_state_dict(state_dict)
+    return model.to(device).eval()
+
+
 def main():
     args = build_parser().parse_args()
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if args.top_frac and not 0.0 < args.top_frac <= 1.0:
+        raise ValueError("--top_frac must be in (0, 1]")
+    args.out_dir.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(args.seed)
 
     patterns = args.patterns if args.patterns else list(config.PATTERNS)
@@ -107,17 +155,37 @@ def main():
         print(f"[eval] gpu {args.gpu_id}/{args.num_gpus} -> {patterns}", flush=True)
     suffix = f"{suffix}{args.out_suffix}"
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    cvae = CVAE(config.MASK_DIM, config.LATENT_DIM, config.CVAE_HIDDEN)
-    cvae.load_state_dict(torch.load(args.cvae_ckpt, weights_only=True,
-                                    map_location=device))
-    cvae.to(device).eval()
+    if args.methods is None:
+        methods = list(BASE_METHODS)
+        # Historic default: include the per-task selected-mask reference.
+        methods.append("top10%")
+        if args.include_exact32:
+            methods.append("random_exact32")
+    else:
+        methods = list(args.methods)
+        if args.include_exact32 and "random_exact32" not in methods:
+            methods.append("random_exact32")
 
-    mean_imp = MeanImportance()
-    det_reg = DetRegressor()
-    det_reg.load_state_dict(torch.load(OUT_DIR / "det_reg.pt", weights_only=True,
-                                       map_location=device))
-    det_reg.to(device).eval()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    cvae = None
+    if "cvae" in methods:
+        cvae = CVAE(config.MASK_DIM, config.LATENT_DIM, config.CVAE_HIDDEN)
+        cvae.load_state_dict(torch.load(args.cvae_ckpt, weights_only=True,
+                                        map_location=device))
+        cvae.to(device).eval()
+
+    mean_imp = None
+    if "mean_imp" in methods:
+        mean_imp = MeanImportance(args.prior_patterns,
+                                  importance_name=args.importance_name,
+                                  top_frac=args.top_frac or None)
+
+    det_reg = None
+    if "det_reg" in methods:
+        det_checkpoint = (args.out_dir / "det_reg.pt"
+                          if args.det_reg_checkpoint is None
+                          else args.det_reg_checkpoint)
+        det_reg = _load_det_reg(det_checkpoint, device, args.train_patterns)
 
     results = {}
     for pat in patterns:
@@ -128,22 +196,26 @@ def main():
                             seed=1000 + int(pat, 2), pos_fraction=config.POS_FRACTION)
         x_val, y_val = val["x"].to(device), val["y"].to(device)
 
-        methods = list(BASE_METHODS)
-        methods.append("top10%")
-
         methods_and_masks = []
         for method in methods:
             if method == "top10%":
                 path = config.pattern_dir(pat) / "best10pct.pt"
                 if not path.exists():
+                    if args.methods is not None:
+                        raise FileNotFoundError(
+                            f"explicit top10% oracle requested but missing: {path}")
                     continue
                 d = torch.load(path, weights_only=True)
                 masks = d["masks"][:args.n_masks].to(device)
             else:
                 masks = masks_for_method(pat, method, args.n_masks, cvae,
                                           device, mean_imp, det_reg,
-                                          sample_generator)
+                                          sample_generator,
+                                          exact_seed=args.seed * 1_000_000)
             methods_and_masks.append((method, masks))
+
+        if not methods_and_masks:
+            raise ValueError(f"no masks available for pattern {pat}")
 
         all_masks = torch.cat([m for _, m in methods_and_masks], dim=0)
         all_vl, all_va = train_and_eval(all_masks, pat, args.steps,
@@ -159,28 +231,44 @@ def main():
                      "min_bce": vl.min().item(),
                      "mean_acc": va.mean().item(),
                      "min_acc": va.min().item(),
-                     "sparsity": masks.float().mean().item()}
+                     "sparsity": masks.float().mean().item(),
+                     # Retain the paired per-mask observations for CIs and
+                     # uncertainty diagnostics; scalar fields above preserve
+                     # the legacy summary schema.
+                     "bce": vl.detach().cpu().tolist(),
+                     "acc": va.detach().cpu().tolist()}
             results[f"{pat}:{method}"] = stats
             print(f"[eval] {pat} {method:7s}: "
                   f"bce={stats['mean_bce']:.3e} "
                   f"acc={stats['mean_acc']:.4f} "
                   f"sp={stats['sparsity']:.3f}", flush=True)
 
-    out_pt = OUT_DIR / f"eval_results{suffix}.pt"
-    out_json = OUT_DIR / f"eval_results{suffix}.json"
+    out_pt = args.out_dir / f"eval_results{suffix}.pt"
+    out_json = args.out_dir / f"eval_results{suffix}.json"
     torch.save(results, out_pt)
     with open(out_json, "w") as f:
         json.dump(results, f, indent=2)
     print(f"[eval] saved -> {out_json}")
 
     if args.gpu_id is None:
-        plot_results(results)
+        plot_dir = args.out_dir if args.out_dir != OUT_DIR else None
+        plot_results(results, suffix=args.out_suffix, patterns=patterns,
+                     out_dir=plot_dir)
 
 
-def plot_results(results):
-    config.ensure_plot_dirs()
-    order = ["random", "mean_imp", "det_reg", "cvae", "top10%", "ideal"]
-    patterns = config.PATTERNS
+def plot_results(results, suffix="", patterns=None, out_dir=None):
+    """Plot an evaluation result set, including a held-out subset if supplied."""
+    if out_dir is None:
+        config.ensure_plot_dirs()
+        out_dir = config.PLOT_EVAL_DIR
+    else:
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+    order = ["random", "random_exact32", "mean_imp", "det_reg", "cvae",
+             "top10%", "ideal"]
+    patterns = list(config.PATTERNS if patterns is None else patterns)
+    order = [method for method in order
+             if any(f"{pat}:{method}" in results for pat in patterns)]
     n_methods = len(order)
     width = 0.8 / n_methods
 
@@ -206,7 +294,7 @@ def plot_results(results):
         ax.legend(fontsize=8)
         ax.grid(alpha=0.3, which="both")
         fig.tight_layout()
-        out = config.PLOT_EVAL_DIR / fname
+        out = out_dir / f"{Path(fname).stem}{suffix}.png"
         fig.savefig(out, dpi=130)
         plt.close(fig)
         print(f"[eval] plot -> {out}")

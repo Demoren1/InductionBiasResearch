@@ -147,7 +147,8 @@ def plot_reconstructions(model: CVAE, x, y, patterns, out_dir: Path,
                  "Bernoulli recon")
     fig.subplots_adjust(left=0.05, right=0.98, top=0.92, bottom=0.03,
                         wspace=0.05, hspace=0.35)
-    out = config.PLOT_CVAE_DIR / "cvae_reconstructions.png"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / "cvae_reconstructions.png"
     fig.savefig(out, dpi=130)
     plt.close(fig)
     return out
@@ -163,7 +164,8 @@ def plot_losses(train_loss: list, val_loss: list, out_dir: Path) -> Path:
     ax.legend()
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    out = config.PLOT_CVAE_DIR / "cvae_loss.png"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / "cvae_loss.png"
     fig.savefig(out, dpi=130)
     plt.close(fig)
     return out
@@ -211,7 +213,8 @@ def plot_condition_effect(model: CVAE, patterns, out_dir: Path) -> Path:
     fig.suptitle("Unconditional VAE z=0 prior-mode p-maps (maps must be "
                  "identical across patterns)")
     fig.tight_layout(rect=(0, 0, 1, 0.94))
-    out = config.PLOT_CVAE_DIR / "cvae_condition_effect.png"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / "cvae_condition_effect.png"
     fig.savefig(out, dpi=130)
     plt.close(fig)
     return out
@@ -233,7 +236,8 @@ def plot_samples(samples: dict, out_dir: Path) -> Path:
                 axes[r, c].set_ylabel(label, fontsize=8)
     fig.suptitle("Unconditional VAE-generated masks")
     fig.tight_layout(rect=(0, 0, 1, 0.94))
-    out = config.PLOT_CVAE_DIR / "cvae_generated.png"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / "cvae_generated.png"
     fig.savefig(out, dpi=130)
     plt.close(fig)
     return out
@@ -314,10 +318,12 @@ def do_train(args) -> None:
         model.load_state_dict(torch.load(out_dir / "cvae_best.pt",
                                          weights_only=True,
                                          map_location=device))
-        plot_losses(train_log, val_log, config.PLOT_CVAE_DIR)
-        plot_reconstructions(model, x, y, args.patterns, config.PLOT_CVAE_DIR,
+        plot_dir = (config.PLOT_CVAE_DIR if args.out_dir == config.CVAE_DIR
+                    else args.out_dir / "plots")
+        plot_losses(train_log, val_log, plot_dir)
+        plot_reconstructions(model, x, y, args.patterns, plot_dir,
                              vmax=x.max().item() if importance_mode else 1.0)
-        plot_condition_effect(model, config.PATTERNS, config.PLOT_CVAE_DIR)
+        plot_condition_effect(model, config.PATTERNS, plot_dir)
 
         meta = {
             "patterns": args.patterns,
@@ -341,9 +347,9 @@ def do_train(args) -> None:
         torch.save(meta, out_dir / "cvae_meta.pt")
         print(f"[cvae] best val loss {best_val:.4f}; saved "
               f"{out_dir / 'cvae_best.pt'}", flush=True)
-        print(f"[cvae] plots -> {config.PLOT_CVAE_DIR / 'cvae_loss.png'}, "
-              f"{config.PLOT_CVAE_DIR / 'cvae_reconstructions.png'}, "
-              f"{config.PLOT_CVAE_DIR / 'cvae_condition_effect.png'}",
+        print(f"[cvae] plots -> {plot_dir / 'cvae_loss.png'}, "
+              f"{plot_dir / 'cvae_reconstructions.png'}, "
+              f"{plot_dir / 'cvae_condition_effect.png'}",
               flush=True)
     except Exception as e:
         print(f"[cvae] FATAL: {e}", flush=True)
@@ -375,9 +381,11 @@ def do_sample(args) -> None:
         print(f"[cvae] sampled {pat}: sparsity={(m == 1).float().mean().item():.3f}",
               flush=True)
     torch.save(out, out_dir / "cvae_samples.pt")
-    plot_samples(out, config.PLOT_CVAE_DIR)
+    plot_dir = (config.PLOT_CVAE_DIR if args.out_dir == config.CVAE_DIR
+                else args.out_dir / "plots")
+    plot_samples(out, plot_dir)
     print(f"[cvae] samples -> {out_dir / 'cvae_samples.pt'}", flush=True)
-    print(f"[cvae] plot     -> {config.PLOT_CVAE_DIR / 'cvae_generated.png'}",
+    print(f"[cvae] plot     -> {plot_dir / 'cvae_generated.png'}",
           flush=True)
 
 

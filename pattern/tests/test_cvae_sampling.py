@@ -6,6 +6,7 @@ import torch
 
 import config
 from models.cvae import CVAE
+from models.mlp import generate_fixed_sparsity_masks
 
 
 class CVAESamplingTests(unittest.TestCase):
@@ -26,6 +27,11 @@ class CVAESamplingTests(unittest.TestCase):
                                        generator=torch.Generator().manual_seed(13))
         self.assertEqual(masks.shape, (7, config.MASK_DIM))
         self.assertTrue(torch.equal(masks.sum(dim=1), torch.full((7,), 11.0)))
+
+    def test_fixed_sparsity_random_masks_have_exact_cardinality(self) -> None:
+        masks = generate_fixed_sparsity_masks(64, 8, 8, 32, seed=23)
+        self.assertTrue(torch.equal(masks.sum(dim=(1, 2)), torch.full((64,), 32.0)))
+        self.assertGreater(torch.unique(masks.reshape(64, -1), dim=0).size(0), 1)
 
 
 if __name__ == "__main__":
