@@ -13,10 +13,10 @@
 выученного prior проверяется не качеством реконструкции, а качеством **новых
 MLP, обученных с нуля с этими масками на held-out задачах**.
 
-Важно: корневой [`README.md`](README.md) описывает более ранний соседний
+Важно: корневой [`README.md`](../README.md) описывает более ранний соседний
 эксперимент MA(k,s). Он концептуально связан с этой программой исследований,
 но не является реализацией `pattern` или `motif_pair`. Общая математическая
-формализация находится в [`paper/preliminary.tex`](paper/preliminary.tex).
+формализация находится в [`paper/preliminary.tex`](../paper/preliminary.tex).
 
 ## 1. Исследовательский вопрос
 
@@ -124,10 +124,10 @@ search.
 
 ## 3. Эксперимент `pattern`
 
-Основные источники: [`pattern/README.md`](pattern/README.md),
-[`pattern/RESULTS.md`](pattern/RESULTS.md),
-[`pattern/OOD_RESULTS.md`](pattern/OOD_RESULTS.md) и
-[`pattern/THEORETICAL_STATE.md`](pattern/THEORETICAL_STATE.md).
+Основные источники: [`pattern/README.md`](../pattern/README.md),
+[`pattern/RESULTS.md`](../pattern/RESULTS.md),
+[`pattern/OOD_RESULTS.md`](../pattern/OOD_RESULTS.md) и
+[`pattern/THEORETICAL_STATE.md`](../pattern/THEORETICAL_STATE.md).
 
 ### 3.1. Цель
 
@@ -154,8 +154,8 @@ pattern, но геометрия first-layer support одинакова для �
 выборку из всех `2^8` последовательностей. Train batches создаются заново во
 время обучения; validation data фиксированы seed.
 
-Реализация: [`pattern/data/generate.py`](pattern/data/generate.py), параметры:
-[`pattern/config.py`](pattern/config.py).
+Реализация: [`pattern/data/generate.py`](../pattern/data/generate.py), параметры:
+[`pattern/config.py`](../pattern/config.py).
 
 ### 3.3. Gold solution
 
@@ -401,8 +401,8 @@ E = mean_repeats(abs(W1 * M) * abs(W2)).
 
 ## 4. Эксперимент `motif_pair`
 
-Основные источники: [`motif_pair/README.md`](motif_pair/README.md) и
-[`motif_pair/OOD_RESULTS.md`](motif_pair/OOD_RESULTS.md).
+Основные источники: [`motif_pair/README.md`](../motif_pair/README.md) и
+[`motif_pair/OOD_RESULTS.md`](../motif_pair/OOD_RESULTS.md).
 
 ### 4.1. Зачем понадобился второй эксперимент
 

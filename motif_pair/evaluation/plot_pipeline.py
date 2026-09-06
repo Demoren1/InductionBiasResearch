@@ -54,6 +54,24 @@ def _task_gap(task: str) -> int:
     return config.parse_task(task).gap
 
 
+def _heldout_gaps(split: dict[str, Any]) -> tuple[int, ...]:
+    """Read held-out gap regimes, retaining compatibility with old manifests."""
+    declared = split.get("heldout_gaps")
+    if isinstance(declared, list) and all(isinstance(value, int) for value in declared):
+        return tuple(sorted(declared))
+    train = { _task_gap(str(task)) for task in split.get("train_tasks", []) }
+    test = { _task_gap(str(task)) for task in split.get("test_tasks", []) }
+    return tuple(sorted(test - train))
+
+
+def _mark_heldout_gaps(axis: plt.Axes, gaps: Iterable[int], *, alpha: float = .10) -> None:
+    """Shade categorical gap positions that were absent from meta-training."""
+    for gap in gaps:
+        if gap in config.GAPS:
+            position = config.GAPS.index(gap)
+            axis.axvspan(position - .48, position + .48, color="tab:red", alpha=alpha, zorder=0)
+
+
 def _read_json(path: Path) -> Any:
     with path.open() as handle:
         return json.load(handle)
@@ -130,6 +148,8 @@ def _plot_split(split_path: Path, plots_dir: Path, pdf: bool) -> list[str]:
     x = np.arange(len(config.GAPS))
     axes[0].bar(x - .19, train_counts, .38, label="meta-train")
     axes[0].bar(x + .19, test_counts, .38, label="held-out")
+    heldout = _heldout_gaps(split)
+    _mark_heldout_gaps(axes[0], heldout)
     axes[0].set(xticks=x, xticklabels=config.GAPS, xlabel="gap", ylabel="tasks", title="Task split by gap")
     axes[0].legend(frameon=False)
     axes[1].axis("off")
@@ -139,6 +159,9 @@ def _plot_split(split_path: Path, plots_dir: Path, pdf: bool) -> list[str]:
         f"unique (A, B) pairs: {len(train_pairs)} / {len(test_pairs)}",
         f"pair-disjoint: {pair_disjoint}",
         f"manifest pair_disjoint: {split.get('pair_disjoint', False)}",
+        f"split kind: {split.get('split_kind', 'pair_disjoint')}",
+        f"held-out gaps: {list(heldout) or 'none'}",
+        f"train gaps: {split.get('train_gaps', 'all')}",
         f"split seed: {split.get('split_seed', 'unknown')}",
     ]
     axes[1].text(.04, .92, "\n".join(lines), va="top", fontsize=11, family="monospace")
@@ -282,6 +305,7 @@ def _plot_importance(split_path: Path, ckpt_root: Path, plots_dir: Path, pdf: bo
         raise _stage_missing(f"missing split manifest: {split_path}")
     split = _read_json(split_path)
     tasks = _choose_by_gap([str(x) for x in split.get("train_tasks", [])], max_tasks)
+    heldout = _heldout_gaps(split)
     grouped: dict[int, list[np.ndarray]] = defaultdict(list)
     for task in tasks:
         path = ckpt_root / f"task_{task}" / importance_name
@@ -321,8 +345,9 @@ def _plot_importance(split_path: Path, ckpt_root: Path, plots_dir: Path, pdf: bo
                               vmin=0, vmax=1, cmap="magma")
             ax.set_title(f"gap {gap} (n={len(grouped[gap])})")
         else:
-            ax.text(.5, .5, "unavailable", ha="center", va="center")
-            ax.set_title(f"gap {gap}")
+            label = "held out" if gap in heldout else "unavailable"
+            ax.text(.5, .5, label, ha="center", va="center")
+            ax.set_title(f"gap {gap}" + (" (test)" if gap in heldout else ""))
         ax.set(xticks=(), yticks=())
     if image is not None:
         fig.colorbar(image, ax=axes, shrink=.78, label="mean normalized |W₁|")
@@ -532,10 +557,11 @@ def _align_to_gold(mask: torch.Tensor, gold: torch.Tensor) -> tuple[torch.Tensor
 def _load_generator(checkpoint_path: Path, device: torch.device):
     if not checkpoint_path.is_file():
         raise _stage_missing(f"missing generator checkpoint: {checkpoint_path}")
-    from models.cvae import CVAE
+    from models.cvae import CVAE, checkpoint_condition_encoding
     payload = torch.load(checkpoint_path, weights_only=True, map_location="cpu")
     model = CVAE(payload.get("mask_dim", config.MASK_DIM), payload.get("latent_dim", 32),
-                 payload.get("hidden", 256), payload.get("cond_dim", config.COND_DIM))
+                 payload.get("hidden", 256), payload.get("cond_dim", config.COND_DIM),
+                 condition_encoding=checkpoint_condition_encoding(payload))
     model.load_state_dict(payload["state_dict"])
     return model.to(device).eval(), payload
 
@@ -652,7 +678,8 @@ def _plot_generator_and_latent(split_path: Path, ckpt_root: Path, gen_dir: Path,
     if device_name not in {"cuda", "cpu"} or (device_name == "cuda" and not torch.cuda.is_available()):
         raise _stage_missing("generator/latent plots need CUDA, or an explicit --device cpu for plotting-only inference")
     try:
-        from models.cvae import canonicalize_hidden_columns, task_condition
+        from models.cvae import canonicalize_hidden_columns
+        from evaluation.baselines import interpolate_train_gap_mean
     except ImportError as error:  # pragma: no cover - only relevant to incomplete installs
         raise _stage_missing(f"cannot import CVAE plotting helpers: {error}") from error
     requested = torch.device(device_name)
@@ -680,7 +707,7 @@ def _plot_generator_and_latent(split_path: Path, ckpt_root: Path, gen_dir: Path,
     with torch.no_grad():
         canonical_maps = canonicalize_hidden_columns(maps.to(requested))
         x = canonical_maps.flatten(1)
-        c = task_condition(source_tasks, device=requested)
+        c = cvae.condition(source_tasks, device=requested)
         mu, _ = cvae.encode(x, c)
 
         n_diagnostic = 64
@@ -691,10 +718,17 @@ def _plot_generator_and_latent(split_path: Path, ckpt_root: Path, gen_dir: Path,
         vae_diagnostic = vae_diagnostic.reshape(len(tasks), n_diagnostic, config.SEQ_LEN, config.H)
         cvae_diagnostic = cvae_diagnostic.reshape(len(tasks), n_diagnostic, config.SEQ_LEN, config.H)
 
-        conditional = []
+        by_gap: dict[int, torch.Tensor] = {}
         source_gaps = torch.tensor([_task_gap(task) for task in source_tasks], device=requested)
+        for gap in torch.unique(source_gaps).tolist():
+            by_gap[int(gap)] = canonical_maps[source_gaps == gap].mean(dim=0)
+        conditional = []
         for gap in config.GAPS:
-            mean = canonical_maps[source_gaps == gap].mean(dim=0).flatten()
+            # In gap-held-out runs, an empty source group is expected.  Mirror
+            # the downstream train-only mean baseline rather than taking an
+            # empty-tensor mean (which would quietly propagate NaNs).
+            mean, _ = interpolate_train_gap_mean(by_gap, gap)
+            mean = mean.flatten()
             indices = mean.topk(config.K_ACTIVE).indices
             mask = torch.zeros_like(mean)
             mask[indices] = 1
@@ -715,7 +749,8 @@ def _plot_generator_and_latent(split_path: Path, ckpt_root: Path, gen_dir: Path,
     return outputs
 
 
-def _plot_final_eval(eval_dir: Path, plots_dir: Path, pdf: bool) -> list[str]:
+def _plot_final_eval(eval_dir: Path, plots_dir: Path, pdf: bool,
+                     heldout_gaps: tuple[int, ...] = ()) -> list[str]:
     summary_path = eval_dir / "summary.json"
     if not summary_path.is_file():
         raise _stage_missing(f"missing final summary: {summary_path}")
@@ -730,6 +765,8 @@ def _plot_final_eval(eval_dir: Path, plots_dir: Path, pdf: bool) -> list[str]:
         axis.bar(np.arange(len(names)), values)
         axis.set(xticks=np.arange(len(names)), xticklabels=names, ylabel="mean", title=title)
         axis.tick_params(axis="x", rotation=40)
+    if heldout_gaps:
+        fig.suptitle(f"Unseen-gap evaluation: held-out gaps {list(heldout_gaps)}", y=1.02, fontsize=12)
     outputs = _save(fig, "09_final_eval", plots_dir, pdf)
 
     results_path = eval_dir / "eval_results.json"
@@ -739,7 +776,7 @@ def _plot_final_eval(eval_dir: Path, plots_dir: Path, pdf: bool) -> list[str]:
     comparisons = [
         ("random_exact96", "CVAE − exact-96 random"),
         ("vae", "CVAE − VAE"),
-        ("cvae_wrong_gap", "CVAE − wrong-gap CVAE"),
+        ("cvae_wrong_gap", "CVAE − nearest-wrong CVAE"),
     ]
     available = [(rhs, label) for rhs, label in comparisons
                  if tasks and all("cvae" in row and rhs in row for row in tasks.values())]
@@ -766,6 +803,81 @@ def _plot_final_eval(eval_dir: Path, plots_dir: Path, pdf: bool) -> list[str]:
     axes[1].legend(frameon=False, fontsize=8)
     outputs.extend(_save(fig, "10_paired_ood_deltas", plots_dir, pdf))
     return outputs
+
+
+def _plot_gap_ood_generalization(split_path: Path, eval_dir: Path, plots_dir: Path) -> list[str]:
+    """Publication panel for performance at gap regimes absent from meta-training.
+
+    This intentionally consumes only final held-out evaluation results.  It
+    has no model-selection role and exports both raster and vector versions
+    even when the broader plotting run did not request PDFs.
+    """
+    if not split_path.is_file():
+        raise _stage_missing(f"missing split manifest: {split_path}")
+    split = _read_json(split_path)
+    heldout = _heldout_gaps(split)
+    if split.get("split_kind") != "gap_heldout" or not heldout:
+        raise _stage_missing("gap-OOD generalization panel requires a gap_heldout split")
+    results_path = eval_dir / "eval_results.json"
+    if not results_path.is_file():
+        raise _stage_missing(f"missing final evaluation results: {results_path}")
+    results = _read_json(results_path)
+    encoding = results.get("provenance", {}).get("condition_encoding")
+    if encoding != "scalar":
+        raise ValueError(
+            "gap-OOD generalization panel requires scalar-conditioned evaluation provenance"
+        )
+    tasks = results.get("tasks", {})
+    if not isinstance(tasks, dict) or not tasks:
+        raise ValueError("eval_results.json has no tasks")
+    grouped = {
+        gap: [row for task, row in tasks.items() if _task_gap(task) == gap]
+        for gap in heldout
+    }
+    if any(not rows for rows in grouped.values()):
+        raise ValueError("evaluation results do not cover every declared held-out gap")
+    preferred = ("cvae", "conditional_mean", "vae", "random_exact96", "cvae_wrong_gap", "random")
+    methods = [name for name in preferred if all(name in row for rows in grouped.values() for row in rows)]
+    if "cvae" not in methods:
+        raise ValueError("gap-OOD generalization panel needs CVAE results for every held-out task")
+    colors = {
+        "cvae": "tab:orange", "conditional_mean": "tab:green", "vae": "tab:blue",
+        "random_exact96": "0.40", "cvae_wrong_gap": "tab:red", "random": "0.65",
+    }
+    labels = {
+        "cvae": "CVAE", "conditional_mean": "train-only gap mean", "vae": "VAE",
+        "random_exact96": "exact-96 random", "cvae_wrong_gap": "nearest-wrong CVAE",
+        "random": "Bernoulli random",
+    }
+    fig, axes = plt.subplots(1, 2, figsize=(12.4, 4.4), constrained_layout=True)
+    gap_x = np.arange(len(heldout), dtype=float)
+    width = min(.72 / len(methods), .17)
+    offsets = (np.arange(len(methods)) - (len(methods) - 1) / 2) * width
+    metrics = (("mean_acc", "Held-out accuracy", "accuracy"),
+               ("mean_best_permutation_iou", "Structural recovery", "best-permutation IoU"))
+    for axis, (metric, title, ylabel) in zip(axes, metrics):
+        for index, method in enumerate(methods):
+            values = [[float(row[method][metric]) for row in grouped[gap]] for gap in heldout]
+            means = [float(np.mean(value)) for value in values]
+            # Population SD is descriptive: individual points reveal the
+            # actual task-level spread without implying a sampling model.
+            stds = [float(np.std(value)) for value in values]
+            position = gap_x + offsets[index]
+            axis.bar(position, means, width=width * .92, yerr=stds, capsize=2.5,
+                     color=colors[method], alpha=.86, label=labels[method])
+            for center, value in zip(position, values):
+                jitter = np.linspace(-width * .20, width * .20, len(value))
+                axis.scatter(np.full(len(value), center) + jitter, value, s=13,
+                             color=colors[method], alpha=.75, zorder=4, linewidths=0)
+        axis.set(xticks=gap_x, xticklabels=[f"gap {gap}\n(n={len(grouped[gap])})" for gap in heldout],
+                 xlabel="gap absent from meta-training", ylabel=ylabel, title=title)
+        axis.set_ylim(bottom=0)
+        axis.grid(axis="y", color="0.9", linewidth=.8)
+    axes[0].legend(frameon=False, fontsize=8, loc="best")
+    fig.suptitle("Gap-OOD generalization: scalar-conditioned priors at unseen structural regimes", fontsize=13)
+    # This panel is the manuscript-ready result: always preserve a PDF in
+    # addition to PNG, independently of the diagnostic --pdf switch.
+    return _save(fig, "11_gap_ood_generalization", plots_dir, pdf=True)
 
 
 def build_plots(run_root: Path, *, plots_dir: Path | None = None, split_path: Path | None = None,
@@ -797,6 +909,8 @@ def build_plots(run_root: Path, *, plots_dir: Path | None = None, split_path: Pa
                     "importance_name": importance_name, "top_frac": top_frac},
         "stages": {},
     }
+    split_for_annotations = _read_json(split_path) if split_path.is_file() else {}
+    heldout_for_annotations = _heldout_gaps(split_for_annotations)
     _add_stage(manifest, "split", lambda: _plot_split(split_path, plots_dir, pdf))
     _add_stage(manifest, "data", lambda: _plot_data(split_path, data_dir, plots_dir, pdf, max_tasks))
     _add_stage(manifest, "candidate_selection", lambda: _plot_candidates(split_path, ckpt_root, plots_dir, pdf))
@@ -812,7 +926,11 @@ def build_plots(run_root: Path, *, plots_dir: Path | None = None, split_path: Pa
         manifest["stages"]["generator_and_latent"] = {
             "status": "skipped", "reason": "disabled by --no-generator", "outputs": []
         }
-    _add_stage(manifest, "final_evaluation", lambda: _plot_final_eval(eval_dir, plots_dir, pdf))
+    _add_stage(manifest, "final_evaluation", lambda: _plot_final_eval(
+        eval_dir, plots_dir, pdf, heldout_for_annotations))
+    if split_for_annotations.get("split_kind") == "gap_heldout":
+        _add_stage(manifest, "gap_ood_generalization", lambda: _plot_gap_ood_generalization(
+            split_path, eval_dir, plots_dir))
     manifest_path = plots_dir / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     return manifest

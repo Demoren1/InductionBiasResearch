@@ -1,5 +1,8 @@
 # Pattern-in-Sequence Experiment
 
+Current results, including the separate length-32 interpolation study, are
+summarized in [the 8 September 2026 final report](../mds/FINAL_REPORT_2026-09-08.md).
+
 Independent sub-experiment of the root MA(k,s) project in this repo. It studies a
 family of 4-bit pattern-detection tasks and whether a VAE can learn their shared,
 pattern-independent structural bias from trained networks.
@@ -111,6 +114,14 @@ Five fixed random splits (`42..46`) give CVAE accuracy **0.9086** versus
 **0.8821** for `random_exact32`: OOD transfer gain **+0.0266 ± 0.0046** across
 splits, positive in all five. See `OOD_RESULTS.md` for the full protocol,
 per-split results, caveats, and aggregation command.
+
+## Two frozen VAE decoders: agreement-only latent search
+
+The experiment in [DECODER_AGREEMENT.md](DECODER_AGREEMENT.md) trains two VAE
+seeds on the same 12 meta-train patterns, freezes them, and optimizes independent
+latents to match top-32 masks modulo hidden-column permutations. Gold support
+and held-out labels are used only after search. The completed GPU run and
+numbers are in [RESULTS.md](outputs/decoder_agreement/seed_20260906/RESULTS.md).
 
 ## Outputs
 

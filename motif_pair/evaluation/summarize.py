@@ -63,6 +63,21 @@ def summarize(payload: dict) -> dict:
                 _paired(tasks, "cvae", rhs, "mean_best_permutation_iou"),
             ])
         out["paired_comparisons"] = comparisons
+    fidelity = {
+        task: row["cvae"].get("condition_fidelity")
+        for task, row in tasks.items()
+        if "cvae" in row and row["cvae"].get("condition_fidelity") is not None
+    }
+    if len(fidelity) == len(tasks):
+        margins = [row["strict_margin"] for row in fidelity.values()]
+        out["condition_fidelity"] = {
+            "definition": "correct-gap PIoU minus the best equally-near seen wrong-gap PIoU",
+            "mean_strict_margin": _mean(margins),
+            "std_strict_margin_across_tasks": _std(margins),
+            "positive_tasks": sum(value > 0 for value in margins),
+            "n_tasks": len(margins),
+            "per_task": fidelity,
+        }
     return out
 
 

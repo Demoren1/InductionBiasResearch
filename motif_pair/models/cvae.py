@@ -1,9 +1,10 @@
 """Conditional and unconditional VAEs for sparse first-layer masks.
 
-The conditional model receives only the task gap as an eight-way one-hot
-vector.  In particular, it never receives the two motifs, so OOD evaluation
-tests transfer of the gap-dependent structural rule rather than memorisation
-of task identities.
+The conditional model receives only the task gap.  Legacy runs encode it as
+an eight-way one-hot vector; gap-OOD runs use one normalized scalar so unseen
+gap values can be queried meaningfully.  The motifs are never passed to the
+generator, so evaluation targets transfer of the gap-dependent structural
+rule rather than memorisation of task identities.
 """
 
 from __future__ import annotations
@@ -95,14 +96,53 @@ def verify_generator_config(payload: dict, *, importance_name: str,
         )
 
 
-def task_condition(tasks, *, device=None) -> torch.Tensor:
-    """Return gap-only one-hot conditions for a task or batch of tasks."""
+def checkpoint_condition_encoding(payload: dict) -> str:
+    """Read a checkpoint's condition encoding, handling legacy artifacts.
+
+    A missing field is safe only for historical one-hot checkpoints (or an
+    unconditional VAE).  A nonstandard dimension without metadata is
+    ambiguous and must be rejected instead of silently selecting a global
+    default.
+    """
+    if not isinstance(payload, dict):
+        raise TypeError("checkpoint payload must be a dict")
+    explicit = payload.get("condition_encoding")
+    cond_dim = payload.get("cond_dim")
+    if explicit is not None:
+        encoding = config.normalize_condition_encoding(explicit)
+        if cond_dim is not None and int(cond_dim) != config.condition_dim(encoding):
+            raise ValueError(
+                f"checkpoint condition mismatch: encoding={encoding!r} has "
+                f"dim {config.condition_dim(encoding)}, cond_dim={cond_dim!r}"
+            )
+        return encoding
+    if cond_dim is not None and int(cond_dim) == 0:
+        return config.CONDITION_ENCODING_NONE
+    if cond_dim is None or int(cond_dim) == config.condition_dim(config.CONDITION_ENCODING_ONE_HOT):
+        return config.CONDITION_ENCODING_ONE_HOT
+    raise ValueError(
+        "checkpoint has a non-legacy cond_dim but no condition_encoding metadata; "
+        "its representation cannot be selected safely"
+    )
+
+
+def checkpoint_condition_metadata(payload: dict) -> dict[str, object]:
+    """Return canonical condition metadata for a loaded checkpoint payload."""
+    return config.condition_metadata(checkpoint_condition_encoding(payload))
+
+
+def task_condition(tasks, *, condition_encoding: str | None = None, device=None) -> torch.Tensor:
+    """Return gap-only conditions for a task or batch using an explicit encoding."""
+    encoding = config.normalize_condition_encoding(condition_encoding)
+    expected_dim = config.condition_dim(encoding)
     if isinstance(tasks, torch.Tensor):
         x = tasks.to(device) if device is not None else tasks
-        if x.ndim == 2 and x.shape[-1] == _config("COND_DIM", 8):
+        if x.ndim == 2 and x.shape[-1] == expected_dim:
             return x.float()
-        if x.ndim == 1 and x.numel() == _config("COND_DIM", 8):
+        if x.ndim == 1 and x.numel() == expected_dim:
             return x.float().unsqueeze(0)
+        # Keep the legacy convenience path: integer tensor gap(s) are treated
+        # as task specifications below rather than precomputed conditions.
         tasks = x.detach().cpu().tolist()
     # Experiment tasks are normally canonical strings or ``config.Task``
     # objects; only a *list* denotes a batch.  Do not inspect the concrete
@@ -111,10 +151,12 @@ def task_condition(tasks, *, device=None) -> torch.Tensor:
     if not isinstance(tasks, list):
         tasks = [tasks]
     if hasattr(config, "task_to_condition"):
-        rows = [torch.as_tensor(config.task_to_condition(t), dtype=torch.float32)
+        rows = [torch.as_tensor(config.task_to_condition(t, encoding=encoding), dtype=torch.float32)
                 for t in tasks]
         result = torch.stack(rows)
     else:  # Kept for small standalone smoke tests.
+        if encoding != "one_hot":
+            raise ValueError("standalone task conditions only support legacy one_hot encoding")
         gaps = list(_config("GAPS", range(3, 11)))
         values = []
         for task in tasks:
@@ -125,15 +167,28 @@ def task_condition(tasks, *, device=None) -> torch.Tensor:
 
 
 class CVAE(nn.Module):
-    """Bernoulli-mask VAE, conditional on a gap one-hot when ``cond_dim > 0``."""
+    """Bernoulli-mask VAE with an explicit gap-condition representation."""
 
     def __init__(self, mask_dim: int | None = None, latent_dim: int | None = None,
-                 hidden: int | None = None, cond_dim: int | None = None):
+                 hidden: int | None = None, cond_dim: int | None = None, *,
+                 condition_encoding: str | None = None):
         super().__init__()
         self.mask_dim = int(mask_dim if mask_dim is not None else _config("MASK_DIM", 256))
         self.latent_dim = int(latent_dim if latent_dim is not None else _config("LATENT_DIM", 32))
         self.hidden = int(hidden if hidden is not None else _config("CVAE_HIDDEN", 256))
-        self.cond_dim = int(cond_dim if cond_dim is not None else _config("COND_DIM", 8))
+        # ``CVAE(..., cond_dim=0)`` is a public legacy VAE construction.  In
+        # every other unannotated case retain the historical one-hot behavior.
+        inferred_encoding = (config.CONDITION_ENCODING_NONE
+                             if cond_dim == 0 and condition_encoding is None
+                             else condition_encoding)
+        self.condition_encoding = config.normalize_condition_encoding(inferred_encoding)
+        expected_cond_dim = config.condition_dim(self.condition_encoding)
+        self.cond_dim = int(expected_cond_dim if cond_dim is None else cond_dim)
+        if self.cond_dim != expected_cond_dim:
+            raise ValueError(
+                f"condition encoding {self.condition_encoding!r} requires cond_dim "
+                f"{expected_cond_dim}, got {self.cond_dim}"
+            )
         self.encoder = nn.Sequential(
             nn.Linear(self.mask_dim + self.cond_dim, self.hidden), nn.ReLU(),
             nn.Linear(self.hidden, self.hidden), nn.ReLU(),
@@ -155,7 +210,7 @@ class CVAE(nn.Module):
                 n = len(tasks) if isinstance(tasks, (list, tuple)) else 1
                 dev = device
             return torch.zeros(n, 0, device=dev)
-        c = task_condition(tasks, device=device)
+        c = task_condition(tasks, condition_encoding=self.condition_encoding, device=device)
         if c.shape[-1] != self.cond_dim:
             raise ValueError(f"condition dim {c.shape[-1]} != model cond_dim {self.cond_dim}")
         return c
@@ -302,13 +357,15 @@ def load_top_importance(tasks: Iterable, ckpt_root: Path | None = None,
                         importance_name: str = "importance.pt", top_frac: float = .1,
                         device: torch.device | str = "cpu", *,
                         split_path: Path | None = None,
-                        expected_provenance: dict | None = None):
+                        expected_provenance: dict | None = None,
+                        condition_encoding: str | None = None):
     """Load continuous raw importance maps for explicitly supplied tasks.
 
     The default artifact is ``importance.pt``.  ``top_frac`` selects models by
     their source validation BCE but leaves the selected maps continuous; no
     binary-mask conversion happens on this training path.
     """
+    condition_encoding = config.normalize_condition_encoding(condition_encoding)
     if split_path is not None and expected_provenance is not None:
         raise ValueError("pass only one of split_path or expected_provenance")
     if split_path is not None:
@@ -348,9 +405,11 @@ def load_top_importance(tasks: Iterable, ckpt_root: Path | None = None,
             maps.reshape(len(maps), _config("SEQ_LEN", 16), _config("H", 16))
         ).flatten(1)
         xs.append(maps)
-        cs.append(task_condition([task], device=maps.device).expand(len(maps), -1))
+        cs.append(task_condition([task], condition_encoding=condition_encoding,
+                                 device=maps.device).expand(len(maps), -1))
         provenance.append({"task": expected_task,
                            "source": str(path), "n_selected": len(maps),
+                           "condition_encoding": condition_encoding,
                            "hidden_columns_canonicalized": True,
                            **({key: payload[key] for key in ("split_path", "split_sha256", "split_train_tasks")}
                               if isinstance(payload, dict) and expected_provenance is not None else {})})

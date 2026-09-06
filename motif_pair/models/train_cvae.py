@@ -52,6 +52,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--tasks", nargs="+", required=True, help="meta-train task ids only")
     p.add_argument("--out_dir", type=Path, required=True)
     p.add_argument("--variant", choices=("cvae", "vae"), default="cvae")
+    p.add_argument("--condition-encoding", "--condition_encoding",
+                   dest="condition_encoding", default=_value("DEFAULT_CONDITION_ENCODING", "one_hot"),
+                   choices=("one_hot", "scalar"),
+                   help="gap representation for the CVAE; the VAE ablation is always unconditioned")
     p.add_argument("--epochs", type=int, default=_value("CVAE_EPOCHS", 80))
     p.add_argument("--batch_size", type=int, default=_value("CVAE_BATCH_SIZE", 256))
     p.add_argument("--lr", type=float, default=_value("CVAE_LR", 1e-3))
@@ -59,6 +63,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--latent_dim", type=int, default=_value("LATENT_DIM", 32))
     p.add_argument("--hidden", type=int, default=_value("CVAE_HIDDEN", 256))
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--loader-seed", "--loader_seed", dest="loader_seed", type=int,
+                   help="internal map split and batch-order seed; defaults to --seed")
     p.add_argument("--top_frac", type=float, default=.1,
                    help="lowest-BCE fraction selected from continuous importance.pt maps")
     p.add_argument("--importance_name", default="importance.pt",
@@ -217,6 +223,8 @@ def _checkpoint_payload(model: CVAE, args, tasks: list[str], sources: list[dict]
         "latent_dim": model.latent_dim,
         "hidden": model.hidden,
         "cond_dim": model.cond_dim,
+        **config.condition_metadata(model.condition_encoding),
+        "requested_condition_encoding": args.condition_encoding,
         "beta": args.beta,
         "top_frac": args.top_frac,
         "importance_name": args.importance_name,
@@ -224,6 +232,8 @@ def _checkpoint_payload(model: CVAE, args, tasks: list[str], sources: list[dict]
                         for task in tasks],
         "sources": sources,
         "seed": args.seed,
+        "model_seed": args.seed,
+        "loader_seed": args.seed if getattr(args, "loader_seed", None) is None else args.loader_seed,
         "selected_epoch": epoch,
         "internal_train_metrics": train_metrics,
         "internal_val_metrics": val_metrics,
@@ -247,6 +257,14 @@ def run_training(args) -> dict[str, Any]:
     if not 0 < args.tail_fraction <= 1 or args.tail_min_epochs < 1:
         raise ValueError("--tail_fraction must be in (0, 1] and --tail_min_epochs positive")
     device = require_cuda(args.device)
+    requested_encoding = config.normalize_condition_encoding(
+        getattr(args, "condition_encoding", _value("DEFAULT_CONDITION_ENCODING", "one_hot")))
+    # The VAE ablation deliberately has no task condition, even during a
+    # scalar-conditioned CVAE run.  Persist both representations so copied
+    # aggregate checkpoints cannot be mistaken for the wrong model class.
+    effective_encoding = (requested_encoding if args.variant == "cvae"
+                          else config.CONDITION_ENCODING_NONE)
+    args.condition_encoding = requested_encoding
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -260,11 +278,14 @@ def run_training(args) -> dict[str, Any]:
         raise ValueError("--tasks must exactly equal --split train_tasks (including order)")
     x, c, sources = load_top_importance(tasks, args.ckpt_root, args.importance_name,
                                         args.top_frac, device=device,
-                                        expected_provenance=split_provenance)
-    train_loader, val_loader = make_loaders(x, c, args.batch_size, args.seed,
+                                        expected_provenance=split_provenance,
+                                        condition_encoding=effective_encoding)
+    loader_seed = args.seed if getattr(args, "loader_seed", None) is None else args.loader_seed
+    train_loader, val_loader = make_loaders(x, c, args.batch_size, loader_seed,
                                             val_fraction=args.val_fraction)
-    cond_dim = _value("COND_DIM", 8) if args.variant == "cvae" else 0
-    model = CVAE(_value("MASK_DIM", 256), args.latent_dim, args.hidden, cond_dim).to(device)
+    cond_dim = config.condition_dim(effective_encoding)
+    model = CVAE(_value("MASK_DIM", 256), args.latent_dim, args.hidden, cond_dim,
+                 condition_encoding=effective_encoding).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     # These are generated artifacts owned by this exact run directory.  Remove
@@ -326,6 +347,10 @@ def run_training(args) -> dict[str, Any]:
         (args.out_dir / "best_tail.pt").unlink(missing_ok=True)
     summary = {
         "variant": args.variant,
+        "model_seed": args.seed,
+        "loader_seed": loader_seed,
+        **config.condition_metadata(model.condition_encoding),
+        "requested_condition_encoding": requested_encoding,
         "beta": args.beta,
         "importance_name": args.importance_name,
         "top_frac": args.top_frac,

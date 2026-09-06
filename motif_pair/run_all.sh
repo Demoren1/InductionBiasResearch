@@ -20,6 +20,14 @@ RUN_ROOT="${RUN_ROOT:-outputs/ood/pair_disjoint_seed_${SPLIT_SEED}}"
 SPLIT_JSON="${SPLIT_JSON:-$RUN_ROOT/split.json}"
 CKPT_ROOT="${CKPT_ROOT:-$RUN_ROOT/checkpoints}"
 DATA_DIR="${DATA_DIR:-$RUN_ROOT/data}"
+SPLIT_KIND="${SPLIT_KIND:-pair_disjoint}"
+HELDOUT_GAPS="${HELDOUT_GAPS:-}"
+PAIR_POLICY="${PAIR_POLICY:-shared}"
+CONDITION_ENCODING="${CONDITION_ENCODING:-one_hot}"
+if [[ "$SPLIT_KIND" == "gap_heldout" && "$CONDITION_ENCODING" != "scalar" ]]; then
+  echo "SPLIT_KIND=gap_heldout requires CONDITION_ENCODING=scalar" >&2
+  exit 2
+fi
 
 # Physical GPU ids. Candidate banks and beta candidates use all listed GPUs;
 # lighter CUDA stages use the first id unless overridden.
@@ -50,7 +58,8 @@ IMPORTANCE_NAME="${IMPORTANCE_NAME:-importance.pt}"
 BETAS="${BETAS:-1.0 0.3 0.1 0.03 0.01 0.003 0.001 0.0003}"
 read -r -a BETA_ARRAY <<< "$BETAS"
 
-export SPLIT_SEED SPLIT_JSON CKPT_ROOT DATA_DIR GPU_IDS DATA_GPU POSTPROC_GPU EVAL_GPU
+export RUN_ROOT SPLIT_SEED SPLIT_JSON CKPT_ROOT DATA_DIR GPU_IDS DATA_GPU POSTPROC_GPU EVAL_GPU
+export SPLIT_KIND HELDOUT_GAPS PAIR_POLICY CONDITION_ENCODING
 export N_MLPS_PER_TASK TRAIN_STEPS TOP_FRAC IMPORTANCE_NAME
 mkdir -p "$RUN_ROOT"
 
@@ -62,8 +71,38 @@ plot_available() {
     bash scripts/06_plot.sh
 }
 
-echo "[1/6] Pair-disjoint split, datasets, and shortcut audit on GPU $DATA_GPU"
+echo "[1/6] $SPLIT_KIND split, datasets, and shortcut audit on GPU $DATA_GPU"
 bash scripts/01_generate_data.sh
+python - "$RUN_ROOT/experiment.json" "$SPLIT_JSON" <<'PY'
+import hashlib
+import json
+import os
+from pathlib import Path
+
+import config
+
+out = Path(__import__("sys").argv[1])
+split_path = Path(__import__("sys").argv[2]).resolve()
+split = json.loads(split_path.read_text(encoding="utf-8"))
+manifest = {
+    "experiment": "motif_pair_gap_ood" if split.get("split_kind") == "gap_heldout" else "motif_pair_ood",
+    "split_path": str(split_path),
+    "split_sha256": hashlib.sha256(split_path.read_bytes()).hexdigest(),
+    "split_kind": split.get("split_kind", "pair_disjoint"),
+    "split_seed": split.get("split_seed"),
+    "heldout_gaps": split.get("heldout_gaps", []),
+    "train_gaps": split.get("train_gaps", list(config.GAPS)),
+    "pair_policy": split.get("pair_policy", "disjoint"),
+    **config.condition_metadata(os.environ["CONDITION_ENCODING"]),
+}
+out.parent.mkdir(parents=True, exist_ok=True)
+out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+print(f"experiment manifest -> {out}")
+PY
+if [[ "${PLOT_GAP_OOD_DESIGN:-0}" == "1" ]]; then
+  python evaluation/plot_gap_ood_design.py --split "$SPLIT_JSON" \
+    --out-stem "$RUN_ROOT/plots/00_gap_ood_design"
+fi
 plot_available
 
 echo "[2/6] Candidate MLP banks on GPUs: $GPU_IDS"
@@ -93,6 +132,7 @@ python models/sweep_beta.py \
   --epochs "$CVAE_EPOCHS" \
   --top_frac "$TOP_FRAC" \
   --importance_name "$IMPORTANCE_NAME" \
+  --condition-encoding "$CONDITION_ENCODING" \
   --split "$SPLIT_JSON" \
   --ckpt_root "$CKPT_ROOT"
 plot_available

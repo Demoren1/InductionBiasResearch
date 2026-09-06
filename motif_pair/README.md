@@ -1,5 +1,8 @@
 # Circular Motif-Pair OOD Experiment
 
+Current results and the boundaries of the claims are summarized in
+[the 8 September 2026 final report](../mds/FINAL_REPORT_2026-09-08.md).
+
 This experiment tests whether structural information learned from successful
 networks transfers when the useful support is task-dependent.
 
@@ -17,6 +20,17 @@ support. Train and test are globally disjoint in the ordered motif pair
 `(A,B)`, while every motif role and every gap remains covered in meta-train.
 Thus the claim under test is compositional OOD for unseen motif pairs at seen
 structural regimes, not extrapolation to unseen gaps.
+
+The new primary unseen-structure protocol instead holds out complete gap
+values, uses a normalized scalar condition, and keeps the same ordered motif
+pairs on both sides of the split to isolate the gap axis.  Its design,
+commands, provenance, and output layout are documented in
+[`GAP_OOD.md`](GAP_OOD.md).  The original one-hot pipeline remains available
+as the seen-gap transfer control described below.
+
+The frozen scalar-CVAE oracle reachability experiment (2026-09-06), including
+seen/held-out gaps and latent radii 8/16, is recorded in
+[`PROGRESS_2026-09-06_MOTIF_ORACLE_IDEAL.md`](../mds/PROGRESS_2026-09-06_MOTIF_ORACLE_IDEAL.md).
 
 ## Task
 
@@ -117,7 +131,8 @@ is positive single-split evidence, not yet a multi-seed confirmation. See
 
 ## Interpretation boundary
 
-The support depends on gap but not motif identity. A positive result shows
-that a conditional generator can select a shared gap-specific structural prior
-for unseen motif-pair tasks. A separate harder experiment must hold out entire
-gap values and use a condition encoding suitable for interpolation.
+The support depends on gap but not motif identity. The existing numerical
+result therefore shows transfer to unseen motif pairs at seen structural
+regimes only. The scalar-conditioned experiment in [`GAP_OOD.md`](GAP_OOD.md)
+is the separate test of interpolation/extrapolation to entirely unseen gap
+values; it must not inherit the result numbers reported above.

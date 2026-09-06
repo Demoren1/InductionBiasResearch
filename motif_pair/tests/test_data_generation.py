@@ -90,3 +90,19 @@ def test_generate_data_writes_split_artifacts_to_explicit_data_dir(tmp_path):
     assert val["task"] == task
     assert val["split_sha256"] == hashlib.sha256(split.read_bytes()).hexdigest()
     assert val["split_train_tasks"] == [task]
+
+
+def test_generate_data_persists_scalar_condition_metadata(tmp_path):
+    split = tmp_path / "split.json"
+    split.write_text('{"train_tasks": ["' + TASK.id + '"], "test_tasks": []}')
+    data_dir = tmp_path / "scalar_data"
+
+    generate_data(split, n_val=16, device="cpu", data_dir=data_dir,
+                  condition_encoding="scalar")
+
+    val = torch.load(data_dir / f"val_{TASK.id}.pt", weights_only=True)
+    assert val["condition_encoding"] == "scalar"
+    assert val["condition_gap_min"] == min(config.GAPS)
+    assert val["condition_gap_max"] == max(config.GAPS)
+    assert val["task_condition"].shape == (1,)
+    assert val["task_condition"].item() == 0.0

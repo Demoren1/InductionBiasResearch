@@ -11,6 +11,7 @@ SEED="${CVAE_SEED:-42}"
 TOP_FRAC="${TOP_FRAC:-0.1}"
 IMPORTANCE_NAME="${IMPORTANCE_NAME:-importance.pt}"
 CKPT_ROOT="${CKPT_ROOT:-outputs/checkpoints}"
+CONDITION_ENCODING="${CONDITION_ENCODING:-one_hot}"
 GEN_GPU="${GEN_GPU:-${GPU_ID:-0}}"
 export CUDA_VISIBLE_DEVICES="$GEN_GPU"
 
@@ -25,7 +26,9 @@ for task in "${TRAIN_TASKS[@]}"; do
 done
 python models/train_cvae.py --tasks "${TRAIN_TASKS[@]}" --out_dir "$OUT_ROOT/cvae" \
   --split "$SPLIT_JSON" --variant cvae --epochs "$EPOCHS" --beta "$BETA" --top_frac "$TOP_FRAC" \
-  --importance_name "$IMPORTANCE_NAME" --seed "$SEED" --device cuda --ckpt_root "$CKPT_ROOT"
+  --importance_name "$IMPORTANCE_NAME" --seed "$SEED" --device cuda --ckpt_root "$CKPT_ROOT" \
+  --condition-encoding "$CONDITION_ENCODING"
 python models/train_cvae.py --tasks "${TRAIN_TASKS[@]}" --out_dir "$OUT_ROOT/vae" \
   --split "$SPLIT_JSON" --variant vae --epochs "$EPOCHS" --beta "$BETA" --top_frac "$TOP_FRAC" \
-  --importance_name "$IMPORTANCE_NAME" --seed "$SEED" --device cuda --ckpt_root "$CKPT_ROOT"
+  --importance_name "$IMPORTANCE_NAME" --seed "$SEED" --device cuda --ckpt_root "$CKPT_ROOT" \
+  --condition-encoding "$CONDITION_ENCODING"

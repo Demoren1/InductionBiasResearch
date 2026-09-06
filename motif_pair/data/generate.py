@@ -384,7 +384,8 @@ def _cpu_artifact(value: Any) -> Any:
 
 
 def generate_data(split_path: Path, n_val: int = config.N_VAL_SAMPLES,
-                  device: str | None = None, data_dir: Path | None = None) -> None:
+                  device: str | None = None, data_dir: Path | None = None,
+                  condition_encoding: str | None = None) -> None:
     """Persist exhaustive banks and fixed validation sets for a split manifest.
 
     ``data_dir`` is deliberately an explicit persistence boundary.  A single
@@ -395,6 +396,7 @@ def generate_data(split_path: Path, n_val: int = config.N_VAL_SAMPLES,
     """
     if device is not None:
         configure_compute_device(device)
+    condition_encoding = config.normalize_condition_encoding(condition_encoding)
     payload = json.loads(split_path.read_text())
     task_ids = payload.get("train_tasks", []) + payload.get("test_tasks", [])
     if not task_ids:
@@ -407,13 +409,20 @@ def generate_data(split_path: Path, n_val: int = config.N_VAL_SAMPLES,
         "split_path": str(split_path.resolve()),
         "split_sha256": hashlib.sha256(split_path.read_bytes()).hexdigest(),
         "split_train_tasks": list(payload.get("train_tasks", [])),
+        **config.condition_metadata(condition_encoding),
     }
     for index, task_id in enumerate(task_ids):
         task = config.parse_task(task_id)
-        bank = make_task_bank(task)
+        bank = {
+            **make_task_bank(task),
+            "task_condition": config.task_to_condition(task, encoding=condition_encoding),
+        }
         torch.save(_cpu_artifact({**bank, **split_provenance}),
                    artifact_dir / f"bank_{task.id}.pt")
-        val = make_dataset(task, n_samples=n_val, seed=20_000 + index)
+        val = {
+            **make_dataset(task, n_samples=n_val, seed=20_000 + index),
+            "task_condition": config.task_to_condition(task, encoding=condition_encoding),
+        }
         torch.save(_cpu_artifact({**val, **split_provenance}),
                    artifact_dir / f"val_{task.id}.pt")
         print(f"[data] {task.id}: bank={len(bank['y'])} val={len(val['y'])}")
@@ -426,8 +435,12 @@ def main() -> None:
                         help="directory for split-specific bank_*.pt and val_*.pt artifacts")
     parser.add_argument("--n-val", type=int, default=config.N_VAL_SAMPLES)
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
+    parser.add_argument("--condition-encoding", choices=("one_hot", "scalar"),
+                        default=config.DEFAULT_CONDITION_ENCODING,
+                        help="condition metadata stored with split-specific artifacts")
     args = parser.parse_args()
-    generate_data(args.split, n_val=args.n_val, device=args.device, data_dir=args.data_dir)
+    generate_data(args.split, n_val=args.n_val, device=args.device, data_dir=args.data_dir,
+                  condition_encoding=args.condition_encoding)
 
 
 if __name__ == "__main__":

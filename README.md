@@ -1,5 +1,21 @@
 # Masked MLP + CVAE: inductive bias discovery on MA(k, s)
 
+## Current experiment index
+
+The consolidated status as of 8 September 2026 is in
+[the final research report](mds/FINAL_REPORT_2026-09-08.md). The active
+subprojects are documented separately:
+
+- [`pattern`](pattern/README.md): local support from mask-CVAE, decoder
+  agreement, and length-32 interpolation;
+- [`motif_pair`](motif_pair/README.md): gap-dependent circular support;
+- [`meta_pattern`](meta_pattern/README.md): direct meta-learning of full
+  parameter bases \(U\).
+
+The remainder of this README is the historical MA(k, s) experiment. Its
+results remain useful context, but they are not the current `pattern`,
+`motif_pair`, or `meta_pattern` protocols.
+
 ## Overview
 
 Train 10,000 sparse MLPs (20% active first-layer entries) per (kernel, offset)

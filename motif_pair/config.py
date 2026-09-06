@@ -50,8 +50,15 @@ CVAE_BETA = 0.1
 EVAL_STEPS = 1_000
 
 # The structural oracle depends only on separation, not motif identities.
-# Conditioning on a gap one-hot makes that intended invariance explicit.
-COND_DIM = len(GAPS)
+# ``one_hot`` is deliberately the default: it is the representation used by
+# existing artifacts and checkpoints.  New gap-OOD runs select ``scalar``
+# explicitly, so a checkpoint records a representation rather than inheriting
+# a mutable process-wide default.
+CONDITION_ENCODING_ONE_HOT = "one_hot"
+CONDITION_ENCODING_SCALAR = "scalar"
+CONDITION_ENCODING_NONE = "none"
+DEFAULT_CONDITION_ENCODING = CONDITION_ENCODING_ONE_HOT
+COND_DIM = len(GAPS)  # Legacy one-hot dimension; prefer ``condition_dim`` in new code.
 
 ROOT = Path(__file__).resolve().parent
 OUTPUTS = ROOT / "outputs"
@@ -126,14 +133,78 @@ def all_tasks() -> tuple[Task, ...]:
 ALL_TASKS = all_tasks()
 
 
-def task_to_condition(task: Task | str):
-    """Encode only the structural task variable: a gap one-hot tensor."""
+def normalize_condition_encoding(encoding: str | None = None) -> str:
+    """Return a validated, canonical condition-encoding name.
+
+    ``None`` intentionally means the legacy one-hot encoding.  New run
+    configuration should pass a concrete encoding and persist
+    :func:`condition_metadata` in its checkpoint.
+    """
+    value = DEFAULT_CONDITION_ENCODING if encoding is None else encoding
+    if not isinstance(value, str):
+        raise TypeError("condition encoding must be a string or None")
+    value = value.lower()
+    aliases = {
+        "onehot": CONDITION_ENCODING_ONE_HOT,
+        "scalar_normalized_gap": CONDITION_ENCODING_SCALAR,
+    }
+    value = aliases.get(value, value)
+    if value not in {
+        CONDITION_ENCODING_ONE_HOT,
+        CONDITION_ENCODING_SCALAR,
+        CONDITION_ENCODING_NONE,
+    }:
+        raise ValueError(
+            f"unknown condition encoding {encoding!r}; expected one of "
+            f"{(CONDITION_ENCODING_ONE_HOT, CONDITION_ENCODING_SCALAR, CONDITION_ENCODING_NONE)}"
+        )
+    return value
+
+
+def condition_dim(encoding: str | None = None) -> int:
+    """Dimension of a canonical gap-condition representation."""
+    encoding = normalize_condition_encoding(encoding)
+    if encoding == CONDITION_ENCODING_ONE_HOT:
+        return len(GAPS)
+    if encoding == CONDITION_ENCODING_SCALAR:
+        return 1
+    return 0
+
+
+def condition_metadata(encoding: str | None = None) -> dict[str, object]:
+    """Stable checkpoint metadata describing a condition representation."""
+    encoding = normalize_condition_encoding(encoding)
+    metadata: dict[str, object] = {"condition_encoding": encoding}
+    if encoding == CONDITION_ENCODING_SCALAR:
+        metadata.update({
+            "condition_scalar_normalization": "(gap - min_gap) / (max_gap - min_gap)",
+            "condition_gap_min": min(GAPS),
+            "condition_gap_max": max(GAPS),
+        })
+    return metadata
+
+
+def task_to_condition(task: Task | str, *, encoding: str | None = None):
+    """Encode the task's gap using the requested structural representation.
+
+    ``one_hot`` is retained as the default for old callers.  ``scalar`` is a
+    single normalized value in ``[0, 1]`` based on the full declared gap
+    universe, never just the gaps visible in a meta-training split.
+    """
     import torch
 
     parsed = parse_task(task)
-    condition = torch.zeros(COND_DIM, dtype=torch.float32)
-    condition[GAPS.index(parsed.gap)] = 1.0
-    return condition
+    encoding = normalize_condition_encoding(encoding)
+    if encoding == CONDITION_ENCODING_ONE_HOT:
+        condition = torch.zeros(condition_dim(encoding), dtype=torch.float32)
+        condition[GAPS.index(parsed.gap)] = 1.0
+        return condition
+    if encoding == CONDITION_ENCODING_SCALAR:
+        span = max(GAPS) - min(GAPS)
+        if span <= 0:  # Defensive: scalar normalization requires a gap range.
+            raise ValueError("scalar condition encoding requires at least two distinct gaps")
+        return torch.tensor([(parsed.gap - min(GAPS)) / span], dtype=torch.float32)
+    return torch.zeros(0, dtype=torch.float32)
 
 
 def task_dir(task: Task | str) -> Path:

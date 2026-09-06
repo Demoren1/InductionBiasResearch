@@ -18,6 +18,7 @@ import sys
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import config  # noqa: E402
 from models.cvae import read_split_provenance, task_ids  # noqa: E402
 
 
@@ -34,6 +35,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--betas", type=float, nargs="+", default=[1.0, .3, .1, .03, .01],
                    help="candidate values; they are canonicalized to decreasing order")
     p.add_argument("--variants", choices=("cvae", "vae"), nargs="+", default=["cvae"])
+    p.add_argument("--condition-encoding", "--condition_encoding",
+                   dest="condition_encoding", default=config.DEFAULT_CONDITION_ENCODING,
+                   choices=("one_hot", "scalar"),
+                   help="gap representation for CVAE candidates; VAE remains unconditioned")
     p.add_argument("--seeds", type=int, nargs="+", default=[42])
     p.add_argument("--gpu_ids", type=str, nargs="+", required=True,
                    help="unique physical GPU ids; at most one isolated run is active per id")
@@ -135,6 +140,7 @@ def _command(args, *, variant: str, beta: float, seed: int, run_dir: Path) -> li
         sys.executable, str(train), "--split", str(args.split), "--tasks", *args.tasks,
         "--out_dir", str(run_dir),
         "--variant", variant, "--beta", str(beta), "--seed", str(seed),
+        "--condition-encoding", args.condition_encoding,
         "--epochs", str(args.epochs), "--batch_size", str(args.batch_size), "--lr", str(args.lr),
         "--latent_dim", str(args.latent_dim), "--hidden", str(args.hidden),
         "--top_frac", str(args.top_frac), "--importance_name", args.importance_name,
@@ -203,6 +209,7 @@ def main() -> None:
     if len(args.seeds) != len(set(args.seeds)):
         raise ValueError("--seeds must not repeat a seed")
     args.split = args.split.resolve()
+    args.condition_encoding = config.normalize_condition_encoding(args.condition_encoding)
     args.split_provenance = read_split_provenance(args.split)
     if task_ids(args.tasks) != args.split_provenance["split_train_tasks"]:
         raise ValueError("--tasks must exactly equal --split train_tasks (including order)")
@@ -216,6 +223,9 @@ def main() -> None:
             "variant": variant, "betas_evaluated_descending": betas,
             "seeds": args.seeds, "tasks": args.tasks, "top_frac": args.top_frac,
             "importance_name": args.importance_name,
+            **config.condition_metadata(args.condition_encoding if variant == "cvae"
+                                        else config.CONDITION_ENCODING_NONE),
+            "requested_condition_encoding": args.condition_encoding,
             **args.split_provenance,
             "guard_thresholds": {
                 "min_val_kl": args.min_val_kl,

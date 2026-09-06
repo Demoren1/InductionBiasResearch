@@ -1,0 +1,319 @@
+{
+  "section": "motif_pair",
+  "report_date": "2026-09-08",
+  "experiment_dates": [
+    "2026-09-06"
+  ],
+  "statement": "Synthesis dated 2026-09-08 of audited 2026-09-06 experiment artifacts, with a 2026-09-07 cutoff.",
+  "task": {
+    "input": "cyclic sequence of 16 values in {-1,+1}",
+    "label": "positive iff unique 3-bit motifs A and B start exactly gap positions apart; negative iff same motifs have another admissible distance",
+    "example_task": "A001_B101_G04",
+    "ideal_support": "16 hidden units; each has two 3-wide cyclic windows separated by gap; 96 of 256 first-layer edges",
+    "analytic_control": {
+      "task_input_pairs": 101120,
+      "errors": 0,
+      "minimum_margin": 0.5
+    },
+    "sources": [
+      "mds/PROGRESS_2026-09-06_MOTIF_TASK_DESIGN_AUDIT.md",
+      "motif_pair/OOD_RESULTS.md"
+    ]
+  },
+  "baseline_pair_disjoint_known_gaps": {
+    "scope": "new ordered motif pairs, all gap regimes seen in meta-training; not unseen-gap generalization",
+    "metrics": {
+      "random_exact96": {
+        "accuracy": 0.7274,
+        "bce": 0.563,
+        "hungarian_iou": 0.438
+      },
+      "unconditional_vae": {
+        "accuracy": 0.7381,
+        "bce": 0.5549,
+        "hungarian_iou": 0.574
+      },
+      "cvae_correct_gap": {
+        "accuracy": 0.748,
+        "bce": 0.5434,
+        "hungarian_iou": 0.632
+      },
+      "train_only_conditional_mean": {
+        "accuracy": 0.7497,
+        "bce": 0.5426,
+        "hungarian_iou": 0.66
+      },
+      "ideal": {
+        "accuracy": 0.7509,
+        "bce": 0.5452,
+        "hungarian_iou": 1.0
+      }
+    },
+    "paired_cvae_minus_random_exact96": {
+      "accuracy_delta": 0.02063,
+      "ci95_t": [
+        0.01089,
+        0.03036
+      ],
+      "wins": "15/16"
+    },
+    "source": "motif_pair/OOD_RESULTS.md"
+  },
+  "scalar_gap_ood": {
+    "protocol": "scalar c(g)=(g-3)/7; 8 shared motif pairs per gap; 64 masks; fresh MLP per hard top-96 mask; no held-out latent optimization or target selection",
+    "interpolation": {
+      "train_gaps": [
+        3,
+        4,
+        6,
+        7,
+        9,
+        10
+      ],
+      "heldout_gaps": [
+        5,
+        8
+      ],
+      "correct_condition": {
+        "accuracy": 0.7355327606,
+        "bce": 0.5612428207,
+        "iou": 0.6082445374
+      },
+      "nearest_wrong": {
+        "accuracy": 0.734760046,
+        "bce": 0.5621816106,
+        "iou": 0.6049892233
+      },
+      "correct_minus_wrong_accuracy": {
+        "delta": 0.0007727146,
+        "ci95_t": [
+          -0.0006,
+          0.0021
+        ]
+      },
+      "strict_iou_margin_vs_best_neighbour": {
+        "mean": -0.0167,
+        "positive_tasks": "0/16"
+      },
+      "source": "motif_pair/outputs/ood/gap_interp_g05_g08_seed_42/eval_all_nearest/summary.json",
+      "random_exact96": {
+        "accuracy": 0.7176046371459961,
+        "iou": 0.42850402246047536,
+        "source": "motif_pair/outputs/ood/gap_interp_g05_g08_seed_42/eval/summary.json"
+      }
+    },
+    "extrapolation": {
+      "train_gaps": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "heldout_gaps": [
+        3,
+        4
+      ],
+      "correct_condition": {
+        "accuracy": 0.7105417252,
+        "bce": 0.5856657512,
+        "iou": 0.4097267143
+      },
+      "nearest_wrong": {
+        "accuracy": 0.7090406418,
+        "bce": 0.58657513,
+        "iou": 0.4182553802
+      },
+      "source": "motif_pair/outputs/ood/gap_extrap_g03_g04_seed_42/eval_all_nearest/summary.json",
+      "random_exact96": {
+        "accuracy": 0.7129373550415039,
+        "iou": 0.436730723382201,
+        "source": "motif_pair/outputs/ood/gap_extrap_g03_g04_seed_42/eval/summary.json"
+      }
+    }
+  },
+  "reconstruction": {
+    "scope": "internal validation of importance-CVAE; not held-out-gap generation",
+    "interpolation_iou": {
+      "input_top96": 0.449,
+      "posterior_mean": 0.6054,
+      "z0": 0.6454,
+      "gap_mean": 0.6528
+    },
+    "extrapolation_iou": {
+      "input_top96": 0.4489,
+      "posterior_mean": 0.6717,
+      "z0": 0.7043,
+      "gap_mean": 0.6826
+    },
+    "source": "mds/PROGRESS_2026-09-06_MOTIF_RECONSTRUCTION.md"
+  },
+  "oracle_importance_cvae": {
+    "scope": "ideal explicitly enters objective; diagnostic only, not zero-shot",
+    "settings": "64 Gaussian starts, 1000 Adam steps, radii 8 and 16; optimize z only",
+    "all_gaps_exact": "0/2048 trajectories",
+    "heldout_best_iou_over_starts_and_radii": {
+      "interp_g5": 0.6842,
+      "interp_g8": 0.8286,
+      "extrap_g3": 0.4656,
+      "extrap_g4": 0.561
+    },
+    "interpretation": "finite multistart failure does not prove absence from the decoder image",
+    "source": "mds/PROGRESS_2026-09-06_MOTIF_ORACLE_IDEAL.md"
+  },
+  "ideal_target_cvae_control": {
+    "scope": "separate CVAE trained directly on canonical ideal masks of seen gaps",
+    "seen_posterior_mean": "exact reconstruction for every seen ideal in both profiles",
+    "unseen_exact": "0/64 per gap and radius for encoder reconstruction and oracle",
+    "unseen_best_iou": {
+      "interp_g5": 0.8824,
+      "interp_g8": 0.8641,
+      "extrap_g3": 0.5,
+      "extrap_g4": 0.7143
+    },
+    "source": "mds/PROGRESS_2026-09-06_MOTIF_IDEAL_CVAE.md"
+  },
+  "two_decoder_and_task_search": {
+    "scope": "same four held-out scalar-gap conditions; supervised target-task adaptation, not zero-shot",
+    "decoder_agreement": {
+      "agreement_pairs": "MSE is lowered and pair-IoU rises, but exact ideal is 0 for every decoder/gap"
+    },
+    "fresh_mlp_accuracy": {
+      "interpolation": {
+        "prior42": 0.7374,
+        "pair42": 0.7336,
+        "single_z_task_loss": 0.7428,
+        "gap_mean": 0.7416,
+        "ideal": 0.7539
+      },
+      "extrapolation": {
+        "prior42": 0.7086,
+        "pair42": 0.7012,
+        "single_z_task_loss": 0.708,
+        "gap_mean": 0.722,
+        "ideal": 0.7405
+      }
+    },
+    "single_z_minus_prior42_pp": {
+      "interpolation": {
+        "delta": 0.54,
+        "ci95": [
+          -0.041,
+          1.195
+        ]
+      },
+      "extrapolation": {
+        "delta": -0.066,
+        "ci95": [
+          -0.516,
+          0.404
+        ]
+      }
+    },
+    "source": "motif_pair/outputs/decoder_agreement/20260906/summary.json"
+  },
+  "combined_and_normalized": {
+    "combined_lambda1_accuracy": {
+      "interpolation": 0.7238,
+      "extrapolation": 0.6944
+    },
+    "combined_task_only_accuracy": {
+      "interpolation": 0.7224,
+      "extrapolation": 0.6939
+    },
+    "lambda1_minus_task_only_pp": {
+      "interpolation": {
+        "delta": 0.141,
+        "ci95": [
+          -0.046,
+          0.333
+        ]
+      },
+      "extrapolation": {
+        "delta": 0.05,
+        "ci95": [
+          -0.36,
+          0.461
+        ]
+      }
+    },
+    "normalized_hard_accuracy": {
+      "task_only": [
+        0.7227,
+        0.6939
+      ],
+      "alpha_0p1": [
+        0.7224,
+        0.6933
+      ],
+      "alpha_0p3": [
+        0.7225,
+        0.6933
+      ],
+      "alpha_1": [
+        0.7223,
+        0.6922
+      ]
+    },
+    "alpha1_minus_task_only": {
+      "interpolation": {
+        "delta": -0.000323375058030706,
+        "ci95": [
+          -0.0014470616950680083,
+          0.000779022792736583
+        ]
+      },
+      "extrapolation": {
+        "delta": -0.0016726652799547992,
+        "ci95": [
+          -0.0034484903102184107,
+          0.00010331471665701031
+        ]
+      }
+    },
+    "gradient_scale_before_normalization": "agreement/task norm ratio 18.4--47.7",
+    "negative_gradient_cosine_fraction": {
+      "alpha_0p1": [
+        0.2573,
+        0.3419
+      ],
+      "alpha_0p3": [
+        0.3021,
+        0.3911
+      ],
+      "alpha_1": [
+        0.4263,
+        0.4315
+      ]
+    },
+    "soft_vs_hard": "soft masks retain all 256 nonzero edges with sum 96; hard top-96 retains 96, so their accuracy is not directly comparable",
+    "sources": [
+      "mds/PROGRESS_2026-09-06_MOTIF_COMBINED_LOSS.md",
+      "mds/PROGRESS_2026-09-06_MOTIF_NORMALIZED_LOSS.md",
+      "motif_pair/outputs/normalized_task_agreement/20260906/summary.json"
+    ]
+  },
+  "task_design_audit": {
+    "alternative_exact_supports": "28/64 tasks have a non-ideal exact-96 support on their restricted input bank",
+    "counterexample": {
+      "task": "A001_B101_G04",
+      "hungarian_iou": 0.5,
+      "accuracy_on_960_admissible_inputs": 1.0,
+      "false_positives_on_full_2pow16": 27456
+    },
+    "input_overlap": {
+      "search_validation_seen_in_first_search_train_mean": 0.999878,
+      "final_test_seen_in_first_search_train_mean": 0.999893
+    },
+    "source": "mds/PROGRESS_2026-09-06_MOTIF_TASK_DESIGN_AUDIT.md"
+  },
+  "figures_to_reuse": [
+    "motif_pair/outputs/ood/gap_interp_g05_g08_seed_42/plots/11_gap_ood_generalization.png",
+    "motif_pair/outputs/ood/gap_extrap_g03_g04_seed_42/plots/11_gap_ood_generalization.png",
+    "motif_pair/outputs/reconstruction_diagnostic/20260906/interp/examples.png",
+    "motif_pair/outputs/reconstruction_diagnostic/20260906/extrap/examples.png",
+    "motif_pair/outputs/oracle_ideal/seed_20260906/convergence.png",
+    "motif_pair/outputs/normalized_task_agreement/20260906/accuracy_differences.png"
+  ]
+}
