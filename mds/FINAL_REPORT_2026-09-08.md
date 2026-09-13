@@ -567,15 +567,4 @@ python mds/build_final_report_figures.py
 
 Проверки реализации перед публикацией: **112 тестов прошли**: 29 meta-pattern, 12 legacy pattern, 13 pattern length-interp и 58 motif-pair (настоящий pytest 8.4.2; 46.29 с, exit 0). [Среда и команды проверок](data/2026-09-08/validation.json) сохранены отдельно. Проверен синтаксис shell-launcher, ссылки итогового отчёта и воспроизводимость его новых графиков. Тесты подтверждают реализацию — sampler/splits, математические контролы, метаградиенты, checkpoint/resume, согласованность оптимизаторов — и не заменяют статистическую проверку научных выводов.
 
-### Отчёты 6 сентября, на которых основана сводка
-
-- [Pattern: decoder agreement](PROGRESS_2026-09-06_PATTERN_DECODER_AGREEMENT.md).
-- [Motif: пара decoder и одиночный z](PROGRESS_2026-09-06_MOTIF_PAIR_AND_SINGLE_Z.md).
-- [Motif: реконструкция importance](PROGRESS_2026-09-06_MOTIF_RECONSTRUCTION.md).
-- [Motif: oracle-поиск ideal](PROGRESS_2026-09-06_MOTIF_ORACLE_IDEAL.md).
-- [Motif: CVAE, обученная на ideal](PROGRESS_2026-09-06_MOTIF_IDEAL_CVAE.md).
-- [Motif: сумма loss](PROGRESS_2026-09-06_MOTIF_COMBINED_LOSS.md).
-- [Motif: нормирование градиентов](PROGRESS_2026-09-06_MOTIF_NORMALIZED_LOSS.md).
-- [Motif: аудит постановки](PROGRESS_2026-09-06_MOTIF_TASK_DESIGN_AUDIT.md).
-
-Результаты 7 сентября по U представлены в таблицах выше и в сохранённой [сводке диагностики](data/2026-09-08/meta_diagnosis.json). Более ранние сравнения сохранены в [общем обзоре pattern и motif](EXPERIMENTS_PATTERN_AND_MOTIF_PAIR.md) и package-отчётах; их численные режимы не смешиваются с новой задачей длины 32.
+Результаты 7 сентября по U представлены в таблицах выше и в сохранённой [сводке диагностики](data/2026-09-08/meta_diagnosis.json). Ранее ведшиеся промежуточные отчёты и общий обзор были сведены в этот документ и удалены; актуальными источниками остаются разделы выше, package-отчёты и материалы воспроизводимости.

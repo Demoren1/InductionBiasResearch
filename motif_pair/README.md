@@ -29,8 +29,8 @@ commands, provenance, and output layout are documented in
 as the seen-gap transfer control described below.
 
 The frozen scalar-CVAE oracle reachability experiment (2026-09-06), including
-seen/held-out gaps and latent radii 8/16, is recorded in
-[`PROGRESS_2026-09-06_MOTIF_ORACLE_IDEAL.md`](../mds/PROGRESS_2026-09-06_MOTIF_ORACLE_IDEAL.md).
+seen/held-out gaps and latent radii 8/16, is summarized in the
+[final research report](../mds/FINAL_REPORT_2026-09-08.md).
 
 ## Task
 
