@@ -10,7 +10,7 @@
 | 2 | Разные gaps | Отложено, запусков в этой сессии нет |
 | 3 | Heatmaps масок | Выполнено для `8×8` и `32×32`, добавлен random exact-K alignment control |
 | 4 | Шумные `z` около `z*` | Выполнено: noise `0…8`, oracle radius `1…12`, matched `R=4` |
-| 5 | Отображение между масками двух CVAE | Не запускалось |
+| 5 | Отображение между масками двух CVAE | Выполнено: 32 пары, два направления, linear/MLP adapters и one-sided Adam control |
 | 6 | Adam против sampling | Выполнено: random-search control agreement, soft Adam, hard STE pilot, hard-mask sampling |
 | 7 | CVAE против других моделей | Не запускалось |
 
@@ -197,6 +197,63 @@ Gold-oracle получил exact ideal для 3921/4096 стартов.
 
 ![Контроль эффекта alignment](assets/2026-09-13/final_heatmap_alignment_control.png)
 
+## 7. Краткий итог
+
+| Проверка | Результат |
+|---|---|
+| Agreement между независимо обученными VAE | Подтверждено: exact hard agreement `96.68%` на 64 парах и `99.41%` на 32 новых парах |
+| Agreement восстанавливает analytic ideal | Не подтверждено: итоговый Gold IoU `0.7020` и `0.6845` при decoder IoU `≈1` |
+| Ideal достижим внутри VAE для `8×8` | Подтверждено: Gold-oracle при `R=4` нашёл exact в `95.7%` стартов |
+| Task-z находит ideal из prior | Не подтверждено: `0` exact для soft Adam, hard STE и hard sampling |
+| Task-loss удерживает найденный `z*` | Не подтверждено: soft Adam сохранил `0%`, hard STE `10.5%`, sampling `11.69%` exact |
+| Hard sampling улучшает task-quality из prior | Подтверждено: accuracy `+0.00737` для `8×8` и `+0.00632` для `32×32` |
+| VAE prior содержит locality сверх эффекта Hungarian | Подтверждено best-window без alignment: `0.812` против random `0.686` для `8×8`; `0.672` против `0.439` для `32×32` |
+| Latent одного VAE можно амортизированно перенести в другой VAE | Частично подтверждено: linear adapter даёт hard IoU `0.7613` против identity `0.6299`, но exact только `97/262144` |
+| Нелинейный adapter лучше линейного | Не подтверждено: MLP хуже linear на `−0.0062` hard IoU |
+| Ideal достижим текущей VAE для `32×32/k=5` | Не подтверждено: `0/4096` exact при `R=4`; `0/8` в preflight при `R=32` |
+| Точная граница exact-бассейна около `z*` | Не определена: sampled exact сохраняется до L2 `1`, уменьшается между `1–2`, почти исчезает к `4` |
+
+## 8. Latent adapters между двумя CVAE
+
+Постановка: 32 независимо обученные пары VAE, оба направления внутри каждой пары, `16384/4096/4096` train/validation/test latent-кодов на направление. Decoder заморожены; Gold и task labels не используются для обучения или выбора checkpoint.
+
+$$
+z_2=A_{12}(z_1),\qquad
+\mathcal L_{adapter}=\left\|\operatorname{softTopK}(D_1(z_1))
+-P^*\operatorname{softTopK}(D_2(A_{12}(z_1)))\right\|_2^2.
+$$
+
+`P*` — detached per-example Hungarian-сопоставление hidden columns. Adapter оптимизируется 2000 шагов при `R=12`; test latent-коды не участвуют в выборе checkpoint. 95% ДИ считаются по 32 VAE-парам после усреднения двух направлений.
+
+| Метод | Soft MSE ↓ | Hard IoU ↑ | Exact hard | Fixed-permutation IoU ↑ | Unique target masks | Post-hoc Gold IoU |
+|---|---:|---:|---:|---:|---:|---:|
+| Independent prior | 0.106989 [0.105956; 0.108021] | 0.6299 [0.6285; 0.6312] | 0/262144 | 0.3564 | 1.0000 | 0.6325 |
+| Identity `z₂=z₁` | 0.106872 [0.105816; 0.107928] | 0.6299 [0.6284; 0.6313] | 0/262144 | 0.3893 | 1.0000 | 0.6325 |
+| Constant adapter | 0.071495 [0.070829; 0.072162] | 0.6777 [0.6763; 0.6792] | 0/262144 | 0.3768 | 0.0002 | 0.7436 |
+| Linear adapter | **0.031884 [0.030771; 0.032996]** | **0.7613 [0.7576; 0.7649]** | **97/262144 = 0.037%** | **0.7465** | **1.0000** | 0.6448 |
+| Residual MLP adapter | 0.033925 [0.032834; 0.035016] | 0.7551 [0.7517; 0.7585] | 52/262144 = 0.020% | 0.7389 | 1.0000 | 0.6451 |
+
+Одна перестановка hidden-columns выбирается на validation и фиксируется для test. Linear сохраняет большую часть результата и без per-example Hungarian: `0.7465` против `0.7613`. Constant улучшает agreement, но генерирует одну маску; linear и MLP дают `4096/4096` уникальных target-масок в каждом направлении.
+
+Парный эффект linear относительно constant: `−0.039612 [−0.040514; −0.038710]` soft MSE и `+0.0836 [+0.0802; +0.0869]` hard IoU.
+
+| One-sided контроль на 64 test-кодах на направление | Soft MSE ↓ | Hard IoU ↑ | Exact hard |
+|---|---:|---:|---:|
+| Linear adapter | 0.032050 [0.030918; 0.033183] | 0.7609 [0.7570; 0.7648] | 1/4096 = 0.024% |
+| Residual MLP adapter | 0.033968 [0.032832; 0.035104] | 0.7559 [0.7520; 0.7599] | 0/4096 |
+| `z₂`-only Adam, independent init | 0.008918 [0.008659; 0.009177] | **0.9300 [0.9279; 0.9321]** | **955/4096 = 23.32%** |
+| `z₂`-only Adam, MLP init | **0.008270 [0.007929; 0.008612]** | 0.9240 [0.9215; 0.9265] | 847/4096 = 20.68% |
+
+MLP хуже linear: парный эффект `+0.002041 [0.001547; 0.002535]` soft MSE и `−0.0062 [−0.0080; −0.0044]` hard IoU. Linear output имеет mean norm `4.768` и достигает границы `R=12` в `0.03%` случаев; MLP — norm `7.366` и границу в `17.42%` случаев.
+
+MLP-init улучшает итоговый soft Adam-loss на `−0.000648 [−0.000878; −0.000418]`, но ухудшает hard IoU на `−0.0060 [−0.0079; −0.0040]` и exact на `−2.64 п.п. [−4.39; −0.89]`.
+
+![Сводка latent-adapter](assets/2026-09-13/final_latent_adapter_summary.png)
+
+Heatmaps показывают средние hard-маски первой пары после выравнивания target к source; строки — два направления, порядок примеров фиксирован.
+
+![Heatmaps latent-adapter](assets/2026-09-13/final_latent_adapter_heatmaps.png)
+
 ## Артефакты
 
 | Блок | Основные данные |
@@ -208,4 +265,5 @@ Gold-oracle получил exact ideal для 3921/4096 стартов.
 | Sampling `8×8` | [`summary.json`](data/2026-09-13/sampling_pattern8_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern8_32pairs_paired.json) |
 | Sampling `32×32` | [`summary.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_paired.json) |
 | Heatmaps | [`mask_heatmap_stats.json`](assets/2026-09-13/mask_heatmap_stats.json), [`alignment control`](assets/2026-09-13/final_heatmap_alignment_control.json) |
+| Latent adapters | [`summary.json`](data/2026-09-13/latent_adapter_32pairs_summary.json), [`standalone report`](LATENT_ADAPTER_32PAIRS_2026-09-13.md) |
 | Final figures | [`generator`](../pattern/evaluation/final_report_20260913.py) |
