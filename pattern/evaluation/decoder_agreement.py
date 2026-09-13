@@ -134,9 +134,9 @@ def _project_ball_(z: torch.Tensor, radius: float) -> None:
 
 
 def optimize_agreement(model1: torch.nn.Module, model2: torch.nn.Module,
-                       n_starts: int = 64, steps: int = 1000, lr: float = .03,
+                       n_starts: int = 64, steps: int = 2000, lr: float = .03,
                        seed: int = 20260906, temperature: float = .5,
-                       radius: float = 8., device: str | torch.device = "cpu",
+                       radius: float = 12., device: str | torch.device = "cpu",
                        k: int = DEFAULT_K_ACTIVE) -> dict[str, Any]:
     """Optimize independent latents using only decoder-mask agreement.
 

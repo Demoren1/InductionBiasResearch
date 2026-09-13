@@ -88,6 +88,42 @@ measure variation within those fixed decoders, not robustness over independently
 trained decoder pairs. Accuracy differences should not be directly combined
 with the earlier five-split aggregate.
 
+## Replication across VAE initializations
+
+The multi-seed runner keeps the split, selected maps, map partition and loader
+order, latent starts, and agreement hyperparameters fixed while varying only
+the VAE training/model seeds.  After a disjoint tuning run on seeds 170--185,
+its default confirmatory protocol uses 160 VAE epochs (best validation
+checkpoint) and 2000 agreement steps with learning rate 0.03, temperature 0.5,
+and latent radius 12.  It has 32 disjoint pairs spanning seeds 186 through 249.
+Pair-level means are the
+independent replication unit; the 64 latent starts within a pair are nested
+search restarts and are not treated as 64 independent VAE trainings.
+
+Train the VAEs, freeze them, run label-free agreement, and create the
+structural aggregate with:
+
+```bash
+bash pattern/scripts/12_agreement_replicates.sh
+```
+
+By default this stops before fresh-MLP held-out evaluation.  Once the frozen
+masks and structural summary have been inspected, run the downstream stage with:
+
+```bash
+STAGE=evaluate bash pattern/scripts/12_agreement_replicates.sh
+```
+
+Outputs live under `outputs/decoder_agreement/multiseed32_tuned_20260912/`, with one
+self-contained directory per VAE pair plus a pair-level `summary.json`,
+`RESULTS.md`, and `agreement_replicates.{png,pdf}`.  Gold IoU is computed only
+post hoc after every pair's `masks.pt` has been fixed; it never participates in
+the agreement search.  Aggregate means include 95% t-intervals over the 32
+independent VAE pairs, rather than treating latent restarts as independent
+model fits.  The earlier 64-pair baseline with 80 VAE epochs, 1000 agreement
+steps, and radius 8 remains immutable under
+`outputs/decoder_agreement/multiseed64_20260912/`.
+
 The follow-up [oracle reachability test](ORACLE_IDEAL.md) explicitly optimizes
 latents against ideal support while keeping these same decoders frozen. Its
 gold-guided results are recorded separately from this agreement-only experiment.

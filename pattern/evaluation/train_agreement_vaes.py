@@ -134,7 +134,9 @@ def train_one(seed: int, x: torch.Tensor, y: torch.Tensor, expected: dict,
     if complete is not None:
         print(f"[agreement-vae] seed={seed}: verified existing checkpoint; skipping", flush=True)
         return {"seed": seed, "status": "verified_existing", "best_val": complete["best_val_loss"],
-                "seconds": 0.0, "checkpoint_sha256": complete["checkpoint_sha256"]}
+                "best_epoch": complete["best_epoch"], "seconds": 0.0,
+                "checkpoint_sha256": complete["checkpoint_sha256"],
+                "noncollapse": complete["noncollapse_diagnostics"]}
 
     result_dir.mkdir(parents=True, exist_ok=False)
     configure_seed(seed)
@@ -234,7 +236,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--split", type=Path, default=DEFAULT_SPLIT)
     parser.add_argument("--out_dir", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--seeds", type=int, nargs="+", default=[42, 43])
-    parser.add_argument("--epochs", type=int, default=80)
+    parser.add_argument("--epochs", type=int, default=160)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     return parser.parse_args()
 
@@ -250,6 +252,7 @@ def main() -> None:
     device = torch.device("cuda" if args.device == "cuda" or
                           (args.device == "auto" and torch.cuda.is_available()) else "cpu")
     torch.set_num_threads(2)
+    torch.use_deterministic_algorithms(True)
     split = json.loads(args.split.read_text())
     patterns = split["train_patterns"]
     held_out = set(split["test_patterns"])
