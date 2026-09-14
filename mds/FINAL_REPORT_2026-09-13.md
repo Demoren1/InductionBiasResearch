@@ -266,4 +266,35 @@ Heatmaps показывают средние hard-маски первой пар
 | Sampling `32×32` | [`summary.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_paired.json) |
 | Heatmaps | [`mask_heatmap_stats.json`](assets/2026-09-13/mask_heatmap_stats.json), [`alignment control`](assets/2026-09-13/final_heatmap_alignment_control.json) |
 | Latent adapters | [`summary.json`](data/2026-09-13/latent_adapter_32pairs_summary.json), [`standalone report`](LATENT_ADAPTER_32PAIRS_2026-09-13.md) |
+| Generated parameter sharing | [`summary.json`](data/2026-09-15/generated_parameter_sharing_summary.json), [`standalone report`](GENERATED_PARAMETER_SHARING_REPORT_2026-09-15.md) |
 | Final figures | [`generator`](../pattern/evaluation/final_report_20260913.py) |
+
+## Дополнение 15 сентября: generated parameter sharing
+
+Зафиксированы длина входа `32` и длина паттерна `4`; задачи — все `16` различных бинарных паттернов этой длины. Генератор с `469` параметрами задаёт одну общую структуру разделения параметров `U=Gψ(z*)`, а для каждой задачи с нуля обучаются `63` веса в модели `Wτ=Uvτ`.
+
+| Структура | Test BCE ↓ | Test accuracy ↑ | Active IoU ↑ |
+|---|---:|---:|---:|
+| Generated sharing | **0.2510 ± 0.0585** | **0.9224 ± 0.0339** | **0.6099 ± 0.1265** |
+| Та же generated connectivity, независимые веса | 0.3870 ± 0.0237 | 0.8278 ± 0.0130 | 0.6099 ± 0.1265 |
+| Dense MLP | 0.5360 ± 0.0027 | 0.7267 ± 0.0026 | 0.1250 |
+| Random sharing | 0.5980 ± 0.0037 | 0.6611 ± 0.0034 | 0.2854 ± 0.0049 |
+| Analytic sharing | **0.1396 ± 0.0024** | **0.9849 ± 0.0014** | 1.0000 |
+
+Generated sharing лучше dense, random sharing и той же connectivity без sharing во всех `8/8` seeds. Тест использует новые выборки для тех же 16 pattern identities; перенос на невиданные паттерны или другую длину не проверялся.
+
+### Отличие от ближайших работ
+
+В [Meta-Learning Symmetries by Reparameterization](https://arxiv.org/pdf/2007.02933) авторы напрямую meta-обучают полную symmetry matrix `U`; в [Equivariance Discovery by Learned Parameter-Sharing](https://proceedings.mlr.press/v151/yeh22b/yeh22b.pdf) напрямую оптимизируется relaxed assignment matrix `A`. В нашей постановке матрица не является свободным набором параметров:
+
+$$
+U=G_\psi(z),\qquad W_\tau=Uv_\tau.
+$$
+
+Отличие — компактный coordinate-generator структуры parameter sharing, обучаемый через task validation-loss после адаптации `vτ`. В текущем эксперименте один фиксированный `z*` порождает одну общую `U`, поэтому пока подтверждена полезность generated-параметризации. Полноценную генерацию семейства структур через разные `z` и перенос на новые классы задач ещё необходимо проверить.
+
+![Сравнение generated parameter sharing](assets/2026-09-15/generated_parameter_sharing_comparison.png)
+
+![Generated структуры и analytic ideal](assets/2026-09-15/generated_parameter_sharing_masks.png)
+
+Подробности: [`GENERATED_PARAMETER_SHARING_REPORT_2026-09-15.md`](GENERATED_PARAMETER_SHARING_REPORT_2026-09-15.md).
