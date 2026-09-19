@@ -1,0 +1,32 @@
+{
+  "source": {
+    "paper": "https://proceedings.mlr.press/v151/yeh22b/yeh22b.pdf",
+    "official_code": "https://github.com/raymondyeh07/equivariance_discovery"
+  },
+  "notes": [
+    "Only values printed in paper tables are stored as exact numbers.",
+    "Figure-only values must be digitized and labeled approximate before use.",
+    "The official release omits the referenced ConvSharing implementation."
+  ],
+  "gaussian_ablation_table_1": [
+    {"dimensions": 2, "penalties": "none", "mse_mean": 0.019, "mse_ci95": 0.003, "pd_mean": 0.915, "pd_ci95": 0.030},
+    {"dimensions": 2, "penalties": "entropy", "mse_mean": 0.016, "mse_ci95": 0.003, "pd_mean": 0.385, "pd_ci95": 0.070},
+    {"dimensions": 2, "penalties": "entropy+nuclear", "mse_mean": 0.014, "mse_ci95": 0.003, "pd_mean": 0.145, "pd_ci95": 0.050},
+    {"dimensions": 4, "penalties": "none", "mse_mean": 0.035, "mse_ci95": 0.003, "pd_mean": 2.050, "pd_ci95": 0.069},
+    {"dimensions": 4, "penalties": "entropy", "mse_mean": 0.033, "mse_ci95": 0.003, "pd_mean": 1.680, "pd_ci95": 0.070},
+    {"dimensions": 4, "penalties": "entropy+nuclear", "mse_mean": 0.025, "mse_ci95": 0.003, "pd_mean": 0.490, "pd_ci95": 0.095},
+    {"dimensions": 6, "penalties": "none", "mse_mean": 0.050, "mse_ci95": 0.004, "pd_mean": 3.350, "pd_ci95": 0.075},
+    {"dimensions": 6, "penalties": "entropy", "mse_mean": 0.048, "mse_ci95": 0.004, "pd_mean": 3.360, "pd_ci95": 0.094},
+    {"dimensions": 6, "penalties": "entropy+nuclear", "mse_mean": 0.028, "mse_ci95": 0.004, "pd_mean": 0.590, "pd_ci95": 0.132}
+  ],
+  "sum_numbers_table_a1": [
+    {"method": "Augerino", "transforms": 3, "l2_mean": 0.03498, "l2_ci95": 0.00528, "inference_ms": 4.00, "memory_mib": 727},
+    {"method": "Augerino", "transforms": 15, "l2_mean": 0.02567, "l2_ci95": 0.00370, "inference_ms": 5.13, "memory_mib": 1101},
+    {"method": "Augerino", "transforms": 75, "l2_mean": 0.01966, "l2_ci95": 0.00503, "inference_ms": 22.0, "memory_mib": 2965},
+    {"method": "Yeh direct A", "transforms": null, "l2_mean": 0.01005, "l2_ci95": 0.00503, "inference_ms": 1.73, "memory_mib": 645}
+  ],
+  "cross_correlation_exact_statements": [
+    {"assignment_items": 6, "method": "Yeh direct A", "partition_distance": 0},
+    {"assignment_items": 15, "method": "Yeh direct A", "partition_distance": 0}
+  ]
+}

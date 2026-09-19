@@ -115,6 +115,13 @@ class SharingGenerator(nn.Module):
         row = torch.linspace(-1, 1, config.seq_len)[:, None].expand(-1, config.hidden)
         column = torch.linspace(-1, 1, config.hidden)[None, :].expand(config.seq_len, -1)
         self.register_buffer("coordinates", torch.stack((row, column), dim=-1))
+        permutations = torch.tensor(list(itertools.permutations(range(config.filter_dim))))
+        self.register_buffer("assignment_permutations", permutations, persistent=False)
+        self.register_buffer(
+            "assignment_permutation_one_hot",
+            F.one_hot(permutations, config.filter_dim).to(torch.float32),
+            persistent=False,
+        )
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         prefix = z.shape[:-1]
@@ -145,28 +152,24 @@ def assignments(generator: SharingGenerator, z: torch.Tensor, config: SharingCon
     active_hard = hard_topk(scores_by_column, config.pattern_len).transpose(-2, -1)
     category_soft = torch.softmax(category_logits / temperature, dim=-1)
     soft = active_soft[..., None] * category_soft
+    if mode == "soft":
+        return soft
 
-    # The four selected inputs of every hidden unit receive a permutation of
-    # the four shared filter parameters. The 4! possibilities are cheap to
-    # score exactly and avoid categorical collapse.
+    # Selected inputs of every hidden unit receive a permutation of the shared
+    # filter parameters. Exact scoring avoids categorical collapse.
     active_indices = scores_by_column.topk(config.pattern_len, dim=-1).indices
     category_by_column = category_logits.transpose(-3, -2)
     gather_index = active_indices[..., None].expand(*active_indices.shape, config.filter_dim)
     selected_scores = torch.gather(category_by_column, -2, gather_index)
-    permutations = torch.tensor(
-        list(itertools.permutations(range(config.filter_dim))),
-        device=z.device,
-    )
-    permutation_one_hot = F.one_hot(permutations, config.filter_dim).to(category_logits.dtype)
+    permutations = generator.assignment_permutations
+    permutation_one_hot = generator.assignment_permutation_one_hot.to(category_logits.dtype)
     permutation_scores = torch.einsum("...hkq,pkq->...hp", selected_scores, permutation_one_hot)
     best_permutation = permutations[permutation_scores.argmax(-1)]
     selected_hard = F.one_hot(best_permutation, config.filter_dim).to(category_logits.dtype)
     hard_by_column = torch.zeros_like(category_by_column)
     hard_by_column.scatter_(-2, gather_index, selected_hard)
     hard = hard_by_column.transpose(-3, -2) * active_hard[..., None]
-    if mode == "soft":
-        return soft
-    elif mode == "hard":
+    if mode == "hard":
         return hard
     elif mode == "ste":
         return _HardForwardSoftBackward.apply(hard, soft)
