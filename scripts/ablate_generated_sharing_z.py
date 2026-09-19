@@ -50,9 +50,14 @@ def _permutation_buffers(generator: nn.Module, config: SharingConfig,
 class CoordinateGenerator(nn.Module):
     """The original generator with its initial global z folded into the bias."""
 
-    def __init__(self, config: SharingConfig, initial_z: torch.Tensor) -> None:
+    def __init__(self, config: SharingConfig, initial_z: torch.Tensor,
+                 initialization_seed: int | None = None) -> None:
         super().__init__()
-        original = SharingGenerator(config).to(initial_z.device)
+        # SharingGenerator seeds its own weights from config.seed, independently
+        # of torch's global RNG. Change that seed only for initialization.
+        generator_config = (config if initialization_seed is None
+                            else replace(config, seed=initialization_seed))
+        original = SharingGenerator(generator_config).to(initial_z.device)
         first = original.network[0]
         folded = nn.Linear(2, config.generator_width).to(initial_z.device)
         with torch.no_grad():
@@ -71,7 +76,8 @@ class CoordinateGenerator(nn.Module):
 
 
 def train_fixed_z(config: SharingConfig, device: torch.device,
-                  policy: str) -> tuple[nn.Module, torch.Tensor, dict]:
+                  policy: str, initialization_seed: int | None = None,
+                  ) -> tuple[nn.Module, torch.Tensor, dict]:
     if policy not in ("frozen_bank", "single_fixed", "coordinate_only"):
         raise ValueError(policy)
     torch.manual_seed(config.seed)
@@ -79,7 +85,10 @@ def train_fixed_z(config: SharingConfig, device: torch.device,
     initial_bank = _new_z(1, config.train_restarts, config, device,
                           "meta-train-shared").detach()
     z = initial_bank if policy == "frozen_bank" else initial_bank[:, :1].expand_as(initial_bank).clone()
-    generator = (CoordinateGenerator(config, initial_bank[:, :1]) if policy == "coordinate_only"
+    if initialization_seed is not None and policy != "coordinate_only":
+        raise ValueError("initialization_seed is only supported without z")
+    generator = (CoordinateGenerator(config, initial_bank[:, :1], initialization_seed)
+                 if policy == "coordinate_only"
                  else SharingGenerator(config).to(device))
     optimizer = torch.optim.Adam(generator.parameters(), lr=config.generator_lr)
     best_score = math.inf
@@ -133,6 +142,7 @@ def train_fixed_z(config: SharingConfig, device: torch.device,
                   f"query={history[-1]['query_bce']:.6f} best={best_score:.6f}", flush=True)
     generator.load_state_dict(best_generator)
     return generator, best_z, {
+        "initialization_seed": config.seed if initialization_seed is None else initialization_seed,
         "selected_outer_step": best_step,
         "selected_training_validation_bce": best_score,
         "training_seconds": time.monotonic() - started,
@@ -190,7 +200,8 @@ def fold_global_z(generator: nn.Module, z: torch.Tensor,
 
 
 def run(output: Path, reference: Path, policy: str, device: str,
-        outer_steps: int | None = None) -> dict:
+        outer_steps: int | None = None,
+        initialization_seed: int | None = None) -> dict:
     if output.exists():
         raise FileExistsError(output)
     reference_state = torch.load(reference, map_location="cpu", weights_only=True)
@@ -212,7 +223,7 @@ def run(output: Path, reference: Path, policy: str, device: str,
                     "selected_training_validation_bce": history[-1]["selected_validation_bce"],
                     "training_seconds": time.monotonic() - started, "history": history}
     else:
-        generator, z, training = train_fixed_z(config, actual_device, policy)
+        generator, z, training = train_fixed_z(config, actual_device, policy, initialization_seed)
     fold = fold_global_z(generator, z, config)
     if fold["hard_assignment_mismatched_entries"]:
         raise ValueError("folding the global latent changed hard U")
@@ -242,8 +253,10 @@ def main() -> None:
                                              "coordinate_only"), required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--outer-steps", type=int, default=None)
+    parser.add_argument("--initialization-seed", type=int, default=None)
     args = parser.parse_args()
-    run(args.output, args.reference, args.policy, args.device, args.outer_steps)
+    run(args.output, args.reference, args.policy, args.device,
+        args.outer_steps, args.initialization_seed)
 
 
 if __name__ == "__main__":
