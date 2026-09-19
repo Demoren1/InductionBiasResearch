@@ -11,7 +11,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .run import ARMS, TEST_LENGTHS
+from .run_position_dependent import ARMS, TEST_LENGTHS
 
 
 LABELS = {

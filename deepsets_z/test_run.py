@@ -2,7 +2,7 @@
 
 import torch
 
-from .run import (Config, IndependentGenerators, LatentGenerator, assignment,
+from .run_position_dependent import (Config, IndependentGenerators, LatentGenerator, assignment,
                   coordinate_grid, design, make_sets)
 
 
