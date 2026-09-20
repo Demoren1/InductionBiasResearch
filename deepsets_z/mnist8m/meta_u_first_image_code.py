@@ -1,7 +1,7 @@
 """Image-conditioned 32-value gates for a shared first-layer U on MNIST8m.
 
-For every image x, a small encoder emits a(x) in R^32.  Its first-layer
-matrix is reshape(U @ (v_task * a(x))).  U and the image encoder are shared
+For every image x, an encoder emits g(x) = 1 + tanh(E(x)) in R^32. Its
+first-layer matrix is reshape(U @ (v_task * g(x))). U and the encoder are shared
 across tasks; only v_task and a 31-value readout adapt on support labels.
 """
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import time
 from pathlib import Path
 
@@ -25,21 +26,60 @@ from .meta_u_first import (HIDDEN, INPUT_PIXELS, RANK, FirstLayerU,
 
 ARMS = ("generated", "generated_shuffled", "generated_ortho",
         "generated_shuffled_ortho", "random", "learned")
+ENCODERS = ("mlp32", "mlp64", "mlp128", "mlp256", "mlp512",
+            "mlp256x2", "conv32", "conv64")
+
+
+def atomic_torch_save(value: object, path: Path) -> None:
+    temporary = path.with_name(path.name + ".tmp")
+    torch.save(value, temporary)
+    os.replace(temporary, path)
+
+
+class ConvImageEncoder(nn.Module):
+    def __init__(self, channels: int) -> None:
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(1, channels // 2, 3, padding=1), nn.Tanh(),
+            nn.AvgPool2d(2),
+            nn.Conv2d(channels // 2, channels, 3, padding=1), nn.Tanh(),
+            nn.AvgPool2d(2), nn.Flatten())
+        self.head = nn.Linear(channels * 7 * 7, RANK)
+
+    def forward(self, images: torch.Tensor) -> torch.Tensor:
+        return self.head(self.features(images.reshape(-1, 1, 28, 28)))
+
+
+def make_image_encoder(name: str) -> tuple[nn.Module, nn.Linear]:
+    if name.startswith("mlp") and name != "mlp256x2":
+        width = int(name[3:])
+        encoder = nn.Sequential(nn.Linear(INPUT_PIXELS, width), nn.Tanh(),
+                                nn.Linear(width, RANK))
+        return encoder, encoder[-1]
+    if name == "mlp256x2":
+        encoder = nn.Sequential(
+            nn.Linear(INPUT_PIXELS, 256), nn.Tanh(),
+            nn.Linear(256, 256), nn.Tanh(), nn.Linear(256, RANK))
+        return encoder, encoder[-1]
+    if name.startswith("conv"):
+        encoder = ConvImageEncoder(int(name[4:]))
+        return encoder, encoder.head
+    raise ValueError(name)
 
 
 class ImageCodeU(nn.Module):
-    def __init__(self, arm: str, seed: int) -> None:
+    def __init__(self, arm: str, seed: int, encoder: str = "mlp64") -> None:
         super().__init__()
         if arm not in ARMS:
             raise ValueError(arm)
+        if encoder not in ENCODERS:
+            raise ValueError(encoder)
         self.base = FirstLayerU(arm, seed)
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(seed + 3091)
-            self.image_encoder = nn.Sequential(
-                nn.Linear(INPUT_PIXELS, 64), nn.Tanh(),
-                nn.Linear(64, RANK))
-            nn.init.normal_(self.image_encoder[-1].weight, std=0.01)
-            nn.init.zeros_(self.image_encoder[-1].bias)
+            self.image_encoder, final_layer = make_image_encoder(encoder)
+            nn.init.normal_(final_layer.weight, std=0.01)
+            nn.init.zeros_(final_layer.bias)
 
     def prepare(self, images: torch.Tensor, u: torch.Tensor,
                 *, image_code: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
@@ -124,6 +164,7 @@ def evaluate(model: ImageCodeU, pool: tuple, *, seed: int, tasks: int,
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--arm", choices=ARMS, required=True)
+    parser.add_argument("--encoder", choices=ENCODERS, default="mlp64")
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--data-dir", type=Path, default=Path("datasets/mnist8m"))
@@ -158,11 +199,12 @@ def main() -> None:
                            per_digit=args.eval_images_per_digit, device=device)
     test = load_pool(args.data_dir, seed=args.seed, split="test",
                      per_digit=args.eval_images_per_digit, device=device)
-    model = ImageCodeU(args.arm, args.seed).to(device)
+    model = ImageCodeU(args.arm, args.seed, args.encoder).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.outer_lr)
     rng = torch.Generator(device=device).manual_seed(args.seed + 1200)
     args.out.mkdir(parents=True, exist_ok=True)
-    stem = f"{args.arm}_seed{args.seed}"
+    stem = (f"{args.arm}_seed{args.seed}" if args.encoder == "mlp64"
+            else f"{args.arm}_{args.encoder}_seed{args.seed}")
     result_path = args.out / f"{stem}.json"
     latest_path = args.out / f"{stem}_latest.pt"
     best_path = args.out / f"{stem}_best.pt"
@@ -172,12 +214,32 @@ def main() -> None:
         math.inf, 0, [], 0, 0.0)
     if args.resume:
         saved = torch.load(latest_path, map_location=device, weights_only=False)
+        signature = {key: value for key, value in vars(args).items()
+                     if key not in ("device", "out", "resume")}
+        if saved.get("config") is not None and saved["config"] != {
+                key: str(value) if isinstance(value, Path) else value
+                for key, value in signature.items()}:
+            raise ValueError(f"Checkpoint settings differ: {latest_path}")
+        if saved.get("config") is None and args.encoder != "mlp64":
+            raise ValueError(f"Checkpoint lacks encoder settings: {latest_path}")
         model.load_state_dict(saved["model"])
         optimizer.load_state_dict(saved["optimizer"])
         rng.set_state(saved["rng"].cpu())
         best_score, best_step = saved["best_score"], saved["best_step"]
         history, start_step = saved["history"], saved["step"]
         elapsed_before = saved["elapsed_seconds"]
+    output = {"config": {k: str(v) if isinstance(v, Path) else v
+                         for k, v in vars(args).items()},
+              "model": {"u_shape": [235500, RANK],
+                        "encoder": args.encoder,
+                        "trainable_parameters": sum(
+                            p.numel() for p in model.parameters()),
+                        "image_code_parameters": sum(
+                            p.numel() for p in model.image_encoder.parameters()),
+                        "adapted_parameters": [RANK, 31]},
+              "best_step": best_step,
+              "best_validation_score": best_score,
+              "history": history}
     start = time.monotonic() - elapsed_before
     for step in range(start_step + 1, args.steps + 1):
         model.train()
@@ -210,24 +272,19 @@ def main() -> None:
             history.append(row)
             if score < best_score:
                 best_score, best_step = score, step
-                torch.save(model.state_dict(), best_path)
-            torch.save({"model": model.state_dict(),
+                atomic_torch_save(model.state_dict(), best_path)
+            atomic_torch_save({"model": model.state_dict(),
                         "optimizer": optimizer.state_dict(),
                         "rng": rng.get_state(), "best_score": best_score,
                         "best_step": best_step, "history": history,
                         "step": step,
+                        "config": {
+                            key: str(value) if isinstance(value, Path) else value
+                            for key, value in vars(args).items()
+                            if key not in ("device", "out", "resume")},
                         "elapsed_seconds": row["elapsed_seconds"]}, latest_path)
-            output = {"config": {k: str(v) if isinstance(v, Path) else v
-                                 for k, v in vars(args).items()},
-                      "model": {"u_shape": [235500, RANK],
-                                "trainable_parameters": sum(
-                                    p.numel() for p in model.parameters()),
-                                "image_code_parameters": sum(
-                                    p.numel() for p in model.image_encoder.parameters()),
-                                "adapted_parameters": [RANK, 31]},
-                      "best_step": best_step,
-                      "best_validation_score": best_score,
-                      "history": history}
+            output["best_step"] = best_step
+            output["best_validation_score"] = best_score
             temporary = result_path.with_suffix(".tmp")
             temporary.write_text(json.dumps(output, indent=2) + "\n")
             temporary.replace(result_path)
