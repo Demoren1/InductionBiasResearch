@@ -1,7 +1,8 @@
 """Fine-tune a random-task MoE for the ordinary MNIST8m digit sum.
 
-The coordinate-generated first-layer U is frozen.  The training and test sets
-are the same masked, nonzero-digit sets used for the paper MLP control.
+The coordinate-generated first-layer U is frozen.  The downstream layers can
+optionally be trained.  The training and test sets are the same masked,
+nonzero-digit sets used for the paper MLP control.
 """
 
 from __future__ import annotations
@@ -66,6 +67,8 @@ def main() -> None:
     parser.add_argument("--trainable", choices=("router_v", "router_v_coeff",
                                               "router_v_readout", "router_v_head"),
                         default="router_v")
+    parser.add_argument("--unfreeze-middle", action="store_true",
+                        help="Also fine-tune the second and third image layers; U stays frozen")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--data-dir", type=Path, default=Path("datasets/mnist8m"))
@@ -76,14 +79,15 @@ def main() -> None:
     parser.add_argument("--patience", type=int, default=12)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--adam-eps", type=float, default=0.001)
     parser.add_argument("--target-center", type=float, default=CENTER)
     parser.add_argument("--target-scale", type=float, default=SCALE)
     parser.add_argument("--probe-sets", type=int, default=1000)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     if (min(args.epochs, args.patience, args.batch_size, args.probe_sets) < 1
-            or args.lr <= 0 or args.target_scale <= 0):
-        parser.error("Epochs, patience, batch size, probe sets, and LR must be positive")
+            or args.lr <= 0 or args.adam_eps <= 0 or args.target_scale <= 0):
+        parser.error("Epochs, patience, batch size, probe sets, LR, and Adam epsilon must be positive")
     if args.checkpoint is None:
         directory = ("meta_u_first_v_moe_router_conv_10k" if args.router == "conv"
                      else "meta_u_first_v_moe_router_mlp_10k")
@@ -107,6 +111,10 @@ def main() -> None:
     for parameter in model.router.parameters():
         parameter.requires_grad_(True)
     model.v_experts.requires_grad_(True)
+    if args.unfreeze_middle:
+        for layer in (model.base.second, model.base.third):
+            for parameter in layer.parameters():
+                parameter.requires_grad_(True)
     if args.trainable in ("router_v_coeff", "router_v_head"):
         model.initial_coefficients.requires_grad_(True)
     if args.trainable in ("router_v_readout", "router_v_head"):
@@ -114,12 +122,14 @@ def main() -> None:
     with torch.no_grad():
         frozen_u = model.base.u().detach()
     trainable = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.Adam(trainable, lr=args.lr, eps=0.001)
+    optimizer = torch.optim.Adam(trainable, lr=args.lr, eps=args.adam_eps)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=5, min_lr=1e-5)
     rng = np.random.default_rng(args.seed + 3_000_000)
     args.out.mkdir(parents=True, exist_ok=True)
     stem = f"{args.router}_{args.trainable}_seed{args.seed}"
+    if args.unfreeze_middle:
+        stem += "_unfrozen_middle"
     result_path = args.out / f"{stem}.json"
     latest_path = args.out / f"{stem}_latest.pt"
     best_path = args.out / f"{stem}_best.pt"
@@ -179,6 +189,7 @@ def main() -> None:
         result = {"config": {key: str(value) if isinstance(value, Path) else value
                              for key, value in vars(args).items()},
                   "frozen_u": True,
+                  "frozen_middle_layers": not args.unfreeze_middle,
                   "trained_parameters": sum(p.numel() for p in trainable),
                   "train_sets": len(train["targets"]),
                   "best_epoch": best_epoch, "best_validation_mae": best_mae,
