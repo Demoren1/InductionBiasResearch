@@ -37,14 +37,14 @@ def atomic_torch_save(value: object, path: Path) -> None:
 
 
 class ConvImageEncoder(nn.Module):
-    def __init__(self, channels: int) -> None:
+    def __init__(self, channels: int, out_features: int = RANK) -> None:
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(1, channels // 2, 3, padding=1), nn.Tanh(),
             nn.AvgPool2d(2),
             nn.Conv2d(channels // 2, channels, 3, padding=1), nn.Tanh(),
             nn.AvgPool2d(2), nn.Flatten())
-        self.head = nn.Linear(channels * 7 * 7, RANK)
+        self.head = nn.Linear(channels * 7 * 7, out_features)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         return self.head(self.features(images.reshape(-1, 1, 28, 28)))
