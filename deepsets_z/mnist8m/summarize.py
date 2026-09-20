@@ -179,6 +179,49 @@ def main() -> None:
         seed_fig.savefig(args.output.with_name(f"{args.output.stem}_seed{seed}.png"),
                          dpi=180)
         plt.close(seed_fig)
+    seed_fig, (seed_accuracy_ax, seed_mae_ax) = plt.subplots(
+        1, 2, figsize=(12, 4.5), constrained_layout=True)
+    all_seeds = sorted(seed_runs)
+    for arm in ARMS:
+        seeds = [seed for seed in all_seeds if arm in seed_runs[seed]]
+        if not seeds:
+            continue
+        accuracy = [seed_runs[seed][arm]["metrics"]["test_50"]
+                    ["exact_round_accuracy"] * 100 for seed in seeds]
+        mae50 = [seed_runs[seed][arm]["metrics"]["test_50"]["mae"]
+                 for seed in seeds]
+        seed_accuracy_ax.plot(seeds, accuracy, marker="o", color=COLORS[arm],
+                              label=LABELS[arm])
+        seed_mae_ax.plot(seeds, mae50, marker="o", color=COLORS[arm],
+                         label=LABELS[arm])
+    seed_accuracy_ax.set(xlabel="Seed", ylabel="Exact accuracy at length 50, %",
+                         xticks=all_seeds, ylim=(0, 102))
+    seed_mae_ax.set(xlabel="Seed", ylabel="MAE at length 50", xticks=all_seeds)
+    seed_mae_ax.set_yscale("log")
+    for seed_ax in (seed_accuracy_ax, seed_mae_ax):
+        seed_ax.grid(alpha=0.25)
+    seed_accuracy_ax.legend(fontsize=8)
+    seed_fig.savefig(args.output.with_name(args.output.stem + "_across_seeds.png"),
+                     dpi=180)
+    plt.close(seed_fig)
+    paired_seeds = [seed for seed in all_seeds if "no_z" in seed_runs[seed]]
+    paired_fig, paired_ax = plt.subplots(figsize=(8, 4.3), constrained_layout=True)
+    for arm, offset in (("learned_z", -0.17), ("fixed_z", 0.17)):
+        seeds = [seed for seed in paired_seeds if arm in seed_runs[seed]]
+        differences = [100 * (seed_runs[seed][arm]["metrics"]["test_50"]
+                              ["exact_round_accuracy"] -
+                              seed_runs[seed]["no_z"]["metrics"]["test_50"]
+                              ["exact_round_accuracy"]) for seed in seeds]
+        paired_ax.bar([seed + offset for seed in seeds], differences,
+                      width=0.32, color=COLORS[arm], label=f"{LABELS[arm]} − no z")
+    paired_ax.axhline(0, color="#222222", linewidth=1)
+    paired_ax.set(xlabel="Seed", ylabel="Accuracy difference at length 50, pp",
+                  xticks=paired_seeds)
+    paired_ax.grid(axis="y", alpha=0.25)
+    paired_ax.legend(fontsize=8)
+    paired_fig.savefig(args.output.with_name(args.output.stem + "_paired_seeds.png"),
+                       dpi=180)
+    plt.close(paired_fig)
     training_ax.set(xlabel="Epoch", ylabel="Validation MAE")
     training_ax.set_yscale("log")
     training_ax.grid(alpha=0.25)
