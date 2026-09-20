@@ -197,3 +197,17 @@ python -m deepsets_z.mnist8m.v_moe_sweep --devices auto
 При 5000 шагах свёртка лучше MLP для K = 48, 96 и 128. Дополнительный опыт при K = 96 и 10 000 шагах сохраняет преимущество свёртки: MAE 0,994 против 1,097 на длине 5 и 2,225 против 2,493 на длине 20. Для воспроизведения продлённого опыта используйте тот же `v_moe_sweep` с `--counts 96 --steps 10000 --router conv` и отдельно `--router mlp`, задав разные каталоги через `--out`.
 
 Оба запуска K = 96 затем продолжены из checkpoint до плато валидации: `--resume --steps 60000 --early-stop-patience 16 --early-stop-min-delta 0.002 --min-steps 12000` для `meta_u_first_v_moe`, с прежними `--router`, `--experts 96`, `--ortho-weight 0.2` и `--out`. Свёртка остановилась на шаге 34 750, MLP — на 41 000. Команда `python -m deepsets_z.mnist8m.evaluate_v_moe_router_lengths --device cuda:0` сравнивает их лучшие checkpoint на длинах до 50. [Итоговый отчёт и графики](META_U_FIRST_V_MOE_ROUTER_RESULTS.md): после длительного обучения разрыв на длине 20 мал (1,907 против 1,925 MAE), на длине 50 убедительного различия нет (3,661 против 3,631). Рабочие checkpoint остаются в `outputs/`, итоговые JSON и графики сохранены рядом с отчётом.
+
+### Дообучение на обычной сумме цифр
+
+[Отчёт и графики](V_MOE_DIGIT_SUM_FINETUNE_RESULTS.md) проверяют, может ли модель после обучения на случайных стоимостях цифр решать обычную сумму. Общая сгенерированная `U` и два следующих слоя заморожены; на наборах `sets_authors` дообучаются роутер, эксперты `v` и в отдельных вариантах коэффициенты смеси и выходной вектор. На сырых суммах лучший свёрточный вариант получает **81,85%** точных ответов на длине 50 против **83,72%** у плотной MLP. Если обучать только роутер и `v` при фиксированном выходе, получается **1,74%**.
+
+После получения лучших checkpoint из предыдущего опыта запуски воспроизводятся так:
+
+```bash
+python -m deepsets_z.mnist8m.finetune_v_moe_digit_sum --router conv --trainable router_v_head --device cuda:0 --target-center 0 --target-scale 1 --out deepsets_z/mnist8m/outputs/v_moe_digit_sum_finetune_raw
+python -m deepsets_z.mnist8m.finetune_v_moe_digit_sum --router conv --trainable router_v --device cuda:0
+python -m deepsets_z.mnist8m.summarize_v_moe_digit_sum_finetune
+```
+
+Первый запуск обучает предсказание сырой суммы, второй повторяет буквальную проверку только роутера и `v`. Скрипт поддерживает `--router mlp`, `--trainable router_v_readout` и `--trainable router_v_coeff`; контрольные точки и подробные логи остаются в исключённом из Git `outputs/`. Сводные числа и графики сохранены рядом с отчётом.
