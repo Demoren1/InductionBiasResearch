@@ -168,10 +168,11 @@ def evaluate(model: VExpertMoE, pool: tuple, *, seed: int, tasks: int,
                 gc, gr = torch.autograd.grad(loss, (coefficients, readout))
                 coefficients = (coefficients - lr_coeff * gc).detach().requires_grad_(True)
                 readout = (readout - lr_readout * gr).detach().requires_grad_(True)
-            prediction = model.predict(qp, q[1], coefficients, readout)
-            rows.append((normalized_mse(
-                prediction, q[2], q[3]).detach().item(),
-                (prediction - q[2]).abs().mean().detach().item()))
+            with torch.no_grad():
+                prediction = model.predict(qp, q[1], coefficients, readout)
+                rows.append((normalized_mse(
+                    prediction, q[2], q[3]).item(),
+                    (prediction - q[2]).abs().mean().item()))
         result[str(length)] = {
             "normalized_mse": float(np.mean([row[0] for row in rows])),
             "mae": float(np.mean([row[1] for row in rows])),
@@ -228,6 +229,10 @@ def main() -> None:
     parser.add_argument("--eval-every", type=int, default=250)
     parser.add_argument("--val-tasks", type=int, default=16)
     parser.add_argument("--test-tasks", type=int, default=64)
+    parser.add_argument("--early-stop-patience", type=int, default=0,
+                        help="Validation checks without a material gain; 0 disables")
+    parser.add_argument("--early-stop-min-delta", type=float, default=0.002)
+    parser.add_argument("--min-steps", type=int, default=0)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     if args.experts < 1 or args.experts > 256 or args.ortho_weight < 0:
@@ -236,6 +241,9 @@ def main() -> None:
            args.query, args.train_images_per_digit, args.eval_images_per_digit,
            args.eval_every, args.val_tasks, args.test_tasks) < 1:
         parser.error("All counts must be positive")
+    if (args.early_stop_patience < 0 or args.early_stop_min_delta < 0
+            or args.min_steps < 0 or args.min_steps > args.steps):
+        parser.error("Invalid early-stopping settings")
     torch.set_num_threads(4)
     torch.backends.cuda.matmul.allow_tf32 = True
     device = torch.device(args.device)
@@ -261,12 +269,18 @@ def main() -> None:
         raise FileExistsError(result_path)
     signature = {key: str(value) if isinstance(value, Path) else value
                  for key, value in vars(args).items()
-                 if key not in ("device", "out", "resume")}
+                 if key not in ("device", "out", "resume",
+                                "early_stop_patience", "early_stop_min_delta",
+                                "min_steps")}
     best_score, best_step, history, start_step, elapsed_before = (
         math.inf, 0, [], 0, 0.0)
     if args.resume:
         saved = torch.load(latest_path, map_location=device, weights_only=False)
-        if saved["config"] != signature:
+        saved_signature = saved["config"]
+        expected_signature = dict(signature)
+        expected_signature["steps"] = saved_signature["steps"]
+        if (saved_signature != expected_signature
+                or saved_signature["steps"] > args.steps):
             raise ValueError(f"Checkpoint settings differ: {latest_path}")
         model.load_state_dict(saved["model"])
         optimizer.load_state_dict(saved["optimizer"])
@@ -287,6 +301,13 @@ def main() -> None:
         "best_step": best_step, "best_validation_score": best_score,
         "history": history}
     start = time.monotonic() - elapsed_before
+    material_best = math.inf
+    last_material_step = 0
+    for row in history:
+        if row["validation_score"] < material_best - args.early_stop_min_delta:
+            material_best = row["validation_score"]
+            last_material_step = row["step"]
+    stopped_for_plateau = False
     for step in range(start_step + 1, args.steps + 1):
         model.train()
         optimizer.zero_grad(set_to_none=True)
@@ -319,6 +340,9 @@ def main() -> None:
                    "validation_score": score,
                    "elapsed_seconds": time.monotonic() - start}
             history.append(row)
+            if score < material_best - args.early_stop_min_delta:
+                material_best = score
+                last_material_step = step
             if score < best_score:
                 best_score, best_step = score, step
                 atomic_torch_save(model.state_dict(), best_path)
@@ -337,6 +361,21 @@ def main() -> None:
                   f"orth={orth_loss.item():.4f} val={score:.4f} "
                   f"best={best_step} elapsed={row['elapsed_seconds']:.0f}s",
                   flush=True)
+            if (args.early_stop_patience
+                    and step >= args.min_steps
+                    and step - last_material_step >=
+                    args.early_stop_patience * args.eval_every):
+                stopped_for_plateau = True
+                print(f"EARLY_STOP {stem} step={step} "
+                      f"last_material_gain={last_material_step}", flush=True)
+                break
+    output["stopping"] = {
+        "reason": "validation_plateau" if stopped_for_plateau else "step_limit",
+        "stop_step": history[-1]["step"],
+        "last_material_gain_step": last_material_step,
+        "patience_checks": args.early_stop_patience,
+        "min_delta": args.early_stop_min_delta,
+        "min_steps": args.min_steps}
     model.load_state_dict(torch.load(
         best_path, map_location=device, weights_only=True))
     output["test"] = evaluate(
