@@ -1,0 +1,234 @@
+{
+  "seed": 42,
+  "validation_tasks": 500,
+  "validation_offset": 30000,
+  "test_tasks": 1000,
+  "test_offset": 50000,
+  "selection": "Highest validation accuracy among generator candidates; controls selected on validation separately",
+  "candidates": [
+    {
+      "label": "Generator width 64, batch 4",
+      "name": "g64_i01_b4_o1e3_s01",
+      "generator_width": 64,
+      "meta_batch": 4,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 23600,
+      "training_tasks_at_best": 94400,
+      "parameters_total": 33355,
+      "parameters_u": 4993,
+      "validation_accuracy": 0.933199982047081,
+      "test_accuracy": 0.9059999786019325,
+      "test_accuracy_se": 0.002522689957610454,
+      "test_cross_entropy": 0.26592488795006647,
+      "selected_generated": true,
+      "selected_generated_minus_this_pp": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "label": "Generator width 80, batch 4",
+      "name": "g80_i01_b4_o1e3_s01",
+      "generator_width": 80,
+      "meta_batch": 4,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 16400,
+      "training_tasks_at_best": 65600,
+      "parameters_total": 35883,
+      "parameters_u": 7521,
+      "validation_accuracy": 0.9295199810266495,
+      "test_accuracy": 0.8987999781370163,
+      "test_accuracy_se": 0.0026068671718851304,
+      "test_cross_entropy": 0.28201873326068744,
+      "selected_generated": false,
+      "selected_generated_minus_this_pp": {
+        "mean": 0.720000046491623,
+        "ci95": [
+          0.2800001949071884,
+          1.1320000827312469
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": 0.36800010204315187,
+        "ci95": [
+          -0.14399991184473038,
+          0.8642002439498873
+        ]
+      }
+    },
+    {
+      "label": "Generator width 128, batch 4",
+      "name": "g128_i01_b4_o1e3_s01",
+      "generator_width": 128,
+      "meta_batch": 4,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 10800,
+      "training_tasks_at_best": 43200,
+      "parameters_total": 46539,
+      "parameters_u": 18177,
+      "validation_accuracy": 0.9240799810886383,
+      "test_accuracy": 0.8861999768018722,
+      "test_accuracy_se": 0.002730460730172517,
+      "test_cross_entropy": 0.3213690682016313,
+      "selected_generated": false,
+      "selected_generated_minus_this_pp": {
+        "mean": 1.9800001800060272,
+        "ci95": [
+          1.5360001975297928,
+          2.4121002402901635
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": 0.9120000958442688,
+        "ci95": [
+          0.3840001085400581,
+          1.4400002002716064
+        ]
+      }
+    },
+    {
+      "label": "Generator width 64, batch 8",
+      "name": "g64_i01_b8_o1e3_s01",
+      "generator_width": 64,
+      "meta_batch": 8,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 10800,
+      "training_tasks_at_best": 86400,
+      "parameters_total": 33355,
+      "parameters_u": 4993,
+      "validation_accuracy": 0.9270399816036224,
+      "test_accuracy": 0.8989199787974358,
+      "test_accuracy_se": 0.0026616382972660274,
+      "test_cross_entropy": 0.28665697878005447,
+      "selected_generated": false,
+      "selected_generated_minus_this_pp": {
+        "mean": 0.7079999804496765,
+        "ci95": [
+          0.2679999526590109,
+          1.1520001161843538
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": 0.6160000443458558,
+        "ci95": [
+          0.10400001972913743,
+          1.1200001603364946
+        ]
+      }
+    },
+    {
+      "label": "Direct U",
+      "name": "d_i01_b4_o1e3",
+      "generator_width": null,
+      "meta_batch": 4,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 12000,
+      "training_tasks_at_best": 48000,
+      "parameters_total": 35855,
+      "parameters_u": 7493,
+      "validation_accuracy": 0.9514399853944778,
+      "test_accuracy": 0.9213599803447723,
+      "test_accuracy_se": 0.00232076219706394,
+      "test_cross_entropy": 0.22741805311333155,
+      "selected_generated": false,
+      "selected_generated_minus_this_pp": {
+        "mean": -1.5360001742839813,
+        "ci95": [
+          -1.9680002814531328,
+          -1.1360000666975976
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": -1.8240003347396851,
+        "ci95": [
+          -2.320200452804565,
+          -1.3360002136230469
+        ]
+      }
+    },
+    {
+      "label": "Fixed identity U",
+      "name": "identity_i01_b4_o1e3",
+      "generator_width": null,
+      "meta_batch": 4,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 16800,
+      "training_tasks_at_best": 67200,
+      "parameters_total": 28362,
+      "parameters_u": 0,
+      "validation_accuracy": 0.9035199811458587,
+      "test_accuracy": 0.8645599784553051,
+      "test_accuracy_se": 0.003566725119848234,
+      "test_cross_entropy": 0.5927506882315502,
+      "selected_generated": false,
+      "selected_generated_minus_this_pp": {
+        "mean": 4.144000014662742,
+        "ci95": [
+          3.515999986976385,
+          4.759999925270677
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": 2.968000090122223,
+        "ci95": [
+          2.1440000292658805,
+          3.808000040650368
+        ]
+      }
+    },
+    {
+      "label": "Fixed random U",
+      "name": "random_i01_b4_o1e3",
+      "generator_width": null,
+      "meta_batch": 4,
+      "outer_lr": 0.001,
+      "inner_init": 0.1,
+      "inner_lr_mode": "softplus",
+      "best_step": 9600,
+      "training_tasks_at_best": 38400,
+      "parameters_total": 28362,
+      "parameters_u": 0,
+      "validation_accuracy": 0.8680799798965454,
+      "test_accuracy": 0.8276799788773059,
+      "test_accuracy_se": 0.004334213013568233,
+      "test_cross_entropy": 0.7919242629529908,
+      "selected_generated": false,
+      "selected_generated_minus_this_pp": {
+        "mean": 7.831999972462654,
+        "ci95": [
+          7.060000000596046,
+          8.608100190758703
+        ]
+      },
+      "selected_generated_minus_this_validation_pp": {
+        "mean": 6.5120002150535585,
+        "ci95": [
+          5.607800053060054,
+          7.488000061064959
+        ]
+      }
+    }
+  ]
+}

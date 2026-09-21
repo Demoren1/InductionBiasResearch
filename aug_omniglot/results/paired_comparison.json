@@ -1,0 +1,86 @@
+{
+  "seed": 42,
+  "test_tasks": 400,
+  "data": {
+    "train_classes": 790,
+    "val_classes": 174,
+    "test_classes": 659,
+    "val_alphabets": [
+      "Anglo-Saxon_Futhorc",
+      "Futurama",
+      "Greek",
+      "Korean",
+      "Tifinagh"
+    ],
+    "images_per_class": 20
+  },
+  "arms": {
+    "generated": {
+      "accuracy": 0.866599977761507,
+      "accuracy_se": 0.004716642561594079,
+      "loss": 0.395287212934345,
+      "best_step": 8800
+    },
+    "generated_w80": {
+      "accuracy": 0.8449999772757292,
+      "accuracy_se": 0.0056139371687332264,
+      "loss": 0.4846694555226713,
+      "best_step": 7000
+    },
+    "direct": {
+      "accuracy": 0.8778999777138233,
+      "accuracy_se": 0.004542086752545881,
+      "loss": 0.3354333056975156,
+      "best_step": 4800
+    },
+    "random": {
+      "accuracy": 0.7592999794334173,
+      "accuracy_se": 0.008293414450734952,
+      "loss": 1.162096175304614,
+      "best_step": 3600
+    },
+    "identity": {
+      "accuracy": 0.7510999788716436,
+      "accuracy_se": 0.008844633405172508,
+      "loss": 1.3619965481478722,
+      "best_step": 5800
+    }
+  },
+  "generated_minus": {
+    "generated_w80": {
+      "mean_percentage_points": 2.1600000485777855,
+      "ci95_percentage_points": [
+        1.2600003246217966,
+        3.0799997337162495
+      ]
+    },
+    "direct": {
+      "mean_percentage_points": -1.1299999952316284,
+      "ci95_percentage_points": [
+        -1.8402501333504913,
+        -0.3699999302625656
+      ]
+    },
+    "random": {
+      "mean_percentage_points": 10.729999832808971,
+      "ci95_percentage_points": [
+        9.329999928548933,
+        12.10999992005527
+      ]
+    },
+    "identity": {
+      "mean_percentage_points": 11.549999888986349,
+      "ci95_percentage_points": [
+        9.969749842304736,
+        13.179999836347998
+      ]
+    },
+    "generated_w80_vs_direct": {
+      "mean_percentage_points": -3.2900000438094135,
+      "ci95_percentage_points": [
+        -4.170250353217124,
+        -2.420000030472875
+      ]
+    }
+  }
+}
