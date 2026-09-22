@@ -1,6 +1,8 @@
-Inductive biases play a central role in the generalization and data efficiency of neural networks.
-Encoding these assumptions through network connectivity often relies on domain expertise.
-This paper presents a generative approach to discovering connectivity patterns shared across related tasks.
-For each task, a separate generative model captures structural patterns extracted from trained networks.
-These models are used to refine the constraints shared across tasks.
-The central hypothesis is that agreement between them reveals structural inductive biases that generalize to previously unseen tasks.
+Inductive biases shape how neural networks generalize from limited data, yet encoding them in network connectivity often relies on domain expertise.
+This paper presents a generative approach that draws on related tasks to discover shared structural constraints.
+For each task, a generative model approximates a family of hypothesis spaces that admit near-optimal solutions.
+Intersecting these task-specific families narrows the search to structures compatible with all tasks, automating the discovery of a shared inductive bias (want lossless).
+% TODO: Validate the expected experimental result stated below, including
+% comparisons of data efficiency and generalization to unseen tasks.
+% TODO: Consider real-world evaluation to assess broader applicability.
+Experiments on synthetic tasks demonstrate improved data efficiency and generalization to unseen tasks, supporting the hypothesis that the recovered constraints capture transferable structure.
