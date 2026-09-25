@@ -1,0 +1,37 @@
+{
+  "description": "Post-hoc source-pack diagnostic at set length 50 using the same 10000 sets per pack for both saved models",
+  "seed": 42,
+  "set_length": 50,
+  "sets_per_pack": 10000,
+  "packs": {
+    "1": {"dense_accuracy": 0.8338, "dense_mae": 0.404515, "generated_u_accuracy": 0.8283, "generated_u_mae": 0.450788},
+    "2": {"dense_accuracy": 0.8312, "dense_mae": 0.401064, "generated_u_accuracy": 0.8309, "generated_u_mae": 0.442408},
+    "3": {"dense_accuracy": 0.8373, "dense_mae": 0.390582, "generated_u_accuracy": 0.8366, "generated_u_mae": 0.440648},
+    "4": {"dense_accuracy": 0.8013, "dense_mae": 0.483879, "generated_u_accuracy": 0.8305, "generated_u_mae": 0.463070},
+    "5": {"dense_accuracy": 0.7937, "dense_mae": 0.508209, "generated_u_accuracy": 0.8237, "generated_u_mae": 0.480051},
+    "6": {"dense_accuracy": 0.7905, "dense_mae": 0.498679, "generated_u_accuracy": 0.8233, "generated_u_mae": 0.470819},
+    "7": {"dense_accuracy": 0.8033, "dense_mae": 0.460735, "generated_u_accuracy": 0.8264, "generated_u_mae": 0.466163}
+  },
+  "across_pack_mean": {
+    "dense_accuracy": 0.813014,
+    "dense_mae": 0.449666,
+    "generated_u_accuracy": 0.828529,
+    "generated_u_mae": 0.459135,
+    "generated_minus_dense_accuracy_pp": 1.5514
+  },
+  "across_pack_sample_std": {
+    "dense_accuracy": 0.020265,
+    "dense_mae": 0.050024,
+    "generated_u_accuracy": 0.004653,
+    "generated_u_mae": 0.014889
+  },
+  "checkpoints": {
+    "dense": "deepsets_z/mnist8m/results_authors_scaled/paper_mlp_seed42_last.pt",
+    "generated_u": "deepsets_z/mnist8m/outputs/v_moe_digit_sum_finetune_raw/conv_router_v_head_seed42_unfrozen_middle_best.pt"
+  },
+  "limitations": [
+    "One training seed for each compared checkpoint",
+    "This diagnostic was designed after inspecting the original per-length curve",
+    "The seven MNIST8m packs are contiguous source blocks rather than independently randomized datasets"
+  ]
+}

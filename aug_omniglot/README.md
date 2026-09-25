@@ -72,3 +72,54 @@ comparable target.
 Reference: Zhou, Knowles, Finn, *Meta-Learning Symmetries by
 Reparameterization*, ICLR 2021, section 6 and appendix D.3,
 <https://arxiv.org/pdf/2007.02933>.
+
+## Support-conditioned U experiment
+
+`conditional_run.py` tests a different question: can the **five support images
+of the current episode** help choose its convolutional U matrices? The
+generator sees only those unmodified images, with no query images or labels.
+It produces one U for the entire episode. The existing Conv4 model then adapts
+V, batch-normalization affine parameters, and the classifier on the five
+labelled support examples and predicts the 25 transformed query examples.
+The query error trains both the generator and the shared V initialization.
+
+Three matched arms use the same episodes, training protocol, initial V and
+test tasks for each seed:
+
+* `static`: directly learned U, shared across every episode;
+* `mean`: a small CNN encodes each support image, and their average determines U;
+* `transformer`: the same CNN plus one set transformer layer determines U. The
+  transformer has no sequence-position embeddings, so changing the order of
+  support images leaves U unchanged.
+
+The conditional arms start with U equal to identity. They learn a common base U
+and four rank-four basis corrections, combined using coefficients predicted
+from the support set. This keeps the task-specific change smaller than emitting
+all 7,493 matrix elements independently. At test time, they are evaluated both
+with the correct support images and with unrelated support images to test
+whether the image-conditioned U matters. The latter changes only the
+generator input; V still adapts to the correct labelled support examples.
+As in the earlier Conv4 runs, batch normalization in the classifier uses the
+statistics of each query batch. The generator itself sees no query images.
+
+Run all three arms on three seeds, using every GPU whose *compute utilization*
+is zero when the command starts:
+
+    conda run --no-capture-output -n ras python -m aug_omniglot.conditional_sweep --devices auto
+
+The command shows a live progress bar, starts one run per selected GPU, and
+prints per-seed and across-seed accuracy when finished. Nine runs are queued,
+so all eight GPUs can be occupied simultaneously if idle. Detailed logs are in
+`aug_omniglot/outputs/conditional_u/logs/`; each run also has `progress.json`,
+`history.jsonl`, `best.pt`, and `result.json`. The aggregate is `summary.json`.
+Re-running skips finished runs and resumes interrupted runs from validation
+checkpoints. Training stops when validation loss has failed to improve at
+ten consecutive checks after 4,000 steps, or at the 30,000-step safety cap.
+If any run hits the cap, increase it with `--max-steps 60000` and repeat the
+command to continue those runs. A seed-specific run can be launched through
+`python -m aug_omniglot.conditional_run --arm mean --seed 42 --device cuda:0`.
+
+This is an internal comparison using our augmentation and class split, not an
+exact reproduction of the published Aug-Omniglot benchmark. Conditional arms
+have more parameters than the static control, so the matched versus unrelated
+support comparison is necessary for interpreting any accuracy difference.

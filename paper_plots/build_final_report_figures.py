@@ -1,6 +1,6 @@
 """Rebuild the September 8 report figures from committed evidence, without a GPU.
 
-Run from any directory: python /path/to/repo/mds/build_final_report_figures.py
+Run from any directory: python /path/to/repo/paper_plots/build_final_report_figures.py
 Existing mask/example figures are verbatim artifact copies listed in manifest.json.
 """
 from pathlib import Path
@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent / 'mds'
 DATA = ROOT / 'data' / '2026-09-08'
 OUT = ROOT / 'assets' / '2026-09-08'
 OUT.mkdir(parents=True, exist_ok=True)

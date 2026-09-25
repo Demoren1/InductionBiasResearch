@@ -19,6 +19,7 @@ from .meta_u_first_image_code import ConvImageEncoder, atomic_torch_save
 
 
 LENGTHS = (1, 3, 5, 10, 20)
+U_ARMS = ("generated_ortho", "kronecker", "learned", "random", "convolution")
 
 
 class MLPImageRouter(nn.Module):
@@ -40,14 +41,15 @@ class MLPImageRouter(nn.Module):
 
 class VExpertMoE(nn.Module):
     def __init__(self, experts: int, seed: int,
-                 router_kind: str = "conv") -> None:
+                 router_kind: str = "conv",
+                 u_arm: str = "generated_ortho") -> None:
         super().__init__()
         if experts < 1 or experts > 256:
             raise ValueError("Number of experts must be between 1 and 256")
         if router_kind not in {"conv", "mlp"}:
             raise ValueError("router_kind must be conv or mlp")
         self.n_experts = experts
-        self.base = FirstLayerU("generated_ortho", seed)
+        self.base = FirstLayerU(u_arm, seed)
         initial_v = self.base.initial_v1.detach().clone()
         self.base.initial_v1.requires_grad_(False)
         with torch.random.fork_rng(devices=[]):
@@ -210,6 +212,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experts", type=int, required=True)
     parser.add_argument("--router", choices=("conv", "mlp"), default="conv")
+    parser.add_argument("--u-arm", choices=U_ARMS, default="generated_ortho",
+                        help="How the shared first-layer U is parameterized")
     parser.add_argument("--ortho-weight", type=float, default=0.0)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--seed", type=int, default=42)
@@ -253,7 +257,8 @@ def main() -> None:
                            per_digit=args.eval_images_per_digit, device=device)
     test = load_pool(args.data_dir, seed=args.seed, split="test",
                      per_digit=args.eval_images_per_digit, device=device)
-    model = VExpertMoE(args.experts, args.seed, args.router).to(device)
+    model = VExpertMoE(args.experts, args.seed, args.router,
+                       u_arm=args.u_arm).to(device)
     optimizer = torch.optim.Adam(
         (p for p in model.parameters() if p.requires_grad), lr=args.outer_lr)
     rng = torch.Generator(device=device).manual_seed(args.seed + 1200)
@@ -262,6 +267,8 @@ def main() -> None:
     stem = f"moe_k{args.experts}_ortho{weight_tag}_seed{args.seed}"
     if args.router != "conv":
         stem += f"_{args.router}"
+    if args.u_arm != "generated_ortho":
+        stem += f"_u_{args.u_arm}"
     result_path = args.out / f"{stem}.json"
     latest_path = args.out / f"{stem}_latest.pt"
     best_path = args.out / f"{stem}_best.pt"
@@ -276,7 +283,9 @@ def main() -> None:
         math.inf, 0, [], 0, 0.0)
     if args.resume:
         saved = torch.load(latest_path, map_location=device, weights_only=False)
-        saved_signature = saved["config"]
+        saved_signature = dict(saved["config"])
+        # Checkpoints written before --u-arm existed used generated_ortho.
+        saved_signature.setdefault("u_arm", "generated_ortho")
         expected_signature = dict(signature)
         expected_signature["steps"] = saved_signature["steps"]
         if (saved_signature != expected_signature

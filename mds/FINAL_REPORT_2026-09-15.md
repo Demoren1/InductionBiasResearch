@@ -265,8 +265,8 @@ Heatmaps показывают средние hard-маски первой пар
 | Sampling `8×8` | [`summary.json`](data/2026-09-13/sampling_pattern8_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern8_32pairs_paired.json) |
 | Sampling `32×32` | [`summary.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_paired.json) |
 | Heatmaps | [`mask_heatmap_stats.json`](assets/2026-09-13/mask_heatmap_stats.json), [`alignment control`](assets/2026-09-13/final_heatmap_alignment_control.json) |
-| Latent adapters | [`summary.json`](data/2026-09-13/latent_adapter_32pairs_summary.json), [`standalone report`](LATENT_ADAPTER_32PAIRS_2026-09-13.md) |
-| Generated parameter sharing | [`summary.json`](data/2026-09-15/generated_parameter_sharing_summary.json), [`standalone report`](GENERATED_PARAMETER_SHARING_REPORT_2026-09-15.md) |
+| Latent adapters | [`summary.json`](data/2026-09-13/latent_adapter_32pairs_summary.json) |
+| Generated parameter sharing | [`summary.json`](data/2026-09-15/generated_parameter_sharing_summary.json) |
 | Benchmarks Yeh et al. | [`standalone report`](../yeh2022_generated_sharing/FINAL_REPORT.md), [`reproduction package`](../yeh2022_generated_sharing/README.md) |
 | Final figures | [`generator`](../pattern/evaluation/final_report_20260913.py) |
 
@@ -298,7 +298,7 @@ $$
 
 ![Generated структуры и analytic ideal](assets/2026-09-15/generated_parameter_sharing_masks.png)
 
-Подробности: [`GENERATED_PARAMETER_SHARING_REPORT_2026-09-15.md`](GENERATED_PARAMETER_SHARING_REPORT_2026-09-15.md).
+Подробности и интерпретация сохранены выше в этом финальном отчёте.
 
 ## Дополнение 15 сентября: benchmarks Yeh et al. (2022)
 

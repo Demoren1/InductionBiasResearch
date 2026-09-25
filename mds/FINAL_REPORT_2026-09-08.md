@@ -553,12 +553,12 @@ Seed 43 и автоматическое продолжение до 3000 шаг�
 | Точные числа motif | [Evidence и пути к первичным отчётам](data/2026-09-08/motif_evidence.json) |
 | Точные числа U | [Все модели/бюджеты/условия](data/2026-09-08/meta_interpolation.json), [диагностика](data/2026-09-08/meta_diagnosis.json), [подробности fixed-U](data/2026-09-08/meta_fixed_u_details.json) |
 | Происхождение скопированных артефактов | [Manifest с SHA-256](data/2026-09-08/manifest.json) |
-| Сводные графики без GPU | [Скрипт построения](build_final_report_figures.py), [PNG и SVG](assets/2026-09-08) |
+| Сводные графики без GPU | [Скрипт построения](../paper_plots/build_final_report_figures.py), [PNG и SVG](assets/2026-09-08) |
 
 Из корня репозитория в окружении с NumPy и Matplotlib:
 
 ```bash
-python mds/build_final_report_figures.py
+python paper_plots/build_final_report_figures.py
 ```
 
 Зависимости среды перечислены в [requirements.txt](../requirements.txt), тестовые — в [requirements-dev.txt](../requirements-dev.txt).

@@ -1,8 +1,9 @@
 """First-layer U on MNIST8m tasks with shifted query images.
 
 The 300 first-layer outputs are indexed as three 10x10 feature maps.  A learned
-or fixed random U is compared with an analytic strided 3x3 convolution U.
-Coordinate-generated U and a shuffled-coordinate control are also available.
+or fixed random U is compared with a Kronecker-factorized U and an analytic
+strided 3x3 convolution U. Coordinate-generated U and a shuffled-coordinate
+control are also available.
 For every task, v1 for the first layer and a 31-number readout are adapted on
 unshifted support sets; query images are translated by three pixels.
 """
@@ -27,6 +28,8 @@ INPUT_PIXELS = 784
 HIDDEN = 300
 RANK = 32
 N_WEIGHTS = (INPUT_PIXELS + 1) * HIDDEN
+KRONECKER_INPUT_RANK = 8
+KRONECKER_OUTPUT_RANK = 4
 SHIFT_CHOICES = ((0, -3), (0, 3), (-3, 0), (3, 0))
 GENERATED_ARMS = ("generated", "generated_shuffled", "generated_ortho",
                   "generated_shuffled_ortho")
@@ -92,7 +95,7 @@ def translate(images: torch.Tensor, dy: int, dx: int) -> torch.Tensor:
 class FirstLayerU(nn.Module):
     def __init__(self, arm: str, seed: int) -> None:
         super().__init__()
-        if arm not in ("learned", "random", "convolution", "dense",
+        if arm not in ("learned", "kronecker", "random", "convolution", "dense",
                        *GENERATED_ARMS):
             raise ValueError(arm)
         torch.manual_seed(seed)
@@ -103,6 +106,20 @@ class FirstLayerU(nn.Module):
             nn.init.zeros_(layer.bias)
         if arm == "convolution":
             initial_u = convolution_u()
+        elif arm == "kronecker":
+            if KRONECKER_INPUT_RANK * KRONECKER_OUTPUT_RANK != RANK:
+                raise RuntimeError("Kronecker factor dimensions must multiply to RANK")
+            # The paper's scalable fully connected parameterization writes
+            # W = A V B^T, equivalently vec(W) = (B \otimes A) vec(V).
+            # Here V is 8x4 so vec(V) has the same 32 entries as every other
+            # arm in this experiment.
+            input_factor = torch.linalg.qr(torch.randn(
+                INPUT_PIXELS + 1, KRONECKER_INPUT_RANK), mode="reduced").Q
+            output_factor = torch.linalg.qr(torch.randn(
+                HIDDEN, KRONECKER_OUTPUT_RANK), mode="reduced").Q
+            self.kronecker_input = nn.Parameter(input_factor)
+            self.kronecker_output = nn.Parameter(output_factor)
+            initial_u = None
         elif arm in GENERATED_ARMS:
             # Preserve the same downstream layers and initial v as the direct-U
             # controls without retaining a full random basis.
@@ -167,6 +184,12 @@ class FirstLayerU(nn.Module):
                     1e-6 * torch.eye(RANK, device=raw.device, dtype=raw.dtype))
                 return torch.linalg.solve_triangular(
                     chol, raw.T, upper=False).T * 0.08
+            return F.normalize(raw, dim=0) * math.sqrt(N_WEIGHTS) * 0.08
+        if self.arm == "kronecker":
+            # Row-major order matches (u @ v).reshape(input, output):
+            # U[i, o, k, l] = A[i, k] B[o, l].
+            raw = torch.einsum("ik,ol->iokl", self.kronecker_input,
+                               self.kronecker_output).reshape(N_WEIGHTS, RANK)
             return F.normalize(raw, dim=0) * math.sqrt(N_WEIGHTS) * 0.08
         return F.normalize(self.u_raw, dim=0) * math.sqrt(N_WEIGHTS) * 0.08
 
@@ -272,7 +295,7 @@ def convolution_overlap(model: FirstLayerU) -> float | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--arm", choices=("learned", "random", "convolution",
+    parser.add_argument("--arm", choices=("learned", "kronecker", "random", "convolution",
                                           "dense", *GENERATED_ARMS),
                         required=True)
     parser.add_argument("--device", default="cuda:0")
@@ -375,7 +398,7 @@ def main() -> None:
                       "model": {"u_shape": ([N_WEIGHTS, RANK]
                                             if args.arm != "dense" else None),
                                 "u_trainable": args.arm in (
-                                    "learned", *GENERATED_ARMS),
+                                    "learned", "kronecker", *GENERATED_ARMS),
                                 "generator_parameters": (
                                     sum(p.numel() for p in model.generator.parameters())
                                     if args.arm in GENERATED_ARMS

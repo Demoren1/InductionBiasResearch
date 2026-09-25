@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from .meta_u_first_v_moe import VExpertMoE
+from .meta_u_first_v_moe import U_ARMS, VExpertMoE
 from .run import TEST_LENGTHS, batch, load_split
 
 
@@ -64,6 +64,8 @@ def evaluate(model: VExpertMoE, frozen_u: torch.Tensor,
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--router", choices=("conv", "mlp"), default="conv")
+    parser.add_argument("--u-arm", choices=U_ARMS, default="generated_ortho",
+                        help="U parameterization used by the source checkpoint")
     parser.add_argument("--trainable", choices=("router_v", "router_v_coeff",
                                               "router_v_readout", "router_v_head"),
                         default="router_v")
@@ -89,9 +91,15 @@ def main() -> None:
             or args.lr <= 0 or args.adam_eps <= 0 or args.target_scale <= 0):
         parser.error("Epochs, patience, batch size, probe sets, LR, and Adam epsilon must be positive")
     if args.checkpoint is None:
-        directory = ("meta_u_first_v_moe_router_conv_10k" if args.router == "conv"
-                     else "meta_u_first_v_moe_router_mlp_10k")
+        if args.u_arm == "generated_ortho":
+            directory = ("meta_u_first_v_moe_router_conv_10k"
+                         if args.router == "conv"
+                         else "meta_u_first_v_moe_router_mlp_10k")
+        else:
+            directory = "meta_u_first_v_moe_u_controls"
         stem = "moe_k96_ortho0p2_seed42" + ("_mlp" if args.router == "mlp" else "")
+        if args.u_arm != "generated_ortho":
+            stem += f"_u_{args.u_arm}"
         args.checkpoint = Path("deepsets_z/mnist8m/outputs") / directory / f"{stem}_best.pt"
     torch.set_num_threads(4)
     torch.backends.cuda.matmul.allow_tf32 = True
@@ -103,7 +111,8 @@ def main() -> None:
     probes = {length: {key: value[:args.probe_sets]
                        for key, value in load_split(sets_dir / f"test_{length}.npz").items()}
               for length in (5, 20, 50)}
-    model = VExpertMoE(96, args.seed, args.router).to(device)
+    model = VExpertMoE(96, args.seed, args.router,
+                       u_arm=args.u_arm).to(device)
     model.load_state_dict(torch.load(args.checkpoint, map_location=device,
                                      weights_only=True))
     for parameter in model.parameters():
@@ -128,6 +137,8 @@ def main() -> None:
     rng = np.random.default_rng(args.seed + 3_000_000)
     args.out.mkdir(parents=True, exist_ok=True)
     stem = f"{args.router}_{args.trainable}_seed{args.seed}"
+    if args.u_arm != "generated_ortho":
+        stem += f"_u_{args.u_arm}"
     if args.unfreeze_middle:
         stem += "_unfrozen_middle"
     result_path = args.out / f"{stem}.json"
