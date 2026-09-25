@@ -31,8 +31,12 @@ N_WEIGHTS = (INPUT_PIXELS + 1) * HIDDEN
 KRONECKER_INPUT_RANK = 8
 KRONECKER_OUTPUT_RANK = 4
 SHIFT_CHOICES = ((0, -3), (0, 3), (-3, 0), (3, 0))
-GENERATED_ARMS = ("generated", "generated_shuffled", "generated_ortho",
-                  "generated_shuffled_ortho")
+CONTINUOUS_GENERATED_ARMS = (
+    "generated", "generated_shuffled", "generated_ortho",
+    "generated_shuffled_ortho")
+BINARY_GENERATED_ARMS = ("generated_binary",)
+GENERATED_ARMS = (*CONTINUOUS_GENERATED_ARMS, *BINARY_GENERATED_ARMS)
+BINARY_ARMS = (*BINARY_GENERATED_ARMS, "random_binary")
 
 
 def generator_coordinates() -> torch.Tensor:
@@ -95,7 +99,8 @@ def translate(images: torch.Tensor, dy: int, dx: int) -> torch.Tensor:
 class FirstLayerU(nn.Module):
     def __init__(self, arm: str, seed: int) -> None:
         super().__init__()
-        if arm not in ("learned", "kronecker", "random", "convolution", "dense",
+        if arm not in ("learned", "kronecker", "random", "random_binary",
+                       "convolution", "dense",
                        *GENERATED_ARMS):
             raise ValueError(arm)
         torch.manual_seed(seed)
@@ -125,13 +130,19 @@ class FirstLayerU(nn.Module):
             # controls without retaining a full random basis.
             initial_u = None
             torch.randn(N_WEIGHTS, RANK)
+        elif arm == "random_binary":
+            assignment_rng = torch.Generator().manual_seed(seed + 8107)
+            labels = torch.randint(RANK, (N_WEIGHTS,), generator=assignment_rng)
+            initial_u = F.one_hot(labels, num_classes=RANK).float()
+            # Keep subsequent model initialization aligned with generated U.
+            torch.randn(N_WEIGHTS, RANK)
         else:
             initial_u = torch.randn(N_WEIGHTS, RANK)
-        if initial_u is not None:
+        if initial_u is not None and arm not in BINARY_ARMS:
             initial_u = F.normalize(initial_u, dim=0) * math.sqrt(N_WEIGHTS) * 0.08
         if arm == "learned":
             self.u_raw = nn.Parameter(initial_u)
-        elif arm in ("random", "convolution"):
+        elif arm in ("random", "random_binary", "convolution"):
             self.register_buffer("u_raw", initial_u)
         elif arm in GENERATED_ARMS:
             coordinates = generator_coordinates()
@@ -157,6 +168,10 @@ class FirstLayerU(nn.Module):
                     INPUT_PIXELS + 1, HIDDEN, RANK)[:INPUT_PIXELS].mean(0)
             self.register_buffer("initial_dc", initial_dc)
         initial_v1 = torch.randn(RANK) * 0.1
+        if arm in BINARY_ARMS:
+            # Exact 0/1 assignments repeat the entries of v directly. Centering
+            # prevents a large DC activation before the first optimizer step.
+            initial_v1 -= initial_v1.mean()
         if arm == "dense":
             # Match the random-U arm's initial first-layer matrix exactly.
             self.dense_weight = nn.Parameter(
@@ -169,8 +184,47 @@ class FirstLayerU(nn.Module):
             with torch.no_grad():
                 self.initial_v1[27:30].zero_()
         self.arm = arm
+        if arm in BINARY_GENERATED_ARMS:
+            self.register_buffer("binary_temperature", torch.tensor(1.0))
+        self._binary_soft: torch.Tensor | None = None
 
-    def u(self) -> torch.Tensor | None:
+    def set_binary_temperature(self, temperature: float) -> None:
+        if temperature <= 0:
+            raise ValueError("Binary-assignment temperature must be positive")
+        if self.arm in BINARY_GENERATED_ARMS:
+            self.binary_temperature.fill_(temperature)
+
+    def binary_assignment_regularization(self) -> tuple[torch.Tensor, torch.Tensor]:
+        """Normalized row entropy and category-usage KL for generated binary U."""
+        if self.arm not in BINARY_GENERATED_ARMS or self._binary_soft is None:
+            zero = self.initial_v1.new_zeros(())
+            return zero, zero
+        soft = self._binary_soft
+        entropy = -(soft * soft.clamp_min(1e-12).log()).sum(-1).mean()
+        entropy = entropy / math.log(RANK)
+        usage = soft.mean(0).clamp_min(1e-12)
+        balance = (usage * (usage * RANK).log()).sum()
+        return entropy, balance
+
+    @torch.no_grad()
+    def binary_assignment_diagnostics(self) -> dict | None:
+        if self.arm not in BINARY_ARMS:
+            return None
+        assignment = self.u(hard_binary=True)
+        labels = assignment.argmax(-1)
+        counts = torch.bincount(labels, minlength=RANK)
+        usage = counts.float() / counts.sum()
+        return {
+            "one_hot": bool(torch.all((assignment == 0) | (assignment == 1))),
+            "row_sum_min": float(assignment.sum(-1).min()),
+            "row_sum_max": float(assignment.sum(-1).max()),
+            "active_categories": int((counts > 0).sum()),
+            "category_usage": usage.cpu().tolist(),
+            "category_usage_min": float(usage.min()),
+            "category_usage_max": float(usage.max()),
+        }
+
+    def u(self, *, hard_binary: bool | None = None) -> torch.Tensor | None:
         if self.arm == "dense":
             return None
         if self.arm in GENERATED_ARMS:
@@ -178,6 +232,15 @@ class FirstLayerU(nn.Module):
                 INPUT_PIXELS + 1, HIDDEN, RANK)
             raw = torch.cat((raw[:INPUT_PIXELS] - self.initial_dc[None],
                              raw[INPUT_PIXELS:]), dim=0).reshape(N_WEIGHTS, RANK)
+            if self.arm in BINARY_GENERATED_ARMS:
+                soft = torch.softmax(raw / self.binary_temperature, dim=-1)
+                self._binary_soft = soft
+                if hard_binary is None:
+                    hard_binary = not self.training
+                if hard_binary:
+                    return F.one_hot(soft.argmax(-1),
+                                     num_classes=RANK).to(soft.dtype)
+                return soft
             if self.arm.endswith("ortho"):
                 gram = raw.T @ raw / N_WEIGHTS
                 chol = torch.linalg.cholesky(gram +
@@ -191,6 +254,8 @@ class FirstLayerU(nn.Module):
             raw = torch.einsum("ik,ol->iokl", self.kronecker_input,
                                self.kronecker_output).reshape(N_WEIGHTS, RANK)
             return F.normalize(raw, dim=0) * math.sqrt(N_WEIGHTS) * 0.08
+        if self.arm == "random_binary":
+            return self.u_raw
         return F.normalize(self.u_raw, dim=0) * math.sqrt(N_WEIGHTS) * 0.08
 
     def predict(self, images: torch.Tensor, mask: torch.Tensor,

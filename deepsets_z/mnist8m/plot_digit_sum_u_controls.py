@@ -13,6 +13,8 @@ from .run import TEST_LENGTHS
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RUNS = ROOT / "deepsets_z" / "mnist8m" / "outputs" / "v_moe_digit_sum_finetune_raw"
+DEFAULT_BINARY_RUNS = (ROOT / "deepsets_z" / "mnist8m" / "outputs" /
+                       "v_moe_digit_sum_binary_u")
 DEFAULT_DENSE = ROOT / "deepsets_z" / "mnist8m" / "results_authors_scaled" / "paper_mlp_seed42.json"
 DEFAULT_FIGURE = ROOT / "mds" / "assets" / "2026-09-19" / "mnist8m_middle_unfreeze.png"
 DEFAULT_SUMMARY = ROOT / "deepsets_z" / "mnist8m" / "digit_sum_u_control_summary.json"
@@ -35,6 +37,15 @@ RUNS = {
         "Analytic convolution U; only U frozen", "#5370b7", "-."),
 }
 
+BINARY_RUNS = {
+    "generated_binary_unfrozen": (
+        "conv_router_v_head_seed42_u_generated_binary_unfrozen_middle.json",
+        "Generated binary U; only U frozen", "#d1495b", "-"),
+    "random_binary_unfrozen": (
+        "conv_router_v_head_seed42_u_random_binary_unfrozen_middle.json",
+        "Fixed random binary U; only U frozen", "#6c757d", ":"),
+}
+
 
 def load_complete(path: Path) -> dict:
     if not path.exists():
@@ -48,6 +59,7 @@ def load_complete(path: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=Path, default=DEFAULT_RUNS)
+    parser.add_argument("--binary-runs", type=Path, default=DEFAULT_BINARY_RUNS)
     parser.add_argument("--dense", type=Path, default=DEFAULT_DENSE)
     parser.add_argument("--figure", type=Path, default=DEFAULT_FIGURE)
     parser.add_argument("--summary", type=Path, default=DEFAULT_SUMMARY)
@@ -55,6 +67,9 @@ def main() -> None:
 
     runs = {key: load_complete(args.runs / spec[0])
             for key, spec in RUNS.items()}
+    runs.update({key: load_complete(args.binary_runs / spec[0])
+                 for key, spec in BINARY_RUNS.items()})
+    specifications = {**RUNS, **BINARY_RUNS}
     dense = json.loads(args.dense.read_text())
     summary = {
         "seed": 42,
@@ -64,8 +79,9 @@ def main() -> None:
                   for length in TEST_LENGTHS},
     }
     for key, run in runs.items():
+        source_root = args.binary_runs if key in BINARY_RUNS else args.runs
         summary["runs"][key] = {
-            "source": str(args.runs / RUNS[key][0]),
+            "source": str(source_root / specifications[key][0]),
             "u_arm": run["config"].get("u_arm", "generated_ortho"),
             "middle_layers_frozen": run.get("frozen_middle_layers", True),
             "best_epoch": run["best_epoch"],
@@ -79,7 +95,7 @@ def main() -> None:
     fig, axes = plt.subplots(1, 2, figsize=(15.5, 5.2),
                              layout="constrained")
     ax = axes[0]
-    for key, (_filename, label, color, linestyle) in RUNS.items():
+    for key, (_filename, label, color, linestyle) in specifications.items():
         run = runs[key]
         ax.plot(TEST_LENGTHS,
                 [100 * run["test"][str(length)]["exact_round_accuracy"]
@@ -100,8 +116,9 @@ def main() -> None:
     # The right panel answers whether Kronecker U changes fine-tuning dynamics;
     # fixed controls remain on the already crowded quality panel.
     for key in ("generated_frozen", "generated_unfrozen",
-                "kronecker_frozen", "kronecker_unfrozen"):
-        _filename, label, color, linestyle = RUNS[key]
+                "kronecker_frozen", "kronecker_unfrozen",
+                "generated_binary_unfrozen", "random_binary_unfrozen"):
+        _filename, label, color, linestyle = specifications[key]
         history = runs[key]["history"]
         ax.plot([row["epoch"] for row in history],
                 [row["validation"]["mae"] for row in history],

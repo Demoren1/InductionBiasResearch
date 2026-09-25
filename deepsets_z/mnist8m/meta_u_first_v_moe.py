@@ -19,7 +19,8 @@ from .meta_u_first_image_code import ConvImageEncoder, atomic_torch_save
 
 
 LENGTHS = (1, 3, 5, 10, 20)
-U_ARMS = ("generated_ortho", "kronecker", "learned", "random", "convolution")
+U_ARMS = ("generated_ortho", "generated_binary", "kronecker", "learned",
+          "random", "random_binary", "convolution")
 
 
 class MLPImageRouter(nn.Module):
@@ -215,6 +216,11 @@ def main() -> None:
     parser.add_argument("--u-arm", choices=U_ARMS, default="generated_ortho",
                         help="How the shared first-layer U is parameterized")
     parser.add_argument("--ortho-weight", type=float, default=0.0)
+    parser.add_argument("--binary-temperature-start", type=float, default=1.0)
+    parser.add_argument("--binary-temperature-end", type=float, default=0.25)
+    parser.add_argument("--binary-anneal-steps", type=int, default=12000)
+    parser.add_argument("--binary-entropy-weight", type=float, default=0.01)
+    parser.add_argument("--binary-balance-weight", type=float, default=0.1)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--data-dir", type=Path, default=Path("datasets/mnist8m"))
@@ -239,8 +245,13 @@ def main() -> None:
     parser.add_argument("--min-steps", type=int, default=0)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
-    if args.experts < 1 or args.experts > 256 or args.ortho_weight < 0:
-        parser.error("Expected 1..256 experts and non-negative ortho weight")
+    if (args.experts < 1 or args.experts > 256 or args.ortho_weight < 0
+            or min(args.binary_temperature_start,
+                   args.binary_temperature_end) <= 0
+            or args.binary_anneal_steps < 1
+            or min(args.binary_entropy_weight,
+                   args.binary_balance_weight) < 0):
+        parser.error("Invalid expert, orthogonality, or binary-U settings")
     if min(args.steps, args.inner_steps, args.tasks_per_step, args.support,
            args.query, args.train_images_per_digit, args.eval_images_per_digit,
            args.eval_every, args.val_tasks, args.test_tasks) < 1:
@@ -278,14 +289,22 @@ def main() -> None:
                  for key, value in vars(args).items()
                  if key not in ("device", "out", "resume",
                                 "early_stop_patience", "early_stop_min_delta",
-                                "min_steps")}
+                                "min_steps", "test_tasks")}
     best_score, best_step, history, start_step, elapsed_before = (
         math.inf, 0, [], 0, 0.0)
     if args.resume:
         saved = torch.load(latest_path, map_location=device, weights_only=False)
         saved_signature = dict(saved["config"])
+        # Test task count affects only the final evaluation and may be raised
+        # when a pilot is continued into the definitive run.
+        saved_signature.pop("test_tasks", None)
         # Checkpoints written before --u-arm existed used generated_ortho.
         saved_signature.setdefault("u_arm", "generated_ortho")
+        saved_signature.setdefault("binary_temperature_start", 1.0)
+        saved_signature.setdefault("binary_temperature_end", 0.25)
+        saved_signature.setdefault("binary_anneal_steps", 12000)
+        saved_signature.setdefault("binary_entropy_weight", 0.01)
+        saved_signature.setdefault("binary_balance_weight", 0.1)
         expected_signature = dict(signature)
         expected_signature["steps"] = saved_signature["steps"]
         if (saved_signature != expected_signature
@@ -320,6 +339,11 @@ def main() -> None:
     for step in range(start_step + 1, args.steps + 1):
         model.train()
         optimizer.zero_grad(set_to_none=True)
+        anneal_fraction = min(1.0, (step - 1) / max(1, args.binary_anneal_steps - 1))
+        binary_temperature = args.binary_temperature_start * (
+            args.binary_temperature_end / args.binary_temperature_start
+        ) ** anneal_fraction
+        model.base.set_binary_temperature(binary_temperature)
         shared_u = model.base.u()
         losses = []
         for _ in range(args.tasks_per_step):
@@ -331,7 +355,10 @@ def main() -> None:
                 meta_gradient=True))
         data_loss = torch.stack(losses).mean()
         orth_loss = model.orthogonality_loss()
-        outer_loss = data_loss + args.ortho_weight * orth_loss
+        binary_entropy, binary_balance = model.base.binary_assignment_regularization()
+        outer_loss = (data_loss + args.ortho_weight * orth_loss
+                      + args.binary_entropy_weight * binary_entropy
+                      + args.binary_balance_weight * binary_balance)
         outer_loss.backward()
         torch.nn.utils.clip_grad_norm_(
             (p for p in model.parameters() if p.requires_grad), 5.0)
@@ -346,6 +373,9 @@ def main() -> None:
                 [val[str(length)]["normalized_mse"] for length in (1, 3, 5)]))
             row = {"step": step, "train_normalized_mse": data_loss.item(),
                    "train_orthogonality": orth_loss.item(),
+                   "binary_temperature": binary_temperature,
+                   "binary_entropy": binary_entropy.item(),
+                   "binary_balance": binary_balance.item(),
                    "validation_score": score,
                    "elapsed_seconds": time.monotonic() - start}
             history.append(row)
@@ -368,6 +398,7 @@ def main() -> None:
             temporary.replace(result_path)
             print(f"{stem} step={step} train={data_loss.item():.4f} "
                   f"orth={orth_loss.item():.4f} val={score:.4f} "
+                  f"temp={binary_temperature:.3f} "
                   f"best={best_step} elapsed={row['elapsed_seconds']:.0f}s",
                   flush=True)
             if (args.early_stop_patience
@@ -398,6 +429,7 @@ def main() -> None:
         uniform_route=True)
     output["expert_orthogonality"] = model.orthogonality_loss().item()
     output["routing"] = routing_diagnostics(model, test)
+    output["binary_assignment"] = model.base.binary_assignment_diagnostics()
     result_path.write_text(json.dumps(output, indent=2) + "\n")
     print(f"DONE {stem} best={best_step} "
           f"test5_mae={output['test']['5']['mae']:.4f} "

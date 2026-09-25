@@ -129,7 +129,9 @@ def main() -> None:
     if args.trainable in ("router_v_readout", "router_v_head"):
         model.base.initial_readout.requires_grad_(True)
     with torch.no_grad():
-        frozen_u = model.base.u().detach()
+        # Generated assignments are relaxed during meta-training and hardened
+        # exactly as in Yeh et al. before downstream training and inference.
+        frozen_u = model.base.u(hard_binary=True).detach()
     trainable = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.Adam(trainable, lr=args.lr, eps=args.adam_eps)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(

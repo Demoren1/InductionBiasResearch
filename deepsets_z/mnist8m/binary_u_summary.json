@@ -1,0 +1,357 @@
+{
+  "seed": 42,
+  "definition": "U has one categorical row per first-layer weight and 32 columns; generated U is row-stochastic during meta-training and hardened with one-hot(argmax) for validation, downstream training, and test.",
+  "selection": "Six 5000-step settings were compared by hard validation score only. temp005 was selected and continued to validation plateau.",
+  "pilots": [
+    {
+      "name": "constant",
+      "temperature_start": 1.0,
+      "temperature_end": 1.0,
+      "entropy_weight": 0.01,
+      "balance_weight": 0.0,
+      "best_hard_validation_score": 0.8720041246463855,
+      "best_step": 4500,
+      "test_mae": {
+        "1": 0.7712139338254929,
+        "3": 1.1450542099773884,
+        "5": 1.5903962589800358,
+        "10": 2.1671879664063454,
+        "20": 3.4112622439861298
+      },
+      "active_categories": 30,
+      "category_usage_min": 0.0,
+      "category_usage_max": 0.2487388551235199,
+      "final_soft_entropy": 0.9872608184814453
+    },
+    {
+      "name": "annealed",
+      "temperature_start": 1.0,
+      "temperature_end": 0.25,
+      "entropy_weight": 0.01,
+      "balance_weight": 0.0,
+      "best_hard_validation_score": 0.8326091561466455,
+      "best_step": 3000,
+      "test_mae": {
+        "1": 0.7514876164495945,
+        "3": 1.0816398076713085,
+        "5": 1.578117124736309,
+        "10": 2.225786432623863,
+        "20": 3.420483037829399
+      },
+      "active_categories": 29,
+      "category_usage_min": 0.0,
+      "category_usage_max": 0.40689173340797424,
+      "final_soft_entropy": 0.8223540782928467
+    },
+    {
+      "name": "balanced",
+      "temperature_start": 1.0,
+      "temperature_end": 0.25,
+      "entropy_weight": 0.01,
+      "balance_weight": 0.1,
+      "best_hard_validation_score": 0.7314597694203258,
+      "best_step": 5000,
+      "test_mae": {
+        "1": 0.7336712349206209,
+        "3": 1.0690842494368553,
+        "5": 1.497226007282734,
+        "10": 2.1398120671510696,
+        "20": 3.1825137585401535
+      },
+      "active_categories": 32,
+      "category_usage_min": 0.0005562632577493787,
+      "category_usage_max": 0.15397876501083374,
+      "final_soft_entropy": 0.9098114371299744
+    },
+    {
+      "name": "temp005",
+      "temperature_start": 1.0,
+      "temperature_end": 0.05,
+      "entropy_weight": 0.01,
+      "balance_weight": 0.1,
+      "best_hard_validation_score": 0.28288887922341627,
+      "best_step": 29500,
+      "test_mae": {
+        "1": 0.3819586122408509,
+        "3": 0.6837155143730342,
+        "5": 0.8519085426814854,
+        "10": 1.3667927216738462,
+        "20": 1.9585681101307273
+      },
+      "active_categories": 32,
+      "category_usage_min": 0.024267515167593956,
+      "category_usage_max": 0.03901486098766327,
+      "final_soft_entropy": 0.16008919477462769
+    },
+    {
+      "name": "entropy01",
+      "temperature_start": 1.0,
+      "temperature_end": 0.1,
+      "entropy_weight": 0.1,
+      "balance_weight": 0.1,
+      "best_hard_validation_score": 0.6743856350270411,
+      "best_step": 5000,
+      "test_mae": {
+        "1": 0.6537544298917055,
+        "3": 0.9455213844776154,
+        "5": 1.322964396327734,
+        "10": 1.9633383825421333,
+        "20": 2.9925105422735214
+      },
+      "active_categories": 32,
+      "category_usage_min": 0.0021953291725367308,
+      "category_usage_max": 0.07605944573879242,
+      "final_soft_entropy": 0.6457424759864807
+    },
+    {
+      "name": "entropy05",
+      "temperature_start": 1.0,
+      "temperature_end": 0.1,
+      "entropy_weight": 0.5,
+      "balance_weight": 0.1,
+      "best_hard_validation_score": 0.7678583133965731,
+      "best_step": 5000,
+      "test_mae": {
+        "1": 0.7071511000394821,
+        "3": 1.0344761721789837,
+        "5": 1.5314653292298317,
+        "10": 2.1073840335011482,
+        "20": 3.0177775248885155
+      },
+      "active_categories": 6,
+      "category_usage_min": 0.0,
+      "category_usage_max": 0.28802546858787537,
+      "final_soft_entropy": 0.01015907060354948
+    }
+  ],
+  "pretraining_on_random_digit_costs": {
+    "generated_binary": {
+      "source": "deepsets_z/mnist8m/outputs/binary_u_pilot/temp005/moe_k96_ortho0p2_seed42_u_generated_binary.json",
+      "best_step": 29500,
+      "best_hard_validation_score": 0.28288887922341627,
+      "stopping": {
+        "reason": "validation_plateau",
+        "stop_step": 33500,
+        "last_material_gain_step": 29500,
+        "patience_checks": 8,
+        "min_delta": 0.002,
+        "min_steps": 12000
+      },
+      "test_mae": {
+        "1": 0.3819586122408509,
+        "3": 0.6837155143730342,
+        "5": 0.8519085426814854,
+        "10": 1.3667927216738462,
+        "20": 1.9585681101307273
+      },
+      "binary_assignment": {
+        "one_hot": true,
+        "row_sum_min": 1.0,
+        "row_sum_max": 1.0,
+        "active_categories": 32,
+        "category_usage": [
+          0.03756263107061386,
+          0.03045859932899475,
+          0.03221231326460838,
+          0.02944798208773136,
+          0.03204246237874031,
+          0.028577495366334915,
+          0.03341401368379593,
+          0.032993629574775696,
+          0.030305732041597366,
+          0.03392781317234039,
+          0.026972400024533272,
+          0.03170700743794441,
+          0.0325859859585762,
+          0.032038215547800064,
+          0.025307856500148773,
+          0.024828026071190834,
+          0.024267515167593956,
+          0.03467515856027603,
+          0.031889595091342926,
+          0.03236518055200577,
+          0.02963482029736042,
+          0.026225052773952484,
+          0.0367133766412735,
+          0.029919320717453957,
+          0.02987685799598694,
+          0.03901486098766327,
+          0.031214436516165733,
+          0.025239914655685425,
+          0.029932059347629547,
+          0.03703184798359871,
+          0.034110404551029205,
+          0.03350743278861046
+        ],
+        "category_usage_min": 0.024267515167593956,
+        "category_usage_max": 0.03901486098766327
+      }
+    },
+    "random_binary": {
+      "source": "deepsets_z/mnist8m/outputs/binary_u_full/random/moe_k96_ortho0p2_seed42_u_random_binary.json",
+      "best_step": 43500,
+      "best_hard_validation_score": 0.3005112210909526,
+      "stopping": {
+        "reason": "validation_plateau",
+        "stop_step": 43500,
+        "last_material_gain_step": 39500,
+        "patience_checks": 16,
+        "min_delta": 0.002,
+        "min_steps": 12000
+      },
+      "test_mae": {
+        "1": 0.37845283141359687,
+        "3": 0.688386126421392,
+        "5": 0.8522268962115049,
+        "10": 1.339812253601849,
+        "20": 1.972322198562324
+      },
+      "binary_assignment": {
+        "one_hot": true,
+        "row_sum_min": 1.0,
+        "row_sum_max": 1.0,
+        "active_categories": 32,
+        "category_usage": [
+          0.031210191547870636,
+          0.031070062890648842,
+          0.031664542853832245,
+          0.031176220625638962,
+          0.030237792059779167,
+          0.03149469196796417,
+          0.031503185629844666,
+          0.03131634742021561,
+          0.03166878968477249,
+          0.03073885291814804,
+          0.03130785748362541,
+          0.03077707067131996,
+          0.03147346153855324,
+          0.03161358833312988,
+          0.030955413356423378,
+          0.0311932060867548,
+          0.031757961958646774,
+          0.03135456517338753,
+          0.031290870159864426,
+          0.030692145228385925,
+          0.030904458835721016,
+          0.030811039730906487,
+          0.032076433300971985,
+          0.03139278292655945,
+          0.031503185629844666,
+          0.03100636973977089,
+          0.03157961741089821,
+          0.03170700743794441,
+          0.031278133392333984,
+          0.030870487913489342,
+          0.03130785748362541,
+          0.031065817922353745
+        ],
+        "category_usage_min": 0.030237792059779167,
+        "category_usage_max": 0.032076433300971985
+      }
+    }
+  },
+  "ordinary_digit_sum_finetuning": {
+    "generated_binary": {
+      "source": "deepsets_z/mnist8m/outputs/v_moe_digit_sum_binary_u/conv_router_v_head_seed42_u_generated_binary_unfrozen_middle.json",
+      "best_epoch": 89,
+      "best_validation_mae": 0.05637008943001601,
+      "stopping": {
+        "epoch": 100,
+        "reason": "epoch_limit"
+      },
+      "test": {
+        "5": {
+          "mae": 0.0598810227394104,
+          "exact_round_accuracy": 0.9753
+        },
+        "10": {
+          "mae": 0.13359638538360596,
+          "exact_round_accuracy": 0.9479
+        },
+        "15": {
+          "mae": 0.17729054489135743,
+          "exact_round_accuracy": 0.9294
+        },
+        "20": {
+          "mae": 0.25362993087768554,
+          "exact_round_accuracy": 0.9018
+        },
+        "25": {
+          "mae": 0.30653139724731443,
+          "exact_round_accuracy": 0.879
+        },
+        "30": {
+          "mae": 0.34685032272338867,
+          "exact_round_accuracy": 0.8631
+        },
+        "35": {
+          "mae": 0.4051385238647461,
+          "exact_round_accuracy": 0.8424
+        },
+        "40": {
+          "mae": 0.49791060943603516,
+          "exact_round_accuracy": 0.8107
+        },
+        "45": {
+          "mae": 0.538985513305664,
+          "exact_round_accuracy": 0.7956
+        },
+        "50": {
+          "mae": 0.5481095626831055,
+          "exact_round_accuracy": 0.79
+        }
+      }
+    },
+    "random_binary": {
+      "source": "deepsets_z/mnist8m/outputs/v_moe_digit_sum_binary_u/conv_router_v_head_seed42_u_random_binary_unfrozen_middle.json",
+      "best_epoch": 51,
+      "best_validation_mae": 0.0729858425986947,
+      "stopping": {
+        "epoch": 63,
+        "reason": "validation_plateau"
+      },
+      "test": {
+        "5": {
+          "mae": 0.05818820776939392,
+          "exact_round_accuracy": 0.976
+        },
+        "10": {
+          "mae": 0.14320997791290282,
+          "exact_round_accuracy": 0.9446
+        },
+        "15": {
+          "mae": 0.19426141471862793,
+          "exact_round_accuracy": 0.9231
+        },
+        "20": {
+          "mae": 0.24844238052368164,
+          "exact_round_accuracy": 0.9026
+        },
+        "25": {
+          "mae": 0.3183355941772461,
+          "exact_round_accuracy": 0.8725
+        },
+        "30": {
+          "mae": 0.36487656021118164,
+          "exact_round_accuracy": 0.8541
+        },
+        "35": {
+          "mae": 0.422064599609375,
+          "exact_round_accuracy": 0.8327
+        },
+        "40": {
+          "mae": 0.5130464660644531,
+          "exact_round_accuracy": 0.8028
+        },
+        "45": {
+          "mae": 0.562857780456543,
+          "exact_round_accuracy": 0.7842
+        },
+        "50": {
+          "mae": 0.5575687728881836,
+          "exact_round_accuracy": 0.7896
+        }
+      }
+    }
+  }
+}
