@@ -1,2 +1,16 @@
 \section{Introduction}
-TODO
+
+Choosing an appropriate inductive bias is crucial for generalization \cite{baxter2000model}.
+By constraining the hypothesis space to reflect the underlying task structure, such a bias enables effective learning from limited data.
+In neural networks, examples of structural inductive biases include local connectivity and spatial weight sharing in convolutional architectures \cite{lecun1998gradient}, and recurrent state updates with parameters shared across time in recurrent architectures \cite{elman1990finding}.
+Suitable parameter-sharing patterns also enforce equivariance to task-relevant transformations \cite{ravanbakhsh2017equivariance}.
+Building on these principles, recent work has explored learning symmetry-inducing parameter-sharing patterns directly from data \cite{zhou2021meta,yeh2022equivariance}.
+
+
+Selecting suitable structural biases by hand requires domain expertise, particularly when the relevant properties of a new task are not known in advance \cite{yeh2022equivariance}.
+This motivates learning such biases from data.
+For example, \citet{zhou2021meta} represent layer weights as the product of a transformation matrix shared across tasks and a vector of task-specific parameters.
+The shared matrix is meta-learned across tasks to capture transferable parameter-sharing patterns, including those that induce equivariance.
+For larger layers, the authors use a Kronecker-factorized approximation to reduce memory and computational costs, restricting the search to a structured family of reparameterizations.
+More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
+The broader challenge is therefore to identify structural constraints that support learning across an environment of related tasks and generalize to previously unseen tasks from that environment \cite{baxter2000model}.
