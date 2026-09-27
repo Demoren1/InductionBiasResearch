@@ -29,7 +29,7 @@
 | Confirmatory, 32 пары | Random search, 2001 состояния | 0.049630 | 0.7561 | — | 0.6691 | 0.91749 |
 | Confirmatory, 32 пары | Adam agreement, 2000 шагов | **0.0000227** | **0.99964** | **0.9941; 2036/2048** | **0.6845** | **0.91981** |
 
-![Сводка agreement](assets/2026-09-13/final_agreement_summary.png)
+![Сводка agreement](../mds_archive/assets/2026-09-13/final_agreement_summary.png)
 
 ### Выбор параметров
 
@@ -41,13 +41,13 @@
 | Agreement, 8 пар | 1000 шагов, `R=8`, `T=0.5`, `lr=0.03` | exact 0.9727; soft MSE `1.067e-4` |
 | Agreement, 8 пар | 2000 шагов, `R=12`, `T=0.5`, `lr=0.03` | **exact 0.9961; soft MSE `2.373e-5`** |
 
-![Sweep параметров agreement](assets/2026-09-13/agreement_hparam_sweep.png)
+![Sweep параметров agreement](../mds_archive/assets/2026-09-13/agreement_hparam_sweep.png)
 
 ### Примеры масок
 
 Столбцы: initial первого VAE, agreement первого VAE, выровненный agreement второго VAE, analytic ideal.
 
-![Маски agreement и ideal](assets/2026-09-13/agreement_mask_examples.png)
+![Маски agreement и ideal](../mds_archive/assets/2026-09-13/agreement_mask_examples.png)
 
 ## 2. Разные gaps
 
@@ -73,7 +73,7 @@
 | 6 | 96.4% [94.9%; 97.9%] | 0.998 [0.997; 0.999] |
 | 12 | 91.7% [89.6%; 93.8%] | 0.995 [0.994; 0.996] |
 
-![Достижимость ideal по радиусу](assets/2026-09-13/zstar_radius_reachability.png)
+![Достижимость ideal по радиусу](../mds_archive/assets/2026-09-13/zstar_radius_reachability.png)
 
 ### Noise sweep около exact `z*`
 
@@ -90,7 +90,7 @@
 | 4 | 13.67% | 0.49% | 4.39% | 0.862 | 4.597 |
 | 8 | 0.0% | 0.0% | 0.0% | 0.792 | 7.055 |
 
-![Task-z после шума около z-star](assets/2026-09-13/zstar_noise_recovery.png)
+![Task-z после шума около z-star](../mds_archive/assets/2026-09-13/zstar_noise_recovery.png)
 
 ### Matched `R=4`
 
@@ -104,9 +104,9 @@ Gold-oracle нашёл 492/512 exact endpoints; после четырёх зад
 | Exact `z*` | Final soft Adam | 0/1968 | 0.798 [0.795; 0.802] | 2.307 [2.259; 2.356] |
 | Exact `z*` | Best-query soft Adam | 14.4% [12.2%; 16.5%] | 0.873 [0.866; 0.880] | 1.556 [1.508; 1.604] |
 
-![Matched R=4](assets/2026-09-13/zstar_matched_reachability.png)
+![Matched R=4](../mds_archive/assets/2026-09-13/zstar_matched_reachability.png)
 
-![Пример matched-масок](assets/2026-09-13/zstar_matched_mask_example.png)
+![Пример matched-масок](../mds_archive/assets/2026-09-13/zstar_matched_mask_example.png)
 
 ## 4. Adam, hard STE и hard-mask sampling
 
@@ -119,7 +119,7 @@ Gold-oracle нашёл 492/512 exact endpoints; после четырёх зад
 | Robust hard sampling | 8 VAE | 0.675 | 0/2048 | 208/1968 = 10.6% | 0.871 | 1.700 |
 | Robust hard sampling | 32 VAE-пары | 0.6716 | 0/16384 | 1833/15684 = 11.69% | 0.8701 | 1.6821 |
 
-![Сравнение оптимизаторов](assets/2026-09-13/final_optimizer_comparison.png)
+![Сравнение оптимизаторов](../mds_archive/assets/2026-09-13/final_optimizer_comparison.png)
 
 Soft Adam оптимизирует soft relaxation; hard STE использует бинарный forward и soft surrogate gradient; sampling оценивает только binary exact-K supports. Gold не участвует в task-z или sampling selection.
 
@@ -165,7 +165,7 @@ Gold-oracle получил exact ideal для 3921/4096 стартов.
 | `R=32`, seed 1000, 8 стартов | 0.5643 | 0.6244 | 0/8 |
 | Analytic ideal fresh-MLP ceiling | Accuracy 0.7138 | BCE 0.5583 | — |
 
-![Sampling на двух размерностях](assets/2026-09-13/final_sampling_scale_summary.png)
+![Sampling на двух размерностях](../mds_archive/assets/2026-09-13/final_sampling_scale_summary.png)
 
 ## 6. Heatmaps hard-масок
 
@@ -182,9 +182,9 @@ Gold-oracle получил exact ideal для 3921/4096 стартов.
 | `32×32` | Oracle-best `R=4` | Initial | 32768 | 0.6828 | 0.0587 | 0.6241 | 0.3317 |
 | `32×32` | Oracle-best `R=4` | Final | 32768 | 0.6848 | 0.0584 | 0.6265 | 0.3281 |
 
-![Heatmaps 8x8](assets/2026-09-13/pattern8_robust_mask_heatmaps.png)
+![Heatmaps 8x8](../mds_archive/assets/2026-09-13/pattern8_robust_mask_heatmaps.png)
 
-![Heatmaps 32x32](assets/2026-09-13/pattern32_k5_robust_mask_heatmaps.png)
+![Heatmaps 32x32](../mds_archive/assets/2026-09-13/pattern32_k5_robust_mask_heatmaps.png)
 
 ### Random exact-K alignment control
 
@@ -195,7 +195,7 @@ Gold-oracle получил exact ideal для 3921/4096 стартов.
 
 `Best-window` — среднее покрытие лучшего непрерывного окна длины `k` в каждой hidden-column; метрика не использует Hungarian или Gold-column assignment.
 
-![Контроль эффекта alignment](assets/2026-09-13/final_heatmap_alignment_control.png)
+![Контроль эффекта alignment](../mds_archive/assets/2026-09-13/final_heatmap_alignment_control.png)
 
 ## 7. Краткий итог
 
@@ -248,25 +248,25 @@ MLP хуже linear: парный эффект `+0.002041 [0.001547; 0.002535]` 
 
 MLP-init улучшает итоговый soft Adam-loss на `−0.000648 [−0.000878; −0.000418]`, но ухудшает hard IoU на `−0.0060 [−0.0079; −0.0040]` и exact на `−2.64 п.п. [−4.39; −0.89]`.
 
-![Сводка latent-adapter](assets/2026-09-13/final_latent_adapter_summary.png)
+![Сводка latent-adapter](../mds_archive/assets/2026-09-13/final_latent_adapter_summary.png)
 
 Heatmaps показывают средние hard-маски первой пары после выравнивания target к source; строки — два направления, порядок примеров фиксирован.
 
-![Heatmaps latent-adapter](assets/2026-09-13/final_latent_adapter_heatmaps.png)
+![Heatmaps latent-adapter](../mds_archive/assets/2026-09-13/final_latent_adapter_heatmaps.png)
 
 ## Артефакты
 
 | Блок | Основные данные |
 |---|---|
-| Agreement baseline | [`summary.json`](data/2026-09-13/agreement_baseline_64pairs.json) |
-| Agreement confirmatory | [`summary.json`](data/2026-09-13/agreement_confirmatory_32pairs.json) |
-| `z*` noise/radius | [`summary.json`](data/2026-09-13/zstar_noise_summary.json), [`radius_sweep_summary.json`](data/2026-09-13/zstar_radius_sweep_summary.json) |
-| Matched `R=4` | [`refined_summary.json`](data/2026-09-13/zstar_matched_r4_summary.json) |
-| Sampling `8×8` | [`summary.json`](data/2026-09-13/sampling_pattern8_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern8_32pairs_paired.json) |
-| Sampling `32×32` | [`summary.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_summary.json), [`paired_analysis.json`](data/2026-09-13/sampling_pattern32_k5_32pairs_paired.json) |
-| Heatmaps | [`mask_heatmap_stats.json`](assets/2026-09-13/mask_heatmap_stats.json), [`alignment control`](assets/2026-09-13/final_heatmap_alignment_control.json) |
-| Latent adapters | [`summary.json`](data/2026-09-13/latent_adapter_32pairs_summary.json) |
-| Generated parameter sharing | [`summary.json`](data/2026-09-15/generated_parameter_sharing_summary.json) |
+| Agreement baseline | [`summary.json`](../mds_archive/data/2026-09-13/agreement_baseline_64pairs.json) |
+| Agreement confirmatory | [`summary.json`](../mds_archive/data/2026-09-13/agreement_confirmatory_32pairs.json) |
+| `z*` noise/radius | [`summary.json`](../mds_archive/data/2026-09-13/zstar_noise_summary.json), [`radius_sweep_summary.json`](../mds_archive/data/2026-09-13/zstar_radius_sweep_summary.json) |
+| Matched `R=4` | [`refined_summary.json`](../mds_archive/data/2026-09-13/zstar_matched_r4_summary.json) |
+| Sampling `8×8` | [`summary.json`](../mds_archive/data/2026-09-13/sampling_pattern8_32pairs_summary.json), [`paired_analysis.json`](../mds_archive/data/2026-09-13/sampling_pattern8_32pairs_paired.json) |
+| Sampling `32×32` | [`summary.json`](../mds_archive/data/2026-09-13/sampling_pattern32_k5_32pairs_summary.json), [`paired_analysis.json`](../mds_archive/data/2026-09-13/sampling_pattern32_k5_32pairs_paired.json) |
+| Heatmaps | [`mask_heatmap_stats.json`](../mds_archive/assets/2026-09-13/mask_heatmap_stats.json), [`alignment control`](../mds_archive/assets/2026-09-13/final_heatmap_alignment_control.json) |
+| Latent adapters | [`summary.json`](../mds_archive/data/2026-09-13/latent_adapter_32pairs_summary.json) |
+| Generated parameter sharing | [`summary.json`](../mds_archive/data/2026-09-15/generated_parameter_sharing_summary.json) |
 | Benchmarks Yeh et al. | [`standalone report`](../yeh2022_generated_sharing/FINAL_REPORT.md), [`reproduction package`](../yeh2022_generated_sharing/README.md) |
 | Final figures | [`generator`](../pattern/evaluation/final_report_20260913.py) |
 
@@ -294,9 +294,9 @@ $$
 
 Отличие — компактный coordinate-generator структуры parameter sharing, обучаемый через task validation-loss после адаптации `vτ`. В текущем эксперименте один фиксированный `z*` порождает одну общую `U`, поэтому пока подтверждена полезность generated-параметризации. Полноценную генерацию семейства структур через разные `z` и перенос на новые классы задач ещё необходимо проверить.
 
-![Сравнение generated parameter sharing](assets/2026-09-15/generated_parameter_sharing_comparison.png)
+![Сравнение generated parameter sharing](../mds_archive/assets/2026-09-15/generated_parameter_sharing_comparison.png)
 
-![Generated структуры и analytic ideal](assets/2026-09-15/generated_parameter_sharing_masks.png)
+![Generated структуры и analytic ideal](../mds_archive/assets/2026-09-15/generated_parameter_sharing_masks.png)
 
 Подробности и интерпретация сохранены выше в этом финальном отчёте.
 
@@ -331,7 +331,7 @@ $$
 | Cross-correlation `A=15`, global `z` | **0** | — | 6 | 11 | **0** |
 | Cross-correlation `A=15`, task-specific `z` | **0** | — | 7 | 11 | **0** |
 
-![Test MSE на benchmarks Yeh et al.](assets/2026-09-15/yeh2022_generated_sharing_mse.png)
+![Test MSE на benchmarks Yeh et al.](../mds_archive/assets/2026-09-15/yeh2022_generated_sharing_mse.png)
 
 ### Итог
 
