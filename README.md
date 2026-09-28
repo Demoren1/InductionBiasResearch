@@ -9,12 +9,13 @@ subprojects are documented separately:
 - [`pattern`](pattern/README.md): local support from mask-CVAE, decoder
   agreement, and length-32 interpolation;
 - [`motif_pair`](motif_pair/README.md): gap-dependent circular support;
-- [`meta_pattern`](meta_pattern/README.md): direct meta-learning of full
-  parameter bases \(U\).
+- [GeneratorPsi](https://github.com/Demoren1/GeneratorPsi): code for generating
+  parameter bases \(U\) and related parameter-sharing experiments. The local
+  checkout is at `/home/udeneev-av/GeneratorPsi`.
 
 The remainder of this README is the historical MA(k, s) experiment. Its
 results remain useful context, but they are not the current `pattern`,
-`motif_pair`, or `meta_pattern` protocols.
+`motif_pair`, or GeneratorPsi protocols.
 
 ## Overview
 
