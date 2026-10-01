@@ -6,7 +6,7 @@
 
 - [Основной отчёт](mds/FINAL_REPORT_2026-09-27.md).
 - [История экспериментов и планы](mds/experiments_md/README.md).
-- [План Transformer-генератора с суррогатным оценщиком](mds/experiments_md/2026-10-02/01_transformer_surrogate_plan.md).
+- [План Transformer-генератора с оценщиком качества](mds/PLAN_GENERATOR_EVALUATOR.md).
 - [Статья](paper/main.pdf) и [математическая схема генератора](paper/ALGORITHM_TRANSFORMER_RU.md).
 
 ## Оставленные проекты
