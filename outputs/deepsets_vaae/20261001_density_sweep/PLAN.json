@@ -1,0 +1,101 @@
+{
+  "date_moscow": "2026-10-01",
+  "gpu_snapshot": [
+    {
+      "index": 0,
+      "uuid": "GPU-2e5ce2f9-206f-380c-9687-3743ff9f665c",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 66389.0
+    },
+    {
+      "index": 1,
+      "uuid": "GPU-6784dc4e-6ec9-2266-5d23-85bf1b1c2af3",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 53089.0
+    },
+    {
+      "index": 2,
+      "uuid": "GPU-f8501f2d-53bc-9087-6041-64ee69876325",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 53089.0
+    },
+    {
+      "index": 3,
+      "uuid": "GPU-7bb2c2a2-451a-7632-d931-fc64f8901744",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 24083.0
+    },
+    {
+      "index": 4,
+      "uuid": "GPU-ebb2cc3f-3769-6b77-f2de-166234901bb6",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 68839.0
+    },
+    {
+      "index": 5,
+      "uuid": "GPU-fa392093-03b9-0a49-7959-ed393750e978",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 68839.0
+    },
+    {
+      "index": 6,
+      "uuid": "GPU-2ac4168d-7c26-2108-6c70-778e5b97f743",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 88.0
+    },
+    {
+      "index": 7,
+      "uuid": "GPU-3c5e3dfd-1a22-964d-5405-e4dd5ac73795",
+      "utilization_percent": 0.0,
+      "memory_used_mib": 559.0
+    }
+  ],
+  "gpu_selection": "all8 requested; utilization0 observed; occupiedmemoryignored; existingprocessespreserved",
+  "seeds": [
+    4100,
+    4101,
+    4102,
+    4103,
+    4104,
+    4105,
+    4106,
+    4107
+  ],
+  "retained_density_grid": [
+    0,
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1,
+    0.2,
+    0.3,
+    0.5,
+    0.7,
+    1
+  ],
+  "density_definition": "fraction of active input-to-hidden connections; sparsity=1-density",
+  "bank_density": 0.2,
+  "retrain_source_banks": false,
+  "retrain_vaes": false,
+  "agreement_search": "rerun400steps4starts for each nonendpointK using frozen original source VAEs",
+  "methods": [
+    "random_density",
+    "function_gradient_density",
+    "agreement_density"
+  ],
+  "evaluation": "same 8 target costtasks;4pairedinitializations;budgets32/64/128/256;800steps",
+  "density_selection": "only validation_mse on2separateunused validation costtasks, fixed testcosttasks remain exploratory",
+  "target_batch_conditions": 8,
+  "target_kernel_mode": "reference",
+  "initialization_reference_models": 20,
+  "gradient_denominator": 20,
+  "fixed_heatmap_selection": {
+    "seed": 4100,
+    "task": 0,
+    "support_size": 256,
+    "init": 0
+  },
+  "anticipated_checkpoint_storage_gib": 35,
+  "free_disk_gib_initial": 94
+}

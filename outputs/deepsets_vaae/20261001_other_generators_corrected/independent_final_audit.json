@@ -1,0 +1,70 @@
+{
+  "verdict": "PASS",
+  "scope": {
+    "corrected_root": "20261001_other_generators_corrected",
+    "extraction_root": "20261001_generative_extraction_controls",
+    "seeds": [
+      4100,
+      4101,
+      4102,
+      4103,
+      4104,
+      4105,
+      4106,
+      4107
+    ]
+  },
+  "checks": {
+    "main_and_extraction_local_report_links": "See final parent local_link_audit.json",
+    "corrected_complete": true,
+    "extraction_complete": true,
+    "corrected_checkpoints_checked": 512,
+    "extraction_checkpoints_checked": 128,
+    "checkpoint_shape": [
+      48,
+      784,
+      32
+    ],
+    "method_init_mapping_exact_all_512": true,
+    "binary_masks_and_exact_cardinality_all_512": true,
+    "effective_weight_equals_weight_times_mask_all_640": true,
+    "forbidden_effective_weights_exact_zero_all_640": true,
+    "corrected_records_per_seed": {
+      "old": 1536,
+      "fresh": 1536
+    },
+    "extraction_records_per_seed": {
+      "old": 384,
+      "fresh": 384
+    },
+    "corrected_record_total": 24576,
+    "extraction_record_total": 6144,
+    "extraction_recovery": {
+      "verifier_only": true,
+      "checkpoint_sha256_unchanged": true,
+      "no_training_or_evaluation_repeated": true,
+      "old_control_max_mse_delta": 0.0
+    },
+    "non_gan_plateau": {
+      "converged": 32,
+      "attempts": 32
+    },
+    "gan": {
+      "converged": 0,
+      "attempts": 8,
+      "status": "max_steps_unstable"
+    }
+  },
+  "main_report": {
+    "nmse_table_recomputed": true,
+    "signs_and_rounded_CIs_match_summary": true,
+    "source_density": "20%",
+    "target_density": "30%",
+    "target_sparsity": "70%",
+    "flat_rank_diagnostic_preserved": true,
+    "gan_explicitly_excluded_from_converged_claim": true,
+    "counts": "512 main + 128 extraction checkpoints"
+  },
+  "conclusion": "No remaining blocking issues.",
+  "provenance": "Read-only independent reviewer /root/generative_protocol_review supplied these findings; primary agent persisted the JSON without changing scientific artifacts."
+}

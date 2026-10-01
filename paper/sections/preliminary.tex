@@ -1,2 +1,127 @@
 \section{Preliminary}
-TODO
+\label{sec:preliminary}
+
+\subsection{Tasks and hypothesis spaces}
+
+We adopt the formulation of inductive bias learning introduced by
+\citet{baxter2000model}. Let $\mathcal X$ and $\mathcal Y$ denote the input
+and output spaces, and let $\ell:\mathcal Y\times\mathcal Y\to[0,\infty)$
+be a loss function. A supervised learning task is represented by a
+probability distribution $P$ on $\mathcal X\times\mathcal Y$.
+A hypothesis is a function $h:\mathcal X\to\mathcal Y$, whose population
+risk is
+\begin{equation}
+  R_P(h)
+  :=\mathbb E_{(x,y)\sim P}\bigl[\ell(h(x),y)\bigr].
+  \label{eq:population-risk}
+\end{equation}
+We assume that the expectations appearing below are well defined and finite.
+
+For a single task, a task learner receives a sample
+$S=\{(x_j,y_j)\}_{j=1}^{m}$ drawn
+independently from $P$. Its empirical risk is
+\begin{equation}
+  \widehat R_S(h)
+  :=\frac{1}{m}\sum_{j=1}^{m}\ell(h(x_j),y_j).
+  \label{eq:empirical-risk}
+\end{equation}
+A task learner $A_{\mathcal H}$ maps this sample to a hypothesis
+$A_{\mathcal H}(S)\in\mathcal H$ within a given hypothesis space
+$\mathcal H$. The choice of $\mathcal H$
+encodes an inductive bias: restricting the available functions can
+facilitate generalization from limited data, provided that the space
+retains sufficiently good solutions.
+
+\subsection{Task environment and bias learner}
+
+Let $Q$ be a probability distribution over a collection $\mathcal P$ of
+task distributions. Source tasks $P_1,\ldots,P_n$ are drawn independently
+from $Q$, and each supplies a sample $S_i$ of independent observations.
+Given a family of hypothesis spaces $\mathbb H$, a bias learner $B$ uses
+these samples to select a shared hypothesis space:
+\begin{equation}
+  \widehat{\mathcal H}
+  :=B(S_1,\ldots,S_n)\in\mathbb H,
+  \label{eq:bias-learner}
+\end{equation}
+Task learners use the selected space to learn their own hypotheses on
+new tasks drawn independently from $Q$. Following Baxter, the suitability
+of a space for this environment is measured by
+\begin{equation}
+  R_Q(\mathcal H)
+  :=\mathbb E_{P\sim Q}
+    \left[\inf_{h\in\mathcal H}R_P(h)\right].
+  \label{eq:environment-risk}
+\end{equation}
+The task-specific infimum allows different hypotheses to solve different
+tasks within the same shared space.
+
+\subsection{Connectivity as a structural inductive bias}
+
+In our setting, hypothesis spaces are indexed by connectivity masks.
+Fix a network architecture with $E$ candidate connections in the layer
+whose structure is to be learned. A binary mask
+\begin{equation}
+  M\in\mathcal M\subseteq\{0,1\}^{E}
+  \label{eq:admissible-masks}
+\end{equation}
+specifies which connections are available. The admissible set
+$\mathcal M$ may impose a fixed connection budget or additional
+connectivity constraints.
+
+Let $f_{w,M}$ denote a predictor with mask $M$ and numerical parameters
+$w$. Masked connections are set to zero, while $w$ includes the active
+weights and the remaining trainable parameters. Each mask defines a
+hypothesis space
+\begin{equation}
+  \mathcal H_M
+  :=\{f_{w,M}:w\in\Theta_M\},
+  \qquad
+  \mathbb H_{\mathcal M}
+  :=\{\mathcal H_M:M\in\mathcal M\},
+  \label{eq:masked-hypothesis-spaces}
+\end{equation}
+where $\Theta_M$ is the admissible parameter set.
+
+Learning a structural bias therefore amounts to selecting a mask whose
+induced space is suitable for the task environment. The corresponding
+population objective is
+\begin{equation}
+  \inf_{M\in\mathcal M}R_Q(\mathcal H_M)
+  =\inf_{M\in\mathcal M}\mathbb E_{P\sim Q}
+    \left[\inf_{w\in\Theta_M}R_P(f_{w,M})\right].
+  \label{eq:structural-bias-objective}
+\end{equation}
+In this setting, the bias learner $B$ selects a mask $\widehat M$ and
+thereby returns the space $\widehat{\mathcal H}=\mathcal H_{\widehat M}$.
+The selected mask is fixed across tasks, while a task learner trains
+numerical parameters from scratch for each new task. Connectivity constrains the
+support of the weights; equality constraints between active weights
+require an additional parameter-sharing mechanism.
+
+\subsection{Learning new tasks from finite samples}
+
+The environment risk measures the best solutions available within a
+hypothesis space. To describe learning from limited data, we also specify
+how a task learner uses that space.
+
+For a fixed mask $M$, let $A_M$ denote the task learner operating within
+$\mathcal H_M$. It returns a predictor $A_M(S)\in\mathcal H_M$
+using sample $S$. Its expected risk after observing $m$ labeled examples is
+\begin{equation}
+  \mathcal R_m(M)
+  :=\mathbb E_{P\sim Q}\,
+    \mathbb E_{S\sim P^m}
+      \left[R_P\bigl(A_M(S)\bigr)\right].
+  \label{eq:finite-sample-transfer-risk}
+\end{equation}
+For a mask $\widehat M$ selected by the bias learner $B$, this quantity
+is evaluated conditional on the source data and the selected mask.
+The new task and its sample are independent of this selection.
+
+Our objective is to learn a fixed structure that improves
+$\mathcal R_m$ at limited sample sizes, or reaches a prescribed risk
+level with fewer examples than comparison structures under a common
+training protocol. A low value of $R_Q(\mathcal H_M)$ establishes that
+good solutions are available. Whether the training procedure can obtain
+them efficiently from finite samples is a separate question.

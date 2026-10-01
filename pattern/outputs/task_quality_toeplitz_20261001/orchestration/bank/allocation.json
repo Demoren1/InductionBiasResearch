@@ -1,0 +1,87 @@
+{
+  "stage": "bank",
+  "started_utc": "20261001T115111Z",
+  "approved_gpu_indices": [
+    1,
+    2
+  ],
+  "memory_considered_for_selection": false,
+  "source_sha256": {
+    "pattern/task_quality/__init__.py": "a02cf134491b4b62d243ad2d45a0c8d11ab8288579a6c13c7b625650d5830c1f",
+    "pattern/task_quality/bank.py": "def287c72f0d29e1ec1543012dad2a850ba2a2b3caf6beb1515bdd43b6f1c9ca",
+    "pattern/task_quality/convergence.py": "d2d0421c85b7241e4a91560a92d355a98d8dcc1129f21860a54db14328e21094",
+    "pattern/task_quality/core.py": "b7a3d124dcd51823a41e647465a4b1eb39a4a81756ec4afe720bf0cdf9a12241",
+    "pattern/task_quality/evaluate.py": "129550bd143cbd7c53c040a3424af09da26bdf59eac05f1e054df1794e408cc9",
+    "pattern/task_quality/generator.py": "a9b6d1abf53d6ca38b5611dec071b60168c0d0cd0a619041d5d94d55ef5a5f2e",
+    "pattern/task_quality/launch.py": "0ba0b76c98b798dd7baa46488348161e1e92156ddb3a281f91a890125310d2ba",
+    "pattern/task_quality/meta.py": "65be335c0bcc8e066df27b954259f427ff136c5a1b83bd220a36fba6181d8656",
+    "pattern/task_quality/report.py": "2df7d1f4b9d4b61b92e94a8dcf91670d1767a703f31531b6126549041665672e",
+    "pattern/task_quality/structure.py": "1e325147452766b34f6af2e82e5894a6d3bd3c0833836e294db033163087913e",
+    "meta_pattern/data.py": "3b5433e642af8266a9fcd4bf95ff9f390a89cd65a3e8981dc631b013f1916ab9",
+    "pattern/length_interp/mlp.py": "3869282f211c34e42e8c4a4f629137625930a219ed29b53162c5e4d4dc7ffd38"
+  },
+  "source_snapshot": "/home/udeneev-av/ResearchProject/pattern/outputs/task_quality_toeplitz_20261001/orchestration/bank/source_20261001T115111Z",
+  "jobs": [
+    {
+      "name": "bank_8100",
+      "gpu_uuid": "GPU-6784dc4e-6ec9-2266-5d23-85bf1b1c2af3",
+      "command": [
+        "/home/udeneev-av/miniconda3/envs/ras/bin/python",
+        "-m",
+        "pattern.task_quality.bank",
+        "--out",
+        "/home/udeneev-av/ResearchProject/pattern/outputs/task_quality_toeplitz_20261001/seed_8100/bank",
+        "--seed",
+        "8100",
+        "--device",
+        "cuda"
+      ]
+    },
+    {
+      "name": "bank_8101",
+      "gpu_uuid": "GPU-f8501f2d-53bc-9087-6041-64ee69876325",
+      "command": [
+        "/home/udeneev-av/miniconda3/envs/ras/bin/python",
+        "-m",
+        "pattern.task_quality.bank",
+        "--out",
+        "/home/udeneev-av/ResearchProject/pattern/outputs/task_quality_toeplitz_20261001/seed_8101/bank",
+        "--seed",
+        "8101",
+        "--device",
+        "cuda"
+      ]
+    },
+    {
+      "name": "bank_8102",
+      "gpu_uuid": "GPU-6784dc4e-6ec9-2266-5d23-85bf1b1c2af3",
+      "command": [
+        "/home/udeneev-av/miniconda3/envs/ras/bin/python",
+        "-m",
+        "pattern.task_quality.bank",
+        "--out",
+        "/home/udeneev-av/ResearchProject/pattern/outputs/task_quality_toeplitz_20261001/seed_8102/bank",
+        "--seed",
+        "8102",
+        "--device",
+        "cuda"
+      ]
+    },
+    {
+      "name": "bank_8103",
+      "gpu_uuid": "GPU-f8501f2d-53bc-9087-6041-64ee69876325",
+      "command": [
+        "/home/udeneev-av/miniconda3/envs/ras/bin/python",
+        "-m",
+        "pattern.task_quality.bank",
+        "--out",
+        "/home/udeneev-av/ResearchProject/pattern/outputs/task_quality_toeplitz_20261001/seed_8103/bank",
+        "--seed",
+        "8103",
+        "--device",
+        "cuda"
+      ]
+    }
+  ],
+  "utilization_note": "nvidia-smi measures all activity, including other users."
+}

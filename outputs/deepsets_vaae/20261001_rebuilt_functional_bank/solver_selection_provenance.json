@@ -1,0 +1,26 @@
+{
+  "lr": 0.002,
+  "sparse_l2": 0.0001,
+  "dense_l2": 0.001,
+  "population_decay_every": 500,
+  "cap": 4000,
+  "minimum": 1000,
+  "preliminary_proposal": "bank_v3_pilot/selection.json proposes LR/L2 under stochastic fresh-set learning, decay2000,8000steps",
+  "actual_production_call": "Frozen source_snapshot/rebuilt_bank_run.py reads LR/L2 from bank_v3_pilot; takes analytic population objective, decay500/cap4000 from protocol.json",
+  "independent_confirmation": "population_pilot and population_l2_pilot both used the actual exact empirical-population optimizer, decay500/cap4000, two held-out meta-validation cost tasks; same LR/L2 tuple confirmed before production",
+  "population_pilot_query": {
+    "0.0001": {
+      "functional": 0.20839398354291916,
+      "random": 0.21492663770914078,
+      "dense": 0.21309303492307663
+    },
+    "0.001": {
+      "functional": 0.21148907393217087,
+      "random": 0.22052010893821716,
+      "dense": 0.19566653668880463
+    }
+  },
+  "preliminary_sha256": "d5f417a855fa96f48f2b7788e66a739fb0cc630656c7d09a2bdb960a53a019a6",
+  "production_protocol_sha256": "139498301451f3790da33156e8423dec5f669c04a143e6aae51be9de93baacbf",
+  "report_instruction": "Do not describe the stochastic v3 schedule as production or as a convergence-certified bank solver; preserve actual saved settings."
+}

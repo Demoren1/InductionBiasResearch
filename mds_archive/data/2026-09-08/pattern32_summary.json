@@ -1,0 +1,383 @@
+{
+  "config": {
+    "seq_len": 32,
+    "hidden": 32,
+    "train_lengths": [
+      3,
+      4,
+      6,
+      8
+    ],
+    "heldout_lengths": [
+      5,
+      7
+    ],
+    "seed": 20260906,
+    "task_split_seed": 42,
+    "input_split_seed": 1729,
+    "bank_mlps": 1000,
+    "bank_steps": 2000,
+    "bank_batch": 128,
+    "bank_lr": 0.001,
+    "bank_val_size": 2048,
+    "support_pool_size": 8192,
+    "top_fraction": 0.1,
+    "cvae_epochs": 80,
+    "cvae_batch": 256,
+    "cvae_lr": 0.001,
+    "cvae_beta": 0.1,
+    "cvae_hidden": 256,
+    "latent_dim": 32,
+    "cvae_seeds": [
+      42,
+      43
+    ],
+    "eval_masks": 32,
+    "eval_repeats": 2,
+    "eval_steps": 2000,
+    "eval_batch": 128,
+    "eval_lr": 0.001,
+    "eval_test_size": 2048,
+    "task_limit": 0,
+    "eval_task_limit": 0
+  },
+  "rows": [
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "cvae",
+      "tasks": 32,
+      "accuracy": 0.6933764219284058,
+      "delta_vs_random": 0.03389537334442139,
+      "task_bootstrap_ci95": [
+        0.028522133827209473,
+        0.039518484473228456
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "wrong_lower",
+      "tasks": 32,
+      "accuracy": 0.6917812824249268,
+      "delta_vs_random": 0.03230023384094238,
+      "task_bootstrap_ci95": [
+        0.027197572588920593,
+        0.03772575855255127
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "wrong_upper",
+      "tasks": 32,
+      "accuracy": 0.6943871974945068,
+      "delta_vs_random": 0.03490614891052246,
+      "task_bootstrap_ci95": [
+        0.02919190526008606,
+        0.04092423915863035
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "cvae_z0",
+      "tasks": 32,
+      "accuracy": 0.6841075420379639,
+      "delta_vs_random": 0.024626493453979492,
+      "task_bootstrap_ci95": [
+        0.0201313316822052,
+        0.029430055618286134
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "mean_interp",
+      "tasks": 32,
+      "accuracy": 0.6755261421203613,
+      "delta_vs_random": 0.016045093536376953,
+      "task_bootstrap_ci95": [
+        0.010797572135925294,
+        0.02137463092803954
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "random",
+      "tasks": 32,
+      "accuracy": 0.6594810485839844,
+      "delta_vs_random": 0.0,
+      "task_bootstrap_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "balanced",
+      "method": "ideal",
+      "tasks": 32,
+      "accuracy": 0.7333877086639404,
+      "delta_vs_random": 0.07390666007995605,
+      "task_bootstrap_ci95": [
+        0.06472442746162414,
+        0.08277504444122315
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "cvae",
+      "tasks": 32,
+      "accuracy": 0.6908950805664062,
+      "delta_vs_random": 0.03200984001159668,
+      "task_bootstrap_ci95": [
+        0.02645079493522644,
+        0.03740260303020477
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "wrong_lower",
+      "tasks": 32,
+      "accuracy": 0.6892545223236084,
+      "delta_vs_random": 0.030369281768798828,
+      "task_bootstrap_ci95": [
+        0.025065705180168152,
+        0.035522240400314334
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "wrong_upper",
+      "tasks": 32,
+      "accuracy": 0.6921007633209229,
+      "delta_vs_random": 0.03321552276611328,
+      "task_bootstrap_ci95": [
+        0.02714468538761139,
+        0.039085683226585385
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "cvae_z0",
+      "tasks": 32,
+      "accuracy": 0.682928204536438,
+      "delta_vs_random": 0.024042963981628418,
+      "task_bootstrap_ci95": [
+        0.01920485496520996,
+        0.028907379508018492
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "mean_interp",
+      "tasks": 32,
+      "accuracy": 0.6744101047515869,
+      "delta_vs_random": 0.015524864196777344,
+      "task_bootstrap_ci95": [
+        0.00991411805152893,
+        0.02107844352722168
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "random",
+      "tasks": 32,
+      "accuracy": 0.6588852405548096,
+      "delta_vs_random": 0.0,
+      "task_bootstrap_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "length": 5,
+      "distribution": "natural",
+      "method": "ideal",
+      "tasks": 32,
+      "accuracy": 0.7296571731567383,
+      "delta_vs_random": 0.07077193260192871,
+      "task_bootstrap_ci95": [
+        0.06164407730102539,
+        0.0795024812221527
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "cvae",
+      "tasks": 128,
+      "accuracy": 0.6916211247444153,
+      "delta_vs_random": 0.032614946365356445,
+      "task_bootstrap_ci95": [
+        0.030039910227060318,
+        0.035098207741975786
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "wrong_lower",
+      "tasks": 128,
+      "accuracy": 0.6916831731796265,
+      "delta_vs_random": 0.032677024602890015,
+      "task_bootstrap_ci95": [
+        0.03018278405070305,
+        0.03512268140912056
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "wrong_upper",
+      "tasks": 128,
+      "accuracy": 0.6905690431594849,
+      "delta_vs_random": 0.03156289458274841,
+      "task_bootstrap_ci95": [
+        0.028972036391496658,
+        0.03404439985752106
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "cvae_z0",
+      "tasks": 128,
+      "accuracy": 0.6807774305343628,
+      "delta_vs_random": 0.021771222352981567,
+      "task_bootstrap_ci95": [
+        0.019499877095222475,
+        0.02401713654398918
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "mean_interp",
+      "tasks": 128,
+      "accuracy": 0.662653386592865,
+      "delta_vs_random": 0.0036472082138061523,
+      "task_bootstrap_ci95": [
+        0.0011397838592529298,
+        0.006119287014007568
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "random",
+      "tasks": 128,
+      "accuracy": 0.6590061783790588,
+      "delta_vs_random": 0.0,
+      "task_bootstrap_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "balanced",
+      "method": "ideal",
+      "tasks": 128,
+      "accuracy": 0.7183298468589783,
+      "delta_vs_random": 0.059323668479919434,
+      "task_bootstrap_ci95": [
+        0.056131516396999356,
+        0.062487122416496274
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "cvae",
+      "tasks": 128,
+      "accuracy": 0.689172089099884,
+      "delta_vs_random": 0.03591418266296387,
+      "task_bootstrap_ci95": [
+        0.03321812599897385,
+        0.03852670639753342
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "wrong_lower",
+      "tasks": 128,
+      "accuracy": 0.6892641186714172,
+      "delta_vs_random": 0.03600621223449707,
+      "task_bootstrap_ci95": [
+        0.03342885822057724,
+        0.03851315453648567
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "wrong_upper",
+      "tasks": 128,
+      "accuracy": 0.6881212592124939,
+      "delta_vs_random": 0.03486335277557373,
+      "task_bootstrap_ci95": [
+        0.03209671229124069,
+        0.03748230040073395
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "cvae_z0",
+      "tasks": 128,
+      "accuracy": 0.6762018203735352,
+      "delta_vs_random": 0.02294391393661499,
+      "task_bootstrap_ci95": [
+        0.020277200639247893,
+        0.025440485775470728
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "mean_interp",
+      "tasks": 128,
+      "accuracy": 0.6585016846656799,
+      "delta_vs_random": 0.005243778228759766,
+      "task_bootstrap_ci95": [
+        0.0022580981254577636,
+        0.00810495913028717
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "random",
+      "tasks": 128,
+      "accuracy": 0.6532579064369202,
+      "delta_vs_random": 0.0,
+      "task_bootstrap_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "length": 7,
+      "distribution": "natural",
+      "method": "ideal",
+      "tasks": 128,
+      "accuracy": 0.7185922265052795,
+      "delta_vs_random": 0.06533432006835938,
+      "task_bootstrap_ci95": [
+        0.06262543797492981,
+        0.0680490866303444
+      ]
+    }
+  ],
+  "bootstrap_unit": "pattern; averages masks, MLP repeats and fixed CVAE seeds first"
+}

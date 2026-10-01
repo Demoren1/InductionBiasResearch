@@ -1,0 +1,59 @@
+{
+  "purpose": "Primary papers read before architecture implementation; adaptations generate functional saliency maps rather than neural weights.",
+  "articles": [
+    {
+      "model": "diffusion",
+      "url": "https://arxiv.org/abs/2006.11239",
+      "adaptation": "direct full functional-map x0-prediction DDPM; no VAE compressor"
+    },
+    {
+      "model": "flow_matching",
+      "url": "https://arxiv.org/abs/2210.02747",
+      "adaptation": "conditional independent linear-path flow"
+    },
+    {
+      "model": "gnn_flow",
+      "url": "https://arxiv.org/html/2609.32833v1",
+      "adaptation": "small bipartite neural graph edge/node velocity field; not paper reproduction"
+    },
+    {
+      "model": "flow_matching",
+      "url": "https://arxiv.org/abs/2601.05052",
+      "adaptation": "alignment motivates matched-bank control; no full-weight DeepWeightFlow reproduction"
+    },
+    {
+      "model": "gnn_flow",
+      "url": "https://arxiv.org/abs/2504.03710",
+      "adaptation": "weight-space graph flow motivation"
+    },
+    {
+      "model": "set_transformer_flow",
+      "url": "https://arxiv.org/abs/1810.00825",
+      "adaptation": "SAB over 32 hidden-neuron columns as equivariant flow field"
+    },
+    {
+      "model": "gan",
+      "url": "https://arxiv.org/abs/1704.00028",
+      "adaptation": "conditional WGAN-GP on full maps"
+    },
+    {
+      "model": "gan",
+      "url": "https://arxiv.org/abs/1901.11058",
+      "adaptation": "HyperGAN inspiration only; not its architecture/loss"
+    }
+  ],
+  "scope_notes": [
+    "The September 2026 graph-flow preprint studies neural weights with permutation-equivariant parameter graphs; our bipartite saliency graph is an adaptation, not reproduction.",
+    "Set Transformer supplies an equivariant attention architecture, made generative by the shared conditional flow-matching objective.",
+    "HyperGAN does not equal WGAN-GP: our GAN uses the latter on functional-map logits.",
+    "All density selections remain fixed at rho=0.3; adaptive sparsity not trained here.",
+    "FM backbones share minibatch128, not parameter counts; checkpoint selection uses only source maps.",
+    "The papers do not establish which model wins on our bank; actual target evaluation is required."
+  ],
+  "additional_sparsity_reference": {
+    "title": "Learning Sparse Neural Networks through L0 Regularization",
+    "url": "https://arxiv.org/abs/1712.01312",
+    "proposed_future_use": "task utility plus expected gate count penalty; not trained in this fixed-K study"
+  },
+  "future_bank_constraint": "All source networks were trained at 20% retained edges. These maps alone do not identify the optimal sparsity-utility tradeoff. Adaptive K needs source evaluation at multiple K or banks covering multiple densities, with nested heldout selection."
+}

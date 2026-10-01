@@ -1,0 +1,363 @@
+{
+  "artifacts": {
+    "audit_root": "/home/udeneev-av/ResearchProject/outputs/deepsets_vaae/20261001_rebuilt_utility_graph_flow",
+    "bank_audit_artifacts": "/home/udeneev-av/ResearchProject/outputs/deepsets_vaae/20261001_rebuilt_functional_bank/seed_{4100..4107}/{audit_replay.pt,exact_audit.pt}",
+    "independent_numpy_metric_rows": 2304,
+    "numpy_replay_max_absdiff": 1.7881393432617188e-07
+  },
+  "convergence": {
+    "all_child_fit_flag_total": 8192,
+    "all_child_fits_fixed_2000_updates": 8192,
+    "all_utility_child_fit_flags_including_source_feedback_selection_final": 8192,
+    "child_plateau_semantics": "Fixed 2000-update horizon; plateau flags are descriptive. With checkpoint_every=100, the nominal trailing 50-update range is approximated using two checkpoints 100 updates apart, not an exact 50-update range.",
+    "final_children_flag_total": 2304,
+    "final_children_plateau_flags": 2304,
+    "outer_field_models": [
+      {
+        "best_source_validation": 0.34282826286155776,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4100,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.43570771212358306,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4100,
+        "steps": 525
+      },
+      {
+        "best_source_validation": 0.4336597855495947,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4101,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.6925726569815067,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4101,
+        "steps": 750
+      },
+      {
+        "best_source_validation": 0.5141289979219437,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4102,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.68619654327631,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4102,
+        "steps": 750
+      },
+      {
+        "best_source_validation": 0.4723244085907936,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4103,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.6529233977198601,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4103,
+        "steps": 800
+      },
+      {
+        "best_source_validation": 0.43942656368017197,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4104,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.810138963162899,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4104,
+        "steps": 500
+      },
+      {
+        "best_source_validation": 0.4334859922528267,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4105,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.635220542550087,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4105,
+        "steps": 525
+      },
+      {
+        "best_source_validation": 0.35524635742796207,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4106,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.5477853956324181,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4106,
+        "steps": 700
+      },
+      {
+        "best_source_validation": 0.5723217857174809,
+        "kind": "gnn",
+        "plateau": true,
+        "seed": 4107,
+        "steps": 450
+      },
+      {
+        "best_source_validation": 0.8874815868367101,
+        "kind": "flow",
+        "plateau": true,
+        "seed": 4107,
+        "steps": 475
+      }
+    ],
+    "outer_field_monitor_limit": "Source utility-weighted archive monitor and fixed noise/time validation, not held-out-task validation.",
+    "pre_final_source_feedback_selection_flag_total": 5888,
+    "pre_final_source_feedback_selection_plateau_flags": 5888
+  },
+  "limitations": [
+    "Only four source cost-vector families train the utility fields; eight MNIST split seeds do not add independent task families.",
+    "Outer field checkpoints are selected on the utility-weighted source archive monitor, not an independent held-out source-task family.",
+    "Teacher hidden coordinates are aligned by train-only Hungarian preprocessing; field permutation equivariance is conditional on jointly permuting that aligned context.",
+    "The known synthetic source generator permits per-image residual labels on the source training pool; this privileged source supervision should be disclosed.",
+    "Search8 query selection uses the target query split for mask choice; only untouched test metrics estimate final performance."
+  ],
+  "masks": {
+    "K": 7526,
+    "all_have_exact_K": true,
+    "candidate_masks_checked": 1536,
+    "chosen_sparse_masks_checked": 512,
+    "feature_hidden_shape": [
+      784,
+      32
+    ],
+    "sparse_density": 0.3
+  },
+  "permutation_equivariance": {
+    "cases": 16,
+    "frozen_fields_checked": [
+      "gnn",
+      "flow"
+    ],
+    "joint_permutation_axes": "hidden axis jointly permuted in node, edge, state/prior; flow initial noise also permuted.",
+    "max_mean_score_abs_residual": 1.7457308842949715e-07,
+    "max_score_abs_residual": 4.8160552978515625e-05,
+    "minimum_GNN_topK_cutoff_gap": 1.996755599975586e-06,
+    "minimum_flow_topK_cutoff_gap": 4.725903272628784e-05,
+    "seed": 4100,
+    "support_contexts_checked": 8,
+    "tie_limit": "Exact-top-K equivariance is not guaranteed at a tied cutoff; no checked mask changed under permutation.",
+    "topK_mask_equivariance_passes": 16,
+    "topK_mask_equivariance_total": 16
+  },
+  "provenance": {
+    "bank_protocol_sha256_matches": true,
+    "child_selection_sha256_matches": true,
+    "live_source_hashes_matched": 10,
+    "live_source_hashes_total": 10,
+    "source_context_hashes_matched": 8,
+    "source_context_hashes_total": 8,
+    "source_field_model_hashes_matched": 16,
+    "source_field_model_hashes_total": 16,
+    "source_snapshot_hashes_matched": 10,
+    "source_snapshot_hashes_total": 10,
+    "utility_protocol_sha256": "c2d636daf498d8933197866780f5e832786cfc70b66b7db376da67dd59c71e90"
+  },
+  "scope": "Read-only independent audit of rebuilt DeepSets utility pipeline and frozen target results.",
+  "source_bank_exact_audit": {
+    "audit_splits": 32,
+    "by_density_recipe": [
+      {
+        "mean_delta": 0.05405585760308895,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.25819030571437906,
+        "n": 1024,
+        "recipe": "dense_functional",
+        "rho": 0.1,
+        "wins": 0
+      },
+      {
+        "mean_delta": 0.09672746424621437,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.3008619123575045,
+        "n": 1024,
+        "recipe": "random",
+        "rho": 0.1,
+        "wins": 0
+      },
+      {
+        "mean_delta": 0.009000260797620285,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.2131347089089104,
+        "n": 1024,
+        "recipe": "dense_functional",
+        "rho": 0.3,
+        "wins": 84
+      },
+      {
+        "mean_delta": 0.03348933297093026,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.23762378108222038,
+        "n": 1024,
+        "recipe": "random",
+        "rho": 0.3,
+        "wins": 0
+      },
+      {
+        "mean_delta": 0.006647085734584834,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.21078153384587495,
+        "n": 1024,
+        "recipe": "dense_functional",
+        "rho": 0.5,
+        "wins": 152
+      },
+      {
+        "mean_delta": 0.020682205227785744,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.22481665333907586,
+        "n": 1024,
+        "recipe": "random",
+        "rho": 0.5,
+        "wins": 19
+      },
+      {
+        "mean_delta": 0.010044451439171098,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.2141788995504612,
+        "n": 1024,
+        "recipe": "dense_functional",
+        "rho": 0.7,
+        "wins": 82
+      },
+      {
+        "mean_delta": 0.01663510053913342,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.22076954865042353,
+        "n": 1024,
+        "recipe": "random",
+        "rho": 0.7,
+        "wins": 41
+      },
+      {
+        "mean_delta": 0.01385105267399922,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.21798550078528933,
+        "n": 1024,
+        "recipe": "dense_functional",
+        "rho": 0.9,
+        "wins": 30
+      },
+      {
+        "mean_delta": 0.015610397604177706,
+        "mean_paired_dense_nmse": 0.2041344481112901,
+        "mean_sparse_nmse": 0.21974484571546782,
+        "n": 1024,
+        "recipe": "random",
+        "rho": 0.9,
+        "wins": 40
+      }
+    ],
+    "candidate_rows": 10240,
+    "interpretation": "Exact empirical iid-five expected risk over 3000 held-out audit images per seed/task; source-only audit, not target-test evidence.",
+    "mean_paired_dense_exact_nmse": 0.2041344481112901,
+    "mean_sparse_exact_nmse": 0.2318087689949607,
+    "mean_sparse_minus_paired_dense": 0.02767432088367059,
+    "sparse_candidates_beating_paired_dense": 448
+  },
+  "test_freeze": {
+    "aggregate_child_manifests_valid": 64,
+    "all_freeze_manifests_precede_target_test_provenance": true,
+    "dense_child_hashes_valid": 64,
+    "mask_file_hashes_valid": 64,
+    "posttest_parameter_or_mask_adaptation": "none; after loading the final test split the script computes metrics and writes result records only.",
+    "pretest_test_split_materialized": false,
+    "seed_disjointness_checks": 8,
+    "seed_manifests": 8,
+    "seed_support_query_hash_checks": 8,
+    "sparse_child_hashes_valid": 64,
+    "support_query_hash_rechecked": 8,
+    "test_phase_callsite": "deepsets_vaae/utility_graph_run.py after per-task masks/children and aggregate hashes are written.",
+    "train_query_test_id_sets_disjoint": 8,
+    "two_phase_loader": "final_data(include_test=False) loads train/query; include_test=True is called only after all_children_frozen is written."
+  },
+  "utility_results": {
+    "aggregate_interpretation": "Descriptive aggregate across 64 seed\u00d7task cells with four fresh final initializations per method; seeds are not independent task-family replications.",
+    "methods": [
+      {
+        "mean_nmse": 0.6775005768286064,
+        "method": "functional",
+        "n": 256,
+        "sample_sd": 0.11578856788250488
+      },
+      {
+        "mean_nmse": 0.683885398437269,
+        "method": "pixel_prior",
+        "n": 256,
+        "sample_sd": 0.11472991594766946
+      },
+      {
+        "mean_nmse": 0.661539668799378,
+        "method": "random",
+        "n": 256,
+        "sample_sd": 0.11384283316031163
+      },
+      {
+        "mean_nmse": 0.6752722910605371,
+        "method": "gnn_single",
+        "n": 256,
+        "sample_sd": 0.11691540467563181
+      },
+      {
+        "mean_nmse": 0.6631306291092187,
+        "method": "flow_single",
+        "n": 256,
+        "sample_sd": 0.11574798962533091
+      },
+      {
+        "mean_nmse": 0.6732300644507632,
+        "method": "gnn_search8",
+        "n": 256,
+        "sample_sd": 0.1173404302128818
+      },
+      {
+        "mean_nmse": 0.6620442649582401,
+        "method": "flow_search8",
+        "n": 256,
+        "sample_sd": 0.11486228008451942
+      },
+      {
+        "mean_nmse": 0.6765498828608543,
+        "method": "functional_search8",
+        "n": 256,
+        "sample_sd": 0.11623675745698604
+      },
+      {
+        "mean_nmse": 0.6563439463498071,
+        "method": "dense_tuned",
+        "n": 256,
+        "sample_sd": 0.12331893512422128
+      }
+    ],
+    "n_per_method": 256,
+    "query_selection": "Search8 masks are selected using the same held-out query split whose query losses are stored, so their query metrics are post-selection. Final test metrics are independent of that query-based choice.",
+    "seeds": 8,
+    "tasks_per_seed": 8
+  },
+  "verdict": "PASS"
+}

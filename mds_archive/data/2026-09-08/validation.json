@@ -1,0 +1,45 @@
+{
+  "scope": "CPU validation for the September 8 report publication; no GPU retraining",
+  "python": "3.10.20",
+  "packages": {
+    "torch": "2.3.1",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "matplotlib": "3.10.8"
+  },
+  "tests": [
+    {
+      "cwd": ".",
+      "command": "python -m unittest discover -s meta_pattern/tests -v",
+      "passed": 29
+    },
+    {
+      "cwd": "pattern",
+      "command": "python -m unittest discover -s tests -v",
+      "passed": 12
+    },
+    {
+      "cwd": ".",
+      "command": "python -m unittest discover -s pattern/length_interp/tests -t . -v",
+      "passed": 13
+    },
+    {
+      "cwd": ".",
+      "command": "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=/tmp/ras_pytest_release:motif_pair:. python -m pytest motif_pair/tests -q",
+      "passed": 58,
+      "pytest_version": "8.4.2",
+      "seconds": 46.29,
+      "exit_code": 0,
+      "note": "pytest installed in an isolated /tmp target because ras did not contain it; ordinary installation from requirements-dev.txt removes the need for this /tmp PYTHONPATH entry."
+    }
+  ],
+  "total_passed": 112,
+  "other_checks": [
+    "bash -n pattern/scripts/*.sh",
+    "bash -n motif_pair/run_all.sh motif_pair/scripts/*.sh",
+    "final-report local links",
+    "copied artifact SHA-256",
+    "scientific figure rebuild and visual inspection",
+    "git diff --cached --check"
+  ]
+}

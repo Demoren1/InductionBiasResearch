@@ -1,0 +1,91 @@
+{
+  "report_date": "2026-09-08",
+  "scope": "Evidence for the pattern section only. Metrics from the legacy length-8 and isolated length-32 experiments are deliberately kept separate.",
+  "sources": {
+    "legacy_ood": "pattern/OOD_RESULTS.md",
+    "decoder_agreement": "pattern/outputs/decoder_agreement/seed_20260906/RESULTS.md",
+    "single_z": "pattern/outputs/decoder_agreement/seed_20260906/single_z_comparison/RESULTS.md",
+    "oracle": "pattern/outputs/decoder_agreement/seed_20260906/oracle_ideal/RESULTS.md",
+    "length32": "pattern/outputs/length_interp/hour_20260906_205915/{RESULTS.md,summary.json,interpretation.json,protocol.json}"
+  },
+  "legacy_length8": {
+    "task": "All 16 binary patterns of length 4 in sequences of length 8; masked MLP has 8 hidden units and each hard mask has 32 active edges.",
+    "ood_transfer": {
+      "splits": [42, 43, 44, 45, 46],
+      "mean_accuracy": {
+        "random_exact32": 0.8821,
+        "cvae_train_only": 0.9086,
+        "ideal_toeplitz": 0.9240
+      },
+      "cvae_minus_random_pp": 2.66,
+      "split_sd_pp": 0.46,
+      "all_five_gains_positive": true
+    },
+    "two_decoder_agreement": {
+      "protocol": "One OOD split (42), two frozen unconditional CVAEs (seeds 42 and 43), 64 latent-pair starts; agreement uses no gold support and no held-out labels.",
+      "agreement": {
+        "soft_mse_initial": 0.092475,
+        "soft_mse_optimized": 0.000112,
+        "hard_iou_between_decoders_initial": 0.6542,
+        "hard_iou_between_decoders_optimized": 0.9981,
+        "exactly_matching_pairs_after_optimization": "62/64"
+      },
+      "downstream": {
+        "initial_vae42": {"gold_iou": 0.6507, "accuracy": 0.9138},
+        "agreement_vae42": {"gold_iou": 0.7046, "accuracy": 0.9205},
+        "agreement_vae43": {"gold_iou": 0.7046, "accuracy": 0.9219},
+        "random_exact32": {"gold_iou": 0.4906, "accuracy": 0.8947},
+        "ideal_support": {"gold_iou": 1.0, "accuracy": 0.9328}
+      },
+      "mean_accuracy_gain_vs_initial_pp": 0.58,
+      "mean_accuracy_gain_vs_random_search_pp": 0.21
+    },
+    "oracle_reachability": {
+      "meaning": "Gold-guided diagnostic, not transfer: only z is optimized against the ideal mask in frozen decoders.",
+      "radius8": {
+        "vae42": {"mean_iou": 0.9953, "exact_best_soft": "59/64"},
+        "vae43": {"mean_iou": 0.9981, "exact_best_soft": "62/64"}
+      }
+    },
+    "single_z_task_search": {
+      "meaning": "Label-using direct-gradient heuristic on VAE42, not a full bilevel hypergradient; it has a different compute/data budget from agreement.",
+      "agreement": {"gold_iou": 0.7046, "accuracy": 0.9205},
+      "task_z_final": {"gold_iou": 0.7249, "accuracy": 0.9225}
+    }
+  },
+  "length32_interpolation": {
+    "task": "Binary pattern occurrence in a length-32 bit sequence; CVAE train/validation lengths are 3,4,6,8 and test lengths 5,7 are completely absent from bank construction, CVAE fitting, and checkpoint selection.",
+    "protocol": {
+      "bank": "1000 random exact-K masked MLPs per known task, 2000 Adam steps; select the best 100 by a disjoint 2048-example query BCE; train on normalized unsigned abs(W1*mask) maps.",
+      "cvae": "Two seeds (42,43), latent 32, hidden 256, 80 epochs, BCE-sum plus 0.1 KL; condition is the continuous scalar 2*(length-3)/5-1.",
+      "evaluation": "All 32 length-5 and all 128 length-7 patterns; 32 masks per CVAE seed, two fresh-MLP initializations, 2000 MLP steps, balanced 2048-example test. Every method has exactly 32*k active edges."
+    },
+    "balanced_accuracy_percent": {
+      "k5": {"cvae": 69.3376, "wrong_lower_k4": 69.1781, "wrong_upper_k6": 69.4387, "cvae_z0": 68.4108, "mean_interp": 67.5526, "random": 65.9481, "ideal": 73.3388},
+      "k7": {"cvae": 69.1621, "wrong_lower_k6": 69.1683, "wrong_upper_k8": 69.0569, "cvae_z0": 68.0777, "mean_interp": 66.2653, "random": 65.9006, "ideal": 71.8330}
+    },
+    "cvae_minus_random_pp_ci95": {
+      "k5": {"point": 3.3895, "lo": 2.8661, "hi": 3.9050},
+      "k7": {"point": 3.2615, "lo": 3.0080, "hi": 3.5125}
+    },
+    "structural_iou_to_ideal": {
+      "k5": {"cvae": 0.4015, "wrong_lower": 0.3934, "wrong_upper": 0.4017, "random": 0.2736, "ideal": 1.0},
+      "k7": {"cvae": 0.4632, "wrong_lower": 0.4614, "wrong_upper": 0.4569, "random": 0.2863, "ideal": 1.0}
+    },
+    "condition_diagnostic": {
+      "k5": {"fraction_active_edges_replaced_by_neighbour_condition": [0.1260, 0.1026], "correct_minus_best_neighbour_pp": -0.1011},
+      "k7": {"fraction_active_edges_replaced_by_neighbour_condition": [0.0920, 0.0818], "correct_minus_best_neighbour_pp": -0.0062}
+    },
+    "limits": [
+      "Bootstrap intervals resample held-out patterns and are conditional on the two fitted CVAE seeds.",
+      "The exact result establishes interpolation within this synthetic task family, not extrapolation or transfer beyond it.",
+      "Correct-length conditioning changes generated masks but has not shown a functional advantage over either neighbouring known length."
+    ]
+  },
+  "figure_sources": [
+    {"path": "pattern/outputs/length_interp/hour_20260906_205915/support_masks.png", "use": "One generated mask for each control at k=5 and k=7, columns matched to the analytic support only for visualization."},
+    {"path": "pattern/outputs/decoder_agreement/seed_20260906/summary.png", "use": "Legacy 8x8 downstream comparison."},
+    {"path": "pattern/outputs/decoder_agreement/seed_20260906/agreement_diagnostics.png", "use": "Agreement loss and hard-mask convergence."},
+    {"path": "pattern/outputs/decoder_agreement/seed_20260906/oracle_ideal/masks.png", "use": "Oracle reachability witness; caption must state that gold is used."}
+  ]
+}

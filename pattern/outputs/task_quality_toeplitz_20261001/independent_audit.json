@@ -1,0 +1,109 @@
+{
+  "source_banks": {
+    "status": "PASS",
+    "banks": [
+      {
+        "seed": 8100,
+        "bank_sha256": "c9c7a67f26828050e8ff890361a952949f04e96dc358a650c48322b4ad8b9c84",
+        "maps": 960,
+        "selected_unconverged": 217,
+        "step_cap": 16000
+      },
+      {
+        "seed": 8101,
+        "bank_sha256": "2dd4e3ba3b3f8aa86249f23cdc61a2f38859bf9fb6cd491eafab2cb4045e4eb3",
+        "maps": 960,
+        "selected_unconverged": 224,
+        "step_cap": 16000
+      },
+      {
+        "seed": 8102,
+        "bank_sha256": "93e13f228399367b9af4c9e758a44bc4f47557a0ff1b6e560b8c40ec1fedc5f6",
+        "maps": 960,
+        "selected_unconverged": 218,
+        "step_cap": 16000
+      },
+      {
+        "seed": 8103,
+        "bank_sha256": "9aa4a61d006b18f39c8ba30cfcd8ee45a6e631ace4a95feb86354f4ac14b31a7",
+        "maps": 960,
+        "selected_unconverged": 216,
+        "step_cap": 16000
+      }
+    ],
+    "checks": [
+      "exact selected full teacher states",
+      "source-only task/probe membership",
+      "binary masks and exact densities",
+      "recomputed ReLU functional features",
+      "complete packed 187-dimensional feature layout and normalization"
+    ]
+  },
+  "meta_fits": {
+    "status": "PASS",
+    "fits": [
+      {
+        "seed": 8100,
+        "method": "transformer_mask",
+        "steps": 440,
+        "best_step": 100
+      },
+      {
+        "seed": 8100,
+        "method": "free_mask",
+        "steps": 1700,
+        "best_step": 620
+      },
+      {
+        "seed": 8101,
+        "method": "transformer_mask",
+        "steps": 440,
+        "best_step": 20
+      },
+      {
+        "seed": 8101,
+        "method": "free_mask",
+        "steps": 1180,
+        "best_step": 240
+      },
+      {
+        "seed": 8102,
+        "method": "transformer_mask",
+        "steps": 440,
+        "best_step": 40
+      },
+      {
+        "seed": 8102,
+        "method": "free_mask",
+        "steps": 1140,
+        "best_step": 560
+      },
+      {
+        "seed": 8103,
+        "method": "transformer_mask",
+        "steps": 440,
+        "best_step": 80
+      },
+      {
+        "seed": 8103,
+        "method": "free_mask",
+        "steps": 640,
+        "best_step": 40
+      }
+    ],
+    "checks": [
+      "independent NumPy plateau for three consecutive train and val checks",
+      "best validation checkpoint and frozen source bank hash"
+    ]
+  },
+  "final_records": {
+    "status": "PASS",
+    "records_recomputed": 768,
+    "maximum_CPU_vs_saved_metric_delta": 1.7881393432617188e-07,
+    "checks": [
+      "checkpoint hashes and exact full states",
+      "entire test partition",
+      "test metrics recomputed from saved W, M, biases and readout"
+    ]
+  }
+}

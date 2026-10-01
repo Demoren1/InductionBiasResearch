@@ -1,0 +1,44 @@
+{
+  "experiment": "generated_parameter_sharing",
+  "seeds": [42, 43, 44, 45, 46, 47, 48, 49],
+  "task_scope": {
+    "sequence_length": 32,
+    "pattern_length": 4,
+    "patterns": 16,
+    "test_protocol": "new examples for the same 16 pattern identities"
+  },
+  "parameters": {
+    "generator": 469,
+    "task_specific": 63
+  },
+  "validation_mean_sample_std": {
+    "generated_sharing": {"bce": [0.249710, 0.056858], "accuracy": [0.922884, 0.032774], "active_iou": [0.609859, 0.126542]},
+    "generated_connectivity": {"bce": [0.385708, 0.022715], "accuracy": [0.827833, 0.013140], "active_iou": [0.609859, 0.126542]},
+    "dense": {"bce": [0.537979, 0.003263], "accuracy": [0.725584, 0.001976], "active_iou": [0.125000, 0.000000]},
+    "random_sharing": {"bce": [0.597270, 0.002472], "accuracy": [0.664064, 0.002309], "active_iou": [0.285960, 0.003494]},
+    "analytic_sharing": {"bce": [0.139167, 0.002308], "accuracy": [0.984913, 0.001199], "active_iou": [1.000000, 0.000000]}
+  },
+  "test_mean_sample_std": {
+    "generated_sharing": {"bce": [0.251016, 0.058545], "accuracy": [0.922436, 0.033896], "active_iou": [0.609859, 0.126542]},
+    "generated_connectivity": {"bce": [0.386957, 0.023706], "accuracy": [0.827795, 0.012997], "active_iou": [0.609859, 0.126542]},
+    "dense": {"bce": [0.535982, 0.002659], "accuracy": [0.726658, 0.002631], "active_iou": [0.125000, 0.000000]},
+    "random_sharing": {"bce": [0.598046, 0.003670], "accuracy": [0.661085, 0.003378], "active_iou": [0.285448, 0.004897]},
+    "analytic_sharing": {"bce": [0.139615, 0.002441], "accuracy": [0.984947, 0.001443], "active_iou": [1.000000, 0.000000]}
+  },
+  "paired_test_bce": {
+    "generated_minus_connectivity": {"mean": -0.135941, "wins": 8, "runs": 8},
+    "generated_minus_dense": {"mean": -0.284966, "wins": 8, "runs": 8},
+    "generated_minus_random": {"mean": -0.347029, "wins": 8, "runs": 8},
+    "generated_minus_analytic": {"mean": 0.111401, "wins": 0, "runs": 8}
+  },
+  "generated_test_bce_by_seed": {
+    "42": 0.216157,
+    "43": 0.248143,
+    "44": 0.291650,
+    "45": 0.296375,
+    "46": 0.170640,
+    "47": 0.315379,
+    "48": 0.297892,
+    "49": 0.171894
+  }
+}
