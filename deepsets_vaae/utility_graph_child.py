@@ -335,7 +335,7 @@ def fit_children(
             record(step)
 
     with torch.no_grad():
-        final_support = losses(model, x_support, y_support, 5, chunk=chunk_size)
+        final_support = _streamed_losses(model, x_support, y_support, 5, chunk_size, device)
         final_penalty = _l2_penalty(model, l2)
         final_query = _streamed_losses(model, x_query, y_query, 5, chunk_size, device)
         final_state = {

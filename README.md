@@ -6,11 +6,13 @@
 
 - [Основной отчёт](mds/FINAL_REPORT_2026-09-27.md).
 - [История экспериментов и планы](mds/experiments_md/README.md).
-- [План Transformer-генератора с оценщиком качества](mds/PLAN_GENERATOR_EVALUATOR.md).
+- [План кооперативных Transformer-генераторов с глобальным оценщиком](mds/PLAN_GENERATOR_EVALUATOR.md).
+- [Реализация и запуск generator/evaluator](generator_evaluator/README.md).
 - [Статья](paper/main.pdf) и [математическая схема генератора](paper/ALGORITHM_TRANSFORMER_RU.md).
 
 ## Оставленные проекты
 
+- [generator_evaluator](generator_evaluator/README.md): отдельные Transformer-генераторы pattern-масок, глобальный оценщик и cooperative agreement-поиск.
 - [pattern](pattern/README.md): обнаружение паттернов, функциональные банки и поиск полезной связности.
 - [meta_pattern](meta_pattern/): общие модели и обучение на нескольких pattern-задачах.
 - [deepsets_vaae](deepsets_vaae/README.md): DeepSets на MNIST8m, функциональные банки и сравнения моделей.

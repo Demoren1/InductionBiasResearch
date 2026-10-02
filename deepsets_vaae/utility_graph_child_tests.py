@@ -1,4 +1,4 @@
-"""CPU tests for fixed-horizon paired DeepSets child fits."""
+"""Protocol and device tests for fixed-horizon paired DeepSets child fits."""
 
 from __future__ import annotations
 
@@ -31,6 +31,19 @@ class UtilityGraphChildTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         torch.set_num_threads(cls._old_threads)
+
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA is required for host-input regression")
+    def test_cuda_fit_streams_cpu_support_and_query_through_terminal_metrics(self):
+        masks, xs, ys, xq, yq = _fixture()
+        result = fit_children(masks, xs, ys, xq, yq, [101, 202], [0, 1, 2],
+                              steps=2, lr=1e-3, l2=1e-5, device="cuda:0",
+                              chunk_size=2, checkpoint_every=1)
+        self.assertEqual(xs.device.type, "cpu")
+        self.assertEqual(xq.device.type, "cpu")
+        for name, history_name in (("support_loss", "trainNMSE"), ("query_loss", "queryNMSE")):
+            self.assertEqual(result[name].device.type, "cpu")
+            self.assertTrue(torch.isfinite(result[name]).all())
+            torch.testing.assert_close(result[name], result["history"][history_name][-1])
 
     def test_fixed_horizon_query_invariance_and_numbered_reference_draws(self):
         masks, xs, ys, xq, yq = _fixture()
@@ -130,4 +143,3 @@ class UtilityGraphChildTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
