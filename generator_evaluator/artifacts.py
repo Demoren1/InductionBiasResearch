@@ -2,25 +2,71 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import tempfile
 
 import numpy as np
 import torch
 
 
+def _atomic_write(path: Path, write_payload, *, binary: bool) -> None:
+    """Write through an owned, unique sibling file and replace the destination."""
+    temporary = None
+    descriptor = None
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+        temporary = Path(temporary_name)
+        if binary:
+            stream = os.fdopen(descriptor, "wb")
+        else:
+            stream = os.fdopen(descriptor, "w", encoding="utf-8")
+        descriptor = None  # The stream now owns it.
+        with stream:
+            write_payload(stream)
+            stream.flush()
+        os.replace(temporary, path)
+    except OSError as exc:
+        temporary_context = f" (temporary file {temporary})" if temporary else ""
+        reason = exc.strerror or str(exc)
+        raise OSError(
+            exc.errno,
+            f"Failed to atomically write artifact {path}{temporary_context}: {reason}",
+            exc.filename,
+        ) from exc
+    except RuntimeError as exc:
+        raise RuntimeError(f"Failed to atomically write artifact {path}: {exc}") from exc
+    finally:
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        if temporary is not None:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+            except OSError:
+                # Keep the original write/replace error as the primary failure.
+                pass
+
+
 def save_json(path: Path, payload) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2,
-                                    allow_nan=False) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    serialized = json.dumps(payload, ensure_ascii=False, indent=2,
+                             allow_nan=False) + "\n"
+    _atomic_write(path, lambda stream: stream.write(serialized), binary=False)
 
 
 def save_torch(path: Path, payload) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    torch.save(payload, temporary)
-    temporary.replace(path)
+    # Banks stay ordinary in-memory objects. On disk, unchanged teacher rows
+    # are shared across inputs, live/best checkpoints and frozen artifacts.
+    from .bank_storage import externalize_banks
+    path = Path(path)
+    stored = externalize_banks(payload, path)
+    _atomic_write(path, lambda stream: torch.save(stored, stream), binary=True)
 
 
 def paired_comparison(losses, dense_losses) -> dict:

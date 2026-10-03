@@ -201,15 +201,13 @@ class RealReplay:
                 torch.tensor([row["quality"] for row in rows], dtype=torch.float32))
 
     def save(self, path: str | Path) -> None:
+        from .artifacts import save_torch
         path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
         payload = dict(protocol=asdict(self.protocol), holdout_fraction=self.holdout_fraction,
                        split_seed=self.split_seed, records=self.records, masks=self.masks,
                        contexts=self.contexts, task_fingerprints=self.task_fingerprints,
                        task_splits=self.task_splits, mask_splits=self.mask_splits)
-        temporary = path.with_suffix(path.suffix + ".tmp")
-        torch.save(payload, temporary)
-        temporary.replace(path)
+        save_torch(path, payload)
 
     @classmethod
     def load(cls, path: str | Path) -> "RealReplay":

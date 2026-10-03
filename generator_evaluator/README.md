@@ -11,6 +11,12 @@ feedback, реконструкцию и agreement на общем случайн
 [mds/best_algo.md](../mds/best_algo.md). Запуски обоих доменов:
 `sh_scripts/pattern.sh` и `sh_scripts/deepsets.sh`.
 
+Банки в `inputs.pt`, checkpoints и frozen-артефактах сохраняются как ссылки:
+карты и их данные записываются один раз в общий `bank_assets/` каталога запуска.
+Bootstrap и search переиспользуют неизменившиеся карты. Этот каталог нужен
+для resume и warm-start; ссылки пока привязаны к абсолютному пути запуска.
+Неудачные записи удаляют собственные временные файлы и сохраняют предыдущий checkpoint.
+
 Реализация следует [кооперативному плану](../mds/PLAN_GENERATOR_EVALUATOR.md):
 отдельный Transformer-генератор на каждый train-паттерн, индивидуальный
 functional bank для него и один глобальный context-conditioned ансамбль
