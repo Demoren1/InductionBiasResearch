@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable
 
-from .progress import progress
+from generator_evaluator.storage.progress import progress
 
 
 STAGE_QUALITY = "quality"

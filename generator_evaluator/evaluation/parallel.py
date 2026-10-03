@@ -6,6 +6,9 @@ cache semantics are identical to :class:`MeasurementStore`.
 """
 from __future__ import annotations
 
+from generator_evaluator.storage.artifacts import save_torch
+from generator_evaluator.evaluation.pattern import fit_pattern_batch
+
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import replace
@@ -16,9 +19,9 @@ from typing import Callable, Iterable, Sequence
 
 import torch
 
-from .data import TaskData
-from .measurements import MeasurementStore, _payload, measurement_digest
-from .progress import progress
+from generator_evaluator.data.types import TaskData
+from generator_evaluator.evaluation.measurements import MeasurementStore, _payload, measurement_digest
+from generator_evaluator.storage.progress import progress
 
 
 BatchFitFn = Callable[[torch.Tensor, object, object, str], list[dict]]
@@ -59,7 +62,7 @@ def _worker_initializer(device: str) -> None:
 def _deepsets_worker(masks: torch.Tensor, task: TaskData, protocol, device: str,
                      initialization_seeds=None) -> list[dict]:
     """Spawn-safe worker entry point; imported here to avoid CUDA at parent import."""
-    from .deepsets_batch import fit_deepsets_batch
+    from generator_evaluator.evaluation.deepsets import fit_deepsets_batch
 
     results = fit_deepsets_batch(masks.detach().cpu(), _cpu_task(task), protocol, device,
                                 initialization_seeds=initialization_seeds)
@@ -71,7 +74,7 @@ def _deepsets_worker(masks: torch.Tensor, task: TaskData, protocol, device: str,
 def _pattern_worker(masks: torch.Tensor, tasks: Sequence[TaskData], protocol, device: str,
                     initialization_seeds=None) -> list[dict]:
     """Spawn-safe worker entry point for full-batch pattern fits."""
-    from .pattern_batch import fit_pattern_batch
+    from generator_evaluator.evaluation.pattern import fit_pattern_batch
 
     worker_tasks = [_cpu_task(task) for task in tasks]
     results = fit_pattern_batch(masks.detach().cpu(), worker_tasks, protocol, device,
@@ -129,7 +132,7 @@ def iter_pattern_candidate_batches(masks: torch.Tensor, tasks: Sequence[TaskData
     chunk_sizes = _balanced_chunk_sizes(len(clean), batch_size, len(targets) if use_workers else 1)
     if not use_workers:
         target = str(device) if device is not None else targets[0]
-        from .pattern_batch import fit_pattern_batch
+        from generator_evaluator.evaluation.pattern import fit_pattern_batch
 
         start = 0
         for chunk_size in chunk_sizes:
@@ -427,3 +430,21 @@ class ParallelMeasurementStore(MeasurementStore):
     def __exit__(self, exc_type, exc, traceback):
         self.close(wait=exc_type is None, cancel_futures=exc_type is not None)
         return False
+
+
+class CooperativeBatchedMeasurementStore(ParallelMeasurementStore):
+    """Preserve the cooperative entry point with injectable fit/write hooks."""
+
+    def __init__(self, out, replay, device, *, devices=None, batch_size=128):
+        selected_devices = tuple(devices) if devices else (device,)
+
+        def fit_pattern(masks, tasks, protocol, target, **kwargs):
+            if not isinstance(tasks, (list, tuple)):
+                tasks = [tasks] * len(masks)
+            return fit_pattern_batch(masks, tasks, protocol, target, **kwargs)
+
+        spawned_multi_gpu = (len(selected_devices) > 1 and
+                             all(str(target).startswith("cuda") for target in selected_devices))
+        super().__init__(out, replay, device, devices=selected_devices, batch_size=batch_size,
+                         pattern_batch_fit_fn=None if spawned_multi_gpu else fit_pattern,
+                         save_torch_fn=lambda *args, **kwargs: save_torch(*args, **kwargs))

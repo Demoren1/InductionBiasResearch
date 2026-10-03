@@ -187,7 +187,7 @@ def _store_asset(asset_directory: Path, value: Any) -> str:
         # Keep the public artifact writer as the only atomic torch-save path.
         # The integration hook may call this module recursively; this payload
         # contains no FunctionalBank and therefore terminates immediately.
-        from .artifacts import save_torch
+        from generator_evaluator.storage.artifacts import save_torch
         save_torch(path, compact)
         _remember_verified_asset(path)
     else:
@@ -303,7 +303,7 @@ def _bank_manifest(bank, asset_directory: Path) -> dict[str, Any]:
 
 def _map_payload(payload: Any, asset_directory: Path,
                  bank_cache: dict[int, _FunctionalBankProxy]) -> Any:
-    from .adapters import FunctionalBank
+    from generator_evaluator.data.adapters import FunctionalBank
 
     if isinstance(payload, FunctionalBank):
         identity = id(payload)
@@ -386,7 +386,7 @@ def _hydrate_nested(value: Any, asset_directory: Path) -> Any:
 
 
 def _restore_functional_bank(manifest: dict[str, Any]):
-    from .adapters import FunctionalBank
+    from generator_evaluator.data.adapters import FunctionalBank
 
     if manifest.get("schema") != _SCHEMA:
         raise ValueError(f"unsupported FunctionalBank storage schema: {manifest.get('schema')!r}")

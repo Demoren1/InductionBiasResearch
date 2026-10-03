@@ -14,8 +14,8 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .data import InnerProtocol, TaskData
-from .progress import progress
+from generator_evaluator.data.types import InnerProtocol, TaskData
+from generator_evaluator.storage.progress import progress
 
 
 def validate_pattern_fits(masks: Tensor, tasks: Sequence[TaskData], protocol: InnerProtocol) -> None:
@@ -180,3 +180,23 @@ class PatternFitEngine:
                 "effective_weights": [state["w"] * masks_cpu[index] for state in child_states],
             })
         return result
+
+
+def fit_pattern_batch(masks: Tensor, tasks: Sequence[TaskData], protocol: InnerProtocol,
+                      device: str = "cpu", *,
+                      initialization_seeds: Sequence[int] | None = None) -> list[dict[str, Any]]:
+    """Fit homogeneous full-batch jobs, retaining the historical result schema."""
+    clean = torch.as_tensor(masks, dtype=torch.float32).detach().cpu().contiguous()
+    validate_pattern_fits(clean, tasks, protocol)
+    if protocol.batch_size is not None and protocol.batch_size < tasks[0].x_support.shape[0]:
+        raise ValueError("batched pattern fitting supports full-batch protocol only")
+    results = PatternFitEngine(protocol, device).fit(
+        clean, tasks, initialization_seeds=initialization_seeds)
+    seeds = ([protocol.seed] * len(tasks) if initialization_seeds is None
+             else list(map(int, initialization_seeds)))
+    for result, task, seed in zip(results, tasks, seeds):
+        result.update(label_source="fresh_terminal_query", fixed_horizon=True,
+                      protocol_id=protocol.fingerprint, task_id=task.task_id,
+                      actual_initialization_seed=seed,
+                      solver_protocol_seed=protocol.seed, minibatch_seed_base=None)
+    return results

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import torch
 
-from .data import topology_id
+from generator_evaluator.data.types import topology_id
 
 
 class MaskPrior(ABC):

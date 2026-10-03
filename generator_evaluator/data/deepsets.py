@@ -18,12 +18,12 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .adapters import (FunctionalBank, _cost_vectors, _deepsets_sets,
+from generator_evaluator.data.adapters import (FunctionalBank, _cost_vectors, _deepsets_sets,
                        _exact_topk, make_deepsets_tasks)
-from .data import InnerProtocol, RealReplay, TaskData, support_context, tensor_hash
-from .functional_artifacts import write_functional_card
-from .parallel_measurements import ParallelMeasurementStore
-from .progress import progress
+from generator_evaluator.data.types import InnerProtocol, RealReplay, TaskData, support_context, tensor_hash
+from generator_evaluator.storage.functional import write_functional_card
+from generator_evaluator.evaluation.parallel import ParallelMeasurementStore
+from generator_evaluator.storage.progress import progress
 
 
 _FEATURES = 784

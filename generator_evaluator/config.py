@@ -4,8 +4,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 import math
 
-from .cooperative_data import _validate_roles
-from .quality_objectives import validate_quality_objective
+from generator_evaluator.data.pattern import _validate_roles
+from generator_evaluator.search.quality import validate_quality_objective
 
 
 @dataclass(frozen=True)
@@ -29,9 +29,10 @@ class CooperativeConfig:
     refresh_every: int = 5
     minimum_refresh_every: int = 1
     acquisition_budget: int = 6
-    auxiliary_budget: int = 2
+    auxiliary_budget: int = 0
     candidates: int = 24
     initial_random: int = 8
+    bootstrap_generators: bool = False
     evaluator_epochs: int = 50
     evaluator_batch_size: int = 32
     generator_lr: float = .001
@@ -51,7 +52,7 @@ class CooperativeConfig:
     elite_distillation_weight: float = .1
     reconstruction_weight: float = .1
     reconstruction_batch_size: int = 8
-    generator_pretrain_epochs: int = 5
+    generator_pretrain_epochs: int = 0
     pretrain_updates_per_epoch: int = 20
     permutation_weight: float = 1.
     gap_threshold: float = .1
@@ -60,7 +61,7 @@ class CooperativeConfig:
     batch_children: bool = False
     tune_dense: bool = True
     initial_global_density: bool = False
-    output_budgets: tuple[int, ...] = (9, 44, 62)
+    output_budgets: tuple[int, ...] = ()
 
     def __post_init__(self):
         if self.domain == "pattern":
@@ -96,9 +97,12 @@ class CooperativeConfig:
             raise ValueError("invalid cooperative budgets")
         if not 1 <= self.minimum_refresh_every <= self.refresh_every:
             raise ValueError("minimum refresh interval must be between 1 and refresh_every")
+        weights = (self.agreement_weight, self.elite_distillation_weight,
+                   self.reconstruction_weight)
         if (not math.isfinite(self.latent_lr) or self.latent_lr <= 0 or
-                self.elite_margin < 0 or min(self.agreement_weight, self.elite_distillation_weight,
-                                       self.reconstruction_weight) < 0 or self.gap_threshold <= 0):
+                not all(math.isfinite(value) and value >= 0 for value in weights) or
+                not math.isfinite(self.elite_margin) or self.elite_margin < 0 or
+                not math.isfinite(self.gap_threshold) or self.gap_threshold <= 0):
             raise ValueError("invalid agreement or calibration settings")
         if (self.generator_pretrain_epochs < 0 or
                 min(self.pretrain_updates_per_epoch, self.reconstruction_batch_size,
@@ -122,7 +126,7 @@ def pattern_small_config(**overrides):
         noise_dim=4, ensemble_members=2, generator_epochs=2, updates_per_epoch=4,
         refresh_every=1, evaluator_epochs=10, candidates=8, acquisition_budget=2,
         auxiliary_budget=0, initial_random=2, feedback_masks=1, bank_capacity=100, elite_limit=4,
-        generator_pretrain_epochs=3, pretrain_updates_per_epoch=10)
+        generator_pretrain_epochs=0, pretrain_updates_per_epoch=10)
     settings.update(overrides)
     return CooperativeConfig(**settings)
 
@@ -144,7 +148,7 @@ def deepsets_config(**overrides):
         batch_children=True, width=32, heads=4, layers=1, noise_dim=8,
         ensemble_members=2, generator_epochs=20, updates_per_epoch=10,
         refresh_every=2, evaluator_epochs=30, candidates=24, acquisition_budget=6,
-        auxiliary_budget=2, output_budgets=(2509, 12544, 17562),
+        auxiliary_budget=0, output_budgets=(),
         initial_random=8, feedback_masks=2, bank_capacity=100, elite_limit=8)
     settings.update(overrides)
     return CooperativeConfig(**settings)

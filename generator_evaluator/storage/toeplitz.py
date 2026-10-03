@@ -7,7 +7,7 @@ from pathlib import Path
 
 import torch
 
-from .mask_priors import SlidingWindowMaskPrior
+from generator_evaluator.search.priors import SlidingWindowMaskPrior
 
 
 def write_toeplitz_report(out: Path, methods: dict[str, torch.Tensor]) -> dict:

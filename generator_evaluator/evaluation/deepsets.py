@@ -14,7 +14,7 @@ from typing import Any, Sequence
 import torch
 from torch import Tensor
 
-from .data import InnerProtocol, TaskData
+from generator_evaluator.data.types import InnerProtocol, TaskData
 
 
 def _slice_model_axis(value: Any, start: int, stop: int) -> Any:

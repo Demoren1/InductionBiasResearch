@@ -16,8 +16,8 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .data import InnerProtocol, TaskData, support_context
-from .progress import progress
+from generator_evaluator.data.types import InnerProtocol, TaskData, support_context
+from generator_evaluator.storage.progress import progress
 
 
 @dataclass
@@ -332,7 +332,7 @@ def _fit_pattern(mask: Tensor, task: TaskData, protocol: InnerProtocol, device: 
     building, cache misses, and explicit batch acquisition all share the same
     solver and serialization path.
     """
-    from .pattern_fit import PatternFitEngine
+    from generator_evaluator.evaluation.pattern import PatternFitEngine
     return PatternFitEngine(protocol, device).fit_one(mask, task)
 
 

@@ -15,11 +15,11 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from .adapters import FunctionalBank
-from .data import topology_id
-from .models import QualityEnsemble, TransformerMaskGenerator
-from .training import generator_update, propose_candidates
-from .quality_objectives import quality_objective_cost, validate_quality_objective
+from generator_evaluator.data.adapters import FunctionalBank
+from generator_evaluator.data.types import topology_id
+from generator_evaluator.models.transformer import QualityEnsemble, TransformerMaskGenerator
+from generator_evaluator.training.updates import generator_update, propose_candidates
+from generator_evaluator.search.quality import quality_objective_cost, validate_quality_objective
 
 
 class DensityConditionedGenerator(nn.Module):
@@ -329,6 +329,8 @@ def propose_shared_pool(
     proposal_trace: dict[str, Any] | None = None,
     paired_proposals: bool = False,
     shared_noise: Tensor | None = None,
+    own_rngs: Mapping[str, torch.Generator] | None = None,
+    executor: Any | None = None,
 ) -> tuple[Tensor, list[str]]:
     """Pool exact-K proposals, random exploration, and edge-swap elite variants.
 
@@ -339,11 +341,14 @@ def propose_shared_pool(
     """
     if not models or set(models) != set(banks) or candidates_per_generator < 1:
         raise ValueError("models and banks must have matching nonempty keys")
+    if own_rngs is not None and set(own_rngs) != set(models):
+        raise ValueError("own_rngs must match the generator names")
     first = next(iter(models.values()))
     features, hidden = first.features, first.hidden
     if not 1 <= k <= features * hidden:
         raise ValueError("k must be within mask size")
     excluded = set(excluded_topologies or ())
+    pool_ids: set[str] = set()
     pool: list[Tensor] = []
     sources: list[str] = []
     if proposal_trace is not None:
@@ -370,25 +375,15 @@ def propose_shared_pool(
             else:
                 shared_noise = shared_noise[:paired_count]
 
-    def add(mask: Tensor, source: str) -> None:
-        mask = mask.detach().float()
-        if mask.shape != (features, hidden) or int(mask.sum()) != k:
-            raise ValueError("all pooled masks must have common dimensions and exact K")
-        identity = topology_id(mask)
-        if identity not in excluded:
-            excluded.add(identity)
-            pool.append(mask)
-            sources.append(source)
-
-    for name, model in models.items():
-        if (model.features, model.hidden) != (features, hidden):
-            raise ValueError("all generators must have matching output coordinates")
+    def generate_for(name: str) -> Tensor:
+        model = models[name]
         bank = banks[name]
+        model.set_budget(k)
+        device = next(model.parameters()).device
+        tokens = bank.tokens.to(device)
+        quality = None if bank.quality is None else bank.quality.to(device)
+        local_rng = rng if own_rngs is None else own_rngs[name]
         if paired_count:
-            model.set_budget(k)
-            device = next(model.parameters()).device
-            tokens = bank.tokens.to(device)
-            quality = None if bank.quality is None else bank.quality.to(device)
             with torch.no_grad():
                 logits = model(tokens.expand(paired_count, *tokens.shape[1:]),
                                shared_noise.to(device=device, dtype=tokens.dtype),
@@ -398,9 +393,34 @@ def propose_shared_pool(
                 proposed = hard.reshape_as(logits)
             stochastic_count = candidates_per_generator - paired_count
             if stochastic_count:
-                proposed = torch.cat((proposed, propose_at_budget(model, bank, k, stochastic_count, rng)))
-        else:
-            proposed = propose_at_budget(model, bank, k, candidates_per_generator, rng)
+                proposed = torch.cat((proposed,
+                    propose_at_budget(model, bank, k, stochastic_count, local_rng)))
+            return proposed
+        return propose_at_budget(model, bank, k, candidates_per_generator, local_rng)
+
+    generated = (executor.map(generate_for) if executor is not None else
+                 {name: generate_for(name) for name in models})
+
+    def add(mask: Tensor, source: str) -> None:
+        add_with_archive_policy(mask, source, allow_seen=False)
+
+    def add_with_archive_policy(mask: Tensor, source: str, *, allow_seen: bool) -> None:
+        mask = mask.detach().float()
+        if mask.shape != (features, hidden) or int(mask.sum()) != k:
+            raise ValueError("all pooled masks must have common dimensions and exact K")
+        identity = topology_id(mask)
+        if identity in pool_ids:
+            return
+        if identity not in excluded or allow_seen:
+            excluded.add(identity)
+            pool_ids.add(identity)
+            pool.append(mask)
+            sources.append(source)
+
+    for name, model in models.items():
+        if (model.features, model.hidden) != (features, hidden):
+            raise ValueError("all generators must have matching output coordinates")
+        proposed = generated[name]
         if proposal_trace is not None:
             # These IDs are canonical with respect to hidden-column order but
             # preserve output-row coordinates, exactly the intended agreement
@@ -414,13 +434,18 @@ def propose_shared_pool(
             }
         for mask in proposed:
             add(mask.cpu(), f"generator:{name}")
-    for _ in range(random_count):
-        add(_random_mask(features, hidden, k, torch.device("cpu"), torch.float32, rng), "random")
+    elite_rows = torch.empty(0, features, hidden)
     if elites is not None and len(elites):
         elite_rows = torch.as_tensor(elites).detach().cpu().float()
         elite_rows = elite_rows[elite_rows.sum((1, 2)) == k]
-        for index in range(mutation_count if len(elite_rows) else 0):
-            add(_mutate(elite_rows[index % len(elite_rows)], k, rng), "mutation")
+        # Archived real elites are always part of the scored candidate pool,
+        # even though their labels are already present in replay.
+        for mask in elite_rows:
+            add_with_archive_policy(mask, "archive", allow_seen=True)
+    for _ in range(random_count):
+        add(_random_mask(features, hidden, k, torch.device("cpu"), torch.float32, rng), "random")
+    for index in range(mutation_count if len(elite_rows) else 0):
+        add(_mutate(elite_rows[index % len(elite_rows)], k, rng), "mutation")
     if not pool:
         return torch.empty(0, features, hidden), []
     return torch.stack(pool), sources
@@ -428,19 +453,33 @@ def propose_shared_pool(
 
 def rank_shared_pool(masks: Tensor, ensemble: QualityEnsemble, contexts: Tensor,
                      dense_quality: Tensor,
-                     quality_objective: str = "worst") -> dict[str, Tensor]:
+                     quality_objective: str = "worst", *, batch_size: int = 256) -> dict[str, Tensor]:
     """Predict every proposed mask on every pattern using the global ensemble."""
     validate_quality_objective(quality_objective)
-    if masks.ndim != 3 or contexts.ndim != 2 or dense_quality.shape != (len(contexts),):
+    if (masks.ndim != 3 or contexts.ndim != 2 or
+            dense_quality.shape != (len(contexts),) or batch_size < 1):
         raise ValueError("invalid pool, contexts, or dense quality")
     count, tasks = len(masks), len(contexts)
     device = next(ensemble.parameters(), masks).device
     scorer_masks = masks.to(device)
-    context_batch = contexts.to(scorer_masks).repeat(count, 1)
-    mask_batch = scorer_masks[:, None].expand(-1, tasks, -1, -1).reshape(-1, *masks.shape[1:])
-    with torch.no_grad():
-        mean, std = ensemble.predict(mask_batch, context_batch)
-    mean, std = mean.reshape(count, tasks), std.reshape(count, tasks)
+    scorer_contexts = contexts.to(scorer_masks)
+    means = torch.empty(count * tasks, device=device, dtype=scorer_masks.dtype)
+    stds = torch.empty_like(means)
+    training_states = [(module, module.training) for module in ensemble.modules()]
+    ensemble.eval()
+    try:
+        with torch.no_grad():
+            for start in range(0, count * tasks, batch_size):
+                flat = torch.arange(start, min(start + batch_size, count * tasks), device=device)
+                candidate_rows, task_rows = torch.div(flat, tasks, rounding_mode="floor"), flat % tasks
+                mean, std = ensemble.predict(scorer_masks.index_select(0, candidate_rows),
+                                             scorer_contexts.index_select(0, task_rows))
+                means.index_copy_(0, flat, mean.reshape(-1))
+                stds.index_copy_(0, flat, std.reshape(-1))
+    finally:
+        for module, training in training_states:
+            module.training = training
+    mean, std = means.reshape(count, tasks), stds.reshape(count, tasks)
     delta = mean - dense_quality.to(mean).unsqueeze(0)
     return {"mean": mean, "std": std, "delta": delta,
             "worst_delta": delta.max(dim=1).values,

@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 GPU_IDS="${GPU_IDS:-0 1 2 4 5}"  # Например: "1 2 3".
 
-# Reconstruct masks, then interleave own-task quality, agreement, reconstruction,
-# measured-target feedback, and critic refresh in one joint search loop.
+# Build the initial functional banks, then jointly optimize own-task quality,
+# aligned hard-mask agreement and aligned distillation to the real-mask archive.
+# EVALUATOR_EPOCHS trains once from bank-origin cross-fits; evaluator stays frozen.
+# REFRESH_EVERY schedules measurement rounds and feedback, not evaluator updates.
 # Keep the best common mask across refreshes, using independent selection queries.
-# WARM_START_FROM=/path/to/cooperative/bootstrap skips bank/critic preparation.
+# Bootstrap trains the evaluator only by default; BOOTSTRAP_GENERATORS=1 opts into generator exploration.
+# WARM_START_FROM=/path/to/cooperative/bootstrap skips bank/evaluator preparation.
 # GPU_IDS selects cards for task generators, bank creation, and batched child fits.
 # TRAIN_TASKS and TEST_TASKS set task counts for both bootstrap and search.
 # FIXED_TEST_FROM keeps prior sealed test costs and pools when expanding train.
 # Budget overrides: BANK_CANDIDATES, TEACHERS, BANK_STEPS, CHILD_STEPS,
 # BOOTSTRAP_EPOCHS, GENERATOR_EPOCHS, UPDATES_PER_EPOCH and CHILD_MASK_BATCH.
 # Trailing CLI arguments apply to search; solver changes must match bootstrap.
-# ELITE_LIMIT bounds the archive of measured targets sampled with random latents.
+# ELITE_LIMIT bounds the archive of measured real masks used for distillation.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
@@ -32,17 +35,17 @@ GE_COMMON_ARGS=(
   --refresh-every "${REFRESH_EVERY:-2}" --minimum-refresh-every "${MINIMUM_REFRESH_EVERY:-2}"
   --evaluator-epochs "${EVALUATOR_EPOCHS:-30}"
   --evaluator-batch-size "${EVALUATOR_BATCH_SIZE:-32}" --acquisition-budget 6 --candidates 24 --initial-random 8
-  --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2 --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"
-  --quality-objective "${QUALITY_OBJECTIVE:-worst}"
-  --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-5}"
-  --pretrain-updates-per-epoch "${PRETRAIN_UPDATES:-20}"
-  --reconstruction-batch-size "${RECONSTRUCTION_BATCH_SIZE:-8}"
-  --reconstruction-weight "${RECONSTRUCTION_WEIGHT:-0.1}"
+  --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2
+  --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"
   --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-0.1}"
-  --agreement-ramp-epochs "${AGREEMENT_RAMP_EPOCHS:-5}"
+  --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-0}"
+  --quality-objective "${QUALITY_OBJECTIVE:-worst}"
   --seed "$GE_SEED" --device cuda:0 --generator-devices auto --measurement-devices auto
   --measurement-batch-size "${CHILD_MASK_BATCH:-8}" --progress
 )
+if [[ "${BOOTSTRAP_GENERATORS:-0}" == "1" ]]; then
+  GE_COMMON_ARGS+=(--bootstrap-generators)
+fi
 if [[ -n "${FIXED_TEST_FROM:-}" ]]; then
   GE_COMMON_ARGS+=(--fixed-test-from "$FIXED_TEST_FROM")
 fi
@@ -50,7 +53,7 @@ fi
 if [[ -z "$GE_SOURCE" ]]; then
   GE_SOURCE="$GE_OUT/bootstrap"
   ge_run python -u -m generator_evaluator.cooperative_run "${GE_COMMON_ARGS[@]}" \
-    --bootstrap-only --generator-pretrain-epochs 0 --generator-epochs "${BOOTSTRAP_EPOCHS:-10}" \
+    --bootstrap-only --generator-epochs "${BOOTSTRAP_EPOCHS:-10}" \
     --updates-per-epoch "${BOOTSTRAP_UPDATES:-10}" --out "$GE_SOURCE"
 fi
 

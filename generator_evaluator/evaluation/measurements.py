@@ -14,10 +14,10 @@ from typing import Callable, Iterable, Sequence
 
 import torch
 
-from .adapters import measure_mask as _default_measure_mask
-from .artifacts import save_torch
-from .data import RealReplay, TaskData, tensor_hash
-from .pattern_batch import fit_pattern_batch as _default_batch_fit
+from generator_evaluator.data.adapters import measure_mask as _default_measure_mask
+from generator_evaluator.storage.artifacts import save_torch
+from generator_evaluator.data.types import RealReplay, TaskData, tensor_hash
+from generator_evaluator.evaluation.pattern import fit_pattern_batch as _default_batch_fit
 
 
 MeasureFn = Callable[..., dict]

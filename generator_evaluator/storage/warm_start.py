@@ -7,8 +7,10 @@ measurements, but never materializes or imports final-test measurements.
 """
 from __future__ import annotations
 
+from collections import Counter
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import hashlib
 import json
 from pathlib import Path
@@ -17,13 +19,60 @@ from typing import Any
 
 import torch
 
-from .data import InnerProtocol, RealReplay, TaskData, support_context
+from generator_evaluator.data.types import InnerProtocol, RealReplay, TaskData, support_context, topology_id
 
 
 _ARCHITECTURE_FIELDS = ("width", "heads", "layers", "ensemble_members")
+_EVALUATOR_POLICY = "initial_bank_only"
+_EVALUATOR_ROW_FIELDS = (
+    "topology_id", "mask_key", "task_id", "task_split", "split",
+    "protocol_id", "task_fingerprint", "label_source", "quality",
+    "replica_losses", "seeds", "active_edges", "density",
+)
 _REQUIRED_CHECKPOINT_FIELDS = (
     "epoch", "banks", "replay", "ensemble", "evaluator_training_state",
 )
+
+
+def _evaluator_row_identity(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep only immutable training identity and labels from a replay row."""
+    if not isinstance(row, Mapping):
+        raise ValueError("evaluator bank rows must be mappings")
+    missing = [field for field in _EVALUATOR_ROW_FIELDS if field not in row]
+    if missing:
+        raise ValueError("evaluator bank row lacks identity or label metadata")
+    result = {field: row[field] for field in _EVALUATOR_ROW_FIELDS}
+    result["quality"] = float(result["quality"])
+    result["replica_losses"] = [float(value) for value in result["replica_losses"]]
+    result["seeds"] = list(result["seeds"])
+    result["active_edges"] = int(result["active_edges"])
+    result["density"] = float(result["density"])
+    return result
+
+
+def _evaluator_row_key(row: Mapping[str, Any]) -> str:
+    return json.dumps(_evaluator_row_identity(row), sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False, allow_nan=False)
+
+
+def evaluator_bank_fingerprint(topology_ids: Sequence[str],
+                               rows: Sequence[Mapping[str, Any]]) -> str:
+    """Hash an immutable evaluator-bank manifest, independent of copied paths."""
+    if isinstance(topology_ids, (str, bytes)):
+        raise ValueError("evaluator topology IDs must be a sequence")
+    ids = list(topology_ids)
+    if any(not isinstance(identity, str) or not identity for identity in ids):
+        raise ValueError("evaluator topology IDs must be nonempty strings")
+    if not isinstance(rows, Sequence) or isinstance(rows, (str, bytes)):
+        raise ValueError("evaluator bank rows must be a sequence")
+    sorted_ids = sorted(set(ids))
+    row_payloads = [_evaluator_row_identity(row) for row in rows]
+    row_payloads.sort(key=lambda row: json.dumps(
+        row, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False))
+    payload = {"topology_ids": sorted_ids, "rows": row_payloads}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                         ensure_ascii=False, allow_nan=False).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _sha256(path: Path) -> str:
@@ -332,6 +381,81 @@ def _validate_replay(replay: RealReplay, protocol: InnerProtocol,
     replay.validate()
 
 
+def _validated_evaluator_metadata(source_spec: dict, checkpoint: dict,
+                                  replay: RealReplay, train_tasks: list[TaskData],
+                                  protocol: InnerProtocol
+                                  ) -> tuple[str | None, str | None, tuple[str, ...], list[dict[str, Any]]]:
+    """Authorize critic reuse only for a valid immutable initial-bank manifest."""
+    saved_policy = checkpoint.get("evaluator_policy")
+    spec_policy = source_spec.get("evaluator_policy")
+    if saved_policy is not None and spec_policy is not None and saved_policy != spec_policy:
+        raise ValueError("warm-start evaluator policy differs between checkpoint and run spec")
+    policy = saved_policy if saved_policy is not None else spec_policy
+    if policy is None:
+        # Older online-evaluator runs have no immutable-bank provenance, so
+        # their critic state must be trained afresh by the caller.
+        return None, None, (), []
+    if policy != _EVALUATOR_POLICY:
+        raise ValueError("warm-start evaluator policy is unsupported")
+
+    def metadata_value(name: str):
+        value = checkpoint.get(name)
+        return source_spec.get(name) if value is None else value
+
+    fingerprint = metadata_value("evaluator_bank_fingerprint")
+    topology_ids = metadata_value("evaluator_bank_topology_ids")
+    rows = metadata_value("evaluator_bank_rows")
+    if (not isinstance(fingerprint, str) or not fingerprint or
+            not isinstance(topology_ids, (list, tuple)) or not topology_ids or
+            not isinstance(rows, (list, tuple)) or not rows):
+        raise ValueError("warm-start initial-bank evaluator metadata is incomplete")
+    identities = tuple(topology_ids)
+    if (any(not isinstance(identity, str) or not identity for identity in identities) or
+            identities != tuple(sorted(set(identities)))):
+        raise ValueError("warm-start evaluator topology IDs are invalid or unsorted")
+    manifest_rows = [dict(row) for row in rows if isinstance(row, Mapping)]
+    if len(manifest_rows) != len(rows):
+        raise ValueError("warm-start evaluator rows must be mappings")
+    if evaluator_bank_fingerprint(identities, manifest_rows) != fingerprint:
+        raise ValueError("warm-start evaluator bank fingerprint is corrupt")
+
+    train_by_id = {task.task_id: task for task in train_tasks if task.split == "train"}
+    topology_set = set(identities)
+    requested_rows: Counter[str] = Counter()
+    metadata_topologies = set()
+    has_train_label = False
+    for row in manifest_rows:
+        row_identity = _evaluator_row_identity(row)
+        if row_identity["topology_id"] not in topology_set:
+            raise ValueError("warm-start evaluator row is outside its topology manifest")
+        task = train_by_id.get(row_identity["task_id"])
+        if (task is None or row_identity["task_split"] != "train" or
+                row_identity["task_fingerprint"] != task.fingerprint):
+            raise ValueError("warm-start evaluator row refers to a different task identity")
+        if row_identity["protocol_id"] != protocol.fingerprint:
+            raise ValueError("warm-start evaluator row protocol differs from source replay")
+        if row_identity["label_source"] != "fresh_terminal_query":
+            raise ValueError("warm-start evaluator row lacks a real terminal-query label")
+        metadata_topologies.add(row_identity["topology_id"])
+        has_train_label |= row_identity["split"] == "train"
+        requested_rows[_evaluator_row_key(row_identity)] += 1
+    if metadata_topologies != topology_set or not has_train_label:
+        raise ValueError("warm-start evaluator rows do not cover the saved initial-bank topologies")
+
+    replay_rows: Counter[str] = Counter()
+    replay_topologies = set()
+    for row in replay.records:
+        if (row.get("topology_id") in topology_set and row.get("task_id") in train_by_id and
+                row.get("task_split") == "train"):
+            replay_topologies.add(row["topology_id"])
+            replay_rows[_evaluator_row_key(row)] += 1
+    if not topology_set.issubset(replay_topologies):
+        raise ValueError("warm-start evaluator topology manifest is outside source replay")
+    if any(count > replay_rows[key] for key, count in requested_rows.items()):
+        raise ValueError("warm-start evaluator rows are not a subset of source replay")
+    return policy, fingerprint, identities, manifest_rows
+
+
 @dataclass
 class CooperativeWarmStart:
     """Imported state for a new cooperative run, with an explicit artifact copy."""
@@ -346,6 +470,20 @@ class CooperativeWarmStart:
     evaluator_training_state: dict
     best_mask: torch.Tensor
     provenance: dict[str, Any]
+    evaluator_policy: str | None = None
+    evaluator_bank_fingerprint: str | None = None
+    evaluator_bank_topology_ids: tuple[str, ...] = ()
+    evaluator_bank_rows: list[dict[str, Any]] = field(default_factory=list)
+    source_bank_topology_ids: tuple[str, ...] = ()
+    source_bank_masks: tuple[torch.Tensor, ...] = ()
+
+    @property
+    def reuse_evaluator(self) -> bool:
+        """True only when the loader validated a versioned immutable bank."""
+        return (self.evaluator_policy == _EVALUATOR_POLICY and
+                bool(self.evaluator_bank_fingerprint) and
+                bool(self.evaluator_bank_topology_ids) and
+                bool(self.evaluator_bank_rows))
 
     def materialize_replay(self, destination: str | Path) -> RealReplay:
         """Copy only replay-referenced source children and retarget this replay.
@@ -422,7 +560,17 @@ def load_cooperative_warm_start(source: str | Path, config: Any,
             raise ValueError("warm-start actual protocol may differ from requested protocol only in lr")
 
     inputs = torch.load(inputs_path, map_location="cpu", weights_only=False)
-    _, train_tasks, selection_tasks, test_spec = _validate_inputs(inputs, config)
+    source_input_banks, train_tasks, selection_tasks, test_spec = _validate_inputs(inputs, config)
+    source_masks_by_topology = {}
+    for bank in source_input_banks.values():
+        for mask in bank.masks:
+            cpu_mask = torch.as_tensor(mask).detach().cpu().float().clone()
+            source_masks_by_topology.setdefault(topology_id(cpu_mask), cpu_mask)
+    source_bank_topology_ids = tuple(sorted(source_masks_by_topology))
+    if not source_bank_topology_ids:
+        raise ValueError("warm-start inputs contain no original functional bank masks")
+    source_bank_masks = tuple(source_masks_by_topology[identity]
+                              for identity in source_bank_topology_ids)
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     if (not isinstance(checkpoint, dict) or
             any(name not in checkpoint for name in (*_REQUIRED_CHECKPOINT_FIELDS, "best_mask"))):
@@ -432,6 +580,9 @@ def load_cooperative_warm_start(source: str | Path, config: Any,
 
     replay = deepcopy(checkpoint["replay"])
     _validate_replay(replay, actual_protocol, train_tasks, selection_tasks, root)
+    (evaluator_policy, evaluator_fingerprint, evaluator_topology_ids,
+     evaluator_rows) = _validated_evaluator_metadata(
+         source_spec, checkpoint, replay, train_tasks, actual_protocol)
     if getattr(config, "seed", replay.split_seed) != replay.split_seed:
         raise ValueError("warm-start search seed must retain the source replay partition")
     banks = deepcopy(checkpoint["banks"])
@@ -455,4 +606,10 @@ def load_cooperative_warm_start(source: str | Path, config: Any,
                                 ensemble_state=deepcopy(checkpoint["ensemble"]),
                                 evaluator_training_state=deepcopy(checkpoint["evaluator_training_state"]),
                                 best_mask=torch.as_tensor(checkpoint["best_mask"]).detach().cpu().clone(),
-                                provenance=provenance)
+                                provenance=provenance,
+                                evaluator_policy=evaluator_policy,
+                                evaluator_bank_fingerprint=evaluator_fingerprint,
+                                evaluator_bank_topology_ids=evaluator_topology_ids,
+                                evaluator_bank_rows=evaluator_rows,
+                                source_bank_topology_ids=source_bank_topology_ids,
+                                source_bank_masks=source_bank_masks)

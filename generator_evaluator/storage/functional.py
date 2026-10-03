@@ -9,7 +9,7 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from .artifacts import save_torch
+from generator_evaluator.storage.artifacts import save_torch
 
 
 _SCHEMA = "generator_evaluator.functional_map_card"

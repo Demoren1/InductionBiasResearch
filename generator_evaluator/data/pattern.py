@@ -17,7 +17,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .adapters import (
+from generator_evaluator.data.adapters import (
     FunctionalBank,
     _balanced_indices,
     _exact_topk,
@@ -27,8 +27,8 @@ from .adapters import (
     _random_pattern_masks,
     _uniform_indices,
 )
-from .data import InnerProtocol, TaskData, support_context, tensor_hash
-from .progress import progress
+from generator_evaluator.data.types import InnerProtocol, TaskData, support_context, tensor_hash
+from generator_evaluator.storage.progress import progress
 
 
 _FEATURES, _HIDDEN = 11, 8
@@ -383,7 +383,7 @@ def _build_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, bank_steps
                         {"family": "pattern", "pattern": pattern, "role": "bank_teacher"})
         tasks.append(task)
     if batch_teachers:
-        from .pattern_batch import fit_pattern_batch
+        from generator_evaluator.evaluation.pattern import fit_pattern_batch
         fits = fit_pattern_batch(masks, tasks, protocol, device)
     else:
         fits = [_fit_pattern(masks[row], tasks[row], protocol, device)
@@ -424,7 +424,7 @@ def _build_selected_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, b
                          probe_ids: Tensor, device: str, teacher_batch_size: int,
                          measurement_devices: tuple[str, ...]) -> FunctionalBank:
     """Fit many independent candidates and retain the best fixed-query maps per stratum."""
-    from .parallel_measurements import _balanced_chunk_sizes, iter_pattern_candidate_batches
+    from generator_evaluator.evaluation.parallel import _balanced_chunk_sizes, iter_pattern_candidate_batches
 
     ids, x = _pattern_table()
     labels = _pattern_labels(x, pattern)

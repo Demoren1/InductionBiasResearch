@@ -63,7 +63,7 @@ def save_json(path: Path, payload) -> None:
 def save_torch(path: Path, payload) -> None:
     # Banks stay ordinary in-memory objects. On disk, unchanged teacher rows
     # are shared across inputs, live/best checkpoints and frozen artifacts.
-    from .bank_storage import externalize_banks
+    from generator_evaluator.storage.banks import externalize_banks
     path = Path(path)
     stored = externalize_banks(payload, path)
     _atomic_write(path, lambda stream: torch.save(stored, stream), binary=True)
@@ -113,10 +113,11 @@ def write_plots(out: Path, history: list[dict], examples: list[dict], *,
         fig, axes = plt.subplots(1, len(metrics), figsize=(4 * len(metrics), 3.5))
         for axis, (key, label) in zip(axes, metrics):
             roles = list(dict.fromkeys(row.get("pattern", "generator") for row in rows))
-            for role in roles:
+            shared_metric = key.startswith("direct_agreement_") and any("total_loss" in row for row in rows)
+            for role in roles[:1] if shared_metric else roles:
                 values = [row[key] for row in rows if row.get("pattern", "generator") == role and key in row]
                 if values:
-                    axis.plot(values, label=str(role))
+                    axis.plot(values, label="All generators" if shared_metric else str(role))
             axis.set(xlabel="Update", ylabel=label)
             axis.legend()
         fig.tight_layout()
@@ -124,14 +125,28 @@ def write_plots(out: Path, history: list[dict], examples: list[dict], *,
             fig.savefig(folder / f"{filename}.{ext}")
         plt.close(fig)
     if history:
-        fig, axes = plt.subplots(1, 3, figsize=(13, 3.5))
         cost_label = "Own pattern predicted delta vs dense" if within_task_selection else "Worst predicted delta vs dense"
-        for axis, key, label in zip(axes, ("predicted_cost", "policy_gradient_loss", "permutation_loss"),
-                                    (cost_label, "Policy gradient surrogate", "Permutation logits MSE")):
-            points = [(i, row[key]) for i, row in enumerate(history) if key in row]
-            if points:
-                axis.plot(*zip(*points))
+        if any("total_loss" in row for row in history):
+            loss_metrics = (("own_quality_loss", cost_label),
+                            ("agreement_loss", "Aligned mask agreement MSE"),
+                            ("own_distillation_loss", "Top archive mask MSE"),
+                            ("total_loss", "Combined generator loss"))
+        else:
+            loss_metrics = (("predicted_cost", cost_label),
+                            ("policy_gradient_loss", "Policy gradient surrogate"),
+                            ("permutation_loss", "Permutation logits MSE"))
+        fig, axes = plt.subplots(1, len(loss_metrics), figsize=(4.3 * len(loss_metrics), 3.5))
+        roles = list(dict.fromkeys(row.get("pattern", "generator") for row in history))
+        for axis, (key, label) in zip(axes, loss_metrics):
+            plotted_roles = roles[:1] if key in ("agreement_loss", "total_loss") else roles
+            for role in plotted_roles:
+                values = [row[key] for row in history
+                          if row.get("pattern", "generator") == role and key in row]
+                if values:
+                    axis.plot(values, label="All generators" if len(plotted_roles) < len(roles) else str(role))
             axis.set(xlabel="Generator update", ylabel=label)
+            if axis.lines:
+                axis.legend()
         fig.tight_layout()
         for ext in ("png", "pdf"):
             fig.savefig(folder / f"generator_losses.{ext}")

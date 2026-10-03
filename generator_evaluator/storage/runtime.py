@@ -10,8 +10,8 @@ from typing import Callable, Iterable
 
 import torch
 
-from .artifacts import save_json, save_torch
-from .data import InnerProtocol, TaskData
+from generator_evaluator.storage.artifacts import save_json, save_torch
+from generator_evaluator.data.types import InnerProtocol, TaskData
 
 
 def cpu_state(module: torch.nn.Module) -> dict[str, torch.Tensor]:
@@ -44,7 +44,7 @@ class RunSession:
         self.out = Path(out).resolve()
         self.spec = json.loads(json.dumps(run_spec))
         self.source_files = [Path(path).resolve() for path in source_files]
-        self.project = Path(project).resolve() if project is not None else Path(__file__).resolve().parents[1]
+        self.project = Path(project).resolve() if project is not None else Path(__file__).resolve().parents[2]
         self.resume = resume
         # Runner-local callbacks preserve existing test seams that patch their
         # ``save_torch`` symbol to simulate an interruption.
@@ -124,7 +124,7 @@ class DenseProtocolSelector:
                  measure_many_fn: Callable | None = None):
         self.out = Path(out)
         if measure_fn is None:
-            from .adapters import measure_mask
+            from generator_evaluator.data.adapters import measure_mask
             measure_fn = measure_mask
         self.measure_fn = measure_fn
         self.measure_many_fn = measure_many_fn

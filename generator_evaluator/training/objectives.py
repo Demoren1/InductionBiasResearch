@@ -9,7 +9,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from .cooperative_policy import _hungarian, align_elite_to_logits
+from generator_evaluator.search.policy import _hungarian, align_elite_to_logits
 
 
 def _weight(value: float, name: str) -> float:

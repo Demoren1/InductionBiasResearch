@@ -201,7 +201,7 @@ class RealReplay:
                 torch.tensor([row["quality"] for row in rows], dtype=torch.float32))
 
     def save(self, path: str | Path) -> None:
-        from .artifacts import save_torch
+        from generator_evaluator.storage.artifacts import save_torch
         path = Path(path)
         payload = dict(protocol=asdict(self.protocol), holdout_fraction=self.holdout_fraction,
                        split_seed=self.split_seed, records=self.records, masks=self.masks,

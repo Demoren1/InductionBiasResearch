@@ -14,10 +14,10 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from .generator_objectives import joint_mask_agreement, reconstruct_bank_masks
-from .training import generator_update
-from .cooperative_policy import align_elite_to_logits
-from .quality_objectives import validate_quality_objective
+from generator_evaluator.training.objectives import joint_mask_agreement, reconstruct_bank_masks
+from generator_evaluator.training.updates import generator_update
+from generator_evaluator.search.policy import align_elite_to_logits
+from generator_evaluator.search.quality import validate_quality_objective
 
 
 def _module_device_dtype(module: nn.Module) -> tuple[torch.device, torch.dtype]:
