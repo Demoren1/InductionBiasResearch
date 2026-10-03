@@ -1,16 +1,45 @@
 \section{Introduction}
 
 Choosing an appropriate inductive bias is crucial for generalization \cite{baxter2000model}.
-By constraining the hypothesis space to reflect the underlying task structure, such a bias enables effective learning from limited data.
-In neural networks, examples of structural inductive biases include local connectivity and spatial weight sharing in convolutional architectures \cite{lecun1998gradient}, and recurrent state updates with parameters shared across time in recurrent architectures \cite{elman1990finding}.
+By constraining the hypothesis space to reflect task structure, it can enable effective learning from limited data.
+Examples include local connectivity and spatial weight sharing in convolutional networks \cite{lecun1998gradient}, and recurrent state updates with parameters shared across time \cite{elman1990finding}.
 Suitable parameter-sharing patterns also enforce equivariance to task-relevant transformations \cite{ravanbakhsh2017equivariance}.
-Building on these principles, recent work has explored learning symmetry-inducing parameter-sharing patterns directly from data \cite{zhou2021meta,yeh2022equivariance}.
-
 
 Selecting suitable structural biases by hand requires domain expertise, particularly when the relevant properties of a new task are not known in advance \cite{yeh2022equivariance}.
 This motivates learning such biases from data.
-For example, \citet{zhou2021meta} represent layer weights as the product of a transformation matrix shared across tasks and a vector of task-specific parameters.
-The shared matrix is meta-learned across tasks to capture transferable parameter-sharing patterns, including those that induce equivariance.
-For larger layers, the authors use a Kronecker-factorized approximation to reduce memory and computational costs, restricting the search to a structured family of reparameterizations.
+For example, \citet{zhou2021meta} meta-learn layer reparameterizations to discover shared parameter structures, including symmetry-inducing patterns.
+\citet{atanov2019deep} learn generative priors from convolutional filters of previously trained networks and use them to guide learning on new datasets.
+\citet{sun2020sparse} extract task-specific subnetworks by iterative pruning and share parameters where these subnetworks overlap.
+\citet{ando2005framework} learn a shared predictive structure across tasks while allowing task-specific predictors.
+
 More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
-The broader challenge is therefore to identify structural constraints that support learning across an environment of related tasks and generalize to previously unseen tasks from that environment \cite{baxter2000model}.
+\citet{baxter2000model} provides a theoretical foundation for learning such constraints across an environment of related tasks.
+Under capacity and sampling assumptions, his bounds relate empirical performance across sufficiently many source tasks to the expected risk of the best task-specific hypotheses in a selected space on new tasks from the same environment, with high probability.
+Our focus is on extracting one transferable connectivity pattern from diverse trained solutions: a mask that remains useful when fresh weights are learned for a new task.
+
+In this paper, we present a generative approach to learning a shared connectivity mask for related tasks.
+Building on generative modeling of trained networks \cite{atanov2019deep,schurholt2022hyper}, we construct a bank of functional maps for each task from networks trained at different sparsity levels.
+Each map records neuron responses and connection sensitivities on fixed probe examples, together with the connectivity mask.
+Task-specific generators use these banks to propose new masks, extending the search beyond the stored solutions.
+A shared, task-conditioned evaluator predicts their loss and guides the search, following the principle of surrogate-guided architecture search \cite{liu2018progressive}.
+
+The order of stored solutions and hidden neurons is arbitrary, so the generators process them as sets \cite{zaheer2017deep}.
+Their Transformer encoders omit positional encodings for these elements and average neuron representations to summarize each solution.
+An additional penalty encourages identical outputs when the bank is reordered while keeping the sampled noise fixed.
+An agreement loss encourages generators for different tasks to propose similar masks after aligning hidden neurons.
+
+Search alternates mask generation with candidate evaluation on all source tasks: fresh weights are trained on support data, and loss is measured on separate query data.
+These measurements update the evaluator and generators, while selected trained models replenish the functional banks.
+Finally, a criterion based on the worst source-task performance selects one mask with a fixed connection budget using separate selection data.
+We freeze this mask before evaluating unseen tasks, learning weights independently for each task.
+
+Our main contributions are as follows:
+\begin{itemize}
+    \item We propose a generative framework for learning a shared connectivity mask as a structural inductive bias, with a fixed connection budget and independently trained task-specific weights.
+    \item We introduce functional maps of trained networks as inputs to mask generation, combining neuron responses, connection sensitivities, and connectivity with an encoder invariant to solution and hidden-neuron ordering.
+    \item We develop a cooperative search procedure that combines task-specific generators, agreement between their proposals, and a shared loss evaluator updated through candidate training on source tasks.
+    % TODO: Intended empirical contribution, pending final experiments.
+    % Confirm fixed-mask transfer across sample sizes and comparisons with
+    % dense and matched-budget sparse baselines before retaining this claim.
+    \item We demonstrate improved data efficiency on previously unseen tasks using synthetic pattern-detection problems with known reference connectivity and image-based set-regression tasks, with comparisons against dense networks and matched-budget sparse baselines.
+\end{itemize}
