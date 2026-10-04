@@ -2,9 +2,9 @@
 GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 
 # The search invocation prepares functional banks and the initial evaluator,
-# then jointly optimizes own-task quality, agreement and selected-mask distillation.
+# then optimizes quality across TRAIN tasks, agreement and a spatial functional anchor.
 # EVALUATOR_EPOCHS trains the initial evaluator from bank-origin cross-fits.
-# REFRESH_EVERY schedules real measurements, evaluator updates and map feedback.
+# REFRESH_EVERY schedules real measurements and map feedback; evaluator updates are optional.
 # Keep the best common mask across refreshes, using independent selection queries.
 # BOOTSTRAP_GENERATORS=1 is retained for CLI compatibility.
 # RESTART_FROM reuses saved binary banks and evaluator with fresh generators.
@@ -31,6 +31,7 @@ if [[ -n "${RESTART_FROM:-}" ]]; then
 fi
 GE_COMMON_ARGS=(
   --domain deepsets --preset deepsets --training-mode joint --data-root "$GE_DATA"
+  --k "${MASK_K:-15053}"
   --train-task-count "${TRAIN_TASKS:-6}" --test-task-count "${TEST_TASKS:-4}"
   --bank-candidates "${BANK_CANDIDATES:-4096}" --teachers "${TEACHERS:-1024}"
   --bank-steps "${BANK_STEPS:-4000}" --teacher-batch-size "${CHILD_MASK_BATCH:-64}"
@@ -41,7 +42,7 @@ GE_COMMON_ARGS=(
   --width "${TRANSFORMER_WIDTH:-64}" --heads "${TRANSFORMER_HEADS:-4}" --layers "${TRANSFORMER_LAYERS:-2}" --noise-dim 8 --ensemble-members 2
   --refresh-every "${REFRESH_EVERY:-2}" --minimum-refresh-every "${MINIMUM_REFRESH_EVERY:-2}"
   --evaluator-epochs "${EVALUATOR_EPOCHS:-100}"
-  --evaluator-online-epochs "${EVALUATOR_ONLINE_EPOCHS:-5}"
+  --evaluator-online-epochs "${EVALUATOR_ONLINE_EPOCHS:-0}"
   --evaluator-online-lr "${EVALUATOR_ONLINE_LR:-0.0001}"
   --evaluator-online-bank-rows "${EVALUATOR_ONLINE_BANK_ROWS:-512}"
   --evaluator-exploration-budget "${EVALUATOR_EXPLORATION_BUDGET:-8}"
@@ -50,18 +51,27 @@ GE_COMMON_ARGS=(
   --acquisition-budget "${ACQUISITION_BUDGET:-24}" --candidates 24 --initial-random 8
   --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2
   --agreement-weight "${AGREEMENT_WEIGHT:-0.01}"
-  --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-1.0}"
-  --elite-target-source "${ELITE_TARGET_SOURCE:-selected}"
+  --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-3.0}"
+  --elite-target-source "${ELITE_TARGET_SOURCE:-functional_mean}"
   --generator-lr "${GENERATOR_LR:-0.0003}"
   --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-5}"
-  --generator-pretrain-source "${GENERATOR_PRETRAIN_SOURCE:-selected}"
+  --generator-pretrain-source "${GENERATOR_PRETRAIN_SOURCE:-functional_mean}"
   --generator-pretrain-lr "${GENERATOR_PRETRAIN_LR:-0.003}"
-  --pretrain-updates-per-epoch "${PRETRAIN_UPDATES_PER_EPOCH:-20}"
+  --pretrain-updates-per-epoch "${PRETRAIN_UPDATES_PER_EPOCH:-100}"
+  --functional-anchor-spatial-jitter "${FUNCTIONAL_ANCHOR_SPATIAL_JITTER:-0.2}"
+  --functional-anchor-seed "${FUNCTIONAL_ANCHOR_SEED:-$((GE_SEED + 1))}"
+  --generator-quality-scope "${GENERATOR_QUALITY_SCOPE:-all_train}"
   --reconstruction-weight "${RECONSTRUCTION_WEIGHT:-1.0}"
   --quality-objective "${QUALITY_OBJECTIVE:-average}"
   --seed "$GE_SEED" --device cuda:0 --generator-devices auto --measurement-devices auto
   --measurement-batch-size "${CHILD_MASK_BATCH:-64}" --progress
 )
+if [[ "${GENERATOR_PRETRAIN_FIXED_ALIGNMENT:-1}" == "1" ]]; then
+  GE_COMMON_ARGS+=(--generator-pretrain-fixed-alignment)
+fi
+if [[ "${GENERATOR_BILINEAR_HEAD:-0}" == "1" ]]; then
+  GE_COMMON_ARGS+=(--generator-bilinear-head)
+fi
 if [[ -n "${QUERY_COUNT:-}" ]]; then
   GE_COMMON_ARGS+=(--query-count "$QUERY_COUNT")
 fi
@@ -86,8 +96,8 @@ fi
 
 ge_run python -u -m generator_evaluator.cooperative_run "${GE_COMMON_ARGS[@]}" \
   "${GE_WARM_START_ARGS[@]}" \
-  --generator-epochs "${GENERATOR_EPOCHS:-20}" \
-  --updates-per-epoch "${UPDATES_PER_EPOCH:-10}" \
+  --generator-epochs "${GENERATOR_EPOCHS:-1}" \
+  --updates-per-epoch "${UPDATES_PER_EPOCH:-100}" \
   --elite-limit "${ELITE_LIMIT:-8}" \
   --out "$GE_OUT/search" "$@"
 

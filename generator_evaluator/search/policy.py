@@ -43,6 +43,7 @@ class DensityConditionedGenerator(nn.Module):
         quality_dim: int = 1,
         *,
         target_k: int | None = None,
+        generator_bilinear_head: bool = False,
     ) -> None:
         super().__init__()
         total = features * hidden
@@ -57,8 +58,10 @@ class DensityConditionedGenerator(nn.Module):
         self.quality_dim = quality_dim
         self.width = width
         self.target_k = int(target_k)
+        self.generator_bilinear_head = generator_bilinear_head
         self.inner = TransformerMaskGenerator(
-            token_dim + 1, features, hidden, width, heads, layers, noise_dim, quality_dim
+            token_dim + 1, features, hidden, width, heads, layers, noise_dim, quality_dim,
+            generator_bilinear_head=generator_bilinear_head,
         )
 
     def set_budget(self, k: int) -> None:
@@ -193,8 +196,8 @@ def _hungarian(cost: Tensor) -> list[int]:
     return assignment
 
 
-def align_elite_to_logits(elite: Tensor, logits: Tensor) -> Tensor:
-    """Place an elite's hidden columns in the coordinate order preferred by logits."""
+def align_elite_to_logits_with_assignment(elite: Tensor, logits: Tensor) -> tuple[Tensor, list[int]]:
+    """Align an elite to logits and return target-column to output-column indices."""
     if elite.ndim != 2 or logits.ndim != 2 or elite.shape != logits.shape:
         raise ValueError("elite and logits must have equal [features, hidden] shapes")
     if not bool(((elite == 0) | (elite == 1)).all()):
@@ -208,7 +211,12 @@ def align_elite_to_logits(elite: Tensor, logits: Tensor) -> Tensor:
     aligned = torch.empty_like(target)
     for target_column, output_column in enumerate(target_to_output):
         aligned[:, output_column] = target[:, target_column]
-    return aligned
+    return aligned, target_to_output
+
+
+def align_elite_to_logits(elite: Tensor, logits: Tensor) -> Tensor:
+    """Place an elite's hidden columns in the coordinate order preferred by logits."""
+    return align_elite_to_logits_with_assignment(elite, logits)[0]
 
 
 def cooperative_generator_update(

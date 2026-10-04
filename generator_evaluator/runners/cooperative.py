@@ -21,11 +21,13 @@ from pathlib import Path
 import shutil
 
 import torch
+from torch.nn import functional as F
 
 from generator_evaluator.storage.artifacts import paired_comparison, save_json, save_torch, write_plots
 from generator_evaluator.data.pattern import (append_feedback, bank_input_fingerprint,
                                build_cooperative_fixture, make_cooperative_test_tasks)
 from generator_evaluator.search.policy import (DensityConditionedGenerator,
+                                 align_elite_to_logits_with_assignment,
                                  propose_at_budget, propose_shared_pool,
                                  rank_shared_pool, select_common_elites)
 from generator_evaluator.data.types import InnerProtocol, RealReplay, TaskData, support_context, tensor_hash, topology_id
@@ -94,6 +96,65 @@ def _evaluator_policy(config):
 def _save_optional_torch(config, path, payload):
     if config.persist_artifacts:
         save_torch(path, payload)
+
+
+def _reconstruct_fixed_full_bank_target(model, bank, target_mask, optimizer, *, rng, weight):
+    """Train against an already aligned fixed target without per-draw matching."""
+    from generator_evaluator.training.objectives import (
+        _device_dtype, _forward, _noise, _topk_overlap, _validate_optimizer, _weight,
+    )
+
+    objective_weight = _weight(weight, "weight")
+    _validate_optimizer(model, optimizer)
+    source_tokens = getattr(bank, "tokens", None)
+    source_quality = getattr(bank, "quality", None)
+    if (not isinstance(source_tokens, torch.Tensor) or source_tokens.ndim != 4 or
+            source_tokens.shape[0] != 1 or source_tokens.shape[1] < 1):
+        raise ValueError("prepared bank.tokens must have shape [1, R, H, D]")
+    features, hidden = int(model.features), int(model.hidden)
+    if (not isinstance(target_mask, torch.Tensor) or
+            target_mask.shape != (features, hidden) or
+            not target_mask.is_floating_point() or
+            not bool(torch.isfinite(target_mask).all()) or
+            not bool(((target_mask == 0) | (target_mask == 1)).all()) or
+            int(target_mask.sum()) < 1):
+        raise ValueError("fixed target must be a nonempty finite binary [features, hidden] mask")
+    device, dtype = _device_dtype(model)
+    if source_tokens.device != device or source_tokens.dtype != dtype:
+        raise ValueError("prepared bank tokens must match the generator device and dtype")
+    if source_tokens.shape[2] != hidden or not bool(torch.isfinite(source_tokens).all()):
+        raise ValueError("prepared bank tokens must be finite and match the generator")
+    if source_quality is not None and (
+            not isinstance(source_quality, torch.Tensor) or source_quality.ndim != 3 or
+            source_quality.shape[:2] != source_tokens.shape[:2] or
+            source_quality.device != device or source_quality.dtype != dtype or
+            not bool(torch.isfinite(source_quality).all())):
+        raise ValueError("prepared bank quality must be finite and match its tokens")
+    if target_mask.device != device or target_mask.dtype != dtype:
+        raise ValueError("fixed target must match the generator device and dtype")
+
+    count = 2
+    tokens = source_tokens.expand(count, *source_tokens.shape[1:])
+    quality = None if source_quality is None else source_quality.expand(count, *source_quality.shape[1:])
+    targets = target_mask.unsqueeze(0).expand(count, -1, -1)
+    density = targets.sum((1, 2)) / (features * hidden)
+    if bool((density <= 0).any()) or bool((density > 1).any()):
+        raise ValueError("fixed target density must be in (0, 1]")
+    noise = _noise(count, int(model.noise_dim), rng, device, dtype)
+    logits = _forward(model, tokens, noise, quality, density)
+    reconstruction = F.binary_cross_entropy_with_logits(logits, targets)
+    overlap = _topk_overlap(logits, targets)
+    if objective_weight > 0:
+        optimizer.zero_grad(set_to_none=True)
+        (objective_weight * reconstruction).backward()
+        parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
+        torch.nn.utils.clip_grad_norm_(parameters, max_norm=10.0)
+        optimizer.step()
+    return {
+        "reconstruction_loss": float(reconstruction.detach().cpu()),
+        "reconstruction_overlap": overlap,
+        "reconstruction_scope": "explicit_full_bank_fixed_alignment",
+    }
 
 
 def _compact_dense_tune(out, tasks, mask, protocol, device, learning_rates, *,
@@ -194,13 +255,41 @@ class CooperativeSearchController:
             config.domain == "pattern" or
             config.generator_pretrain_source == "functional_mean" or
             config.elite_target_source == "functional_mean" or
+            config.functional_anchor_spatial_jitter > 0 or
             (config.domain == "deepsets" and config.phase != "bootstrap"))
         if needs_functional_mean:
-            from generator_evaluator.search.consensus import build_functional_consensus_proposals
+            from generator_evaluator.search.consensus import (
+                build_functional_consensus_proposals, build_spatial_jittered_anchor,
+            )
             self.functional_consensus = build_functional_consensus_proposals(list(banks.values()), config.k)
             self.functional_mean = self.functional_consensus.global_topk
+            self.functional_anchor_seed = (config.functional_anchor_seed if
+                                           config.functional_anchor_seed is not None else config.seed + 1)
+            jitter = float(config.functional_anchor_spatial_jitter)
+            self.functional_anchor = (build_spatial_jittered_anchor(
+                self.functional_consensus.importance, config.k, jitter,
+                self.functional_anchor_seed,
+            ) if jitter > 0 else self.functional_mean)
+            spatial_rng_seed = self.functional_anchor_seed
+            if spatial_rng_seed < 0:
+                spatial_rng_seed %= 1 << 128
+            self.functional_anchor_provenance = dict(
+                source=("functional_mean_spatially_jittered_rank_anchor" if jitter > 0
+                        else "functional_mean_global_topk"),
+                mask_hash=tensor_hash(self.functional_anchor),
+                spatial_jitter=jitter,
+                seed=self.functional_anchor_seed,
+                rng_seed=(spatial_rng_seed if jitter > 0 else None),
+                rank_strategy=("stable descending per-column percentile ranks" if jitter > 0 else None),
+                jitter_tile_shape=([7, 7, config.hidden] if jitter > 0 else None),
+                jitter_tile_repeat=([4, 4, 1] if jitter > 0 else None),
+            )
         else:
             self.functional_consensus = self.functional_mean = None
+            self.functional_anchor = None
+            self.functional_anchor_seed = (config.functional_anchor_seed if
+                                           config.functional_anchor_seed is not None else config.seed + 1)
+            self.functional_anchor_provenance = None
         self.replay, self.store = replay, store
         self.models, self.optimizers, self.ensemble = models, optimizers, ensemble
         self.dense_rows, self.dense_quality, self.contexts = dense_rows, dense_quality, contexts
@@ -212,6 +301,7 @@ class CooperativeSearchController:
         self.history, self.evaluator_history, self.calibration, self.refresh_history = [], [], [], []
         self.pretraining_history = []
         self.pretraining_epoch = 0
+        self.fixed_pretraining_alignment = None
         self.generator_pretraining = copy.deepcopy(generator_pretraining)
         self.initialization_done = False
         self.stage, self.stage_epoch = None, 0
@@ -284,6 +374,9 @@ class CooperativeSearchController:
         self.cadence = max(self.config.minimum_refresh_every, self.cadence)
         self.pretraining_history = saved["pretraining_history"]
         self.pretraining_epoch = saved["pretraining_epoch"]
+        self.fixed_pretraining_alignment = copy.deepcopy(
+            saved.get("fixed_pretraining_alignment")
+        )
         self.generator_pretraining = copy.deepcopy(saved.get("generator_pretraining"))
         self.best_mask_origin = copy.deepcopy(saved.get("best_mask_origin"))
         if self.best_mask_origin is None:
@@ -422,7 +515,7 @@ class CooperativeSearchController:
             if not self.initialization_done:
                 return torch.empty(0, self.config.features, self.config.hidden)
             target = (self.best_mask if self.config.elite_target_source == "selected"
-                      else self.functional_mean).detach().cpu()
+                      else self.functional_anchor).detach().cpu()
             if (target.shape != (self.config.features, self.config.hidden) or
                     not bool(torch.isfinite(target).all()) or
                     not bool(((target == 0) | (target == 1)).all()) or
@@ -470,7 +563,7 @@ class CooperativeSearchController:
                              for name in self.patterns}
         else:
             common_anchor = (self.best_mask if source == "selected" else
-                             self.functional_mean if source == "functional_mean" else None)
+                             self.functional_anchor if source == "functional_mean" else None)
             for name in self.patterns:
                 raw_anchor = (common_anchor if common_anchor is not None
                               else self.banks[name].baseline_mask)
@@ -488,6 +581,85 @@ class CooperativeSearchController:
                 anchor_hashes[name] = tensor_hash(anchor)
         prepared_banks = ({name: self.trainer._prepared_bank(name) for name in self.patterns}
                           if source in ("bank", "selected", "functional_mean") else {})
+        fixed_alignment = (self.config.generator_pretrain_fixed_alignment and
+                           source in ("bank", "selected", "functional_mean"))
+        fixed_targets, initial_assignments = {}, {}
+        initial_assignment_hashes, aligned_target_hashes = {}, {}
+        if fixed_alignment:
+            saved_alignment = self.fixed_pretraining_alignment
+            if saved_alignment is not None:
+                if not isinstance(saved_alignment, Mapping):
+                    raise ValueError("saved fixed pretraining alignment must be a mapping")
+                saved_targets = saved_alignment.get("targets")
+                if (saved_alignment.get("source") != source or
+                        saved_alignment.get("anchor_hashes") != anchor_hashes or
+                        not isinstance(saved_targets, Mapping) or
+                        set(saved_targets) != set(self.patterns)):
+                    raise ValueError("saved fixed pretraining alignment does not match this source anchor")
+                initial_assignments = saved_alignment.get("assignments", {})
+                initial_assignment_hashes = saved_alignment.get("assignment_hashes", {})
+                aligned_target_hashes = saved_alignment.get("target_hashes", {})
+                if any(not isinstance(mapping, Mapping) or set(mapping) != set(self.patterns) for mapping in
+                       (initial_assignments, initial_assignment_hashes, aligned_target_hashes)):
+                    raise ValueError("saved fixed pretraining alignment metadata is incomplete")
+                for name in self.patterns:
+                    parameter = next(self.models[name].parameters())
+                    target = saved_targets[name]
+                    if (not isinstance(target, torch.Tensor) or
+                            target.shape != (self.config.features, self.config.hidden) or
+                            not target.is_floating_point() or
+                            not bool(((target == 0) | (target == 1)).all()) or
+                            int(target.sum()) != self.config.k):
+                        raise ValueError(f"saved fixed pretraining target for {name!r} is malformed")
+                    target = target.to(device=parameter.device, dtype=parameter.dtype).contiguous()
+                    if tensor_hash(target) != aligned_target_hashes[name]:
+                        raise ValueError(f"saved fixed pretraining target hash mismatch for {name!r}")
+                    assignment = initial_assignments[name]
+                    if (not isinstance(assignment, list) or
+                            any(isinstance(index, bool) or not isinstance(index, int) for index in assignment) or
+                            len(assignment) != self.config.hidden or
+                            sorted(assignment) != list(range(self.config.hidden))):
+                        raise ValueError(f"saved initial column assignment for {name!r} is malformed")
+                    assignment_hash = hashlib.sha256(
+                        json.dumps(assignment, separators=(",", ":")).encode("utf8")
+                    ).hexdigest()
+                    if assignment_hash != initial_assignment_hashes[name]:
+                        raise ValueError(f"saved initial column assignment hash mismatch for {name!r}")
+                    fixed_targets[name] = target
+            else:
+                with torch.no_grad():
+                    for name in self.patterns:
+                        model = self.models[name]
+                        bank = prepared_banks[name]
+                        target = target_anchors[name]
+                        tokens, quality = bank.tokens, bank.quality
+                        parameter = next(model.parameters())
+                        zero_noise = torch.zeros((1, model.noise_dim), device=parameter.device,
+                                                 dtype=parameter.dtype)
+                        density = target.sum().reshape(1) / (self.config.features * self.config.hidden)
+                        initial_logits = model(tokens, zero_noise, quality, density=density)
+                        if (initial_logits.shape != (1, self.config.features, self.config.hidden) or
+                                not bool(torch.isfinite(initial_logits).all())):
+                            raise ValueError("initial zero-noise generator logits must be finite [1, F, H]")
+                        aligned, assignment = align_elite_to_logits_with_assignment(
+                            target, initial_logits[0]
+                        )
+                        assignment = [int(index) for index in assignment]
+                        fixed_targets[name] = aligned.detach().contiguous()
+                        initial_assignments[name] = assignment
+                        initial_assignment_hashes[name] = hashlib.sha256(
+                            json.dumps(assignment, separators=(",", ":")).encode("utf8")
+                        ).hexdigest()
+                        aligned_target_hashes[name] = tensor_hash(fixed_targets[name])
+                self.fixed_pretraining_alignment = dict(
+                    source=source,
+                    anchor_hashes=dict(anchor_hashes),
+                    targets={name: target.detach().cpu().contiguous()
+                             for name, target in fixed_targets.items()},
+                    assignments=copy.deepcopy(initial_assignments),
+                    assignment_hashes=dict(initial_assignment_hashes),
+                    target_hashes=dict(aligned_target_hashes),
+                )
         try:
             if source in ("bank", "selected", "functional_mean"):
                 for optimizer in self.optimizers.values():
@@ -506,15 +678,24 @@ class CooperativeSearchController:
                                     weight=self.config.reconstruction_weight,
                                     bank_consensus=(self.config.training_mode == "staged" and
                                                     bool(update % 2)))
+                            if fixed_alignment:
+                                return _reconstruct_fixed_full_bank_target(
+                                    self.models[name], prepared_banks[name], fixed_targets[name],
+                                    self.optimizers[name], rng=self.own_rngs[name],
+                                    weight=self.config.reconstruction_weight)
                             return reconstruct_full_bank_target(
                                 self.models[name], prepared_banks[name], target_anchors[name],
                                 self.optimizers[name], rng=self.own_rngs[name],
                                 weight=self.config.reconstruction_weight)
                         rows = executor.map(reconstruct)
                         for name, logs in rows.items():
+                            alignment_fields = (dict(fixed_alignment=True,
+                                initial_assignment_hash=initial_assignment_hashes[name],
+                                aligned_target_hash=aligned_target_hashes[name])
+                                if fixed_alignment else {})
                             self.pretraining_history.append(dict(epoch=epoch + 1, update=update,
                                 pattern=name, pretrain_source=source,
-                                anchor_hash=anchor_hashes[name], **logs))
+                                anchor_hash=anchor_hashes[name], **alignment_fields, **logs))
                     epochs.set_postfix(loss=f"{logs['reconstruction_loss']:.4f}", refresh=False)
                     self.pretraining_epoch = epoch + 1
                     self.stage, self.stage_epoch = "reconstruction", self.pretraining_epoch
@@ -528,12 +709,20 @@ class CooperativeSearchController:
                                           pretrain_source=source,
                                           anchor_kind=anchor_kind,
                                           anchor_hashes=anchor_hashes,
+                                          functional_anchor=(copy.deepcopy(
+                                              self.functional_anchor_provenance)
+                                              if source == "functional_mean" else None),
+                                          fixed_alignment=fixed_alignment,
+                                          initial_assignments=initial_assignments,
+                                          initial_assignment_hashes=initial_assignment_hashes,
+                                          aligned_target_hashes=aligned_target_hashes,
                                           updates=len(self.pretraining_history),
                                           optimizer_states_imported=False)
         if self.config.persist_artifacts:
             save_torch(self.out / "generator_reconstruction.pt", dict(
                 models={name: _cpu_state(model) for name, model in self.models.items()},
                 bank_hashes={name: bank_input_fingerprint(bank) for name, bank in self.banks.items()},
+                generator_bilinear_head=self.config.generator_bilinear_head,
                 updates=len(self.pretraining_history),
                 test_used=False,
                 origin=self.generator_pretraining,
@@ -621,6 +810,7 @@ class CooperativeSearchController:
                 reconstruction_weight=self.config.reconstruction_weight,
                 reconstruction_batch_size=self.config.reconstruction_batch_size,
                 permutation_weight=self.config.permutation_weight,
+                quality_scope=self.config.generator_quality_scope,
                 executor=self.generator_executor)
             for name in self.patterns:
                 logs = dict(returned[name])
@@ -1022,6 +1212,7 @@ class CooperativeSearchController:
             banks=self.banks, replay=self.replay, history=self.history,
             pretraining_history=self.pretraining_history,
             pretraining_epoch=self.pretraining_epoch, initialization_done=self.initialization_done,
+            fixed_pretraining_alignment=self.fixed_pretraining_alignment,
             generator_pretraining=self.generator_pretraining,
             evaluator_history=self.evaluator_history, calibration=self.calibration,
             refresh_history=self.refresh_history, best_mask=self.best_mask,
@@ -1176,6 +1367,16 @@ def _load_generator_reconstruction(path, banks, config):
         raise ValueError(f"cannot read generator reconstruction artifact: {source}") from error
     if not isinstance(artifact, Mapping):
         raise ValueError("generator reconstruction artifact must be a mapping")
+    artifact_bilinear_head = artifact.get("generator_bilinear_head", False)
+    if not isinstance(artifact_bilinear_head, bool):
+        raise ValueError("generator reconstruction generator_bilinear_head metadata must be a bool")
+    if artifact_bilinear_head != config.generator_bilinear_head:
+        raise ValueError(
+            "generator reconstruction bilinear-head mismatch: artifact has "
+            f"generator_bilinear_head={artifact_bilinear_head}, but this run requests "
+            f"generator_bilinear_head={config.generator_bilinear_head}; use a matching "
+            "--generator-bilinear-head setting or reconstruction artifact"
+        )
 
     roles = tuple(config.train_patterns)
     states, bank_hashes = artifact.get("models"), artifact.get("bank_hashes")
@@ -1200,7 +1401,7 @@ def _load_generator_reconstruction(path, banks, config):
             name: DensityConditionedGenerator(
                 banks[name].tokens.shape[-1], config.features, config.hidden,
                 config.width, config.heads, config.layers, config.noise_dim,
-                target_k=config.k)
+                target_k=config.k, generator_bilinear_head=config.generator_bilinear_head)
             for name in roles
         }
     checked_states = {}
@@ -1222,6 +1423,7 @@ def _load_generator_reconstruction(path, banks, config):
         checked_states[name] = state
 
     provenance = dict(path=str(source), sha256=checksum, updates=updates,
+                      generator_bilinear_head=artifact_bilinear_head,
                       optimizer_states_imported=False,
                       optimizer_initialization="fresh_adam")
     return checked_states, provenance
@@ -1378,7 +1580,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                 progress(entries, desc="Fresh mask fits", unit="fit")]
     contexts = torch.stack([task.context for task in train_tasks]).to(device)
     models = {name: DensityConditionedGenerator(bank.tokens.shape[-1], config.features, config.hidden,
-              config.width, config.heads, config.layers, config.noise_dim, target_k=config.k).to(generator_devices[index])
+              config.width, config.heads, config.layers, config.noise_dim, target_k=config.k,
+              generator_bilinear_head=config.generator_bilinear_head).to(generator_devices[index])
               for index, (name, bank) in enumerate(banks.items())}
     if imported_generator_states is not None and not has_resume_checkpoint:
         try:
@@ -1389,6 +1592,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         _save_optional_torch(config, out / "generator_reconstruction.pt", dict(
             models={name: _cpu_state(model) for name, model in models.items()},
             bank_hashes={name: bank_input_fingerprint(bank) for name, bank in banks.items()},
+            generator_bilinear_head=config.generator_bilinear_head,
             updates=generator_pretraining["updates"], test_used=False,
             origin=dict(kind="imported", **generator_pretraining),
             optimizer_states_imported=False,
@@ -1473,6 +1677,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             functional_balanced_consensus=consensus.balanced_per_column)
         _save_optional_torch(config, out / "functional_consensus.pt", dict(
             importance=consensus.importance, masks=functional_controls,
+            functional_anchor=controller.functional_anchor,
+            functional_anchor_provenance=controller.functional_anchor_provenance,
             train_patterns=patterns, test_used=False,
             normalization="unit column mass per source map, equal means within and across banks",
             alignment="ordered input-coordinate centroids",
@@ -1641,8 +1847,10 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             best_selection_delta=controller.best_worst_delta, best_selection_cost=best_cost,
             best_selection_mean_delta=controller.best_mean_delta,
             quality_objective=config.quality_objective,
+            generator_quality_scope=config.generator_quality_scope,
             elite_target_source=config.elite_target_source,
             generator_pretrain_source=config.generator_pretrain_source,
+            functional_anchor=controller.functional_anchor_provenance,
             best_mask_origin=controller.best_mask_origin,
             best_stage=controller.best_stage,
             completed_stage=controller.stage, protocol_id=protocol.fingerprint,
@@ -1918,8 +2126,10 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         best_selection_delta=controller.best_worst_delta, best_selection_cost=best_cost,
         best_selection_mean_delta=controller.best_mean_delta,
         quality_objective=config.quality_objective,
+        generator_quality_scope=config.generator_quality_scope,
         elite_target_source=config.elite_target_source,
         generator_pretrain_source=config.generator_pretrain_source,
+        functional_anchor=controller.functional_anchor_provenance,
         best_mask_origin=controller.best_mask_origin,
         protocol_id=protocol.fingerprint,
         common_train_elites=len(controller.common_elites()), smoke_only=config.smoke,
@@ -2021,6 +2231,15 @@ def make_parser():
     parser.add_argument("--generator-pretrain-source",
                         choices=("teacher", "bank", "selected", "functional_mean"))
     parser.add_argument("--generator-pretrain-lr", type=float)
+    parser.add_argument("--generator-pretrain-fixed-alignment", action="store_true",
+                        help="align each fixed full-bank reconstruction target once before warmup")
+    parser.add_argument("--functional-anchor-spatial-jitter", type=float,
+                        help="spatial jitter strength for the functional-mean fixed anchor (requires 784 features)")
+    parser.add_argument("--functional-anchor-seed", type=int)
+    parser.add_argument("--generator-bilinear-head", action="store_true",
+                        help="add a parameter-free hidden-feature bilinear term to generator logits")
+    parser.add_argument("--generator-quality-scope", choices=("own", "all_train"),
+                        help="task contexts used to score each generator's masks during joint updates")
     parser.add_argument("--elite-target-source", choices=("train_archive", "selected", "functional_mean"))
     parser.add_argument("--quality-objective", choices=QUALITY_OBJECTIVES,
                         help="Across-task cost used for policy, acquisition, feedback and selection")
@@ -2111,10 +2330,17 @@ def resolve_run_settings(args):
     for argument, setting in (("generator_lr", "generator_lr"),
                               ("generator_pretrain_lr", "generator_pretrain_lr"),
                               ("generator_pretrain_source", "generator_pretrain_source"),
-                              ("elite_target_source", "elite_target_source")):
+                              ("elite_target_source", "elite_target_source"),
+                              ("functional_anchor_spatial_jitter", "functional_anchor_spatial_jitter"),
+                              ("functional_anchor_seed", "functional_anchor_seed"),
+                              ("generator_quality_scope", "generator_quality_scope")):
         value = getattr(args, argument)
         if value is not None:
             overrides[setting] = value
+    if args.generator_pretrain_fixed_alignment:
+        overrides["generator_pretrain_fixed_alignment"] = True
+    if args.generator_bilinear_head:
+        overrides["generator_bilinear_head"] = True
     if args.latent_lr is not None:
         overrides["latent_lr"] = args.latent_lr
     if args.evaluator_lr is not None:

@@ -70,6 +70,11 @@ class CooperativeConfig:
     tune_dense: bool = True
     initial_global_density: bool = False
     output_budgets: tuple[int, ...] = ()
+    generator_pretrain_fixed_alignment: bool = False
+    functional_anchor_spatial_jitter: float = 0.
+    functional_anchor_seed: int | None = None
+    generator_bilinear_head: bool = False
+    generator_quality_scope: str = "own"
 
     def __post_init__(self):
         if self.domain == "pattern":
@@ -97,6 +102,23 @@ class CooperativeConfig:
             raise ValueError("generator_pretrain_source must be teacher, bank, selected, or functional_mean")
         if self.elite_target_source not in ("train_archive", "selected", "functional_mean"):
             raise ValueError("elite_target_source must be train_archive, selected, or functional_mean")
+        if (isinstance(self.functional_anchor_spatial_jitter, bool) or
+                not isinstance(self.functional_anchor_spatial_jitter, (int, float)) or
+                not math.isfinite(self.functional_anchor_spatial_jitter) or
+                self.functional_anchor_spatial_jitter < 0):
+            raise ValueError("functional_anchor_spatial_jitter must be a finite nonnegative number")
+        if self.functional_anchor_spatial_jitter > 0 and self.features != 784:
+            raise ValueError("functional anchor spatial jitter requires exactly 784 features")
+        if (self.functional_anchor_seed is not None and
+                (isinstance(self.functional_anchor_seed, bool) or
+                 not isinstance(self.functional_anchor_seed, int))):
+            raise ValueError("functional_anchor_seed must be an integer or None")
+        if not isinstance(self.generator_pretrain_fixed_alignment, bool):
+            raise TypeError("generator_pretrain_fixed_alignment must be a bool")
+        if not isinstance(self.generator_bilinear_head, bool):
+            raise TypeError("generator_bilinear_head must be a bool")
+        if self.generator_quality_scope not in ("own", "all_train"):
+            raise ValueError("generator_quality_scope must be own or all_train")
         for name, value in (("generator_lr", self.generator_lr),
                             ("generator_pretrain_lr", self.generator_pretrain_lr)):
             if (isinstance(value, bool) or not isinstance(value, (int, float)) or

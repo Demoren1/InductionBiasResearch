@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+import math
 from typing import Any
 
+import numpy as np
 import torch
 from torch import Tensor
 
@@ -65,6 +67,46 @@ def _global_topk(importance: Tensor, k: int) -> Tensor:
         selected = torch.tensor(order[:k], dtype=torch.long)
         proposal.reshape(-1)[selected] = 1.
     return proposal
+
+
+def build_spatial_jittered_anchor(importance: Tensor, k: int, jitter: float,
+                                 seed: int) -> Tensor:
+    """Build a stable exact-K anchor from per-column ranks and tiled spatial jitter."""
+    if (not isinstance(importance, Tensor) or importance.ndim != 2 or
+            importance.shape[0] != 784 or importance.shape[1] < 1):
+        raise ValueError("spatial anchor jitter requires importance with shape [784, hidden]")
+    if not importance.is_floating_point() or not bool(torch.isfinite(importance).all()):
+        raise ValueError("spatial anchor importance must be finite floating-point values")
+    if type(k) is not int or not 0 < k < importance.numel():
+        raise ValueError("spatial anchor k must be a positive exact-K budget")
+    if (isinstance(jitter, bool) or not isinstance(jitter, (int, float)) or
+            not math.isfinite(jitter) or jitter <= 0):
+        raise ValueError("spatial anchor jitter must be finite and positive")
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("spatial anchor seed must be an integer")
+
+    scores = importance.detach().to(device="cpu", dtype=torch.float64).contiguous().numpy()
+    ranks = np.empty_like(scores)
+    feature_count, hidden = scores.shape
+    positions = (feature_count - np.arange(feature_count, dtype=np.float64)) / feature_count
+    for column in range(hidden):
+        order = np.argsort(-scores[:, column], kind="stable")
+        ranks[order, column] = positions
+
+    spatial_rng_seed = seed
+    if spatial_rng_seed < 0:
+        spatial_rng_seed %= 1 << 128
+    tile = np.random.default_rng(spatial_rng_seed).uniform(
+        -jitter, jitter, size=(7, 7, hidden)
+    )
+    tile_noise = np.repeat(np.repeat(tile, 4, axis=0), 4, axis=1).reshape(
+        feature_count, hidden
+    )
+    adjusted = ranks + tile_noise
+    order = np.argsort(-adjusted.reshape(-1), kind="stable")[:k]
+    mask = np.zeros(feature_count * hidden, dtype=np.float32)
+    mask[order] = 1.
+    return torch.from_numpy(mask.reshape(feature_count, hidden)).contiguous()
 
 
 def _balanced_per_column(importance: Tensor, k: int) -> Tensor:

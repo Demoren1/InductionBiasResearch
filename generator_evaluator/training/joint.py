@@ -102,6 +102,7 @@ def joint_generator_update(*, models: Mapping[str, nn.Module],
                             reconstruction_weight: float,
                             reconstruction_batch_size: int,
                             permutation_weight: float,
+                            quality_scope: str = "own",
                             executor: PerDeviceGeneratorExecutor | None = None
                             ) -> dict[str, dict[str, float | str]]:
     """Apply one shared quality/agreement/distillation objective and one step.
@@ -122,6 +123,8 @@ def joint_generator_update(*, models: Mapping[str, nn.Module],
         raise ValueError("output_k must be a positive integer")
     if update_ordinal < 0 or updates_per_epoch < 1:
         raise ValueError("invalid joint update schedule position")
+    if quality_scope not in ("own", "all_train"):
+        raise ValueError("quality_scope must be own or all_train")
     agreement_weight = _finite_nonnegative(agreement_weight, "agreement_weight")
     elite_weight = _finite_nonnegative(elite_weight, "elite_weight")
 
@@ -204,20 +207,35 @@ def joint_generator_update(*, models: Mapping[str, nn.Module],
         straight_by_name[name] = straight.to(device=critic_device, dtype=critic_dtype)
         hard_by_name[name] = hard.detach().to(device=critic_device, dtype=critic_dtype)
 
-    own_masks = torch.cat([straight_by_name[name] for name in names], dim=0)
-    own_contexts = torch.cat([
-        contexts[index:index + 1].to(device=critic_device, dtype=critic_dtype).expand(2, -1)
-        for index in range(len(names))
-    ], dim=0)
     dense = dense_quality.to(device=critic_device, dtype=critic_dtype).reshape(len(names), 1)
 
     ensemble.zero_grad(set_to_none=True)
     flags, was_training = _freeze(ensemble)
     try:
-        predicted, _uncertainty = _ensemble_predict_validated(ensemble, own_masks, own_contexts)
-        predicted = predicted.reshape(len(names), 2)
-        quality_delta = predicted - dense
-        per_generator_quality = quality_delta.mean(dim=1)
+        if quality_scope == "own":
+            own_masks = torch.cat([straight_by_name[name] for name in names], dim=0)
+            own_contexts = torch.cat([
+                contexts[index:index + 1].to(device=critic_device, dtype=critic_dtype).expand(2, -1)
+                for index in range(len(names))
+            ], dim=0)
+            predicted, _uncertainty = _ensemble_predict_validated(ensemble, own_masks, own_contexts)
+            predicted = predicted.reshape(len(names), 2)
+            quality_delta = predicted - dense
+            per_generator_quality = quality_delta.mean(dim=1)
+        else:
+            masks_by_generator = torch.stack([straight_by_name[name] for name in names], dim=0)
+            all_masks = masks_by_generator.unsqueeze(2).expand(
+                len(names), 2, len(names), reference_features, reference_hidden
+            ).reshape(len(names) * 2 * len(names), reference_features, reference_hidden)
+            all_contexts = contexts.to(device=critic_device, dtype=critic_dtype).reshape(
+                1, 1, len(names), -1
+            ).expand(len(names), 2, len(names), contexts.shape[1]).reshape(
+                len(names) * 2 * len(names), contexts.shape[1]
+            )
+            predicted, _uncertainty = _ensemble_predict_validated(ensemble, all_masks, all_contexts)
+            predicted = predicted.reshape(len(names), 2, len(names))
+            quality_delta = predicted - dense.reshape(1, 1, len(names))
+            per_generator_quality = quality_delta.mean(dim=(1, 2))
         quality_loss = quality_delta.mean()
 
         pair_indices: list[tuple[int, int]] = []
@@ -333,5 +351,6 @@ def joint_generator_update(*, models: Mapping[str, nn.Module],
             "sample_count": 2.0,
             "output_k": float(output_k),
             "ordinal": float(update_ordinal),
+            "quality_scope": quality_scope,
         }
     return rows

@@ -78,10 +78,14 @@ class TransformerMaskGenerator(nn.Module):
         layers: int = 2,
         noise_dim: int = 16,
         quality_dim: int = 1,
+        *,
+        generator_bilinear_head: bool = False,
     ) -> None:
         super().__init__()
         if token_dim <= 0 or features <= 0 or hidden <= 0 or noise_dim <= 0 or quality_dim <= 0:
             raise ValueError("token_dim, features, hidden, noise_dim, and quality_dim must be positive")
+        if not isinstance(generator_bilinear_head, bool):
+            raise TypeError("generator_bilinear_head must be a bool")
         _validate_architecture(width, heads, layers)
         self.token_dim = token_dim
         self.features = features
@@ -89,6 +93,7 @@ class TransformerMaskGenerator(nn.Module):
         self.noise_dim = noise_dim
         self.quality_dim = quality_dim
         self.width = width
+        self.generator_bilinear_head = generator_bilinear_head
 
         self.token_projection = nn.Linear(token_dim, width)
         self.quality_projection = nn.Linear(quality_dim, width, bias=False)
@@ -210,7 +215,10 @@ class TransformerMaskGenerator(nn.Module):
         feature_terms = self.feature_embeddings.unsqueeze(0).unsqueeze(2).expand(
             batch, -1, self.hidden, -1
         )
-        return self.output_head(torch.cat((hidden_terms, feature_terms), dim=-1)).squeeze(-1)
+        logits = self.output_head(torch.cat((hidden_terms, feature_terms), dim=-1)).squeeze(-1)
+        if self.generator_bilinear_head:
+            logits = logits + (hidden_terms * feature_terms).sum(dim=-1) / (self.width ** 0.5)
+        return logits
 
 
 class MaskQualityEvaluator(nn.Module):
