@@ -1657,40 +1657,12 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         (out / "COMPLETE").write_text("bootstrap complete; heldout test remains sealed\n")
         return summary
     toeplitz = SlidingWindowMaskPrior().mask() if config.domain == "pattern" and config.k == 32 else None
-    methods = {"common": best_mask, "random": _random_masks(1, config.features, config.hidden, config.k, cpu_rng)[0],
-               **{f"functional_{name}": bank.baseline_mask for name, bank in banks.items()},
-               **functional_controls, "dense": dense}
-    if functional_mean is not None:
-        methods["functional_mean"] = functional_mean
-    if toeplitz is not None:
-        methods["toeplitz"] = toeplitz
-    frozen = dict(methods=methods, models=best_models, ensemble=best_evaluator,
-                  banks=best_banks, protocol=asdict(protocol), best_epoch=best_epoch,
-                  best_mask_origin=controller.best_mask_origin,
-                  best_selection_delta=controller.best_worst_delta,
-                  best_selection_cost=best_cost,
-                  best_selection_mean_delta=controller.best_mean_delta,
-                  quality_objective=config.quality_objective, best_stage=controller.best_stage,
-                  training_mode=config.training_mode,
-                  train_patterns=patterns,
-                  test_pattern=config.test_pattern, test_patterns=tuple(config.effective_test_patterns),
-                  selection_role="within-task independent queries", test_used_for_selection=False)
-    if config.persist_artifacts and (out / "frozen.pt").exists():
-        previous = torch.load(out / "frozen.pt", map_location="cpu", weights_only=False)
-        if any(tensor_hash(previous["methods"][name]) != tensor_hash(mask) for name, mask in methods.items()):
-            raise ValueError("immutable frozen method mismatch on resume")
-    else:
-        _save_optional_torch(config, out / "frozen.pt", frozen)
-    save_json(out / "frozen.json", dict(best_epoch=best_epoch,
-        selection_delta=controller.best_worst_delta, selection_cost=best_cost,
-        selection_mean_delta=controller.best_mean_delta, quality_objective=config.quality_objective,
-        best_mask_origin=controller.best_mask_origin,
-        best_stage=controller.best_stage,
-        train_patterns=list(patterns), test_pattern=config.test_pattern,
-        test_patterns=list(config.effective_test_patterns),
-        mask_hashes={name: tensor_hash(mask) for name, mask in methods.items()},
-        masks={name: mask.to(torch.uint8).tolist() for name, mask in methods.items()}, test_used=False))
-    final_generator_masks = {}
+
+    # Keep the historical independent-random snapshots, then add a deterministic
+    # zero-noise point for joint generators. These proposals compete on the same
+    # independent TRAIN-task selection observations used by the search.
+    final_generator_masks, final_zero_noise_masks = {}, {}
+    proposal_generators = {}
     with torch.no_grad():
         for name, model in models.items():
             model.eval()
@@ -1706,18 +1678,164 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             logits = model(prepared.tokens, latent, prepared.quality)[0]
             mask = torch.zeros_like(logits).flatten()
             mask.scatter_(0, logits.flatten().topk(config.k).indices, 1.)
-            final_generator_masks[f"generator_final_{name}"] = mask.reshape_as(logits).cpu()
+            key = f"generator_final_{name}"
+            final_generator_masks[key] = mask.reshape_as(logits).cpu()
+            proposal_generators[key] = name
+            if config.training_mode == "joint":
+                zero_latent = torch.zeros((1, model.noise_dim), device=prepared.tokens.device,
+                                          dtype=prepared.tokens.dtype)
+                zero_logits = model(prepared.tokens, zero_latent, prepared.quality)[0]
+                zero_mask = torch.zeros_like(zero_logits).flatten()
+                zero_mask.scatter_(0, zero_logits.flatten().topk(config.k).indices, 1.)
+                zero_key = f"generator_final_zero_noise_{name}"
+                final_zero_noise_masks[zero_key] = zero_mask.reshape_as(zero_logits).cpu()
+                proposal_generators[zero_key] = name
+    final_generator_proposals = {**final_generator_masks, **final_zero_noise_masks}
     _save_optional_torch(config, out / "final_generator_proposals.pt", dict(
-        masks=final_generator_masks,
+        masks=final_generator_proposals,
+        random_masks=final_generator_masks,
+        zero_noise_masks=final_zero_noise_masks,
         shared_latent=(None if config.training_mode == "joint" else
                        trainer.shared_latent.detach().cpu()),
         latent_mode=("independent_random_per_generator" if config.training_mode == "joint" else
                      "learned_shared_latent"),
         bank_hashes={name: bank_input_fingerprint(bank) for name, bank in banks.items()},
         test_used=False, stage="after all generator updates, before test materialization"))
-    if not config.persist_artifacts:
-        save_json(out / "final_generator_masks.json", {
-            name: mask.to(torch.uint8).tolist() for name, mask in final_generator_masks.items()})
+    save_json(out / "final_generator_masks.json", {
+        name: mask.to(torch.uint8).tolist() for name, mask in final_generator_masks.items()})
+    if final_zero_noise_masks:
+        save_json(out / "final_generator_zero_noise_masks.json", {
+            name: mask.to(torch.uint8).tolist() for name, mask in final_zero_noise_masks.items()})
+
+    frozen_json_path, frozen_pt_path = out / "frozen.json", out / "frozen.pt"
+    existing_frozen_json = (json.loads(frozen_json_path.read_text())
+                            if frozen_json_path.is_file() else None)
+    existing_frozen_pt = (torch.load(frozen_pt_path, map_location="cpu", weights_only=False)
+                          if config.persist_artifacts and frozen_pt_path.is_file() else None)
+    has_frozen = existing_frozen_json is not None or existing_frozen_pt is not None
+    has_final_selection = bool(
+        (existing_frozen_json or {}).get("final_generator_selection") or
+        (existing_frozen_pt or {}).get("final_generator_selection"))
+    preserve_existing_frozen = has_frozen and not has_final_selection
+
+    # Give each proposal full TRAIN-task provenance before selection. Cache hits
+    # retain their original source; new rows identify the proposing generator.
+    train_entries = [
+        (mask, task, f"acquisition:generator:{proposal_generators[name]}")
+        for name, mask in final_generator_proposals.items()
+        for task in train_tasks
+    ]
+    if train_entries:
+        measure_many(train_entries)
+    if not preserve_existing_frozen:
+        controller.select(list(final_generator_proposals.values()), controller.global_epoch,
+                          stage="final_generator_check")
+    else:
+        saved_masks = ((existing_frozen_json or {}).get("masks") or
+                       (existing_frozen_pt or {}).get("methods") or {})
+        if not saved_masks or "common" not in saved_masks:
+            raise ValueError("existing frozen methods are missing their common mask")
+        methods = {name: torch.as_tensor(mask, dtype=torch.float32).detach().cpu().contiguous()
+                   for name, mask in saved_masks.items()}
+        metadata = existing_frozen_json or existing_frozen_pt or {}
+        controller.best_mask = methods["common"].clone()
+        controller.best_epoch = int(metadata.get("best_epoch", controller.best_epoch))
+        controller.best_cost = float(metadata.get("selection_cost", metadata.get("best_selection_cost",
+                                                                                   controller.best_cost)))
+        controller.best_mean_delta = float(metadata.get("selection_mean_delta",
+                                                          metadata.get("best_selection_mean_delta",
+                                                                       controller.best_mean_delta)))
+        controller.best_worst_delta = float(metadata.get("selection_delta",
+                                                           metadata.get("best_selection_delta",
+                                                                        controller.best_worst_delta)))
+        controller.best_stage = metadata.get("best_stage", controller.best_stage)
+        controller.best_mask_origin = metadata.get("best_mask_origin", controller.best_mask_origin)
+
+    selection_ids = [task.task_id for task in selection_tasks]
+    selection_rows = {
+        (row.get("mask_key"), row.get("task_id")): row
+        for row in replay.records
+        if row.get("task_split") == "validation" and row.get("task_id") in selection_ids
+    }
+    representatives = {}
+    for name, mask in final_generator_proposals.items():
+        representatives.setdefault(topology_id(mask), (name, mask))
+    selection_trace_rows = []
+    for name, mask in final_generator_proposals.items():
+        identity = topology_id(mask)
+        representative_name, representative_mask = representatives[identity]
+        representative_key = tensor_hash(representative_mask.float())
+        task_metrics, deltas = {}, []
+        if not preserve_existing_frozen:
+            for task in selection_tasks:
+                row = selection_rows.get((representative_key, task.task_id))
+                if row is None:
+                    continue
+                dense_quality = float(controller.dense_rows[task.task_id]["quality"])
+                delta = float(row["quality"]) - dense_quality
+                task_metrics[task.task_id] = dict(query_quality=float(row["quality"]),
+                                                  dense_quality=dense_quality, delta=delta)
+                deltas.append(delta)
+        objective_cost = (float(quality_objective_cost(
+            torch.tensor(deltas, dtype=torch.float64), config.quality_objective))
+            if len(deltas) == len(selection_tasks) else None)
+        selection_trace_rows.append(dict(
+            name=name, generator=proposal_generators[name], mask_key=tensor_hash(mask.float()),
+            topology_id=identity, selection_representative=representative_name,
+            selection_query_metrics=task_metrics, objective_cost=objective_cost,
+            selected_as_common=(identity == topology_id(controller.best_mask))))
+    final_selection_trace = dict(
+        stage="final_generator_check", epoch=controller.global_epoch,
+        selection_role="independent query observations of TRAIN tasks",
+        selection_performed=not preserve_existing_frozen,
+        existing_frozen_preserved=preserve_existing_frozen,
+        best_mask_topology_id=topology_id(controller.best_mask),
+        best_selection_cost=controller.best_cost, candidates=selection_trace_rows,
+        test_used_for_selection=False)
+    save_json(out / "final_generator_selection.json", final_selection_trace)
+
+    if not preserve_existing_frozen:
+        methods = {"common": controller.best_mask,
+                   "random": _random_masks(1, config.features, config.hidden, config.k, cpu_rng)[0],
+                   **{f"functional_{name}": bank.baseline_mask for name, bank in banks.items()},
+                   **functional_controls, "dense": dense}
+        if functional_mean is not None:
+            methods["functional_mean"] = functional_mean
+        if toeplitz is not None:
+            methods["toeplitz"] = toeplitz
+
+    # Final selection may have replaced the earlier training winner.
+    best_mask, best_cost, best_epoch = controller.best_mask, controller.best_cost, controller.best_epoch
+    best_models, best_evaluator, best_banks = (controller.best_models, controller.best_evaluator,
+                                                controller.best_banks)
+    frozen = dict(methods=methods, models=best_models, ensemble=best_evaluator,
+                  banks=best_banks, protocol=asdict(protocol), best_epoch=best_epoch,
+                  best_mask_origin=controller.best_mask_origin,
+                  best_selection_delta=controller.best_worst_delta,
+                  best_selection_cost=best_cost,
+                  best_selection_mean_delta=controller.best_mean_delta,
+                  quality_objective=config.quality_objective, best_stage=controller.best_stage,
+                  final_generator_selection=not preserve_existing_frozen,
+                  training_mode=config.training_mode,
+                  train_patterns=patterns,
+                  test_pattern=config.test_pattern, test_patterns=tuple(config.effective_test_patterns),
+                  selection_role="within-task independent queries", test_used_for_selection=False)
+    if config.persist_artifacts and frozen_pt_path.exists():
+        previous = existing_frozen_pt or torch.load(frozen_pt_path, map_location="cpu", weights_only=False)
+        if any(tensor_hash(previous["methods"][name]) != tensor_hash(mask) for name, mask in methods.items()):
+            raise ValueError("immutable frozen method mismatch on resume")
+    elif not preserve_existing_frozen:
+        _save_optional_torch(config, frozen_pt_path, frozen)
+    if not preserve_existing_frozen:
+        save_json(frozen_json_path, dict(best_epoch=best_epoch,
+            selection_delta=controller.best_worst_delta, selection_cost=best_cost,
+            selection_mean_delta=controller.best_mean_delta, quality_objective=config.quality_objective,
+            best_mask_origin=controller.best_mask_origin,
+            best_stage=controller.best_stage, final_generator_selection=True,
+            train_patterns=list(patterns), test_pattern=config.test_pattern,
+            test_patterns=list(config.effective_test_patterns),
+            mask_hashes={name: tensor_hash(mask) for name, mask in methods.items()},
+            masks={name: mask.to(torch.uint8).tolist() for name, mask in methods.items()}, test_used=False))
     if config.domain == "pattern":
         materialized = (test_factory or make_cooperative_test_tasks)(test_spec)
         if isinstance(materialized, TaskData):
@@ -1821,6 +1939,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         analytical_structure_target_used=False))
     summary["final_generators_exact_agreement"] = len({topology_id(mask)
         for mask in final_generator_masks.values()}) == 1
+    summary["final_generator_selection"] = final_selection_trace
     if toeplitz is not None:
         summary["final_generator_structure"] = {
             name: SlidingWindowMaskPrior().diagnostics(mask)
