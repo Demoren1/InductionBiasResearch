@@ -537,7 +537,7 @@ def _build_selected_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, b
 def build_cooperative_fixture(train_patterns: tuple[str, ...] = ("0001", "0011"),
                               test_pattern: str | tuple[str, ...] = "0101",
                               seed: int = 4100, bank_steps: int = 2000, teachers_per_pattern: int = 16,
-                              support_count: int = 128, query_count: int = 128, selection_count: int = 64,
+                              support_count: int = 208, query_count: int = 128, selection_count: int = 64,
                               k: int = 32, device: str = "cpu", probe_count: int = 128,
                               batch_teachers: bool = False, bank_candidates: int | None = None,
                               teacher_batch_size: int = 128,

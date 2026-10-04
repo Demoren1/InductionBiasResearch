@@ -256,8 +256,10 @@ class CooperativeSearchController:
         if train:
             self.evaluator_history.append(train_evaluators(
                 self.ensemble, replay_view, epochs=self.config.evaluator_epochs,
-            batch_size=self.config.evaluator_batch_size, lr=self.config.evaluator_lr,
-                seed=self.config.seed if seed is None else seed, device=self.device))
+                batch_size=self.config.evaluator_batch_size, lr=self.config.evaluator_lr,
+                seed=self.config.seed if seed is None else seed, device=self.device,
+                restore_best=self.config.domain == "deepsets",
+                selection_active_edges=self.config.k))
         self.evaluator_policy = _EVALUATOR_POLICY
         self.evaluator_bank_topology_ids = tuple(manifest["topology_ids"])
         self.evaluator_bank_rows = list(manifest["row_ids"])
@@ -1158,6 +1160,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     controller.export_functional_cards()
 
     functional_controls = {}
+    functional_mean = None
     if config.domain == "pattern":
         from generator_evaluator.search.consensus import build_functional_consensus_proposals
         consensus = build_functional_consensus_proposals(list(banks.values()), config.k)
@@ -1170,6 +1173,10 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             alignment="ordered input-coordinate centroids",
             balanced_degree_prior="floor(K/H) per hidden column plus strongest remaining edges",
             analytical_structure_target_used=False))
+
+    if config.domain == "deepsets" and config.phase != "bootstrap":
+        from generator_evaluator.search.consensus import build_functional_consensus_proposals
+        functional_mean = build_functional_consensus_proposals(list(banks.values()), config.k).global_topk
 
     bootstrap_critic_only = config.phase == "bootstrap" and not config.bootstrap_generators
     if not controller.initialization_done:
@@ -1343,6 +1350,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     methods = {"common": best_mask, "random": _random_masks(1, config.features, config.hidden, config.k, cpu_rng)[0],
                **{f"functional_{name}": bank.baseline_mask for name, bank in banks.items()},
                **functional_controls, "dense": dense}
+    if functional_mean is not None:
+        methods["functional_mean"] = functional_mean
     if toeplitz is not None:
         methods["toeplitz"] = toeplitz
     frozen = dict(methods=methods, models=best_models, ensemble=best_evaluator,
@@ -1501,6 +1510,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                                                        for task in test_tasks)
     replay.save(out / "replay.pt")
     save_torch(out / "final_banks.pt", banks)
+    from generator_evaluator.storage.final_report import write_final_report
+    summary["final_report"] = write_final_report(out, summary, methods, examples)
     save_json(out / "summary.json", summary)
     write_plots(out, history, examples, evaluator_history=evaluator_history,
                 calibration=calibration, within_task_selection=True,
@@ -1545,7 +1556,7 @@ def make_parser():
                         help="joint interleaved updates by default; staged retains quality then cooperation")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--replicas", type=int, default=2)
+    parser.add_argument("--replicas", type=int, default=None)
     parser.add_argument("--k", type=int)
     parser.add_argument("--hidden", type=int)
     parser.add_argument("--lr", type=float)
@@ -1567,7 +1578,12 @@ def make_parser():
     parser.add_argument("--measurement-batch-size", type=int, default=8)
     parser.add_argument("--generator-devices", nargs="+", default=None,
                         help="Generator devices; auto assigns generators round-robin across visible CUDA GPUs")
+    parser.add_argument("--bank-support-count", type=int, default=None,
+                        help="DeepSets source support sets; default uses the full private pool budget")
+    parser.add_argument("--bank-query-count", type=int, default=None,
+                        help="DeepSets source query sets; default uses the full private validation pool budget")
     parser.add_argument("--latent-lr", type=float, default=None)
+    parser.add_argument("--evaluator-lr", type=float, default=None)
     for name in ("steps", "bank-steps", "teachers", "bank-candidates", "teacher-batch-size",
                  "support-count", "query-count", "selection-count",
                  "probe-count", "generator-epochs", "updates-per-epoch", "cooperation-rounds",
@@ -1627,6 +1643,8 @@ def resolve_run_settings(args):
                      bootstrap_generators=args.bootstrap_generators)
     if args.latent_lr is not None:
         overrides["latent_lr"] = args.latent_lr
+    if args.evaluator_lr is not None:
+        overrides["evaluator_lr"] = args.evaluator_lr
     if is_deepsets:
         if args.train_patterns is not None:
             raise ValueError("DeepSets uses --train-task-count rather than --train-patterns")
@@ -1656,15 +1674,42 @@ def resolve_run_settings(args):
     if args.quality_objective is not None:
         overrides["quality_objective"] = args.quality_objective
     config = replace(base, **overrides)
-    build = (dict(steps=1000, bank_steps=200, teachers=100, bank_candidates=1000,
-                  teacher_batch_size=8, support_count=205, query_count=51,
+    build = (dict(steps=2000, bank_steps=4000, teachers=1024, bank_candidates=4096,
+                  teacher_batch_size=64, support_count=500, query_count=51,
                   selection_count=51, probe_count=32) if is_deepsets else
              dict(steps=500, bank_steps=200, teachers=100, bank_candidates=1000,
-                  teacher_batch_size=128, support_count=64, query_count=64,
+                  teacher_batch_size=128, support_count=208, query_count=64,
                   selection_count=32, probe_count=32) if args.preset == "pattern-small" else
              dict(steps=2000, bank_steps=2000, teachers=100, bank_candidates=1000,
-                  teacher_batch_size=128, support_count=128, query_count=128,
+                  teacher_batch_size=128, support_count=208, query_count=128,
                   selection_count=64, probe_count=128))
+    if (is_deepsets and not args.smoke and
+            any(getattr(args, name) is None for name in
+                ("support_count", "query_count", "selection_count"))):
+        source_run = args.warm_start_from or args.fixed_test_from
+        if source_run is not None:
+            source_spec = json.loads((source_run / "run_spec.json").read_text())
+            for name in ("support_count", "query_count", "selection_count"):
+                if getattr(args, name) is None:
+                    build[name] = int(source_spec["test_spec"].get(
+                        name, source_spec.get("build_settings", {}).get(name, build[name])))
+        else:
+            from deepsets_vaae.core import load_data
+            data = load_data(args.data_root, args.seed, "cpu")
+            if args.support_count is None:
+                build["support_count"] = len(data["target_train"].features) // (
+                    5 * (args.train_task_count + args.test_task_count))
+            query_budget = len(data["target_validation"].features) // (5 * args.train_task_count)
+            if args.query_count is None and args.selection_count is None:
+                build["query_count"] = build["selection_count"] = min(51, query_budget // 2)
+            elif args.query_count is None:
+                build["query_count"] = min(51, query_budget - args.selection_count)
+            elif args.selection_count is None:
+                build["selection_count"] = min(51, query_budget - args.query_count)
+    if is_deepsets:
+        build.update(bank_support_count=None, bank_query_count=None)
+    elif args.bank_support_count is not None or args.bank_query_count is not None:
+        raise ValueError("bank support/query count overrides apply only to DeepSets")
     for name, default in build.items():
         if getattr(args, name) is None:
             setattr(args, name, default)
@@ -1680,7 +1725,10 @@ def resolve_run_settings(args):
         args.steps, args.bank_steps, args.teachers = 3, 2, 5
         args.bank_candidates = 5
         args.support_count, args.query_count, args.selection_count = 8, 8, 8
-    protocol = InnerProtocol(steps=args.steps, replicas=args.replicas, seed=args.seed,
+        if is_deepsets:
+            args.bank_support_count, args.bank_query_count = 8, 8
+    replicas = args.replicas if args.replicas is not None else (4 if is_deepsets else 2)
+    protocol = InnerProtocol(steps=args.steps, replicas=replicas, seed=args.seed,
                              lr=args.lr if args.lr is not None else (.005 if is_deepsets else .01),
                              l2=args.l2 if args.l2 is not None else (.0001 if is_deepsets else 0.),
                              metric="nmse" if is_deepsets else "bce",
@@ -1784,6 +1832,7 @@ def main():
                 teachers_per_task=args.teachers, bank_candidates=args.bank_candidates,
                 teacher_batch_size=args.teacher_batch_size, support_count=args.support_count,
                 query_count=args.query_count, selection_count=args.selection_count,
+                bank_support_count=args.bank_support_count, bank_query_count=args.bank_query_count,
                 probe_count=args.probe_count, k=config.k, hidden=config.hidden,
                 train_task_count=len(config.train_patterns), test_task_count=config.test_task_count,
                 device=args.device, measurement_devices=measurement_devices,

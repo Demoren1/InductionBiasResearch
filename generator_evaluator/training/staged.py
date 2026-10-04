@@ -63,7 +63,7 @@ class StagedGeneratorTrainer:
         quality_sample_count: int = 2,
         permutation_weight: float = 1.0,
         uncertainty_weight: float = 0.0,
-        quality_objective: str = "worst",
+        quality_objective: str = "average",
         agreement_sample_count: int = 2,
         seed: int = 0,
         latent_device: str | torch.device | None = None,

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-GPU_IDS="${GPU_IDS:-0 1 2 4 5}"  # Например: "1 2 3".
+GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 
 # Build the initial functional banks, then jointly optimize own-task quality,
 # aligned hard-mask agreement and aligned distillation to the real-mask archive.
@@ -23,26 +23,41 @@ GE_DATA="${DATA_ROOT:-datasets/mnist8m}"
 GE_SOURCE="${WARM_START_FROM:-}"
 GE_COMMON_ARGS=(
   --domain deepsets --preset deepsets --training-mode joint --data-root "$GE_DATA"
-  --train-task-count "${TRAIN_TASKS:-2}" --test-task-count "${TEST_TASKS:-2}"
-  --bank-candidates "${BANK_CANDIDATES:-1000}" --teachers "${TEACHERS:-100}"
-  --bank-steps "${BANK_STEPS:-200}" --teacher-batch-size "${CHILD_MASK_BATCH:-8}"
-  --bank-capacity "${BANK_CAPACITY:-100}"
-  --support-count "${SUPPORT_COUNT:-205}" --query-count "${QUERY_COUNT:-51}"
-  --selection-count "${SELECTION_COUNT:-51}" --probe-count "${PROBE_COUNT:-32}"
-  --steps "${CHILD_STEPS:-1000}" --replicas "${REPLICAS:-2}"
+  --train-task-count "${TRAIN_TASKS:-6}" --test-task-count "${TEST_TASKS:-4}"
+  --bank-candidates "${BANK_CANDIDATES:-4096}" --teachers "${TEACHERS:-1024}"
+  --bank-steps "${BANK_STEPS:-4000}" --teacher-batch-size "${CHILD_MASK_BATCH:-64}"
+  --bank-capacity "${BANK_CAPACITY:-${TEACHERS:-1024}}"
+  --probe-count "${PROBE_COUNT:-32}"
+  --steps "${CHILD_STEPS:-2000}" --replicas "${REPLICAS:-4}"
   --lr "${CHILD_LR:-0.005}" --l2 "${CHILD_L2:-0.0001}"
-  --width 32 --heads 4 --layers 1 --noise-dim 8 --ensemble-members 2
+  --width "${TRANSFORMER_WIDTH:-64}" --heads "${TRANSFORMER_HEADS:-4}" --layers "${TRANSFORMER_LAYERS:-2}" --noise-dim 8 --ensemble-members 2
   --refresh-every "${REFRESH_EVERY:-2}" --minimum-refresh-every "${MINIMUM_REFRESH_EVERY:-2}"
-  --evaluator-epochs "${EVALUATOR_EPOCHS:-30}"
-  --evaluator-batch-size "${EVALUATOR_BATCH_SIZE:-32}" --acquisition-budget 6 --candidates 24 --initial-random 8
+  --evaluator-epochs "${EVALUATOR_EPOCHS:-100}"
+  --evaluator-batch-size "${EVALUATOR_BATCH_SIZE:-64}" --evaluator-lr "${EVALUATOR_LR:-0.0003}"
+  --acquisition-budget 6 --candidates 24 --initial-random 8
   --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2
   --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"
   --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-0.1}"
   --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-0}"
-  --quality-objective "${QUALITY_OBJECTIVE:-worst}"
+  --quality-objective "${QUALITY_OBJECTIVE:-average}"
   --seed "$GE_SEED" --device cuda:0 --generator-devices auto --measurement-devices auto
-  --measurement-batch-size "${CHILD_MASK_BATCH:-8}" --progress
+  --measurement-batch-size "${CHILD_MASK_BATCH:-64}" --progress
 )
+if [[ -n "${QUERY_COUNT:-}" ]]; then
+  GE_COMMON_ARGS+=(--query-count "$QUERY_COUNT")
+fi
+if [[ -n "${SELECTION_COUNT:-}" ]]; then
+  GE_COMMON_ARGS+=(--selection-count "$SELECTION_COUNT")
+fi
+if [[ -n "${SUPPORT_COUNT:-}" ]]; then
+  GE_COMMON_ARGS+=(--support-count "$SUPPORT_COUNT")
+fi
+if [[ -n "${BANK_SUPPORT_COUNT:-}" ]]; then
+  GE_COMMON_ARGS+=(--bank-support-count "$BANK_SUPPORT_COUNT")
+fi
+if [[ -n "${BANK_QUERY_COUNT:-}" ]]; then
+  GE_COMMON_ARGS+=(--bank-query-count "$BANK_QUERY_COUNT")
+fi
 if [[ "${BOOTSTRAP_GENERATORS:-0}" == "1" ]]; then
   GE_COMMON_ARGS+=(--bootstrap-generators)
 fi
@@ -65,3 +80,5 @@ ge_run python -u -m generator_evaluator.cooperative_run "${GE_COMMON_ARGS[@]}" \
   --out "$GE_OUT/search" "$@"
 
 printf '\nResults: %s/search/summary.json\nMasks and heatmaps: %s/search/figures/\n' "$GE_OUT" "$GE_OUT"
+
+printf "Final report: %s/search/final_report.md\n" "$GE_OUT"

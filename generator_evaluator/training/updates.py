@@ -8,6 +8,7 @@ as detached policy costs for exact ordered top-k sampling.
 from __future__ import annotations
 
 import math
+from copy import deepcopy
 from collections.abc import Callable, Sequence
 from typing import Any
 
@@ -157,6 +158,36 @@ def _partition_metrics(ensemble: QualityEnsemble, replay: RealReplay, split: str
     return out
 
 
+def _evaluator_selection_data(replay: RealReplay, active_edges: int | None):
+    rows = [row for row in replay.records if row["split"] == "mask_validation"]
+    budget_rows = [row for row in rows if row["active_edges"] == active_edges]
+    if budget_rows:
+        rows = budget_rows
+    if not rows:
+        return None
+    identities = list(dict.fromkeys(row["topology_id"] for row in rows))
+    indices = {identity: index for index, identity in enumerate(identities)}
+    return (torch.stack([replay.masks[row["mask_key"]] for row in rows]),
+            torch.stack([replay.contexts[row["task_id"]] for row in rows]),
+            torch.tensor([row["quality"] for row in rows], dtype=torch.float32),
+            torch.tensor([indices[row["topology_id"]] for row in rows]),
+            len(identities), bool(budget_rows))
+
+
+def _evaluator_selection_metrics(ensemble, selection, device):
+    masks, contexts, targets, groups, count, target_budget = selection
+    with torch.no_grad():
+        prediction = torch.cat([
+            ensemble.predict(masks[start:start + 128].to(device),
+                             contexts[start:start + 128].to(device))[0].cpu()
+            for start in range(0, len(masks), 128)])
+    group_counts = torch.bincount(groups, minlength=count).float()
+    mean_prediction = torch.zeros(count).scatter_add_(0, groups, prediction) / group_counts
+    mean_target = torch.zeros(count).scatter_add_(0, groups, targets) / group_counts
+    metrics = evaluator_metrics(mean_prediction, mean_target)
+    return dict(metrics, masks=count, target_budget=target_budget)
+
+
 def train_evaluators(
     ensemble: QualityEnsemble,
     replay: RealReplay,
@@ -165,10 +196,14 @@ def train_evaluators(
     lr: float = 1e-3,
     seed: int = 0,
     device: str | torch.device = "cpu",
+    *,
+    restore_best: bool = False,
+    selection_active_edges: int | None = None,
 ) -> list[dict[str, Any]]:
     """Fit independent bootstrap evaluator members from replay's train rows.
 
-    Validation partitions are only evaluated after an epoch.  In particular,
+    Validation partitions are evaluated after an epoch and can select the
+    final checkpoint when requested.  In particular,
     ``mask_validation`` and ``meta_validation`` can never be sampled by an
     optimizer step.
     """
@@ -208,6 +243,17 @@ def train_evaluators(
                 shuffle_rng.set_state(shuffle_states[index].cpu())
         bootstrap_rngs.append(sample_rng)
         shufflers.append(shuffle_rng)
+
+    selection = _evaluator_selection_data(replay, selection_active_edges) if restore_best else None
+    best_score, best_epoch, best_model, best_training_state = math.inf, 0, None, None
+
+    def training_state():
+        return {
+            "member_count": len(members),
+            "optimizer_states": [optimizer.state_dict() for optimizer in optimizers],
+            "bootstrap_rng_states": [rng.get_state().cpu() for rng in bootstrap_rngs],
+            "shuffle_rng_states": [rng.get_state().cpu() for rng in shufflers],
+        }
 
     history: list[dict[str, Any]] = []
     epochs_bar = progress(range(epochs), desc="Quality evaluator", unit="epoch")
@@ -249,14 +295,26 @@ def train_evaluators(
             metrics = _partition_metrics(ensemble, replay, split, device)
             for key, value in metrics.items():
                 event[f"{split}_{key}"] = value
+        if selection is not None:
+            selected = _evaluator_selection_metrics(ensemble, selection, device)
+            event.update({f"selection_{key}": value for key, value in selected.items()})
+            if selected["mse"] < best_score:
+                best_score, best_epoch = selected["mse"], epoch + 1
+                best_model = {key: value.detach().cpu().clone()
+                              for key, value in ensemble.state_dict().items()}
+                best_training_state = deepcopy(training_state())
         history.append(event)
         epochs_bar.set_postfix(train_mse=f"{event['train_mse']:.5f}", refresh=False)
-    ensemble.training_state = {
-        "member_count": len(members),
-        "optimizer_states": [optimizer.state_dict() for optimizer in optimizers],
-        "bootstrap_rng_states": [rng.get_state().cpu() for rng in bootstrap_rngs],
-        "shuffle_rng_states": [rng.get_state().cpu() for rng in shufflers],
-    }
+    ensemble.training_state = training_state()
+    if best_model is not None:
+        ensemble.load_state_dict(best_model)
+        ensemble.training_state = best_training_state
+        ensemble.training_state["validation_selection"] = {
+            "epoch": best_epoch, "epochs_evaluated": epochs,
+            "metric": "mean_task_mask_validation_mse", "mse": best_score,
+            "active_edges": selection_active_edges if selection[-1] else None,
+        }
+        history[-1].update(selected_epoch=best_epoch, selection_restored=True)
     return history
 
 

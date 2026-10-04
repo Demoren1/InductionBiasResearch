@@ -504,7 +504,8 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
                   "selection_density_quotas": quotas,
                   "baseline_alignment": "label-free Hungarian cosine alignment of q_abs to teacher 0",
                   "selection_rule": "lowest fixed-horizon source-query NMSE per density; candidate ID breaks ties",
-                  "quality_source": None, "accepted_feedback_task_ids": [task.task_id],
+                  "quality_source": None, "bank_support_count": support_count,
+                  "bank_query_count": query_count, "accepted_feedback_task_ids": [task.task_id],
                   "feedback_hashes": []}
     bank = FunctionalBank(torch.stack(tokens)[None], None, selected_masks_tensor, baseline,
                           provenance, states=states,
@@ -527,14 +528,16 @@ def build_cooperative_deepsets_fixture(
     seed: int = 4100,
     train_task_count: int = 2,
     test_task_count: int = 2,
-    bank_steps: int = 200,
-    teachers_per_task: int = 100,
-    bank_candidates: int = 1000,
-    teacher_batch_size: int = 8,
-    support_count: int = 205,
-    query_count: int = 51,
-    selection_count: int = 51,
+    bank_steps: int = 4000,
+    teachers_per_task: int = 1024,
+    bank_candidates: int = 4096,
+    teacher_batch_size: int = 64,
+    support_count: int | None = None,
+    query_count: int | None = None,
+    selection_count: int | None = None,
     probe_count: int = 32,
+    bank_support_count: int | None = None,
+    bank_query_count: int | None = None,
     k: int = 7526,
     hidden: int = 32,
     device: str = "cpu",
@@ -549,7 +552,26 @@ def build_cooperative_deepsets_fixture(
     _require_count("teachers_per_task", teachers_per_task, 4096)
     _require_count("bank_candidates", bank_candidates, 100_000, minimum=teachers_per_task)
     _require_count("teacher_batch_size", teacher_batch_size, 100_000)
+    from deepsets_vaae.core import load_data
+    data = load_data(data_root, seed, "cpu")
+    if support_count is None:
+        support_count = (int(fixed_test_spec["support_count"]) if fixed_test_spec is not None else
+                         len(data["target_train"].features) //
+                         (_SET_SIZE * (train_task_count + test_task_count)))
     _require_count("support_count", support_count, 100_000)
+    for name, value in (("bank_support_count", bank_support_count),
+                        ("bank_query_count", bank_query_count)):
+        if value is not None:
+            _require_count(name, value, 100_000)
+    if fixed_test_spec is not None and query_count is None:
+        query_count = int(fixed_test_spec["query_count"])
+    query_budget = len(data["target_validation"].features) // (_SET_SIZE * train_task_count)
+    if query_count is None and selection_count is None:
+        query_count = selection_count = min(51, query_budget // 2)
+    elif query_count is None:
+        query_count = min(51, query_budget - selection_count)
+    elif selection_count is None:
+        selection_count = min(51, query_budget - query_count)
     _require_count("query_count", query_count, 100_000)
     _require_count("selection_count", selection_count, 100_000)
     _require_count("probe_count", probe_count, 4096)
@@ -584,8 +606,6 @@ def build_cooperative_deepsets_fixture(
            for index in range(2)):
         raise ValueError("DeepSets adapter returned unexpected seeded held-out costs")
 
-    from deepsets_vaae.core import load_data
-    data = load_data(data_root, seed, "cpu")
     support_rows = support_count * _SET_SIZE
     query_rows = query_count * _SET_SIZE
     selection_rows = selection_count * _SET_SIZE
@@ -663,7 +683,10 @@ def build_cooperative_deepsets_fixture(
                                source_validation_splits[index], bank_probe_x[index], bank_probe_ids[index],
                                seed=seed + 70_003 * (index + 1), bank_steps=bank_steps,
                                bank_candidates=bank_candidates, teachers_per_task=teachers_per_task,
-                               support_count=support_count, query_count=query_count,
+                               support_count=(bank_support_count if bank_support_count is not None else
+                                              len(bank_support_splits[index].features) // _SET_SIZE),
+                               query_count=(bank_query_count if bank_query_count is not None else
+                                            len(source_validation_splits[index].features) // _SET_SIZE),
                                teacher_batch_size=teacher_batch_size, k=k, hidden=hidden,
                                device=primary_device, measurement_devices=devices,
                                bank_out=bank_root / str(index))
@@ -707,7 +730,7 @@ def build_cooperative_deepsets_fixture(
         banks, train_tasks, selection_tasks, test_spec,
         _FixtureConfig(k=k, hidden=hidden, train_task_count=train_task_count,
                        test_task_count=test_task_count),
-        InnerProtocol(steps=1, replicas=2, metric="nmse"))
+        InnerProtocol(steps=1, replicas=4, metric="nmse"))
     return banks, train_tasks, selection_tasks, test_spec
 
 
@@ -757,8 +780,8 @@ def validate_cooperative_deepsets_inputs(banks: dict[str, FunctionalBank],
     k = int(getattr(config, "k", 0))
     if hidden < 1 or not 1 <= k <= _FEATURES * hidden:
         raise ValueError("cooperative DeepSets mask dimensions or K are invalid")
-    if protocol.metric != "nmse" or protocol.replicas != 2:
-        raise ValueError("cooperative DeepSets evaluation requires two NMSE replicas")
+    if protocol.metric != "nmse" or protocol.replicas < 2:
+        raise ValueError("cooperative DeepSets evaluation requires at least two NMSE replicas")
     if (not isinstance(test_spec, dict) or test_spec.get("family") != "cooperative_deepsets" or
             test_spec.get("materialized") is not False or
             tuple(test_spec.get("train_patterns", ())) != roles or
@@ -1048,7 +1071,7 @@ def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: di
         raise ValueError("feedback mask must be a binary [784, hidden] matrix")
     replica_count = int(states["weight"].shape[1]) if states["weight"].ndim >= 4 else 0
     if replica_count < 2:
-        raise ValueError("feedback requires terminal states from both prescribed replicas")
+        raise ValueError("feedback requires terminal states from at least two prescribed replicas")
     for field in ("replica_losses", "seeds", "plateau_flags"):
         if not isinstance(measurement.get(field), (list, tuple)) or len(measurement[field]) != replica_count:
             raise ValueError(f"feedback requires a protocol record for all {field}")

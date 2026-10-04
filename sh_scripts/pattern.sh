@@ -28,11 +28,11 @@ else
   GE_PATTERN_ROLES+=(--test-patterns "${GE_TEST_PATTERNS[@]}")
 fi
 GE_DATA_ARGS=(
-  --support-count "${SUPPORT_COUNT:-192}" --query-count "${QUERY_COUNT:-256}"
+  --support-count "${SUPPORT_COUNT:-208}" --query-count "${QUERY_COUNT:-256}"
   --selection-count "${SELECTION_COUNT:-128}" --probe-count "${PROBE_COUNT:-128}"
   --lr "${CHILD_LR:-0.03}" --l2 "${CHILD_L2:-0.003}"
   --training-mode joint
-  --quality-objective "${QUALITY_OBJECTIVE:-worst}"
+  --quality-objective "${QUALITY_OBJECTIVE:-average}"
   --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"
   --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-0.1}"
   --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-0}"
@@ -80,3 +80,5 @@ ge_run python -u -m generator_evaluator.cooperative_run \
   --out "$GE_OUT/search" "$@"
 
 printf '\nMasks and heatmaps: %s/search/figures/\n' "$GE_OUT"
+
+printf "Final report: %s/search/final_report.md\n" "$GE_OUT"

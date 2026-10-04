@@ -453,7 +453,7 @@ def propose_shared_pool(
 
 def rank_shared_pool(masks: Tensor, ensemble: QualityEnsemble, contexts: Tensor,
                      dense_quality: Tensor,
-                     quality_objective: str = "worst", *, batch_size: int = 256) -> dict[str, Tensor]:
+                     quality_objective: str = "average", *, batch_size: int = 256) -> dict[str, Tensor]:
     """Predict every proposed mask on every pattern using the global ensemble."""
     validate_quality_objective(quality_objective)
     if (masks.ndim != 3 or contexts.ndim != 2 or
@@ -517,7 +517,7 @@ def mixed_acquisition(masks: Tensor, sources: Sequence[str], ranks: Mapping[str,
 
 def select_common_elites(masks: Tensor, real_quality: Tensor, dense_quality: Tensor, *,
                          margin: float = 0.0, limit: int = 8,
-                         quality_objective: str = "worst") -> Tensor:
+                         quality_objective: str = "average") -> Tensor:
     """Keep only masks measured good on *every* train pattern; never backfill."""
     validate_quality_objective(quality_objective)
     if masks.ndim != 3 or real_quality.ndim != 2 or real_quality.shape[0] != len(masks):

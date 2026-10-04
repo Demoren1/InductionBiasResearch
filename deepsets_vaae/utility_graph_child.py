@@ -231,6 +231,15 @@ def fit_children(
         for condition in range(conditions)
     ]
     learning_rate_history: list[float] = []
+    full_support_slices = tuple(
+        slice(start, min(support_count, start + chunk_size))
+        for start in range(0, support_count, chunk_size)
+    )
+    parameters = tuple(model.parameters())
+    # Retain every gradient check on CUDA, but read the cumulative flag only
+    # at bounded intervals. No callback or result can contain a failed fit.
+    gradients_finite = (torch.ones((), dtype=torch.bool, device=device)
+                        if device.type == "cuda" else None)
 
     @torch.no_grad()
     def record(step: int) -> None:
@@ -293,10 +302,7 @@ def fit_children(
             train_count = sampled_x.shape[1]
             chunk_indices = [None]
         elif batch_size is None or batch_size >= support_count:
-            chunk_indices = [
-                torch.arange(start, min(support_count, start + chunk_size))
-                for start in range(0, support_count, chunk_size)
-            ]
+            chunk_indices = full_support_slices
             train_count = support_count
         else:
             train_count = batch_size
@@ -319,19 +325,27 @@ def fit_children(
                     for condition in range(conditions)
                 ]).to(device=device, dtype=torch.float32)
             else:
-                indices = indices_cpu.to(x_support.device)
-                x_chunk = x_support[:, indices].to(device=device, dtype=torch.float32)
-                y_chunk = y_support[:, indices].to(device=device, dtype=torch.float32)
+                x_chunk = x_support[:, indices_cpu].to(device=device, dtype=torch.float32)
+                y_chunk = y_support[:, indices_cpu].to(device=device, dtype=torch.float32)
             prediction = model(x_chunk)
             residual = prediction - y_chunk[:, None, :]
             per_model_chunk_loss = residual.square().sum(dim=-1) / (train_count * 5 * reference_models)
             per_model_chunk_loss.sum().backward()
         (_l2_penalty(model, l2).sum() / reference_models).backward()
-        for parameter in model.parameters():
-            if parameter.grad is not None and not torch.isfinite(parameter.grad).all():
+        for parameter in parameters:
+            if parameter.grad is not None:
+                finite = torch.isfinite(parameter.grad).all()
+                if gradients_finite is None:
+                    if not finite:
+                        raise RuntimeError("nonfinite fresh-child gradient")
+                else:
+                    gradients_finite.logical_and_(finite)
+        is_checkpoint = step % checkpoint_every == 0 or step == start_step + steps
+        if gradients_finite is not None and (step % 64 == 0 or is_checkpoint):
+            if not gradients_finite:
                 raise RuntimeError("nonfinite fresh-child gradient")
         optimizer.step()
-        if step % checkpoint_every == 0 or step == start_step+steps:
+        if is_checkpoint:
             record(step)
 
     with torch.no_grad():

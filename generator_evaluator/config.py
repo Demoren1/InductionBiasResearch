@@ -48,7 +48,7 @@ class CooperativeConfig:
     elite_margin: float = 0.
     agreement_weight: float = .1
     agreement_ramp_epochs: int = 5
-    quality_objective: str = "worst"
+    quality_objective: str = "average"
     elite_distillation_weight: float = .1
     reconstruction_weight: float = .1
     reconstruction_batch_size: int = 8
@@ -145,10 +145,11 @@ def _config_metadata(config):
 def deepsets_config(**overrides):
     settings = dict(domain="deepsets", features=784, hidden=32, preset="deepsets",
         train_patterns=("0", "1"), test_pattern="heldout", k=7526,
-        batch_children=True, width=32, heads=4, layers=1, noise_dim=8,
+        batch_children=True, width=64, heads=4, layers=2, noise_dim=8,
         ensemble_members=2, generator_epochs=20, updates_per_epoch=10,
-        refresh_every=2, evaluator_epochs=30, candidates=24, acquisition_budget=6,
+        refresh_every=2, evaluator_epochs=100, evaluator_batch_size=64,
+        evaluator_lr=.0003, candidates=24, acquisition_budget=6,
         auxiliary_budget=0, output_budgets=(),
-        initial_random=8, feedback_masks=2, bank_capacity=100, elite_limit=8)
+        initial_random=8, feedback_masks=2, bank_capacity=1024, elite_limit=8)
     settings.update(overrides)
     return CooperativeConfig(**settings)
