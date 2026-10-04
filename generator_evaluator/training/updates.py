@@ -266,6 +266,7 @@ def _train_evaluators_distributed(
     member_devices: Sequence[torch.device],
     restore_best: bool,
     selection_active_edges: int | None,
+    include_initial_validation: bool,
 ) -> list[dict[str, Any]]:
     """Train independent evaluator members concurrently across assigned devices."""
     names = tuple(str(index) for index in range(len(members)))
@@ -281,6 +282,9 @@ def _train_evaluators_distributed(
                 optimizers, saved_state.get("optimizer_states", []))):
             optimizer.load_state_dict(state)
             _optimizer_to_device(optimizer, member_devices[index])
+    for optimizer in optimizers:
+        for group in optimizer.param_groups:
+            group["lr"] = lr
 
     bootstrap_rngs: list[torch.Generator] = []
     shufflers: list[torch.Generator] = []
@@ -351,6 +355,7 @@ def _train_evaluators_distributed(
 
     selection = _evaluator_selection_data(replay, selection_active_edges) if restore_best else None
     best_score, best_epoch, best_model, best_training_state = math.inf, 0, None, None
+    initial_selection_score = None
     history: list[dict[str, Any]] = []
     epochs_bar = progress(range(epochs), desc="Quality evaluator", unit="epoch")
 
@@ -365,6 +370,15 @@ def _train_evaluators_distributed(
         )
 
     with PerDeviceGeneratorExecutor(names, member_devices) as executor:
+        if selection is not None and include_initial_validation:
+            prediction = _member_predictions(
+                members, member_devices, executor, selection[0], selection[1], gpu_inputs={},
+            ).mean(dim=0)
+            best_score = _selection_metrics_from_predictions(selection, prediction)["mse"]
+            initial_selection_score = best_score
+            best_model = {key: value.detach().cpu().clone()
+                          for key, value in ensemble.state_dict().items()}
+            best_training_state = deepcopy(training_state())
         for epoch in epochs_bar:
             # Draw with the same independent CPU generators as the legacy
             # path, then copy each member's complete ordered index vector once.
@@ -452,12 +466,7 @@ def _train_evaluators_distributed(
                 selection_prediction = _member_predictions(
                     members, member_devices, executor, selection[0], selection[1], gpu_inputs={},
                 ).mean(dim=0)
-                groups, count = selection[3], selection[4]
-                group_counts = torch.bincount(groups, minlength=count).float()
-                mean_prediction = torch.zeros(count).scatter_add_(0, groups, selection_prediction) / group_counts
-                mean_target = torch.zeros(count).scatter_add_(0, groups, selection[2]) / group_counts
-                selected = dict(evaluator_metrics(mean_prediction, mean_target),
-                                masks=count, target_budget=selection[-1])
+                selected = _selection_metrics_from_predictions(selection, selection_prediction)
                 event.update({f"selection_{key}": value for key, value in selected.items()})
                 if selected["mse"] < best_score:
                     best_score, best_epoch = selected["mse"], epoch + 1
@@ -474,6 +483,7 @@ def _train_evaluators_distributed(
         ensemble.training_state["validation_selection"] = {
             "epoch": best_epoch, "epochs_evaluated": epochs,
             "metric": "mean_task_mask_validation_mse", "mse": best_score,
+            "initial_mse": initial_selection_score,
             "active_edges": selection_active_edges if selection[-1] else None,
         }
         history[-1].update(selected_epoch=best_epoch, selection_restored=True)
@@ -526,6 +536,11 @@ def _evaluator_selection_metrics(ensemble, selection, device):
             ensemble.predict(masks[start:start + 128].to(device),
                              contexts[start:start + 128].to(device))[0].cpu()
             for start in range(0, len(masks), 128)])
+    return _selection_metrics_from_predictions(selection, prediction)
+
+
+def _selection_metrics_from_predictions(selection, prediction):
+    _masks, _contexts, targets, groups, count, target_budget = selection
     group_counts = torch.bincount(groups, minlength=count).float()
     mean_prediction = torch.zeros(count).scatter_add_(0, groups, prediction) / group_counts
     mean_target = torch.zeros(count).scatter_add_(0, groups, targets) / group_counts
@@ -545,6 +560,7 @@ def train_evaluators(
     restore_best: bool = False,
     selection_active_edges: int | None = None,
     member_devices: Sequence[str | torch.device] | None = None,
+    include_initial_validation: bool = False,
 ) -> list[dict[str, Any]]:
     """Fit independent bootstrap evaluator members from replay's train rows.
 
@@ -573,6 +589,7 @@ def train_evaluators(
             primary_device=device, member_devices=assigned,
             restore_best=restore_best,
             selection_active_edges=selection_active_edges,
+            include_initial_validation=include_initial_validation,
         )
     ensemble.to(device)
     optimizers = [torch.optim.Adam(member.parameters(), lr=lr) for member in members]
@@ -586,6 +603,9 @@ def train_evaluators(
         for optimizer, state in zip(optimizers, saved_state.get("optimizer_states", [])):
             optimizer.load_state_dict(state)
             _optimizer_to_device(optimizer, device)
+    for optimizer in optimizers:
+        for group in optimizer.param_groups:
+            group["lr"] = lr
     bootstrap_rngs: list[torch.Generator] = []
     shufflers: list[torch.Generator] = []
     for index in range(len(members)):
@@ -603,6 +623,7 @@ def train_evaluators(
 
     selection = _evaluator_selection_data(replay, selection_active_edges) if restore_best else None
     best_score, best_epoch, best_model, best_training_state = math.inf, 0, None, None
+    initial_selection_score = None
 
     def training_state():
         return {
@@ -613,6 +634,13 @@ def train_evaluators(
         }
 
     history: list[dict[str, Any]] = []
+    if selection is not None and include_initial_validation:
+        ensemble.eval()
+        best_score = _evaluator_selection_metrics(ensemble, selection, device)["mse"]
+        initial_selection_score = best_score
+        best_model = {key: value.detach().cpu().clone()
+                      for key, value in ensemble.state_dict().items()}
+        best_training_state = deepcopy(training_state())
     epochs_bar = progress(range(epochs), desc="Quality evaluator", unit="epoch")
     for epoch in epochs_bar:
         train_losses: list[Tensor] = []
@@ -669,6 +697,7 @@ def train_evaluators(
         ensemble.training_state["validation_selection"] = {
             "epoch": best_epoch, "epochs_evaluated": epochs,
             "metric": "mean_task_mask_validation_mse", "mse": best_score,
+            "initial_mse": initial_selection_score,
             "active_edges": selection_active_edges if selection[-1] else None,
         }
         history[-1].update(selected_epoch=best_epoch, selection_restored=True)

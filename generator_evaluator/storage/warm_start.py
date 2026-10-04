@@ -24,6 +24,7 @@ from generator_evaluator.data.types import InnerProtocol, RealReplay, TaskData, 
 
 _ARCHITECTURE_FIELDS = ("width", "heads", "layers", "ensemble_members")
 _EVALUATOR_POLICY = "initial_bank_only"
+_SUPPORTED_EVALUATOR_POLICIES = (_EVALUATOR_POLICY, "initial_bank_plus_acquisition")
 _EVALUATOR_ROW_FIELDS = (
     "topology_id", "mask_key", "task_id", "task_split", "split",
     "protocol_id", "task_fingerprint", "label_source", "quality",
@@ -395,7 +396,7 @@ def _validated_evaluator_metadata(source_spec: dict, checkpoint: dict,
         # Older online-evaluator runs have no immutable-bank provenance, so
         # their critic state must be trained afresh by the caller.
         return None, None, (), []
-    if policy != _EVALUATOR_POLICY:
+    if policy not in _SUPPORTED_EVALUATOR_POLICIES:
         raise ValueError("warm-start evaluator policy is unsupported")
 
     def metadata_value(name: str):
@@ -480,7 +481,7 @@ class CooperativeWarmStart:
     @property
     def reuse_evaluator(self) -> bool:
         """True only when the loader validated a versioned immutable bank."""
-        return (self.evaluator_policy == _EVALUATOR_POLICY and
+        return (self.evaluator_policy in _SUPPORTED_EVALUATOR_POLICIES and
                 bool(self.evaluator_bank_fingerprint) and
                 bool(self.evaluator_bank_topology_ids) and
                 bool(self.evaluator_bank_rows))

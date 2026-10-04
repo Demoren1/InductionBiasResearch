@@ -40,9 +40,12 @@ from generator_evaluator.runners.legacy import MeasurementStore, _cpu_state, _de
 from generator_evaluator.storage.runtime import RunSession
 from generator_evaluator.training.updates import train_evaluators
 from generator_evaluator.training.evaluator_devices import select_evaluator_devices
+from generator_evaluator.training.online_evaluator import build_online_evaluator_replay
 from generator_evaluator.storage.toeplitz import write_toeplitz_report
 from generator_evaluator.storage.warm_start import evaluator_bank_fingerprint, load_cooperative_warm_start
-from generator_evaluator.storage.prepared import load_labels, load_prepared, save_labels, save_prepared
+from generator_evaluator.storage.prepared import (
+    load_labels, load_prepared, save_labels, save_online_labels, save_prepared,
+)
 from generator_evaluator.search.schedule import (STAGE_BOOTSTRAP_QUALITY, STAGE_COOPERATION, STAGE_JOINT,
                             STAGE_QUALITY, STAGE_TRAINING_COMPLETE,
                             joint_search_stages, search_stages)
@@ -81,6 +84,11 @@ def _real_candidates(replay, tasks, k=None):
 
 
 _EVALUATOR_POLICY = "initial_bank_only"
+_ONLINE_EVALUATOR_POLICY = "initial_bank_plus_acquisition"
+
+
+def _evaluator_policy(config):
+    return _ONLINE_EVALUATOR_POLICY if config.evaluator_online_epochs else _EVALUATOR_POLICY
 
 
 def _save_optional_torch(config, path, payload):
@@ -207,7 +215,8 @@ class CooperativeSearchController:
         self.best_models, self.best_evaluator, self.best_banks = {}, {}, {}
         self.last_refresh, self.cadence = 0, config.refresh_every
         self.generator_executor = None
-        self.evaluator_policy = _EVALUATOR_POLICY
+        self.evaluator_policy = _evaluator_policy(config)
+        self.evaluator_online_updates = 0
         self.evaluator_bank_topology_ids = tuple(sorted(set(initial_bank_topology_ids)))
         self.evaluator_bank_rows = []
         self.evaluator_bank_fingerprint = None
@@ -248,8 +257,9 @@ class CooperativeSearchController:
                      "stage", "stage_epoch", "stage_last_refresh", "initial_shared_latent"):
             setattr(self, name, saved[name])
         self.evaluator_policy = saved["evaluator_policy"]
-        if self.evaluator_policy != _EVALUATOR_POLICY:
+        if self.evaluator_policy != _evaluator_policy(self.config):
             raise ValueError("checkpoint evaluator policy differs from this run")
+        self.evaluator_online_updates = saved.get("evaluator_online_updates", 0)
         self.evaluator_bank_topology_ids = tuple(saved["evaluator_bank_topology_ids"])
         self.evaluator_bank_rows = list(saved["evaluator_bank_rows"])
         self.evaluator_bank_fingerprint = saved["evaluator_bank_fingerprint"]
@@ -290,7 +300,7 @@ class CooperativeSearchController:
                 member_devices=self.evaluator_devices,
                 restore_best=self.config.domain == "deepsets",
                 selection_active_edges=self.config.k))
-        self.evaluator_policy = _EVALUATOR_POLICY
+        self.evaluator_policy = _evaluator_policy(self.config)
         self.evaluator_bank_topology_ids = tuple(manifest["topology_ids"])
         self.evaluator_bank_rows = list(manifest["row_ids"])
         self.evaluator_bank_fingerprint = manifest["fingerprint"]
@@ -299,15 +309,7 @@ class CooperativeSearchController:
             save_json(self.out / "evaluator_bank.json", dict(
                 fingerprint=manifest["fingerprint"], topology_count=len(manifest["topology_ids"]),
                 rows=len(manifest["rows"]), policy=self.evaluator_policy))
-            save_torch(self.out / "evaluator.pt", dict(
-                ensemble=_cpu_state(self.ensemble),
-                architecture=dict(features=self.config.features, context_dim=self.contexts.shape[1],
-                    width=self.config.width, heads=self.config.heads, layers=self.config.layers,
-                    ensemble_members=self.config.ensemble_members),
-                protocol=asdict(self.replay.protocol),
-                bank_fingerprint=self.evaluator_bank_fingerprint,
-                validation_selection=(getattr(self.ensemble, "training_state", None) or {}).get("validation_selection"),
-                test_used_for_training=False))
+            self.save_evaluator()
             self.freeze_evaluator()
             return
         bank_path = self.out / "evaluator_bank.pt"
@@ -319,6 +321,51 @@ class CooperativeSearchController:
         else:
             _save_optional_torch(self.config, bank_path, manifest)
         self.freeze_evaluator()
+
+    def save_evaluator(self):
+        save_torch(self.out / "evaluator.pt", dict(
+            ensemble=_cpu_state(self.ensemble),
+            architecture=dict(features=self.config.features, context_dim=self.contexts.shape[1],
+                width=self.config.width, heads=self.config.heads, layers=self.config.layers,
+                ensemble_members=self.config.ensemble_members),
+            protocol=asdict(self.replay.protocol),
+            bank_fingerprint=self.evaluator_bank_fingerprint,
+            evaluator_policy=self.evaluator_policy,
+            online_updates=self.evaluator_online_updates,
+            validation_selection=(getattr(self.ensemble, "training_state", None) or {}).get("validation_selection"),
+            test_used_for_training=False))
+
+    def fine_tune_evaluator(self, stage, epoch):
+        if not self.config.evaluator_online_epochs:
+            return None
+        seed = self.config.seed + 100_003 * (self.evaluator_online_updates + 1)
+        view, metadata = build_online_evaluator_replay(
+            self.replay, self.evaluator_bank_topology_ids,
+            [task.task_id for task in self.train_tasks],
+            bank_rows=self.config.evaluator_online_bank_rows, seed=seed,
+            active_edges=self.config.k)
+        if view is None:
+            return dict(metadata, skipped=True)
+        for parameter in self.ensemble.parameters():
+            parameter.requires_grad_(True)
+        try:
+            history = train_evaluators(
+                self.ensemble, view, epochs=self.config.evaluator_online_epochs,
+                batch_size=self.config.evaluator_batch_size,
+                lr=self.config.evaluator_online_lr, seed=seed, device=self.device,
+                member_devices=self.evaluator_devices, restore_best=True,
+                selection_active_edges=self.config.k, include_initial_validation=True)
+        finally:
+            self.ensemble.to(self.device)
+            self.freeze_evaluator()
+        self.evaluator_online_updates += 1
+        for event in history:
+            event.update(phase="online", stage=stage, generator_epoch=epoch, **metadata)
+        self.evaluator_history.append(history)
+        self.save_evaluator()
+        return dict(metadata, skipped=False,
+                    update=self.evaluator_online_updates,
+                    selection=(getattr(self.ensemble, "training_state", None) or {}).get("validation_selection"))
 
     def freeze_evaluator(self):
         self.ensemble.eval()
@@ -540,7 +587,7 @@ class CooperativeSearchController:
                 if stage == STAGE_COOPERATION else stage_epoch)
 
     def refresh(self, stage, stage_epoch, auxiliary_budgets):
-        """Acquire real masks and archive measured quality under the fixed critic."""
+        """Acquire real labels, update the critic, and archive measured quality."""
         cooperative = stage in (STAGE_COOPERATION, STAGE_JOINT)
         label = ("cooperation" if stage == STAGE_COOPERATION else
                  STAGE_JOINT if stage == STAGE_JOINT else
@@ -597,7 +644,32 @@ class CooperativeSearchController:
                     break
         cached_top_count = sum(all((identity, task_id) in known_rows for task_id in task_ids)
                                for identity in top_ids)
-        acquisition_types = ["top_quality"] * len(top_indices)
+        exploration_indices = []
+        if self.config.evaluator_online_epochs and self.config.evaluator_exploration_budget:
+            candidates = [index for index in ranked_indices if index not in new_fit_indices
+                          and any((topology_id(masks[index]), task_id) not in known_rows
+                                  for task_id in task_ids)]
+            for ordinal in range(self.config.evaluator_exploration_budget):
+                if not candidates:
+                    break
+                random_candidates = [index for index in candidates if sources[index] == "random"]
+                if ordinal % 2 == 0 and random_candidates:
+                    index = random_candidates[int(torch.randint(
+                        len(random_candidates), (), generator=self.cpu_rng))]
+                else:
+                    generated = [index for index in candidates if sources[index].startswith("generator:")]
+                    choices = generated or candidates
+                    anchors = new_fit_indices + exploration_indices
+                    if anchors:
+                        overlaps = (masks[choices].flatten(1) @ masks[anchors].flatten(1).T).amax(dim=1)
+                        index = choices[int(overlaps.argmin())]
+                    else:
+                        index = choices[0]
+                exploration_indices.append(index)
+                candidates.remove(index)
+        new_fit_indices += exploration_indices
+        acquisition_types = ["exploration" if index in exploration_indices else "top_quality"
+                             for index in new_fit_indices]
         trace = top_pool_sources
         # The Toeplitz diagnostic still accepts the original single-loop
         # ``epoch_`` naming; the payload keeps the explicit joint stage.
@@ -611,6 +683,7 @@ class CooperativeSearchController:
             selected=torch.tensor(top_indices, dtype=torch.long), top_pool_indices=top_indices,
             top_pool_sources=top_pool_sources,
             acquired_new_indices=new_fit_indices, acquired_new_count=len(new_fit_indices),
+            exploration_indices=exploration_indices,
             cached_top_count=cached_top_count,
             acquisition_types=acquisition_types, selected_sources=trace,
             proposal_trace=proposal_trace, overlap=overlap,
@@ -655,12 +728,13 @@ class CooperativeSearchController:
                                for mask in auxiliary for task in self.train_tasks)
             self.measure_many(entries)
 
-        # Functional teachers may consume labels, but the evaluator stays fixed
-        # on the initial bank-membership dataset for the entire generator run.
+        global_epoch = self._global_epoch(stage, stage_epoch)
+        if self.config.evaluator_online_epochs and not self.config.persist_artifacts:
+            save_online_labels(self.out, self.replay, refresh=self.last_refresh + 1)
+        evaluator_update = self.fine_tune_evaluator(label, global_epoch)
         if cooperative:
             self.feedback()
         self.update_actual_archive()
-        global_epoch = self._global_epoch(stage, stage_epoch)
         acquired = [masks[index] for index in new_fit_indices]
         literal_top_pool = [masks[index] for index in top_indices]
         archive = [row["mask"] for row in self.actual_archive]
@@ -679,7 +753,8 @@ class CooperativeSearchController:
             actual_archive_size=len(self.actual_archive), proposal_overlap=overlap,
             top_pool_indices=top_indices, top_pool_sources=top_pool_sources,
             acquired_new_count=len(new_fit_indices), cached_top_count=cached_top_count,
-            acquired_sources=trace,
+            exploration_count=len(exploration_indices), evaluator_update=evaluator_update,
+            acquired_sources=[sources[index] for index in new_fit_indices],
             bank_sizes={name: bank.tokens.shape[1] for name, bank in self.banks.items()})
         self.refresh_history.append(entry)
         self.stage_last_refresh[stage] = stage_epoch
@@ -824,6 +899,7 @@ class CooperativeSearchController:
             ensemble=_cpu_state(self.ensemble),
             evaluator_training_state=getattr(self.ensemble, "training_state", None),
             evaluator_policy=self.evaluator_policy,
+            evaluator_online_updates=self.evaluator_online_updates,
             evaluator_bank_topology_ids=self.evaluator_bank_topology_ids,
             evaluator_bank_rows=self.evaluator_bank_rows,
             evaluator_bank_fingerprint=self.evaluator_bank_fingerprint,
@@ -1096,7 +1172,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                 tasks={task.task_id: task.fingerprint for task in train_tasks + selection_tasks},
                 test_spec=test_spec, dense_learning_rates=dense_learning_rates, build_settings=build_settings,
                 warm_start=None if warm_start is None else warm_start.provenance,
-                evaluator_policy=_EVALUATOR_POLICY,
+                evaluator_policy=_evaluator_policy(config),
                 evaluator_bank_topology_ids=list(initial_evaluator_topology_ids),
                 generator_pretrained_from=generator_pretraining,
                 source_hashes={str(p.relative_to(project)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -1218,6 +1294,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         if evaluator["architecture"] != architecture or evaluator["protocol"] != asdict(protocol):
             raise ValueError("saved evaluator architecture or solver differs from requested run")
         ensemble.load_state_dict(evaluator["ensemble"], strict=True)
+        ensemble.training_state = {"validation_selection": evaluator.get("validation_selection")}
     if warm_start is not None:
         if warm_start.reuse_evaluator:
             ensemble.load_state_dict(warm_start.ensemble_state)
@@ -1453,6 +1530,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             best_selection_mean_delta=controller.best_mean_delta,
             quality_objective=config.quality_objective, best_stage=controller.best_stage,
             completed_stage=controller.stage, protocol_id=protocol.fingerprint,
+            evaluator_policy=controller.evaluator_policy,
+            evaluator_online_updates=controller.evaluator_online_updates,
             common_train_elites=len(controller.common_elites()), smoke_only=config.smoke,
             real_label_measurements=len(replay.records), bank_sizes={name:len(bank.masks) for name,bank in banks.items()},
             refreshes=refresh_history, final={}, test_materialized=False,
@@ -1617,6 +1696,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         joint_updates=sum(row["stage"] == STAGE_JOINT for row in history),
         cooperation_updates=sum(row["stage"] == STAGE_COOPERATION for row in history),
         completed_stage=controller.stage,
+        evaluator_policy=controller.evaluator_policy,
+        evaluator_online_updates=controller.evaluator_online_updates,
         agreement="matched-noise exact-K MSE agreement; archive-backed measured TRAIN MSE distillation")
     summary["selected_functional_control"] = next((name for name, mask in functional_controls.items()
         if topology_id(mask) == topology_id(best_mask)), None)
@@ -1719,11 +1800,13 @@ def make_parser():
                         help="DeepSets source query sets; default uses the full private validation pool budget")
     parser.add_argument("--latent-lr", type=float, default=None)
     parser.add_argument("--evaluator-lr", type=float, default=None)
+    parser.add_argument("--evaluator-online-lr", type=float, default=None)
     for name in ("steps", "bank-steps", "teachers", "bank-candidates", "teacher-batch-size",
                  "support-count", "query-count", "selection-count",
                  "probe-count", "generator-epochs", "updates-per-epoch", "cooperation-rounds",
                  "cooperation-updates", "refresh-every", "minimum-refresh-every",
                  "evaluator-epochs", "evaluator-batch-size", "candidates", "acquisition-budget", "initial-random",
+                 "evaluator-online-epochs", "evaluator-online-bank-rows", "evaluator-exploration-budget",
                  "bank-capacity", "width", "heads", "layers", "noise-dim", "ensemble-members",
                  "auxiliary-budget", "feedback-masks", "elite-limit",
                  "agreement-ramp-epochs", "generator-pretrain-epochs", "pretrain-updates-per-epoch",
@@ -1803,6 +1886,7 @@ def resolve_run_settings(args):
     for name in ("generator_epochs", "updates_per_epoch", "cooperation_rounds", "cooperation_updates",
                  "refresh_every", "minimum_refresh_every", "evaluator_epochs",
                  "evaluator_batch_size",
+                 "evaluator_online_epochs", "evaluator_online_bank_rows", "evaluator_exploration_budget",
                  "candidates", "acquisition_budget", "initial_random", "bank_capacity",
                  "width", "heads", "layers", "noise_dim", "ensemble_members",
                  "auxiliary_budget", "feedback_masks", "elite_limit", "agreement_ramp_epochs",
@@ -1811,6 +1895,8 @@ def resolve_run_settings(args):
             overrides[name] = getattr(args, name)
     if args.quality_objective is not None:
         overrides["quality_objective"] = args.quality_objective
+    if args.evaluator_online_lr is not None:
+        overrides["evaluator_online_lr"] = args.evaluator_online_lr
     config = replace(base, **overrides)
     build = (dict(steps=2000, bank_steps=4000, teachers=1024, bank_candidates=4096,
                   teacher_batch_size=64, support_count=500, query_count=51,
@@ -1978,6 +2064,7 @@ def main():
           f"training_mode={config.training_mode} {training_schedule}, "
           f"latent_lr={config.latent_lr:g}, generators={generator_devices}, "
           f"evaluators={list(evaluator_devices)}, "
+          f"online_evaluator_epochs={config.evaluator_online_epochs}, "
           f"batched={config.batch_children}", flush=True)
     inputs_path = args.out / "inputs.pt"
     if prepared_restart is not None:

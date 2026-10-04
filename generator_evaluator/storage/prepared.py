@@ -99,6 +99,62 @@ def save_labels(out, replay: RealReplay):
     save_json(root / "manifest.json", _encode(payload, root, [0]))
 
 
+def save_online_labels(out, replay: RealReplay, refresh: int):
+    """Save the cumulative acquired train labels for one refresh."""
+    if not isinstance(refresh, int) or isinstance(refresh, bool) or refresh < 0:
+        raise ValueError("refresh must be a nonnegative integer")
+    root = Path(out) / "prepared" / "online_labels" / f"refresh_{refresh:04d}"
+    manifest = root / "manifest.json"
+    if manifest.is_file():
+        return
+    records = [row for row in replay.records
+               if str(row.get("origin", "")).startswith("acquisition:") and
+               row.get("task_split") == "train" and
+               row.get("split") not in ("test", "control", "selection")]
+    if not records:
+        return
+
+    mask_keys = list(dict.fromkeys(row["mask_key"] for row in records))
+    task_ids = list(dict.fromkeys(row["task_id"] for row in records))
+    topology_ids = list(dict.fromkeys(row["topology_id"] for row in records))
+    payload = dict(
+        schema=1,
+        protocol=replay.protocol.__dict__,
+        holdout_fraction=replay.holdout_fraction,
+        split_seed=replay.split_seed,
+        records=[{key: value for key, value in row.items() if key != "provenance"}
+                 for row in records],
+        mask_keys=mask_keys,
+        masks=torch.stack([replay.masks[key] for key in mask_keys]).to(torch.uint8),
+        contexts={task_id: replay.contexts[task_id] for task_id in task_ids},
+        task_fingerprints={task_id: replay.task_fingerprints[task_id] for task_id in task_ids},
+        task_splits={task_id: replay.task_splits[task_id] for task_id in task_ids},
+        mask_splits={identity: replay.mask_splits[identity] for identity in topology_ids},
+    )
+    root.mkdir(parents=True, exist_ok=True)
+    save_json(manifest, _encode(payload, root, [0]))
+
+
+def _latest_online_label_manifest(root: Path) -> Path | None:
+    snapshots = []
+    for manifest in root.glob("refresh_*/manifest.json"):
+        suffix = manifest.parent.name.removeprefix("refresh_")
+        if suffix.isdecimal():
+            snapshots.append((int(suffix), manifest))
+    return max(snapshots, key=lambda item: item[0])[1] if snapshots else None
+
+
+def _merge_label_metadata(target: dict, source: dict, name: str):
+    for key, value in source.items():
+        if key in target:
+            current = target[key]
+            equal = torch.equal(current, value) if torch.is_tensor(current) else current == value
+            if not equal:
+                raise ValueError(f"prepared online label {name} conflicts with baseline")
+        else:
+            target[key] = value
+
+
 def load_labels(out, tasks):
     root = Path(out) / "prepared" / "labels"
     if not (root / "manifest.json").is_file():
@@ -121,5 +177,56 @@ def load_labels(out, tasks):
         row["artifact_path"] = None
         row["artifact_ephemeral"] = True
         replay.records.append(row)
+
+    online_manifest = _latest_online_label_manifest(root.parent / "online_labels")
+    if online_manifest is not None:
+        online_root = online_manifest.parent
+        online = _decode(json.loads(online_manifest.read_text()), online_root)
+        if online.get("schema") != 1:
+            raise ValueError("unsupported prepared online label schema")
+        online_protocol = InnerProtocol(**online["protocol"])
+        if (online_protocol != replay.protocol or
+                online["holdout_fraction"] != replay.holdout_fraction or
+                online["split_seed"] != replay.split_seed):
+            raise ValueError("prepared online labels use a different protocol or split")
+
+        online_replay = RealReplay(online_protocol,
+                                   holdout_fraction=online["holdout_fraction"],
+                                   split_seed=online["split_seed"])
+        online_replay.masks = {
+            key: mask.float() for key, mask in zip(online["mask_keys"], online["masks"])
+        }
+        for name in ("contexts", "task_fingerprints", "task_splits", "mask_splits"):
+            setattr(online_replay, name, online[name])
+        for row in online["records"]:
+            if (not str(row.get("origin", "")).startswith("acquisition:") or
+                    row.get("task_split") != "train" or
+                    row.get("split") in ("test", "control", "selection")):
+                raise ValueError("prepared online labels contain an ineligible measurement")
+            task = by_id.get(row["task_id"])
+            if task is None or row["task_fingerprint"] != fingerprints.get(row["task_id"]):
+                raise ValueError("prepared online labels refer to different task data")
+            if task.split != row["task_split"]:
+                raise ValueError("prepared online labels refer to a different task split")
+            row["provenance"] = task.provenance
+            row["artifact_path"] = None
+            row["artifact_ephemeral"] = True
+            online_replay.records.append(row)
+        online_replay.validate()
+
+        _merge_label_metadata(replay.masks, online_replay.masks, "masks")
+        for name in ("contexts", "task_fingerprints", "task_splits", "mask_splits"):
+            _merge_label_metadata(getattr(replay, name), getattr(online_replay, name), name)
+        known_measurements = {
+            row["measurement_key"] for row in replay.records
+            if row.get("measurement_key") is not None
+        }
+        for row in online_replay.records:
+            key = row.get("measurement_key")
+            if key is not None and key in known_measurements:
+                continue
+            replay.records.append(row)
+            if key is not None:
+                known_measurements.add(key)
     replay.validate()
     return replay

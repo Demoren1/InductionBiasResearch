@@ -35,6 +35,10 @@ class CooperativeConfig:
     bootstrap_generators: bool = False
     persist_artifacts: bool = False
     evaluator_epochs: int = 50
+    evaluator_online_epochs: int = 5
+    evaluator_online_lr: float = 1e-4
+    evaluator_online_bank_rows: int = 512
+    evaluator_exploration_budget: int = 2
     evaluator_batch_size: int = 32
     generator_lr: float = .001
     evaluator_lr: float = .001
@@ -98,6 +102,16 @@ class CooperativeConfig:
             raise ValueError("invalid cooperative budgets")
         if not 1 <= self.minimum_refresh_every <= self.refresh_every:
             raise ValueError("minimum refresh interval must be between 1 and refresh_every")
+        online_budgets = (self.evaluator_online_epochs, self.evaluator_exploration_budget)
+        if any(not isinstance(value, int) or isinstance(value, bool) or value < 0
+               for value in online_budgets):
+            raise ValueError("online evaluator epochs and exploration budget must be nonnegative integers")
+        if (not isinstance(self.evaluator_online_bank_rows, int) or
+                isinstance(self.evaluator_online_bank_rows, bool) or
+                self.evaluator_online_bank_rows < 1):
+            raise ValueError("online evaluator bank rows must be a positive integer")
+        if not math.isfinite(self.evaluator_online_lr) or self.evaluator_online_lr <= 0:
+            raise ValueError("invalid online evaluator training settings")
         weights = (self.agreement_weight, self.elite_distillation_weight,
                    self.reconstruction_weight)
         if (not math.isfinite(self.latent_lr) or self.latent_lr <= 0 or

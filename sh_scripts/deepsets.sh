@@ -41,6 +41,10 @@ GE_COMMON_ARGS=(
   --width "${TRANSFORMER_WIDTH:-64}" --heads "${TRANSFORMER_HEADS:-4}" --layers "${TRANSFORMER_LAYERS:-2}" --noise-dim 8 --ensemble-members 2
   --refresh-every "${REFRESH_EVERY:-2}" --minimum-refresh-every "${MINIMUM_REFRESH_EVERY:-2}"
   --evaluator-epochs "${EVALUATOR_EPOCHS:-100}"
+  --evaluator-online-epochs "${EVALUATOR_ONLINE_EPOCHS:-5}"
+  --evaluator-online-lr "${EVALUATOR_ONLINE_LR:-0.0001}"
+  --evaluator-online-bank-rows "${EVALUATOR_ONLINE_BANK_ROWS:-512}"
+  --evaluator-exploration-budget "${EVALUATOR_EXPLORATION_BUDGET:-2}"
   --evaluator-batch-size "${EVALUATOR_BATCH_SIZE:-64}" --evaluator-lr "${EVALUATOR_LR:-0.0003}"
   --evaluator-devices "${GE_EVALUATOR_DEVICES[@]}"
   --acquisition-budget 6 --candidates 24 --initial-random 8
