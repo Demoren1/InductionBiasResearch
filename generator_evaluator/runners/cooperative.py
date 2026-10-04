@@ -30,7 +30,7 @@ from generator_evaluator.search.policy import (DensityConditionedGenerator,
                                  rank_shared_pool, select_common_elites)
 from generator_evaluator.data.types import InnerProtocol, RealReplay, TaskData, support_context, tensor_hash, topology_id
 from generator_evaluator.models.transformer import QualityEnsemble
-from generator_evaluator.training.objectives import reconstruct_bank_masks
+from generator_evaluator.training.objectives import reconstruct_bank_masks, reconstruct_full_bank_target
 from generator_evaluator.training.joint import joint_generator_update
 from generator_evaluator.storage.functional import write_functional_card
 from generator_evaluator.search.quality import QUALITY_OBJECTIVES, quality_objective_cost
@@ -209,6 +209,7 @@ class CooperativeSearchController:
         self._training_views = {}
         self.stage_last_refresh = {}
         self.best_mask = banks[patterns[0]].baseline_mask.clone()
+        self.best_mask_origin = self._infer_best_mask_origin(self.best_mask)
         self.best_cost, self.best_epoch = float("inf"), 0
         self.best_mean_delta = self.best_worst_delta = float("inf")
         self.best_stage = "initial"
@@ -273,6 +274,9 @@ class CooperativeSearchController:
         self.pretraining_history = saved["pretraining_history"]
         self.pretraining_epoch = saved["pretraining_epoch"]
         self.generator_pretraining = copy.deepcopy(saved.get("generator_pretraining"))
+        self.best_mask_origin = copy.deepcopy(saved.get("best_mask_origin"))
+        if self.best_mask_origin is None:
+            self.best_mask_origin = self._infer_best_mask_origin(self.best_mask)
         self.best_mean_delta = saved.get("best_mean_delta", saved["best_cost"])
         self.best_worst_delta = saved.get("best_worst_delta", saved["best_cost"])
         self.initialization_done = saved["initialization_done"]
@@ -402,7 +406,17 @@ class CooperativeSearchController:
                                     quality_objective=self.config.quality_objective)
 
     def distillation_targets(self):
-        """Return the bounded archive of actually measured TRAIN targets."""
+        """Return measured targets from the configured archive policy."""
+        if self.config.elite_target_source == "selected":
+            if not self.initialization_done:
+                return torch.empty(0, self.config.features, self.config.hidden)
+            target = self.best_mask.detach().cpu()
+            if (target.shape != (self.config.features, self.config.hidden) or
+                    not bool(torch.isfinite(target).all()) or
+                    not bool(((target == 0) | (target == 1)).all()) or
+                    int(target.sum()) != self.config.k):
+                raise ValueError("selected distillation target must have the configured exact-K budget")
+            return target.unsqueeze(0)
         if not self.actual_archive:
             return torch.empty(0, self.config.features, self.config.hidden)
         return torch.stack([row["mask"] for row in self.actual_archive])
@@ -434,36 +448,82 @@ class CooperativeSearchController:
     def pretrain_generators(self):
         """Run the one-time reconstruction phase for fresh main generators."""
         from generator_evaluator.training.device_executor import PerDeviceGeneratorExecutor
-        epochs = progress(range(self.pretraining_epoch, self.config.generator_pretrain_epochs),
-                          desc="Main generator reconstruction", unit="epoch")
-        with PerDeviceGeneratorExecutor(self.patterns, self.generator_devices) as executor:
-            for epoch in epochs:
-                for update in range(self.config.pretrain_updates_per_epoch):
-                    def reconstruct(name):
-                        return reconstruct_bank_masks(self.models[name], self.banks[name],
-                            self.optimizers[name], rng=self.own_rngs[name],
-                            batch_size=self.config.reconstruction_batch_size,
-                            weight=self.config.reconstruction_weight,
-                            bank_consensus=(self.config.training_mode == "staged" and
-                                            bool(update % 2)))
-                    rows = executor.map(reconstruct)
-                    for name, logs in rows.items():
-                        self.pretraining_history.append(dict(epoch=epoch + 1, update=update,
-                                                             pattern=name, **logs))
-                epochs.set_postfix(loss=f"{logs['reconstruction_loss']:.4f}", refresh=False)
-                self.pretraining_epoch = epoch + 1
-                self.stage, self.stage_epoch = "reconstruction", self.pretraining_epoch
-                self.save_checkpoint(0)
+        source = self.config.generator_pretrain_source
+        anchor_kind = "full_bank_inputs" if source == "teacher" else source
+        anchor_hashes = {}
+        target_anchors = {}
+        if source == "teacher":
+            anchor_hashes = {name: bank_input_fingerprint(self.banks[name])
+                             for name in self.patterns}
+        else:
+            common_anchor = (self.best_mask if source == "selected" else None)
+            for name in self.patterns:
+                raw_anchor = (common_anchor if source == "selected"
+                              else self.banks[name].baseline_mask)
+                if not isinstance(raw_anchor, torch.Tensor):
+                    raise ValueError("generator pretraining anchor must be a tensor mask")
+                anchor = raw_anchor.detach().to(device="cpu", dtype=torch.float32).contiguous()
+                expected_shape = (self.config.features, self.config.hidden)
+                if (anchor.shape != expected_shape or not bool(torch.isfinite(anchor).all()) or
+                        not bool(((anchor == 0) | (anchor == 1)).all()) or
+                        int(anchor.sum()) != self.config.k):
+                    raise ValueError("generator pretraining anchor must be a finite binary exact-K mask")
+                model_parameter = next(self.models[name].parameters())
+                target_anchors[name] = anchor.to(device=model_parameter.device,
+                                                 dtype=model_parameter.dtype)
+                anchor_hashes[name] = tensor_hash(anchor)
+        prepared_banks = ({name: self.trainer._prepared_bank(name) for name in self.patterns}
+                          if source in ("bank", "selected") else {})
+        try:
+            if source in ("bank", "selected"):
+                for optimizer in self.optimizers.values():
+                    for group in optimizer.param_groups:
+                        group["lr"] = self.config.generator_pretrain_lr
+            epochs = progress(range(self.pretraining_epoch, self.config.generator_pretrain_epochs),
+                              desc="Main generator reconstruction", unit="epoch")
+            with PerDeviceGeneratorExecutor(self.patterns, self.generator_devices) as executor:
+                for epoch in epochs:
+                    for update in range(self.config.pretrain_updates_per_epoch):
+                        def reconstruct(name):
+                            if source == "teacher":
+                                return reconstruct_bank_masks(self.models[name], self.banks[name],
+                                    self.optimizers[name], rng=self.own_rngs[name],
+                                    batch_size=self.config.reconstruction_batch_size,
+                                    weight=self.config.reconstruction_weight,
+                                    bank_consensus=(self.config.training_mode == "staged" and
+                                                    bool(update % 2)))
+                            return reconstruct_full_bank_target(
+                                self.models[name], prepared_banks[name], target_anchors[name],
+                                self.optimizers[name], rng=self.own_rngs[name],
+                                weight=self.config.reconstruction_weight)
+                        rows = executor.map(reconstruct)
+                        for name, logs in rows.items():
+                            self.pretraining_history.append(dict(epoch=epoch + 1, update=update,
+                                pattern=name, pretrain_source=source,
+                                anchor_hash=anchor_hashes[name], **logs))
+                    epochs.set_postfix(loss=f"{logs['reconstruction_loss']:.4f}", refresh=False)
+                    self.pretraining_epoch = epoch + 1
+                    self.stage, self.stage_epoch = "reconstruction", self.pretraining_epoch
+                    self.save_checkpoint(0)
+        finally:
+            if source in ("bank", "selected"):
+                for optimizer in self.optimizers.values():
+                    for group in optimizer.param_groups:
+                        group["lr"] = self.config.generator_lr
         self.generator_pretraining = dict(origin="current_run",
+                                          pretrain_source=source,
+                                          anchor_kind=anchor_kind,
+                                          anchor_hashes=anchor_hashes,
                                           updates=len(self.pretraining_history),
                                           optimizer_states_imported=False)
-        _save_optional_torch(self.config, self.out / "generator_reconstruction.pt", dict(
-            models={name: _cpu_state(model) for name, model in self.models.items()},
-            bank_hashes={name: bank_input_fingerprint(bank) for name, bank in self.banks.items()},
-            updates=len(self.pretraining_history),
-            test_used=False,
-            origin=self.generator_pretraining,
-            optimizer_states_imported=False))
+        if self.config.persist_artifacts:
+            save_torch(self.out / "generator_reconstruction.pt", dict(
+                models={name: _cpu_state(model) for name, model in self.models.items()},
+                bank_hashes={name: bank_input_fingerprint(bank) for name, bank in self.banks.items()},
+                updates=len(self.pretraining_history),
+                test_used=False,
+                origin=self.generator_pretraining,
+                optimizer_states_imported=False))
 
     def _training_bank(self, name, ordinal, shared_density=None):
         """Use full mixed source densities and a sampled single-density view."""
@@ -855,6 +915,35 @@ class CooperativeSearchController:
                                     objective_cost=float(costs[index]))
                                for index in order]
 
+    def _infer_best_mask_origin(self, mask):
+        """Trace a selected mask to measured TRAIN origins by key and topology."""
+        mask = torch.as_tensor(mask).detach().cpu().float().contiguous()
+        mask_key = tensor_hash(mask)
+        identity = topology_id(mask)
+        task_ids = {task.task_id for task in self.train_tasks}
+        matching = [row for row in self.replay.records
+                    if row.get("task_split") == "train" and row.get("task_id") in task_ids and
+                    (row.get("mask_key") == mask_key or row.get("topology_id") == identity)]
+        exact_origins = sorted({str(row.get("origin", "unknown")) for row in matching
+                                if row.get("mask_key") == mask_key})
+        topology_origins = sorted({str(row.get("origin", "unknown")) for row in matching})
+        if any(origin.startswith(("bank:", "functional:")) for origin in topology_origins):
+            kind = "initial_bank_topology"
+        elif any(origin.startswith("acquisition:generator:") for origin in topology_origins):
+            kind = "generator"
+        elif any(origin.startswith("acquisition:mutation") for origin in topology_origins):
+            kind = "mutation"
+        elif any(origin.startswith("acquisition:random") or origin == "random"
+                 for origin in topology_origins):
+            kind = "random"
+        elif topology_origins:
+            kind = "other_measured"
+        else:
+            kind = "unmatched"
+        return dict(kind=kind, mask_key=mask_key, topology_id=identity,
+                    exact_mask_origins=exact_origins, topology_origins=topology_origins,
+                    train_record_count=len(matching))
+
     def select(self, masks, epoch, *, stage="initial"):
         seen, unique = set(), []
         for mask in masks:
@@ -872,6 +961,7 @@ class CooperativeSearchController:
             cost = float(quality_objective_cost(delta, self.config.quality_objective))
             if cost < self.best_cost:
                 self.best_mask, self.best_cost, self.best_epoch = mask.clone().cpu(), cost, epoch
+                self.best_mask_origin = self._infer_best_mask_origin(self.best_mask)
                 self.best_mean_delta, self.best_worst_delta = float(delta.mean()), float(delta.max())
                 self.best_stage = stage
                 if self.config.persist_artifacts:
@@ -921,6 +1011,7 @@ class CooperativeSearchController:
             generator_pretraining=self.generator_pretraining,
             evaluator_history=self.evaluator_history, calibration=self.calibration,
             refresh_history=self.refresh_history, best_mask=self.best_mask,
+            best_mask_origin=self.best_mask_origin,
             best_cost=self.best_cost, best_epoch=self.best_epoch, best_models=self.best_models,
             best_stage=self.best_stage,
             best_evaluator=self.best_evaluator, best_banks=self.best_banks,
@@ -1540,7 +1631,11 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             global_evaluator_members=config.ensemble_members, best_epoch=best_epoch,
             best_selection_delta=controller.best_worst_delta, best_selection_cost=best_cost,
             best_selection_mean_delta=controller.best_mean_delta,
-            quality_objective=config.quality_objective, best_stage=controller.best_stage,
+            quality_objective=config.quality_objective,
+            elite_target_source=config.elite_target_source,
+            generator_pretrain_source=config.generator_pretrain_source,
+            best_mask_origin=controller.best_mask_origin,
+            best_stage=controller.best_stage,
             completed_stage=controller.stage, protocol_id=protocol.fingerprint,
             evaluator_policy=controller.evaluator_policy,
             evaluator_online_updates=controller.evaluator_online_updates,
@@ -1571,6 +1666,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         methods["toeplitz"] = toeplitz
     frozen = dict(methods=methods, models=best_models, ensemble=best_evaluator,
                   banks=best_banks, protocol=asdict(protocol), best_epoch=best_epoch,
+                  best_mask_origin=controller.best_mask_origin,
                   best_selection_delta=controller.best_worst_delta,
                   best_selection_cost=best_cost,
                   best_selection_mean_delta=controller.best_mean_delta,
@@ -1588,6 +1684,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     save_json(out / "frozen.json", dict(best_epoch=best_epoch,
         selection_delta=controller.best_worst_delta, selection_cost=best_cost,
         selection_mean_delta=controller.best_mean_delta, quality_objective=config.quality_objective,
+        best_mask_origin=controller.best_mask_origin,
         best_stage=controller.best_stage,
         train_patterns=list(patterns), test_pattern=config.test_pattern,
         test_patterns=list(config.effective_test_patterns),
@@ -1693,7 +1790,11 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         best_epoch=best_epoch, best_stage=controller.best_stage,
         best_selection_delta=controller.best_worst_delta, best_selection_cost=best_cost,
         best_selection_mean_delta=controller.best_mean_delta,
-        quality_objective=config.quality_objective, protocol_id=protocol.fingerprint,
+        quality_objective=config.quality_objective,
+        elite_target_source=config.elite_target_source,
+        generator_pretrain_source=config.generator_pretrain_source,
+        best_mask_origin=controller.best_mask_origin,
+        protocol_id=protocol.fingerprint,
         common_train_elites=len(controller.common_elites()), smoke_only=config.smoke,
         bank_sizes={name: bank.tokens.shape[1] for name, bank in banks.items()},
         bank_densities={name: sorted(set(bank.masks.sum((1, 2)).long().tolist())) for name, bank in banks.items()},
@@ -1788,6 +1889,10 @@ def make_parser():
     parser.add_argument("--output-budgets", type=int, nargs="*")
     parser.add_argument("--agreement-weight", "--lambda-agreement", dest="agreement_weight", type=float)
     parser.add_argument("--reconstruction-weight", type=float)
+    parser.add_argument("--generator-lr", type=float)
+    parser.add_argument("--generator-pretrain-source", choices=("teacher", "bank", "selected"))
+    parser.add_argument("--generator-pretrain-lr", type=float)
+    parser.add_argument("--elite-target-source", choices=("train_archive", "selected"))
     parser.add_argument("--quality-objective", choices=QUALITY_OBJECTIVES,
                         help="Across-task cost used for policy, acquisition, feedback and selection")
     parser.add_argument("--elite-distillation-weight", "--mu-distill",
@@ -1874,6 +1979,13 @@ def resolve_run_settings(args):
                      phase="bootstrap" if args.bootstrap_only else "search",
                      bootstrap_generators=args.bootstrap_generators,
                      persist_artifacts=args.persist_artifacts)
+    for argument, setting in (("generator_lr", "generator_lr"),
+                              ("generator_pretrain_lr", "generator_pretrain_lr"),
+                              ("generator_pretrain_source", "generator_pretrain_source"),
+                              ("elite_target_source", "elite_target_source")):
+        value = getattr(args, argument)
+        if value is not None:
+            overrides[setting] = value
     if args.latent_lr is not None:
         overrides["latent_lr"] = args.latent_lr
     if args.evaluator_lr is not None:

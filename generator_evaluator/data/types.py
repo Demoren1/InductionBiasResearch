@@ -229,8 +229,10 @@ class RealReplay:
 
     def validate(self) -> None:
         """Recompute identities/partitions and bind labels to saved real fits."""
+        protocol_id = self.protocol.fingerprint
+        mask_metadata: dict[str, tuple[str, str, float, int, str]] = {}
         for row in self.records:
-            if row["protocol_id"] != self.protocol.fingerprint or row["label_source"] != "fresh_terminal_query":
+            if row["protocol_id"] != protocol_id or row["label_source"] != "fresh_terminal_query":
                 raise ValueError("invalid replay label provenance")
             losses = torch.as_tensor(row.get("replica_losses", []), dtype=torch.float32)
             seeds = list(row.get("seeds", []))
@@ -239,25 +241,29 @@ class RealReplay:
                     not math.isfinite(float(row.get("quality", float("nan")))) or
                     row["quality"] != float(losses.mean())):
                 raise ValueError("replay terminal labels or initialization provenance are corrupt")
-            mask = self.masks[row["mask_key"]]
-            identity = topology_id(mask)
-            if row["mask_key"] != tensor_hash(mask) or row["topology_id"] != identity:
+            key = row["mask_key"]
+            if key not in mask_metadata:
+                mask = self.masks[key]
+                mask_metadata[key] = (tensor_hash(mask), topology_id(mask),
+                                      float(mask.float().mean()), int(mask.sum()),
+                                      self.mask_split(mask))
+            mask_hash, identity, density, active_edges, partition = mask_metadata[key]
+            if key != mask_hash or row["topology_id"] != identity:
                 raise ValueError("replay mask identity is corrupt")
-            if (row.get("density") != float(mask.float().mean()) or
-                    row.get("active_edges") != int(mask.sum())):
+            if row.get("density") != density or row.get("active_edges") != active_edges:
                 raise ValueError("replay mask summary is corrupt")
-            if self.mask_splits[identity] != self.mask_split(mask):
+            if self.mask_splits[identity] != partition:
                 raise ValueError("replay topology partition is corrupt")
             task_id = row["task_id"]
             if (task_id not in self.task_splits or task_id not in self.task_fingerprints or
                     self.task_splits[task_id] != row["task_split"] or
                     self.task_fingerprints[task_id] != row["task_fingerprint"]):
                 raise ValueError("replay task identity/partition is corrupt")
-            expected_split = ("control" if self.mask_split(mask) == "control" else
-                              "joint_validation" if row["task_split"] == "validation" and self.mask_split(mask) == "holdout" else
+            expected_split = ("control" if partition == "control" else
+                              "joint_validation" if row["task_split"] == "validation" and partition == "holdout" else
                               "meta_validation" if row["task_split"] == "validation" else
                               "test" if row["task_split"] == "test" else
-                              "mask_validation" if self.mask_split(mask) == "holdout" else "train")
+                              "mask_validation" if partition == "holdout" else "train")
             if expected_split != row["split"]:
                 raise ValueError("replay row crossed partitions")
             context = self.contexts[task_id]

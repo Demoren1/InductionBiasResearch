@@ -58,6 +58,9 @@ class CooperativeConfig:
     reconstruction_weight: float = .1
     reconstruction_batch_size: int = 8
     generator_pretrain_epochs: int = 0
+    generator_pretrain_source: str = "teacher"
+    generator_pretrain_lr: float = .003
+    elite_target_source: str = "train_archive"
     pretrain_updates_per_epoch: int = 20
     permutation_weight: float = 1.
     gap_threshold: float = .1
@@ -90,6 +93,15 @@ class CooperativeConfig:
             raise ValueError("phase must be bootstrap or search")
         if self.training_mode not in ("joint", "staged"):
             raise ValueError("training_mode must be joint or staged")
+        if self.generator_pretrain_source not in ("teacher", "bank", "selected"):
+            raise ValueError("generator_pretrain_source must be teacher, bank, or selected")
+        if self.elite_target_source not in ("train_archive", "selected"):
+            raise ValueError("elite_target_source must be train_archive or selected")
+        for name, value in (("generator_lr", self.generator_lr),
+                            ("generator_pretrain_lr", self.generator_pretrain_lr)):
+            if (isinstance(value, bool) or not isinstance(value, (int, float)) or
+                    not math.isfinite(value) or value <= 0):
+                raise ValueError(f"{name} must be a finite positive number")
         validate_quality_objective(self.quality_objective)
         positive = (self.k, self.generator_epochs, self.updates_per_epoch,
                     self.cooperation_rounds, self.cooperation_updates,

@@ -214,6 +214,72 @@ def reconstruct_bank_masks(
     }
 
 
+def reconstruct_full_bank_target(
+    model: nn.Module,
+    bank: Any,
+    target_mask: Tensor,
+    optimizer: torch.optim.Optimizer,
+    *,
+    rng: torch.Generator | None = None,
+    weight: float = 1.0,
+) -> dict[str, float | str]:
+    """Reconstruct one fixed mask from the complete, device-prepared bank.
+
+    ``bank`` is expected to come from ``StagedGeneratorTrainer._prepared_bank``
+    so its tokens and quality are already on the generator device. The caller
+    validates a static target once before repeated warmup updates.
+    """
+    objective_weight = _weight(weight, "weight")
+    _validate_optimizer(model, optimizer)
+    source_tokens = getattr(bank, "tokens", None)
+    source_quality = getattr(bank, "quality", None)
+    if (not isinstance(source_tokens, Tensor) or source_tokens.ndim != 4 or
+            source_tokens.shape[0] != 1 or source_tokens.shape[1] < 1):
+        raise ValueError("prepared bank.tokens must have shape [1, R, H, D]")
+    if (not isinstance(target_mask, Tensor) or
+            target_mask.shape != (int(model.features), int(model.hidden))):  # type: ignore[attr-defined]
+        raise ValueError("target_mask dimensions must match the generator output")
+    device, dtype = _device_dtype(model)
+    if source_tokens.device != device or source_tokens.dtype != dtype:
+        raise ValueError("prepared bank tokens must match the generator device and dtype")
+    if source_tokens.shape[2] != int(model.hidden):  # type: ignore[attr-defined]
+        raise ValueError("prepared bank hidden dimension must match the generator")
+    if source_quality is not None and (
+            not isinstance(source_quality, Tensor) or source_quality.ndim != 3 or
+            source_quality.shape[:2] != source_tokens.shape[:2] or
+            source_quality.device != device or source_quality.dtype != dtype):
+        raise ValueError("prepared bank quality must match its tokens and generator device")
+    if target_mask.device != device or target_mask.dtype != dtype:
+        raise ValueError("target_mask must be prepared on the generator device and dtype")
+
+    count = 2
+    tokens = source_tokens.expand(count, *source_tokens.shape[1:])
+    quality = (None if source_quality is None else
+               source_quality.expand(count, *source_quality.shape[1:]))
+    targets = target_mask.unsqueeze(0).expand(count, -1, -1)
+    density = targets.sum((1, 2)) / (int(model.features) * int(model.hidden))  # type: ignore[attr-defined]
+    if bool((density <= 0).any()) or bool((density > 1).any()):
+        raise ValueError("target_mask density must be in (0, 1]")
+    noise = _noise(count, int(model.noise_dim), rng, device, dtype)  # type: ignore[attr-defined]
+    logits = _forward(model, tokens, noise, quality, density)
+    aligned = torch.stack([align_elite_to_logits(targets[row], logits[row])
+                           for row in range(count)])
+    reconstruction = F.binary_cross_entropy_with_logits(logits, aligned)
+    overlap = _topk_overlap(logits, aligned)
+
+    if objective_weight > 0:
+        optimizer.zero_grad(set_to_none=True)
+        (objective_weight * reconstruction).backward()
+        parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
+        torch.nn.utils.clip_grad_norm_(parameters, max_norm=10.0)
+        optimizer.step()
+    return {
+        "reconstruction_loss": float(reconstruction.detach().cpu()),
+        "reconstruction_overlap": overlap,
+        "reconstruction_scope": "explicit_full_bank",
+    }
+
+
 def _soft_exact_mass(logits: Tensor, k: int) -> Tensor:
     """Sigmoid relaxation with approximately ``k`` mass per flattened row."""
     flat = logits.reshape(len(logits), -1)

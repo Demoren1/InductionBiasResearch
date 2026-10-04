@@ -2,9 +2,9 @@
 GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 
 # The search invocation prepares functional banks and the initial evaluator,
-# then jointly optimizes own-task quality, agreement and archive distillation.
-# EVALUATOR_EPOCHS trains the initial evaluator from bank-origin cross-fits; it stays frozen.
-# REFRESH_EVERY schedules measurement rounds and feedback, not evaluator updates.
+# then jointly optimizes own-task quality, agreement and selected-mask distillation.
+# EVALUATOR_EPOCHS trains the initial evaluator from bank-origin cross-fits.
+# REFRESH_EVERY schedules real measurements, evaluator updates and map feedback.
 # Keep the best common mask across refreshes, using independent selection queries.
 # BOOTSTRAP_GENERATORS=1 is retained for CLI compatibility.
 # RESTART_FROM reuses saved binary banks and evaluator with fresh generators.
@@ -15,7 +15,7 @@ GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 # Budget overrides: BANK_CANDIDATES, TEACHERS, BANK_STEPS, CHILD_STEPS,
 # GENERATOR_EPOCHS, UPDATES_PER_EPOCH and CHILD_MASK_BATCH.
 # Trailing CLI arguments apply to search.
-# ELITE_LIMIT bounds the archive of measured real masks used for distillation.
+# ELITE_LIMIT bounds the archive of measured real masks considered for selection.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
@@ -49,9 +49,15 @@ GE_COMMON_ARGS=(
   --evaluator-devices "${GE_EVALUATOR_DEVICES[@]}"
   --acquisition-budget "${ACQUISITION_BUDGET:-24}" --candidates 24 --initial-random 8
   --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2
-  --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"
-  --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-0.1}"
-  --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-0}"
+  --agreement-weight "${AGREEMENT_WEIGHT:-0.01}"
+  --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-1.0}"
+  --elite-target-source "${ELITE_TARGET_SOURCE:-selected}"
+  --generator-lr "${GENERATOR_LR:-0.0003}"
+  --generator-pretrain-epochs "${GENERATOR_PRETRAIN_EPOCHS:-5}"
+  --generator-pretrain-source "${GENERATOR_PRETRAIN_SOURCE:-selected}"
+  --generator-pretrain-lr "${GENERATOR_PRETRAIN_LR:-0.003}"
+  --pretrain-updates-per-epoch "${PRETRAIN_UPDATES_PER_EPOCH:-20}"
+  --reconstruction-weight "${RECONSTRUCTION_WEIGHT:-1.0}"
   --quality-objective "${QUALITY_OBJECTIVE:-average}"
   --seed "$GE_SEED" --device cuda:0 --generator-devices auto --measurement-devices auto
   --measurement-batch-size "${CHILD_MASK_BATCH:-64}" --progress
