@@ -227,17 +227,20 @@ def _unwrap_model_state(state: dict[str, Tensor], *, row: int = 0, rows: int = 1
 
 
 def extract_deepsets_functional_token(state: dict[str, Tensor], mask: Tensor,
-                                      probe_x: Tensor) -> tuple[Tensor, dict[str, Tensor]]:
+                                      probe_x: Tensor, *,
+                                      device: str | torch.device | None = None
+                                      ) -> tuple[Tensor, dict[str, Tensor]]:
     """Build normalized tanh contributions and feature derivatives on images."""
     required = ("weight", "bias", "readout", "per_image_offset")
     if not isinstance(state, dict) or any(name not in state for name in required):
         raise ValueError("DeepSets child state lacks weight, bias, readout or per_image_offset")
-    weight = torch.as_tensor(state["weight"], dtype=torch.float32).detach().cpu()
-    bias = torch.as_tensor(state["bias"], dtype=torch.float32).detach().cpu()
-    readout = torch.as_tensor(state["readout"], dtype=torch.float32).detach().cpu()
-    offset = torch.as_tensor(state["per_image_offset"], dtype=torch.float32).detach().cpu()
-    mask = torch.as_tensor(mask, dtype=torch.float32).detach().cpu()
-    probe_x = torch.as_tensor(probe_x, dtype=torch.float32).detach().cpu()
+    target_device = torch.device("cpu" if device is None else device)
+    weight = torch.as_tensor(state["weight"], dtype=torch.float32).detach().to(target_device)
+    bias = torch.as_tensor(state["bias"], dtype=torch.float32).detach().to(target_device)
+    readout = torch.as_tensor(state["readout"], dtype=torch.float32).detach().to(target_device)
+    offset = torch.as_tensor(state["per_image_offset"], dtype=torch.float32).detach().to(target_device)
+    mask = torch.as_tensor(mask, dtype=torch.float32).detach().to(target_device)
+    probe_x = torch.as_tensor(probe_x, dtype=torch.float32).detach().to(target_device)
     if weight.ndim != 2 or weight.shape[0] != _FEATURES or mask.shape != weight.shape:
         raise ValueError("DeepSets weight and mask must share shape [784, hidden]")
     if bias.shape != (weight.shape[1],) or readout.shape != bias.shape or offset.numel() != 1:
@@ -260,11 +263,15 @@ def extract_deepsets_functional_token(state: dict[str, Tensor], mask: Tensor,
     psi_scale = psi.square().mean().sqrt().clamp_min(1e-8)
     q_scale = rms.amax().clamp_min(1e-8)
     tokens = torch.cat((psi.div(psi_scale).T, signed.div(q_scale).T,
-                        absolute.div(q_scale).T, rms.div(q_scale).T, mask.T), dim=1).contiguous()
-    raw = {"psi": psi.contiguous(), "q_signed_mean": signed.contiguous(),
-           "q_abs_mean": absolute.contiguous(), "q_rms": rms.contiguous(),
-           "psi_scale": psi_scale.reshape(1), "q_scale": q_scale.reshape(1),
-           "effective_weights": effective.contiguous()}
+                        absolute.div(q_scale).T, rms.div(q_scale).T, mask.T), dim=1)
+    tokens = tokens.contiguous().cpu().contiguous()
+    raw = {"psi": psi.contiguous().cpu().contiguous(),
+           "q_signed_mean": signed.contiguous().cpu().contiguous(),
+           "q_abs_mean": absolute.contiguous().cpu().contiguous(),
+           "q_rms": rms.contiguous().cpu().contiguous(),
+           "psi_scale": psi_scale.reshape(1).cpu().contiguous(),
+           "q_scale": q_scale.reshape(1).cpu().contiguous(),
+           "effective_weights": effective.contiguous().cpu().contiguous()}
     return tokens, raw
 
 
@@ -1037,15 +1044,23 @@ def validate_deepsets_test_tasks(test_tasks: Sequence[TaskData], test_spec: dict
         seen_test_ids |= support_ids | query_ids
 
 
-def _stratified_rows(bank: FunctionalBank, max_teachers: int) -> list[int]:
+def _stratified_rows(bank: FunctionalBank, max_teachers: int, *,
+                     masks: Tensor | None = None,
+                     states: Sequence[dict[str, Any]] | None = None) -> list[int]:
+    """Select density-balanced rows from a bank or its logical combined rows."""
+    row_masks = bank.masks if masks is None else masks
+    row_states = bank.states if states is None else states
+    densities = [int(value) for value in row_masks.sum((1, 2)).long().tolist()]
+    if len(row_states) != len(densities):
+        raise ValueError("DeepSets feedback masks and states must have matching rows")
     groups: dict[int, list[int]] = {}
-    for index, mask in enumerate(bank.masks):
-        groups.setdefault(int(mask.sum()), []).append(index)
+    for index, density in enumerate(densities):
+        groups.setdefault(density, []).append(index)
     if max_teachers < len(groups):
         raise ValueError("max_teachers must retain a representative for every density anchor")
 
     def is_feedback(index: int) -> bool:
-        return bank.states[index].get("source", {}).get("kind") == "feedback"
+        return row_states[index].get("source", {}).get("kind") == "feedback"
 
     target = int(bank.provenance.get("baseline_k", -1))
     priorities = []
@@ -1054,31 +1069,46 @@ def _stratified_rows(bank: FunctionalBank, max_teachers: int) -> list[int]:
             priorities.append(density)
     priorities.extend(density for density in sorted(groups) if density not in priorities)
     selected: list[int] = []
+    selected_set: set[int] = set()
+    selected_counts = {density: 0 for density in groups}
     for density in priorities:
         anchor = next((index for index in groups[density] if not is_feedback(index)), groups[density][0])
-        groups[density].remove(anchor)
         selected.append(anchor)
-    newest_feedback = [index for index in range(len(bank.masks) - 1, -1, -1)
-                       if is_feedback(index) and index not in selected]
+        selected_set.add(anchor)
+        selected_counts[density] += 1
+    newest_feedback = [index for index in range(len(densities) - 1, -1, -1)
+                       if is_feedback(index) and index not in selected_set]
     newest_feedback = newest_feedback[:max(0, max_teachers - len(selected))]
     selected.extend(newest_feedback)
     for index in newest_feedback:
-        groups[int(bank.masks[index].sum())].remove(index)
+        selected_set.add(index)
+        selected_counts[densities[index]] += 1
+    remaining_counts = {density: len(rows) for density, rows in groups.items()}
+    for index in selected_set:
+        remaining_counts[densities[index]] -= 1
+    next_positions = {density: 0 for density in groups}
     while len(selected) < max_teachers:
-        choices = [density for density, rows in groups.items() if rows]
+        choices = [density for density in groups if remaining_counts[density] > 0]
         if not choices:
             break
-        counts = {density: sum(int(bank.masks[index].sum()) == density for index in selected)
-                  for density in choices}
-        density = min(choices, key=lambda value: (counts[value], value))
-        selected.append(groups[density].pop(0))
+        density = min(choices, key=lambda value: (selected_counts[value], value))
+        rows = groups[density]
+        position = next_positions[density]
+        while rows[position] in selected_set:
+            position += 1
+        index = rows[position]
+        next_positions[density] = position + 1
+        selected.append(index)
+        selected_counts[density] += 1
+        remaining_counts[density] -= 1
     return selected
 
 
 def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: dict[str, Any],
                              probe_x: Tensor, *, task_id: str,
                              artifact_path: str | Path | None = None,
-                             max_teachers: int = 100, eligible: bool = True) -> FunctionalBank:
+                             max_teachers: int = 100, eligible: bool = True,
+                             device: str | torch.device | None = None) -> FunctionalBank:
     """Add distinct terminal training replicas as normalized functional rows."""
     if not isinstance(bank, FunctionalBank) or bank.provenance.get("family") != "cooperative_deepsets":
         raise ValueError("feedback requires a cooperative DeepSets functional bank")
@@ -1127,7 +1157,7 @@ def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: di
         row_hash = _state_hash(state, mask)
         if row_hash in existing:
             continue
-        token, raw = extract_deepsets_functional_token(state, mask, probe_x)
+        token, raw = extract_deepsets_functional_token(state, mask, probe_x, device=device)
         tokens.append(token)
         masks.append(mask.clone())
         addition = {**raw, "state_dict": state, "row_hash": row_hash,
@@ -1146,17 +1176,32 @@ def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: di
         existing.add(row_hash)
     if not tokens:
         return bank
-    combined = FunctionalBank(torch.cat((bank.tokens, torch.stack(tokens)[None]), dim=1), None,
-                              torch.cat((bank.masks, torch.stack(masks)), dim=0), bank.baseline_mask,
-                              deepcopy(bank.provenance), states=[*bank.states, *additions],
-                              diagnostics=deepcopy(bank.diagnostics))
-    keep = _stratified_rows(combined, max_teachers)
-    provenance = deepcopy(combined.provenance)
+    new_tokens = torch.stack(tokens)[None]
+    combined_masks = torch.cat((bank.masks, torch.stack(masks)), dim=0)
+    combined_states = [*bank.states, *additions]
+    keep = _stratified_rows(bank, max_teachers, masks=combined_masks, states=combined_states)
+    provenance = dict(bank.provenance)
     provenance["feedback_hashes"] = sorted(existing)
+    selected_masks = combined_masks[keep]
+    selected_densities = selected_masks.sum((1, 2)).long()
     provenance["teacher_density_counts"] = {
-        int(density): int((combined.masks[keep].sum((1, 2)) == density).sum())
-        for density in torch.unique(combined.masks[keep].sum((1, 2)).long()).tolist()}
-    diagnostics = deepcopy(combined.diagnostics)
+        int(density): int((selected_densities == density).sum())
+        for density in torch.unique(selected_densities).tolist()}
+    diagnostics = dict(bank.diagnostics)
     diagnostics["feedback_rows_added"] = int(diagnostics.get("feedback_rows_added", 0)) + len(additions)
-    return FunctionalBank(combined.tokens[:, keep], None, combined.masks[keep], combined.baseline_mask,
-                          provenance, states=[combined.states[index] for index in keep], diagnostics=diagnostics)
+    old_count = len(bank.masks)
+    old_rows = [index for index, row in enumerate(keep) if row < old_count]
+    new_rows = [index for index, row in enumerate(keep) if row >= old_count]
+    selected_tokens = bank.tokens.new_empty((1, len(keep), *bank.tokens.shape[2:]))
+    if old_rows:
+        selected_tokens.index_copy_(
+            1, torch.tensor(old_rows, dtype=torch.long),
+            bank.tokens.index_select(1, torch.tensor([keep[index] for index in old_rows], dtype=torch.long)))
+    if new_rows:
+        selected_tokens.index_copy_(
+            1, torch.tensor(new_rows, dtype=torch.long),
+            new_tokens.index_select(1, torch.tensor([keep[index] - old_count for index in new_rows],
+                                                    dtype=torch.long)))
+    return FunctionalBank(selected_tokens, None, selected_masks, bank.baseline_mask,
+                          provenance, states=[combined_states[index] for index in keep],
+                          diagnostics=diagnostics)

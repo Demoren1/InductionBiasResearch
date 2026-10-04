@@ -708,28 +708,42 @@ class CooperativeSearchController:
             measured = self.measure_many(entries, retain_results=True)
             memory_results = {(tensor_hash(mask), task.task_id): result
                               for (mask, task, _), (_, result) in zip(entries, measured)}
-        for index in progress(selected, desc="Real functional-map feedback", unit="mask"):
-            for name, row in zip(self.patterns, rows[index]):
-                result = (torch.load(row["artifact_path"], map_location="cpu", weights_only=False)["result"]
-                          if self.config.persist_artifacts else
-                          memory_results[(row["mask_key"], row["task_id"])])
-                append = append_feedback
-                if self.config.domain == "deepsets":
-                    from generator_evaluator.data.deepsets import append_deepsets_feedback
-                    append = append_deepsets_feedback
-                self.banks[name] = append(
-                    self.banks[name], masks[index], result,
-                    self.banks[name].diagnostics["probe_x"], task_id=row["task_id"],
-                    artifact_path=row["artifact_path"], max_teachers=self.config.bank_capacity,
-                    eligible=row["split"] == "train")
-                for teacher in self.banks[name].states:
-                    source = teacher.get("source", {})
-                    source_mask = source.get("source_mask")
-                    matching = (source.get("artifact_path") == row["artifact_path"]
-                                if self.config.persist_artifacts else
-                                torch.is_tensor(source_mask) and torch.equal(source_mask, masks[index]))
-                    if source.get("kind") == "feedback" and matching:
-                        source["query_error"] = float(result["replica_losses"][source["replica"]])
+        from generator_evaluator.training.device_executor import PerDeviceGeneratorExecutor
+        devices = dict(zip(self.patterns, self.generator_devices))
+        with ExitStack() as cleanup:
+            executor = self.generator_executor
+            if executor is None:
+                executor = cleanup.enter_context(
+                    PerDeviceGeneratorExecutor(self.patterns, self.generator_devices))
+            for index in progress(selected, desc="Real functional-map feedback", unit="mask"):
+                task_rows = dict(zip(self.patterns, rows[index]))
+
+                def append_for(name):
+                    row = task_rows[name]
+                    result = (torch.load(row["artifact_path"], map_location="cpu", weights_only=False)["result"]
+                              if self.config.persist_artifacts else
+                              memory_results[(row["mask_key"], row["task_id"])])
+                    append, options = append_feedback, {}
+                    if self.config.domain == "deepsets":
+                        from generator_evaluator.data.deepsets import append_deepsets_feedback
+                        append = append_deepsets_feedback
+                        options["device"] = devices[name]
+                    bank = append(
+                        self.banks[name], masks[index], result,
+                        self.banks[name].diagnostics["probe_x"], task_id=row["task_id"],
+                        artifact_path=row["artifact_path"], max_teachers=self.config.bank_capacity,
+                        eligible=row["split"] == "train", **options)
+                    for teacher in bank.states:
+                        source = teacher.get("source", {})
+                        source_mask = source.get("source_mask")
+                        matching = (source.get("artifact_path") == row["artifact_path"]
+                                    if self.config.persist_artifacts else
+                                    torch.is_tensor(source_mask) and torch.equal(source_mask, masks[index]))
+                        if source.get("kind") == "feedback" and matching:
+                            source["query_error"] = float(result["replica_losses"][source["replica"]])
+                    return bank
+
+                self.banks.update(executor.map(append_for))
         self.export_functional_cards()
         for name in self.patterns:
             self.trainer.set_bank(name, self.banks[name])
