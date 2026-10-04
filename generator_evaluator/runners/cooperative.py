@@ -44,7 +44,7 @@ from generator_evaluator.training.online_evaluator import build_online_evaluator
 from generator_evaluator.storage.toeplitz import write_toeplitz_report
 from generator_evaluator.storage.warm_start import evaluator_bank_fingerprint, load_cooperative_warm_start
 from generator_evaluator.storage.prepared import (
-    load_labels, load_prepared, save_labels, save_online_labels, save_prepared,
+    load_labels, load_prepared, retarget_prepared_baselines, save_labels, save_online_labels, save_prepared,
 )
 from generator_evaluator.search.schedule import (STAGE_BOOTSTRAP_QUALITY, STAGE_COOPERATION, STAGE_JOINT,
                             STAGE_QUALITY, STAGE_TRAINING_COMPLETE,
@@ -190,6 +190,17 @@ class CooperativeSearchController:
                  generator_pretraining=None, initial_bank_topology_ids=(), evaluator_devices=None):
         self.out, self.config, self.device, self.patterns = out, config, device, patterns
         self.banks, self.train_tasks, self.selection_tasks = banks, train_tasks, selection_tasks
+        needs_functional_mean = (
+            config.domain == "pattern" or
+            config.generator_pretrain_source == "functional_mean" or
+            config.elite_target_source == "functional_mean" or
+            (config.domain == "deepsets" and config.phase != "bootstrap"))
+        if needs_functional_mean:
+            from generator_evaluator.search.consensus import build_functional_consensus_proposals
+            self.functional_consensus = build_functional_consensus_proposals(list(banks.values()), config.k)
+            self.functional_mean = self.functional_consensus.global_topk
+        else:
+            self.functional_consensus = self.functional_mean = None
         self.replay, self.store = replay, store
         self.models, self.optimizers, self.ensemble = models, optimizers, ensemble
         self.dense_rows, self.dense_quality, self.contexts = dense_rows, dense_quality, contexts
@@ -406,16 +417,17 @@ class CooperativeSearchController:
                                     quality_objective=self.config.quality_objective)
 
     def distillation_targets(self):
-        """Return measured targets from the configured archive policy."""
-        if self.config.elite_target_source == "selected":
+        """Return fixed source targets or measured rows from the configured archive."""
+        if self.config.elite_target_source in ("selected", "functional_mean"):
             if not self.initialization_done:
                 return torch.empty(0, self.config.features, self.config.hidden)
-            target = self.best_mask.detach().cpu()
+            target = (self.best_mask if self.config.elite_target_source == "selected"
+                      else self.functional_mean).detach().cpu()
             if (target.shape != (self.config.features, self.config.hidden) or
                     not bool(torch.isfinite(target).all()) or
                     not bool(((target == 0) | (target == 1)).all()) or
                     int(target.sum()) != self.config.k):
-                raise ValueError("selected distillation target must have the configured exact-K budget")
+                raise ValueError("fixed distillation target must have the configured exact-K budget")
             return target.unsqueeze(0)
         if not self.actual_archive:
             return torch.empty(0, self.config.features, self.config.hidden)
@@ -449,16 +461,18 @@ class CooperativeSearchController:
         """Run the one-time reconstruction phase for fresh main generators."""
         from generator_evaluator.training.device_executor import PerDeviceGeneratorExecutor
         source = self.config.generator_pretrain_source
-        anchor_kind = "full_bank_inputs" if source == "teacher" else source
+        anchor_kind = ("full_bank_inputs" if source == "teacher" else
+                       "functional_mean_mask" if source == "functional_mean" else source)
         anchor_hashes = {}
         target_anchors = {}
         if source == "teacher":
             anchor_hashes = {name: bank_input_fingerprint(self.banks[name])
                              for name in self.patterns}
         else:
-            common_anchor = (self.best_mask if source == "selected" else None)
+            common_anchor = (self.best_mask if source == "selected" else
+                             self.functional_mean if source == "functional_mean" else None)
             for name in self.patterns:
-                raw_anchor = (common_anchor if source == "selected"
+                raw_anchor = (common_anchor if common_anchor is not None
                               else self.banks[name].baseline_mask)
                 if not isinstance(raw_anchor, torch.Tensor):
                     raise ValueError("generator pretraining anchor must be a tensor mask")
@@ -473,9 +487,9 @@ class CooperativeSearchController:
                                                  dtype=model_parameter.dtype)
                 anchor_hashes[name] = tensor_hash(anchor)
         prepared_banks = ({name: self.trainer._prepared_bank(name) for name in self.patterns}
-                          if source in ("bank", "selected") else {})
+                          if source in ("bank", "selected", "functional_mean") else {})
         try:
-            if source in ("bank", "selected"):
+            if source in ("bank", "selected", "functional_mean"):
                 for optimizer in self.optimizers.values():
                     for group in optimizer.param_groups:
                         group["lr"] = self.config.generator_pretrain_lr
@@ -506,7 +520,7 @@ class CooperativeSearchController:
                     self.stage, self.stage_epoch = "reconstruction", self.pretraining_epoch
                     self.save_checkpoint(0)
         finally:
-            if source in ("bank", "selected"):
+            if source in ("bank", "selected", "functional_mean"):
                 for optimizer in self.optimizers.values():
                     for group in optimizer.param_groups:
                         group["lr"] = self.config.generator_lr
@@ -1452,10 +1466,9 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     controller.export_functional_cards()
 
     functional_controls = {}
-    functional_mean = None
+    functional_mean = controller.functional_mean
+    consensus = controller.functional_consensus
     if config.domain == "pattern":
-        from generator_evaluator.search.consensus import build_functional_consensus_proposals
-        consensus = build_functional_consensus_proposals(list(banks.values()), config.k)
         functional_controls = dict(functional_consensus=consensus.global_topk,
             functional_balanced_consensus=consensus.balanced_per_column)
         _save_optional_torch(config, out / "functional_consensus.pt", dict(
@@ -1465,10 +1478,6 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             alignment="ordered input-coordinate centroids",
             balanced_degree_prior="floor(K/H) per hidden column plus strongest remaining edges",
             analytical_structure_target_used=False))
-
-    if config.domain == "deepsets" and config.phase != "bootstrap":
-        from generator_evaluator.search.consensus import build_functional_consensus_proposals
-        functional_mean = build_functional_consensus_proposals(list(banks.values()), config.k).global_topk
 
     bootstrap_critic_only = config.phase == "bootstrap" and not config.bootstrap_generators
     if not controller.initialization_done:
@@ -1799,7 +1808,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                    "random": _random_masks(1, config.features, config.hidden, config.k, cpu_rng)[0],
                    **{f"functional_{name}": bank.baseline_mask for name, bank in banks.items()},
                    **functional_controls, "dense": dense}
-        if functional_mean is not None:
+        if config.domain == "deepsets" and config.phase != "bootstrap":
             methods["functional_mean"] = functional_mean
         if toeplitz is not None:
             methods["toeplitz"] = toeplitz
@@ -2009,9 +2018,10 @@ def make_parser():
     parser.add_argument("--agreement-weight", "--lambda-agreement", dest="agreement_weight", type=float)
     parser.add_argument("--reconstruction-weight", type=float)
     parser.add_argument("--generator-lr", type=float)
-    parser.add_argument("--generator-pretrain-source", choices=("teacher", "bank", "selected"))
+    parser.add_argument("--generator-pretrain-source",
+                        choices=("teacher", "bank", "selected", "functional_mean"))
     parser.add_argument("--generator-pretrain-lr", type=float)
-    parser.add_argument("--elite-target-source", choices=("train_archive", "selected"))
+    parser.add_argument("--elite-target-source", choices=("train_archive", "selected", "functional_mean"))
     parser.add_argument("--quality-objective", choices=QUALITY_OBJECTIVES,
                         help="Across-task cost used for policy, acquisition, feedback and selection")
     parser.add_argument("--elite-distillation-weight", "--mu-distill",
@@ -2271,8 +2281,16 @@ def main():
         if args.out.resolve() == source:
             parser.error("--restart-from requires a new --out")
         prepared = load_prepared(source)
+        if args.k is None:
+            saved_config = prepared.get("config")
+            if not isinstance(saved_config, dict) or "k" not in saved_config:
+                parser.error("saved preparation does not contain its baseline K")
+            try:
+                config = replace(config, k=saved_config["k"])
+            except (TypeError, ValueError) as error:
+                parser.error(f"saved preparation has an invalid baseline K: {error}")
         requested_config = json.loads(json.dumps(_config_metadata(config)))
-        for name in ("domain", "features", "hidden", "k", "seed", "train_patterns", "test_pattern",
+        for name in ("domain", "features", "hidden", "seed", "train_patterns", "test_pattern",
                      "test_patterns", "test_task_count", "width", "heads", "layers", "ensemble_members"):
             if prepared["config"][name] != requested_config[name]:
                 parser.error(f"saved banks/evaluator configuration differs: {name}")
@@ -2281,6 +2299,7 @@ def main():
         if ({key: value for key, value in prepared["build_settings"].items() if key != "teacher_batch_size"} !=
                 {key: value for key, value in build_settings.items() if key != "teacher_batch_size"}):
             parser.error("bank/data arguments differ from saved preparation")
+        retarget_prepared_baselines(prepared["banks"], config.k)
         prior_tasks = prepared["train_tasks"] + prepared["selection_tasks"]
         prior_replay = load_labels(source, prior_tasks)
         selected_protocol = (prior_replay.protocol if prior_replay is not None else

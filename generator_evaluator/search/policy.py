@@ -69,7 +69,8 @@ class DensityConditionedGenerator(nn.Module):
     def _validate_bank(self, tokens: Tensor, quality: Tensor | None) -> tuple[int, int]:
         if not isinstance(tokens, Tensor) or tokens.ndim != 4 or not tokens.is_floating_point():
             raise ValueError("tokens must be a floating [B,R,H,D] tensor")
-        if not torch.isfinite(tokens).all().item():
+        checked_tokens = tokens[:1] if tokens.shape[0] > 1 and tokens.stride(0) == 0 else tokens
+        if not torch.isfinite(checked_tokens).all().item():
             raise ValueError("tokens must be finite")
         batch, solutions, source_hidden, dimension = tokens.shape
         if solutions < 1 or source_hidden < 1 or dimension != self.token_dim:
@@ -77,7 +78,10 @@ class DensityConditionedGenerator(nn.Module):
         if quality is not None:
             if (not isinstance(quality, Tensor) or quality.ndim != 3 or
                     quality.shape != (batch, solutions, self.quality_dim) or
-                    not quality.is_floating_point() or not torch.isfinite(quality).all().item()):
+                    not quality.is_floating_point()):
+                raise ValueError("quality has invalid bank dimensions")
+            checked_quality = (quality[:1] if batch > 1 and quality.stride(0) == 0 else quality)
+            if not torch.isfinite(checked_quality).all().item():
                 raise ValueError("quality has invalid bank dimensions")
         return batch, solutions
 
@@ -123,6 +127,23 @@ class DensityConditionedGenerator(nn.Module):
         if (not isinstance(noise, Tensor) or noise.ndim != 2 or not noise.is_floating_point() or
                 noise.shape != (batch, self.noise_dim) or not torch.isfinite(noise).all().item()):
             raise ValueError("noise has invalid generator dimensions")
+        if (not torch.is_grad_enabled() and batch > 1 and tokens.stride(0) == 0 and
+                (quality is None or quality.stride(0) == 0)):
+            try:
+                shared_density = density is None or torch.as_tensor(density).ndim == 0
+            except (TypeError, ValueError, RuntimeError):
+                shared_density = False
+            if shared_density:
+                shared_tokens = tokens[:1]
+                shared_quality = None if quality is None else quality[:1]
+                augmented = self._augment_validated(shared_tokens, density, 1)
+                solution_memory, neuron_memory = self.inner._encode_bank_components_validated(
+                    augmented, shared_quality, 1, tokens.shape[1]
+                )
+                return self.inner._decode_from_memories_validated(
+                    solution_memory.expand(batch, -1, -1),
+                    neuron_memory.expand(batch, -1, -1, -1), noise, batch
+                )
         return self.inner._forward_validated(self._augment_validated(tokens, density, batch), noise, quality, batch)
 
 

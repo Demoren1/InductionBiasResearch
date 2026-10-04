@@ -93,10 +93,10 @@ class CooperativeConfig:
             raise ValueError("phase must be bootstrap or search")
         if self.training_mode not in ("joint", "staged"):
             raise ValueError("training_mode must be joint or staged")
-        if self.generator_pretrain_source not in ("teacher", "bank", "selected"):
-            raise ValueError("generator_pretrain_source must be teacher, bank, or selected")
-        if self.elite_target_source not in ("train_archive", "selected"):
-            raise ValueError("elite_target_source must be train_archive or selected")
+        if self.generator_pretrain_source not in ("teacher", "bank", "selected", "functional_mean"):
+            raise ValueError("generator_pretrain_source must be teacher, bank, selected, or functional_mean")
+        if self.elite_target_source not in ("train_archive", "selected", "functional_mean"):
+            raise ValueError("elite_target_source must be train_archive, selected, or functional_mean")
         for name, value in (("generator_lr", self.generator_lr),
                             ("generator_pretrain_lr", self.generator_pretrain_lr)):
             if (isinstance(value, bool) or not isinstance(value, (int, float)) or

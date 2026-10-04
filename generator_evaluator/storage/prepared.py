@@ -1,7 +1,9 @@
 """Reusable functional banks and terminal labels, without child checkpoints."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import fields
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,6 +12,7 @@ import shutil
 import numpy as np
 import torch
 
+from generator_evaluator.data.adapters import _exact_topk
 from generator_evaluator.data.types import InnerProtocol, RealReplay, TaskData
 from generator_evaluator.storage.artifacts import _atomic_write, save_json
 from generator_evaluator.storage.binary_banks import load_banks, save_banks
@@ -52,6 +55,165 @@ def _link_or_copy(source, destination):
         return shutil.copyfile(source, destination)
 
 
+def _integer_k(value, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(f"prepared {name} must be a positive integer")
+    return value
+
+
+def _validated_baseline(bank, name: str, expected_k: int) -> torch.Tensor:
+    mask = bank.baseline_mask
+    if (not isinstance(mask, torch.Tensor) or mask.ndim != 2 or
+            not bool(torch.isfinite(mask).all()) or
+            not bool(((mask == 0) | (mask == 1)).all()) or int(mask.sum()) != expected_k):
+        raise ValueError(f"prepared bank {name!r} baseline must be a finite binary mask with K={expected_k}")
+    return mask
+
+
+def _derive_baseline(bank, name: str, k: int) -> torch.Tensor:
+    diagnostics = bank.diagnostics
+    maps = diagnostics.get("aligned_q_abs") if isinstance(diagnostics, Mapping) else None
+    try:
+        maps = torch.as_tensor(maps)
+    except (TypeError, ValueError, RuntimeError) as error:
+        raise ValueError(f"prepared bank {name!r} lacks usable aligned_q_abs maps for baseline retargeting") from error
+    if (maps.ndim != 3 or maps.shape[0] < 1 or maps.shape[1:] != bank.baseline_mask.shape or
+            maps.dtype == torch.bool or maps.is_complex() or maps.is_quantized or
+            not (maps.is_floating_point() or maps.dtype in {
+                torch.uint8, torch.int8, torch.int16, torch.int32, torch.int64})):
+        raise ValueError(f"prepared bank {name!r} aligned_q_abs must have shape [N, features, hidden]")
+    maps = maps.detach().to(device="cpu", dtype=torch.float32).contiguous()
+    if not bool(torch.isfinite(maps).all()):
+        raise ValueError(f"prepared bank {name!r} aligned_q_abs maps must be finite")
+    return _exact_topk(maps.mean(0), k)
+
+
+def _overlay_hash(shape, active_indices) -> str:
+    value = json.dumps([list(shape), list(active_indices)], separators=(",", ":"))
+    return hashlib.sha256(value.encode("ascii")).hexdigest()
+
+
+def _source_bank_baseline_ks(bank_source, banks) -> dict[str, int]:
+    manifest_path = Path(bank_source) / "prepared" / "banks" / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        entries = manifest["banks"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as error:
+        raise ValueError("restart source has an invalid binary bank manifest") from error
+    if not isinstance(entries, Mapping) or set(entries) != set(banks):
+        raise ValueError("restart source bank names do not match the loaded bank bundle")
+    result = {}
+    for name, entry in entries.items():
+        provenance = entry.get("provenance") if isinstance(entry, Mapping) else None
+        if not isinstance(provenance, Mapping):
+            raise ValueError(f"restart source bank {name!r} has invalid provenance")
+        result[name] = _integer_k(provenance.get("baseline_k"), f"{name} source baseline_k")
+    return result
+
+
+def _baseline_overlays(banks, bank_source) -> dict[str, dict] | None:
+    bundle_baselines = _source_bank_baseline_ks(bank_source, banks)
+    overlays = {}
+    for name, bank in banks.items():
+        provenance = bank.provenance
+        current_k = _integer_k(provenance.get("baseline_k"), f"{name} baseline_k")
+        source_k = _integer_k(provenance.get("source_baseline_k", bundle_baselines[name]),
+                              f"{name} source_baseline_k")
+        effective_k = _integer_k(provenance.get("effective_baseline_k", current_k),
+                                  f"{name} effective_baseline_k")
+        if current_k != effective_k:
+            raise ValueError(f"prepared bank {name!r} baseline_k does not match its effective baseline K")
+        mask = _validated_baseline(bank, name, current_k)
+        bundle_k = bundle_baselines[name]
+        if source_k >= mask.numel() or bundle_k >= mask.numel():
+            raise ValueError(f"prepared bank {name!r} baseline provenance K is invalid")
+        if bundle_k == effective_k:
+            continue
+        derived = _derive_baseline(bank, name, effective_k)
+        if not torch.equal(mask, derived):
+            raise ValueError(f"prepared bank {name!r} baseline overlay disagrees with aligned_q_abs")
+        active = torch.where(mask.reshape(-1) == 1)[0].tolist()
+        shape = list(mask.shape)
+        overlays[name] = dict(source_baseline_k=source_k,
+                              bundle_baseline_k=bundle_k,
+                              effective_baseline_k=effective_k,
+                              shape=shape,
+                              active_indices=active,
+                              sha256=_overlay_hash(shape, active))
+    return overlays or None
+
+
+def _apply_baseline_overlays(banks, overlays) -> None:
+    if overlays is None:
+        return
+    if not isinstance(overlays, Mapping) or not overlays or not set(overlays) <= set(banks):
+        raise ValueError("prepared baseline overlays must name banks in the source bank bundle")
+    for name, overlay in overlays.items():
+        if not isinstance(overlay, Mapping):
+            raise ValueError(f"prepared baseline overlay for bank {name!r} is invalid")
+        bank = banks[name]
+        provenance = bank.provenance
+        source_k = _integer_k(overlay.get("source_baseline_k"), f"{name} overlay source_baseline_k")
+        effective_k = _integer_k(overlay.get("effective_baseline_k"),
+                                 f"{name} overlay effective_baseline_k")
+        bundle_k = _integer_k(overlay.get("bundle_baseline_k"), f"{name} overlay bundle_baseline_k")
+        base_k = _integer_k(provenance.get("baseline_k"), f"{name} source baseline_k")
+        if bundle_k != base_k or bundle_k >= bank.baseline_mask.numel():
+            raise ValueError(f"prepared baseline overlay for bank {name!r} refers to a different source baseline K")
+        lineage_k = _integer_k(provenance.get("source_baseline_k", base_k),
+                               f"{name} source_baseline_k")
+        if source_k != lineage_k or source_k >= bank.baseline_mask.numel():
+            raise ValueError(f"prepared baseline overlay for bank {name!r} changes its source baseline provenance")
+        _validated_baseline(bank, name, bundle_k)
+        shape = overlay.get("shape")
+        if (not isinstance(shape, list) or len(shape) != 2 or
+                any(isinstance(value, bool) or not isinstance(value, int) or value < 1
+                    for value in shape) or tuple(shape) != tuple(bank.baseline_mask.shape)):
+            raise ValueError(f"prepared baseline overlay for bank {name!r} has an invalid shape")
+        active = overlay.get("active_indices")
+        edge_count = bank.baseline_mask.numel()
+        if (effective_k >= edge_count or not isinstance(active, list) or len(active) != effective_k or
+                any(isinstance(value, bool) or not isinstance(value, int) or
+                    value < 0 or value >= edge_count for value in active) or
+                active != sorted(set(active))):
+            raise ValueError(f"prepared baseline overlay for bank {name!r} has invalid active indices")
+        if overlay.get("sha256") != _overlay_hash(shape, active):
+            raise ValueError(f"prepared baseline overlay for bank {name!r} failed its hash check")
+        mask = torch.zeros(edge_count, dtype=torch.float32)
+        mask[torch.tensor(active, dtype=torch.long)] = 1.0
+        mask = mask.reshape(shape)
+        if not torch.equal(mask, _derive_baseline(bank, name, effective_k)):
+            raise ValueError(f"prepared baseline overlay for bank {name!r} disagrees with aligned_q_abs")
+        provenance["source_baseline_k"] = source_k
+        provenance["effective_baseline_k"] = effective_k
+        provenance["baseline_k"] = effective_k
+        bank.baseline_mask = mask
+
+
+def retarget_prepared_baselines(banks, requested_k: int) -> None:
+    requested_k = _integer_k(requested_k, "requested baseline K")
+    for name, bank in banks.items():
+        provenance = bank.provenance
+        current_k = _integer_k(provenance.get("baseline_k"), f"{name} baseline_k")
+        _validated_baseline(bank, name, current_k)
+        source_k = _integer_k(provenance.get("source_baseline_k", current_k),
+                              f"{name} source_baseline_k")
+        effective_k = _integer_k(provenance.get("effective_baseline_k", current_k),
+                                  f"{name} effective_baseline_k")
+        edges = bank.baseline_mask.numel()
+        if current_k >= edges or source_k >= edges:
+            raise ValueError(f"prepared bank {name!r} baseline provenance K is invalid")
+        if effective_k != current_k:
+            raise ValueError(f"prepared bank {name!r} baseline_k does not match its effective baseline K")
+        if requested_k >= edges:
+            raise ValueError(f"requested baseline K={requested_k} is invalid for bank {name!r}")
+        if requested_k != current_k:
+            bank.baseline_mask = _derive_baseline(bank, name, requested_k)
+        provenance["source_baseline_k"] = source_k
+        provenance["effective_baseline_k"] = requested_k
+        provenance["baseline_k"] = requested_k
+
+
 def save_prepared(out, banks, train_tasks, selection_tasks, test_spec, *,
                   config, protocol, build_settings, bank_source=None):
     root = Path(out) / "prepared"
@@ -67,15 +229,22 @@ def save_prepared(out, banks, train_tasks, selection_tasks, test_spec, *,
               for task in group] for group in (train_tasks, selection_tasks)]
     payload = dict(schema=1, tasks=tasks, test_spec=test_spec, config=config,
                    requested_protocol=protocol, build_settings=build_settings)
+    if bank_source is not None:
+        overlays = _baseline_overlays(banks, bank_source)
+        if overlays is not None:
+            payload["baseline_overlays"] = overlays
     save_json(root / "manifest.json", _encode(payload, root, [0]))
 
 
-def load_prepared(out):
+def load_prepared(out, *, requested_baseline_k: int | None = None):
     root = Path(out) / "prepared"
     payload = _decode(json.loads((root / "manifest.json").read_text()), root)
     if payload.get("schema") != 1:
         raise ValueError("unsupported prepared bank schema")
     payload["banks"] = load_banks(root / "banks")
+    _apply_baseline_overlays(payload["banks"], payload.get("baseline_overlays"))
+    if requested_baseline_k is not None:
+        retarget_prepared_baselines(payload["banks"], requested_baseline_k)
     payload["train_tasks"], payload["selection_tasks"] = (
         [TaskData(**task) for task in group] for group in payload.pop("tasks"))
     return payload

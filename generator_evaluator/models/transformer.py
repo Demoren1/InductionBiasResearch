@@ -187,6 +187,13 @@ class TransformerMaskGenerator(nn.Module):
         solution_memory, neuron_memory = self._encode_bank_components_validated(
             tokens, quality, batch
         )
+        return self._decode_from_memories_validated(solution_memory, neuron_memory, noise, batch)
+
+    def _decode_from_memories_validated(self, solution_memory: Tensor, neuron_memory: Tensor,
+                                        noise: Tensor, batch: int | None = None) -> Tensor:
+        """Decode per-row noise from reusable solution and neuron memories."""
+        if batch is None:
+            batch = noise.shape[0]
         noise_memory = self.noise_projection(noise).unsqueeze(1)
         solution_memory = solution_memory + noise_memory
         # Attach each neuron's within-solution profile to its contextualized
