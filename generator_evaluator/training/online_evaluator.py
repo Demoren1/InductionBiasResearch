@@ -35,28 +35,6 @@ def _topology_groups(rows: Sequence[dict[str, Any]]) -> dict[str, list[dict[str,
     return dict(grouped)
 
 
-def _sample_topologies(groups: dict[str, list[dict[str, Any]]], count: int,
-                       rng: torch.Generator) -> list[str]:
-    identities = list(groups)
-    if count <= 0 or not identities:
-        return []
-    order = torch.randperm(len(identities), generator=rng).tolist()
-    return [identities[index] for index in order[:min(count, len(identities))]]
-
-
-def _bounded_topologies(groups: dict[str, list[dict[str, Any]]], row_limit: int,
-                        rng: torch.Generator) -> list[str]:
-    """Select whole topology groups up to a row limit (the last group may cross it)."""
-    selected: list[str] = []
-    row_count = 0
-    for identity in _sample_topologies(groups, len(groups), rng):
-        selected.append(identity)
-        row_count += len(groups[identity])
-        if row_count >= row_limit:
-            break
-    return selected
-
-
 def build_online_evaluator_replay(
     replay: RealReplay,
     initial_topology_ids: Collection[str],
@@ -73,12 +51,12 @@ def build_online_evaluator_replay(
     a pool shorter than that is sampled with replacement. No replay split is
     recalculated or mutated.
 
-    For ``mask_validation``, every eligible acquired heldout topology is kept
-    with all its eligible rows. The same number of distinct original heldout
-    topologies is sampled at the requested edge count. If there are no fresh
-    heldout topologies, a bounded set of original heldout topology groups is
-    used instead. The returned ``None`` signals that no acquired training rows
-    were eligible, so the caller can skip this refresh.
+    For ``mask_validation``, all eligible original and acquired heldout
+    topology groups are kept with all their eligible rows, sorted by topology
+    ID. Original validation is therefore stable across refreshes, independent
+    of the train sampler seed. The returned ``None`` signals that no acquired
+    training rows or no original source rows were eligible, so the caller can
+    skip this refresh.
     """
     if not isinstance(replay, RealReplay):
         raise TypeError("replay must be a RealReplay")
@@ -168,16 +146,12 @@ def build_online_evaluator_replay(
         and allowed_train_task(row)
         and (active_edges is None or row.get("active_edges") == active_edges)
     ]
-    # Keep all eligible rows from each selected topology; the topology itself
-    # is sampled once, so repeated labels cannot dominate validation by count.
+    # Keep every eligible topology exactly once and all its rows. Sorting keeps
+    # the initial-bank validation pool identical on each online refresh.
     original_groups = _topology_groups(original_mask_validation)
     acquired_groups = _topology_groups(acquired_mask_validation)
-    if acquired_groups:
-        acquired_topologies = list(acquired_groups)
-        original_topologies = _sample_topologies(original_groups, len(acquired_topologies), rng)
-    else:
-        acquired_topologies = []
-        original_topologies = _bounded_topologies(original_groups, bank_rows, rng)
+    original_topologies = sorted(original_groups)
+    acquired_topologies = sorted(acquired_groups)
     mask_validation_rows = [
         row
         for identity in original_topologies + acquired_topologies
@@ -190,6 +164,8 @@ def build_online_evaluator_replay(
         selected_acquired_mask_validation_topologies=len(acquired_topologies),
         selected_original_mask_validation_rows=sum(len(original_groups[key]) for key in original_topologies),
         selected_acquired_mask_validation_rows=sum(len(acquired_groups[key]) for key in acquired_topologies),
+        selected_mask_validation_rows=sum(len(original_groups[key]) for key in original_topologies)
+                                     + sum(len(acquired_groups[key]) for key in acquired_topologies),
     )
     if not mask_validation_rows:
         metadata["reason"] = "no_eligible_mask_validation_rows"
@@ -215,4 +191,8 @@ def build_online_evaluator_replay(
 
     view = copy(replay)
     view.records = sampled_original + sampled_acquired + mask_validation_rows + meta_validation + joint_validation
+    view.evaluator_validation_sources = {
+        **{identity: "original" for identity in original_topologies},
+        **{identity: "acquired" for identity in acquired_topologies},
+    }
     return view, metadata

@@ -600,7 +600,9 @@ class CooperativeSearchController:
                           rng=self.cpu_rng) if stage == STAGE_COOPERATION else None)
         masks, sources = propose_shared_pool(
             self.models, self.banks, self.config.k, self.config.candidates, self.rng,
-            random_count=self.config.acquisition_budget,
+            random_count=(self.config.acquisition_budget +
+                          ((self.config.evaluator_exploration_budget + 1) // 2
+                           if self.config.evaluator_online_epochs else 0)),
             mutation_count=self.config.acquisition_budget if len(archive_masks) else 0,
             elites=archive_masks, excluded_topologies=excluded,
             proposal_trace=proposal_trace, paired_proposals=True,
@@ -626,15 +628,14 @@ class CooperativeSearchController:
         # topology ordering resolves equal costs consistently across resumes.
         ranked_indices = sorted(range(len(masks)), key=lambda index: (
             float(ranks["objective_cost"][index]), topology_id(masks[index])))
-        top_indices = ranked_indices[:self.config.acquisition_budget]
-        top_pool_sources = [sources[index] for index in top_indices]
-        top_ids = [topology_id(masks[index]) for index in top_indices]
-
         known_rows = {(row["topology_id"], row["task_id"]): row
                       for row in self.replay.records
                       if row["task_split"] == "train" and
                       row["task_id"] in {task.task_id for task in self.train_tasks}}
         task_ids = [task.task_id for task in self.train_tasks]
+        top_indices = ranked_indices[:self.config.acquisition_budget]
+        top_pool_sources = [sources[index] for index in top_indices]
+        top_ids = [topology_id(masks[index]) for index in top_indices]
         new_fit_indices = []
         for index in ranked_indices:
             identity = topology_id(masks[index])
@@ -642,6 +643,16 @@ class CooperativeSearchController:
                 new_fit_indices.append(index)
                 if len(new_fit_indices) == self.config.acquisition_budget:
                     break
+        reserved_random = []
+        if self.config.evaluator_online_epochs and self.config.evaluator_exploration_budget:
+            random_candidates = [index for index in ranked_indices if sources[index] == "random"
+                                 and index not in new_fit_indices
+                                 and any((topology_id(masks[index]), task_id) not in known_rows
+                                         for task_id in task_ids)]
+            random_quota = (self.config.evaluator_exploration_budget + 1) // 2
+            order = torch.randperm(len(random_candidates), generator=self.cpu_rng).tolist()
+            reserved_random = [random_candidates[index] for index in order[:random_quota]]
+        reserved_set = set(reserved_random)
         cached_top_count = sum(all((identity, task_id) in known_rows for task_id in task_ids)
                                for identity in top_ids)
         exploration_indices = []
@@ -652,13 +663,14 @@ class CooperativeSearchController:
             for ordinal in range(self.config.evaluator_exploration_budget):
                 if not candidates:
                     break
-                random_candidates = [index for index in candidates if sources[index] == "random"]
-                if ordinal % 2 == 0 and random_candidates:
-                    index = random_candidates[int(torch.randint(
-                        len(random_candidates), (), generator=self.cpu_rng))]
+                if ordinal % 2 == 0 and reserved_random:
+                    index = reserved_random.pop(0)
                 else:
-                    generated = [index for index in candidates if sources[index].startswith("generator:")]
-                    choices = generated or candidates
+                    nonreserved = [index for index in candidates if index not in reserved_set]
+                    generated = [index for index in nonreserved if sources[index].startswith("generator:")]
+                    choices = generated or nonreserved
+                    if not choices:
+                        continue
                     anchors = new_fit_indices + exploration_indices
                     if anchors:
                         overlaps = (masks[choices].flatten(1) @ masks[anchors].flatten(1).T).amax(dim=1)

@@ -70,11 +70,12 @@ ge_run python -u -m generator_evaluator.cooperative_run \
   --steps "$GE_CHILD_STEPS" --replicas "${REPLICAS:-4}" "${GE_BANK_ARGS[@]}" \
   --generator-epochs "${GENERATOR_EPOCHS:-20}" \
   --updates-per-epoch "${UPDATES_PER_EPOCH:-10}" --refresh-every 2 \
-  --evaluator-epochs "${EVALUATOR_EPOCHS:-30}" --acquisition-budget 6 --candidates 24 \
+  --evaluator-epochs "${EVALUATOR_EPOCHS:-30}" \
+  --acquisition-budget "${ACQUISITION_BUDGET:-24}" --candidates 24 \
   --evaluator-online-epochs "${EVALUATOR_ONLINE_EPOCHS:-5}" \
   --evaluator-online-lr "${EVALUATOR_ONLINE_LR:-0.0001}" \
   --evaluator-online-bank-rows "${EVALUATOR_ONLINE_BANK_ROWS:-512}" \
-  --evaluator-exploration-budget "${EVALUATOR_EXPLORATION_BUDGET:-2}" \
+  --evaluator-exploration-budget "${EVALUATOR_EXPLORATION_BUDGET:-8}" \
   --seed "$GE_SEED" "${GE_DEVICE_ARGS[@]}" --progress \
   --out "$GE_OUT/search" "$@"
 

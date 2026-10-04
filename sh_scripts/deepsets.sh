@@ -44,10 +44,10 @@ GE_COMMON_ARGS=(
   --evaluator-online-epochs "${EVALUATOR_ONLINE_EPOCHS:-5}"
   --evaluator-online-lr "${EVALUATOR_ONLINE_LR:-0.0001}"
   --evaluator-online-bank-rows "${EVALUATOR_ONLINE_BANK_ROWS:-512}"
-  --evaluator-exploration-budget "${EVALUATOR_EXPLORATION_BUDGET:-2}"
+  --evaluator-exploration-budget "${EVALUATOR_EXPLORATION_BUDGET:-8}"
   --evaluator-batch-size "${EVALUATOR_BATCH_SIZE:-64}" --evaluator-lr "${EVALUATOR_LR:-0.0003}"
   --evaluator-devices "${GE_EVALUATOR_DEVICES[@]}"
-  --acquisition-budget 6 --candidates 24 --initial-random 8
+  --acquisition-budget "${ACQUISITION_BUDGET:-24}" --candidates 24 --initial-random 8
   --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2
   --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"
   --elite-distillation-weight "${ELITE_DISTILLATION_WEIGHT:-0.1}"

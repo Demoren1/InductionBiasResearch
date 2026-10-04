@@ -355,6 +355,7 @@ def _train_evaluators_distributed(
 
     selection = _evaluator_selection_data(replay, selection_active_edges) if restore_best else None
     best_score, best_epoch, best_model, best_training_state = math.inf, 0, None, None
+    best_selection_metrics = None
     initial_selection_score = None
     history: list[dict[str, Any]] = []
     epochs_bar = progress(range(epochs), desc="Quality evaluator", unit="epoch")
@@ -374,7 +375,8 @@ def _train_evaluators_distributed(
             prediction = _member_predictions(
                 members, member_devices, executor, selection[0], selection[1], gpu_inputs={},
             ).mean(dim=0)
-            best_score = _selection_metrics_from_predictions(selection, prediction)["mse"]
+            best_selection_metrics = _selection_metrics_from_predictions(selection, prediction)
+            best_score = best_selection_metrics["mse"]
             initial_selection_score = best_score
             best_model = {key: value.detach().cpu().clone()
                           for key, value in ensemble.state_dict().items()}
@@ -470,6 +472,7 @@ def _train_evaluators_distributed(
                 event.update({f"selection_{key}": value for key, value in selected.items()})
                 if selected["mse"] < best_score:
                     best_score, best_epoch = selected["mse"], epoch + 1
+                    best_selection_metrics = dict(selected)
                     best_model = {key: value.detach().cpu().clone()
                                   for key, value in ensemble.state_dict().items()}
                     best_training_state = deepcopy(training_state())
@@ -482,8 +485,10 @@ def _train_evaluators_distributed(
         ensemble.training_state = best_training_state
         ensemble.training_state["validation_selection"] = {
             "epoch": best_epoch, "epochs_evaluated": epochs,
-            "metric": "mean_task_mask_validation_mse", "mse": best_score,
+            "metric": ("balanced_source_mean_task_mask_validation_mse" if selection[5] is not None
+                       else "mean_task_mask_validation_mse"), "mse": best_score,
             "initial_mse": initial_selection_score,
+            "metrics": best_selection_metrics,
             "active_edges": selection_active_edges if selection[-1] else None,
         }
         history[-1].update(selected_epoch=best_epoch, selection_restored=True)
@@ -522,15 +527,23 @@ def _evaluator_selection_data(replay: RealReplay, active_edges: int | None):
         return None
     identities = list(dict.fromkeys(row["topology_id"] for row in rows))
     indices = {identity: index for index, identity in enumerate(identities)}
+    validation_sources = getattr(replay, "evaluator_validation_sources", None)
+    sources = None
+    if validation_sources is not None:
+        if any(validation_sources.get(identity) not in ("original", "acquired")
+               for identity in identities):
+            raise ValueError("validation topologies must have an original/acquired source")
+        sources = torch.tensor([int(validation_sources[identity] == "acquired")
+                                for identity in identities], dtype=torch.long)
     return (torch.stack([replay.masks[row["mask_key"]] for row in rows]),
             torch.stack([replay.contexts[row["task_id"]] for row in rows]),
             torch.tensor([row["quality"] for row in rows], dtype=torch.float32),
             torch.tensor([indices[row["topology_id"]] for row in rows]),
-            len(identities), bool(budget_rows))
+            len(identities), sources, bool(budget_rows))
 
 
 def _evaluator_selection_metrics(ensemble, selection, device):
-    masks, contexts, targets, groups, count, target_budget = selection
+    masks, contexts, targets, groups, count = selection[:5]
     with torch.no_grad():
         prediction = torch.cat([
             ensemble.predict(masks[start:start + 128].to(device),
@@ -540,11 +553,26 @@ def _evaluator_selection_metrics(ensemble, selection, device):
 
 
 def _selection_metrics_from_predictions(selection, prediction):
-    _masks, _contexts, targets, groups, count, target_budget = selection
+    _masks, _contexts, targets, groups, count, sources, target_budget = selection
     group_counts = torch.bincount(groups, minlength=count).float()
     mean_prediction = torch.zeros(count).scatter_add_(0, groups, prediction) / group_counts
     mean_target = torch.zeros(count).scatter_add_(0, groups, targets) / group_counts
     metrics = evaluator_metrics(mean_prediction, mean_target)
+    if sources is not None:
+        metrics["pooled_mse"] = metrics["mse"]
+        source_scores = []
+        for code, name in ((0, "original"), (1, "acquired")):
+            selected = sources == code
+            if not bool(selected.any()):
+                continue
+            source_metrics = evaluator_metrics(mean_prediction[selected], mean_target[selected])
+            metrics.update({f"{name}_{key}": value for key, value in source_metrics.items()})
+            metrics[f"{name}_masks"] = int(selected.sum())
+            row_selection = selected.index_select(0, groups)
+            metrics[f"{name}_row_mse"] = _finite_float(
+                (prediction[row_selection] - targets[row_selection]).square().mean())
+            source_scores.append(source_metrics["mse"])
+        metrics["mse"] = sum(source_scores) / len(source_scores)
     return dict(metrics, masks=count, target_budget=target_budget)
 
 
@@ -623,6 +651,7 @@ def train_evaluators(
 
     selection = _evaluator_selection_data(replay, selection_active_edges) if restore_best else None
     best_score, best_epoch, best_model, best_training_state = math.inf, 0, None, None
+    best_selection_metrics = None
     initial_selection_score = None
 
     def training_state():
@@ -636,7 +665,8 @@ def train_evaluators(
     history: list[dict[str, Any]] = []
     if selection is not None and include_initial_validation:
         ensemble.eval()
-        best_score = _evaluator_selection_metrics(ensemble, selection, device)["mse"]
+        best_selection_metrics = _evaluator_selection_metrics(ensemble, selection, device)
+        best_score = best_selection_metrics["mse"]
         initial_selection_score = best_score
         best_model = {key: value.detach().cpu().clone()
                       for key, value in ensemble.state_dict().items()}
@@ -685,6 +715,7 @@ def train_evaluators(
             event.update({f"selection_{key}": value for key, value in selected.items()})
             if selected["mse"] < best_score:
                 best_score, best_epoch = selected["mse"], epoch + 1
+                best_selection_metrics = dict(selected)
                 best_model = {key: value.detach().cpu().clone()
                               for key, value in ensemble.state_dict().items()}
                 best_training_state = deepcopy(training_state())
@@ -696,8 +727,10 @@ def train_evaluators(
         ensemble.training_state = best_training_state
         ensemble.training_state["validation_selection"] = {
             "epoch": best_epoch, "epochs_evaluated": epochs,
-            "metric": "mean_task_mask_validation_mse", "mse": best_score,
+            "metric": ("balanced_source_mean_task_mask_validation_mse" if selection[5] is not None
+                       else "mean_task_mask_validation_mse"), "mse": best_score,
             "initial_mse": initial_selection_score,
+            "metrics": best_selection_metrics,
             "active_edges": selection_active_edges if selection[-1] else None,
         }
         history[-1].update(selected_epoch=best_epoch, selection_restored=True)
