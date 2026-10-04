@@ -81,6 +81,29 @@ def _real_candidates(replay, tasks, k=None):
 _EVALUATOR_POLICY = "initial_bank_only"
 
 
+def _save_optional_torch(config, path, payload):
+    if config.persist_artifacts:
+        save_torch(path, payload)
+
+
+def _compact_dense_tune(out, tasks, mask, protocol, device, learning_rates, *,
+                        measurement_devices=None, measurement_batch_size=8):
+    from generator_evaluator.evaluation.parallel import ParallelMeasurementStore
+    from generator_evaluator.storage.runtime import DenseProtocolSelector
+
+    def measure_many_fn(mask, validation, setting, device):
+        replay = RealReplay(setting)
+        with ParallelMeasurementStore(out, replay, device,
+                devices=measurement_devices or [device], batch_size=measurement_batch_size,
+                persist_artifacts=False) as store:
+            return [result for _, result in store.measure_many(
+                [(mask, task, "dense_tuning") for task in validation], desc="Dense tuning")]
+
+    return DenseProtocolSelector(out, save_torch_fn=lambda *args, **kwargs: None,
+        measure_many_fn=measure_many_fn).select(tasks, mask, protocol, device, learning_rates,
+        selection_label="within-task independent selection observations")
+
+
 def _bank_topology_ids(banks):
     return tuple(sorted({topology_id(mask) for bank in banks.values() for mask in bank.masks}))
 
@@ -92,7 +115,7 @@ def _evaluator_row_id(row):
     return {field: row[field] for field in fields}
 
 
-def _evaluator_bank_snapshot(replay, topology_ids, task_ids, row_ids=None):
+def _evaluator_bank_snapshot(replay, topology_ids, task_ids, row_ids=None, *, include_tensors=True):
     """Create the immutable, bank-membership-filtered critic dataset view."""
     topology_ids = tuple(sorted(set(topology_ids)))
     task_ids = set(task_ids)
@@ -133,10 +156,12 @@ def _evaluator_bank_snapshot(replay, topology_ids, task_ids, row_ids=None):
         topology_ids=list(topology_ids),
         row_ids=[_evaluator_row_id(row) for row in rows],
         rows=row_manifest,
-        train_masks=torch.stack([replay.masks[row["mask_key"]] for row in train_rows]),
-        train_contexts=torch.stack([replay.contexts[row["task_id"]] for row in train_rows]),
-        train_targets=torch.tensor([row["quality"] for row in train_rows], dtype=torch.float32),
     )
+    if include_tensors:
+        manifest.update(
+            train_masks=torch.stack([replay.masks[row["mask_key"]] for row in train_rows]),
+            train_contexts=torch.stack([replay.contexts[row["task_id"]] for row in train_rows]),
+            train_targets=torch.tensor([row["quality"] for row in train_rows], dtype=torch.float32))
     return replay_view, manifest
 
 
@@ -250,7 +275,8 @@ class CooperativeSearchController:
                        train=True, seed=None):
         """Fit once from the immutable initial functional-bank membership."""
         replay_view, manifest = _evaluator_bank_snapshot(
-            self.replay, topology_ids, [task.task_id for task in self.train_tasks], row_ids)
+            self.replay, topology_ids, [task.task_id for task in self.train_tasks], row_ids,
+            include_tensors=self.config.persist_artifacts)
         if expected_fingerprint is not None and manifest["fingerprint"] != expected_fingerprint:
             raise ValueError("warm-start evaluator bank fingerprint differs from its saved critic")
         if train:
@@ -264,6 +290,21 @@ class CooperativeSearchController:
         self.evaluator_bank_topology_ids = tuple(manifest["topology_ids"])
         self.evaluator_bank_rows = list(manifest["row_ids"])
         self.evaluator_bank_fingerprint = manifest["fingerprint"]
+        if not self.config.persist_artifacts:
+            save_json(self.out / "evaluator_bank.json", dict(
+                fingerprint=manifest["fingerprint"], topology_count=len(manifest["topology_ids"]),
+                rows=len(manifest["rows"]), policy=self.evaluator_policy))
+            save_torch(self.out / "evaluator.pt", dict(
+                ensemble=_cpu_state(self.ensemble),
+                architecture=dict(features=self.config.features, context_dim=self.contexts.shape[1],
+                    width=self.config.width, heads=self.config.heads, layers=self.config.layers,
+                    ensemble_members=self.config.ensemble_members),
+                protocol=asdict(self.replay.protocol),
+                bank_fingerprint=self.evaluator_bank_fingerprint,
+                validation_selection=(getattr(self.ensemble, "training_state", None) or {}).get("validation_selection"),
+                test_used_for_training=False))
+            self.freeze_evaluator()
+            return
         bank_path = self.out / "evaluator_bank.pt"
         if bank_path.exists():
             existing = torch.load(bank_path, map_location="cpu", weights_only=False)
@@ -271,7 +312,7 @@ class CooperativeSearchController:
                     existing.get("topology_ids") != manifest["topology_ids"]):
                 raise ValueError("immutable evaluator bank artifact differs from the fixed policy")
         else:
-            save_torch(bank_path, manifest)
+            _save_optional_torch(self.config, bank_path, manifest)
         self.freeze_evaluator()
 
     def freeze_evaluator(self):
@@ -316,6 +357,8 @@ class CooperativeSearchController:
 
     def export_functional_cards(self):
         """Persist one compact card per teacher, including measured feedback."""
+        if not self.config.persist_artifacts:
+            return
         for name, bank in self.banks.items():
             for row, teacher in enumerate(bank.states):
                 identity = teacher.get("row_hash") or tensor_hash(bank.tokens[0, row])
@@ -362,7 +405,7 @@ class CooperativeSearchController:
         self.generator_pretraining = dict(origin="current_run",
                                           updates=len(self.pretraining_history),
                                           optimizer_states_imported=False)
-        save_torch(self.out / "generator_reconstruction.pt", dict(
+        _save_optional_torch(self.config, self.out / "generator_reconstruction.pt", dict(
             models={name: _cpu_state(model) for name, model in self.models.items()},
             bank_hashes={name: bank_input_fingerprint(bank) for name, bank in self.banks.items()},
             updates=len(self.pretraining_history),
@@ -555,7 +598,7 @@ class CooperativeSearchController:
         # ``epoch_`` naming; the payload keeps the explicit joint stage.
         proposal_stem = "epoch" if stage == STAGE_JOINT else label
         proposal_path = self.out / "proposals" / f"{proposal_stem}_{stage_epoch:04d}.pt"
-        save_torch(proposal_path, dict(
+        _save_optional_torch(self.config, proposal_path, dict(
             stage=label, stage_epoch=stage_epoch, epoch=self._global_epoch(stage, stage_epoch),
             masks=masks, sources=sources, ranked_pool_indices=ranked_indices,
             ranked_pool_sources=[sources[index] for index in ranked_indices],
@@ -653,22 +696,35 @@ class CooperativeSearchController:
                 densities.add(edges)
         selected += [index for index in order if int(masks[index].sum()) == self.config.k
                      and index not in selected][:self.config.feedback_masks]
+        memory_results = {}
+        if not self.config.persist_artifacts:
+            entries = [(masks[index], task, f"feedback:{task.task_id}")
+                       for index in selected for task in self.train_tasks]
+            measured = self.measure_many(entries, retain_results=True)
+            memory_results = {(tensor_hash(mask), task.task_id): result
+                              for (mask, task, _), (_, result) in zip(entries, measured)}
         for index in progress(selected, desc="Real functional-map feedback", unit="mask"):
             for name, row in zip(self.patterns, rows[index]):
-                payload = torch.load(row["artifact_path"], map_location="cpu", weights_only=False)
+                result = (torch.load(row["artifact_path"], map_location="cpu", weights_only=False)["result"]
+                          if self.config.persist_artifacts else
+                          memory_results[(row["mask_key"], row["task_id"])])
                 append = append_feedback
                 if self.config.domain == "deepsets":
                     from generator_evaluator.data.deepsets import append_deepsets_feedback
                     append = append_deepsets_feedback
                 self.banks[name] = append(
-                    self.banks[name], masks[index], payload["result"],
+                    self.banks[name], masks[index], result,
                     self.banks[name].diagnostics["probe_x"], task_id=row["task_id"],
                     artifact_path=row["artifact_path"], max_teachers=self.config.bank_capacity,
                     eligible=row["split"] == "train")
                 for teacher in self.banks[name].states:
                     source = teacher.get("source", {})
-                    if source.get("kind") == "feedback" and source.get("artifact_path") == row["artifact_path"]:
-                        source["query_error"] = float(payload["result"]["replica_losses"][source["replica"]])
+                    source_mask = source.get("source_mask")
+                    matching = (source.get("artifact_path") == row["artifact_path"]
+                                if self.config.persist_artifacts else
+                                torch.is_tensor(source_mask) and torch.equal(source_mask, masks[index]))
+                    if source.get("kind") == "feedback" and matching:
+                        source["query_error"] = float(result["replica_losses"][source["replica"]])
         self.export_functional_cards()
         for name in self.patterns:
             self.trainer.set_bank(name, self.banks[name])
@@ -712,14 +768,21 @@ class CooperativeSearchController:
                 self.best_mask, self.best_cost, self.best_epoch = mask.clone().cpu(), cost, epoch
                 self.best_mean_delta, self.best_worst_delta = float(delta.mean()), float(delta.max())
                 self.best_stage = stage
-                self.best_models = {name: _cpu_state(model) for name, model in self.models.items()}
-                self.best_evaluator, self.best_banks = _cpu_state(self.ensemble), copy.deepcopy(self.banks)
+                if self.config.persist_artifacts:
+                    self.best_models = {name: _cpu_state(model) for name, model in self.models.items()}
+                    self.best_evaluator, self.best_banks = _cpu_state(self.ensemble), copy.deepcopy(self.banks)
 
     def save_checkpoint(self, epoch, *, stage=None, stage_epoch=None):
         if stage is not None:
             self.stage = stage
         if stage_epoch is not None:
             self.stage_epoch = stage_epoch
+        if not self.config.persist_artifacts:
+            save_json(self.out / "history.json", dict(
+                generator=self.history, generator_pretraining=self.pretraining_history,
+                evaluator=self.evaluator_history, refreshes=self.refresh_history,
+                calibration=self.calibration))
+            return
         cuda_rng_states = {}
         if torch.cuda.is_available():
             for device in sorted({str(item) for item in self.generator_devices} |
@@ -956,6 +1019,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                                 generator_pretrained_from, cleanup):
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
+    if resume and not config.persist_artifacts:
+        raise ValueError("resuming generator search requires --persist-artifacts; compact runs save evaluator weights only")
     if generator_pretrained_from is not None and config.phase != "search":
         raise ValueError("generator-pretrained-from is only valid for search runs")
     generator_devices = _device_list(generator_devices, device, len(config.train_patterns),
@@ -1017,7 +1082,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                                       for task in train_tasks + selection_tasks}
     spec = json.loads(json.dumps(spec))
     session = RunSession(out, spec, source_files, project=project, resume=resume,
-                         save_torch_fn=save_torch, save_json_fn=save_json)
+                         save_torch_fn=lambda path, value: _save_optional_torch(config, path, value),
+                         save_json_fn=save_json)
     try:
         completed = session.prepare(inputs=dict(banks=banks, train_tasks=train_tasks,
                                                 selection_tasks=selection_tasks, test_spec=test_spec))
@@ -1045,7 +1111,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                           selection_rule="reuse source fixed solver", label_measurements=0,
                           test_used=False, fixed_solver_for_all_methods=True)
         elif config.tune_dense:
-            protocol = _dense_tune(out, selection_tasks, dense, protocol, device,
+            tune_dense = _dense_tune if config.persist_artifacts else _compact_dense_tune
+            protocol = tune_dense(out, selection_tasks, dense, protocol, device,
                 dense_learning_rates or [protocol.lr / 3, protocol.lr, protocol.lr * 3],
                 measurement_devices=measurement_devices,
                 measurement_batch_size=measurement_batch_size)
@@ -1065,17 +1132,20 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     replay = (RealReplay(protocol, split_seed=config.seed) if warm_start is None
               else warm_start.materialize_replay(out))
     starting_bank_topology_ids = initial_evaluator_topology_ids
-    if measurement_devices is not None or config.domain == "deepsets":
+    if not config.persist_artifacts or measurement_devices is not None or config.domain == "deepsets":
         from generator_evaluator.evaluation.parallel import ParallelMeasurementStore
         store = cleanup.enter_context(ParallelMeasurementStore(out, replay, device,
-            devices=measurement_devices or [device], batch_size=measurement_batch_size))
+            devices=measurement_devices or [device], batch_size=measurement_batch_size,
+            persist_artifacts=config.persist_artifacts))
     elif config.batch_children:
         from generator_evaluator.evaluation.parallel import CooperativeBatchedMeasurementStore as BatchedMeasurementStore
         store = BatchedMeasurementStore(out, replay, device)
     else:
         store = MeasurementStore(out, replay, device)
 
-    def measure_many(entries):
+    def measure_many(entries, *, retain_results=False):
+        if not config.persist_artifacts:
+            return store.measure_many(entries, retain_results=retain_results)
         if measurement_devices is not None or config.batch_children or config.domain == "deepsets":
             return store.measure_many(entries)
         return [store.measure(mask, task, origin) for mask, task, origin in
@@ -1090,7 +1160,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                 model.load_state_dict(imported_generator_states[name], strict=True)
         except (RuntimeError, TypeError) as error:
             raise ValueError(f"generator reconstruction state does not load strictly: {error}") from error
-        save_torch(out / "generator_reconstruction.pt", dict(
+        _save_optional_torch(config, out / "generator_reconstruction.pt", dict(
             models={name: _cpu_state(model) for name, model in models.items()},
             bank_hashes={name: bank_input_fingerprint(bank) for name, bank in banks.items()},
             updates=generator_pretraining["updates"], test_used=False,
@@ -1166,7 +1236,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         consensus = build_functional_consensus_proposals(list(banks.values()), config.k)
         functional_controls = dict(functional_consensus=consensus.global_topk,
             functional_balanced_consensus=consensus.balanced_per_column)
-        save_torch(out / "functional_consensus.pt", dict(
+        _save_optional_torch(config, out / "functional_consensus.pt", dict(
             importance=consensus.importance, masks=functional_controls,
             train_patterns=patterns, test_used=False,
             normalization="unit column mass per source map, equal means within and across banks",
@@ -1319,8 +1389,9 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     if config.phase == "bootstrap":
         # The checkpoint already contains the live critic, banks and train-only
         # replay. Heldout tasks remain unopened throughout preparation.
-        replay.save(out / "replay.pt")
-        save_torch(out / "final_banks.pt", banks)
+        if config.persist_artifacts:
+            replay.save(out / "replay.pt")
+        _save_optional_torch(config, out / "final_banks.pt", banks)
         summary = dict(domain=config.domain, phase="bootstrap", train_patterns=list(patterns),
             test_pattern=config.test_pattern, test_patterns=list(config.effective_test_patterns),
             preset=config.preset, training_mode=config.training_mode, generators=len(models),
@@ -1364,19 +1435,20 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                   train_patterns=patterns,
                   test_pattern=config.test_pattern, test_patterns=tuple(config.effective_test_patterns),
                   selection_role="within-task independent queries", test_used_for_selection=False)
-    if (out / "frozen.pt").exists():
+    if config.persist_artifacts and (out / "frozen.pt").exists():
         previous = torch.load(out / "frozen.pt", map_location="cpu", weights_only=False)
         if any(tensor_hash(previous["methods"][name]) != tensor_hash(mask) for name, mask in methods.items()):
             raise ValueError("immutable frozen method mismatch on resume")
     else:
-        save_torch(out / "frozen.pt", frozen)
+        _save_optional_torch(config, out / "frozen.pt", frozen)
     save_json(out / "frozen.json", dict(best_epoch=best_epoch,
         selection_delta=controller.best_worst_delta, selection_cost=best_cost,
         selection_mean_delta=controller.best_mean_delta, quality_objective=config.quality_objective,
         best_stage=controller.best_stage,
         train_patterns=list(patterns), test_pattern=config.test_pattern,
         test_patterns=list(config.effective_test_patterns),
-        mask_hashes={name: tensor_hash(mask) for name, mask in methods.items()}, test_used=False))
+        mask_hashes={name: tensor_hash(mask) for name, mask in methods.items()},
+        masks={name: mask.to(torch.uint8).tolist() for name, mask in methods.items()}, test_used=False))
     final_generator_masks = {}
     with torch.no_grad():
         for name, model in models.items():
@@ -1394,7 +1466,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
             mask = torch.zeros_like(logits).flatten()
             mask.scatter_(0, logits.flatten().topk(config.k).indices, 1.)
             final_generator_masks[f"generator_final_{name}"] = mask.reshape_as(logits).cpu()
-    save_torch(out / "final_generator_proposals.pt", dict(
+    _save_optional_torch(config, out / "final_generator_proposals.pt", dict(
         masks=final_generator_masks,
         shared_latent=(None if config.training_mode == "joint" else
                        trainer.shared_latent.detach().cpu()),
@@ -1402,6 +1474,9 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                      "learned_shared_latent"),
         bank_hashes={name: bank_input_fingerprint(bank) for name, bank in banks.items()},
         test_used=False, stage="after all generator updates, before test materialization"))
+    if not config.persist_artifacts:
+        save_json(out / "final_generator_masks.json", {
+            name: mask.to(torch.uint8).tolist() for name, mask in final_generator_masks.items()})
     if config.domain == "pattern":
         materialized = (test_factory or make_cooperative_test_tasks)(test_spec)
         if isinstance(materialized, TaskData):
@@ -1450,10 +1525,12 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         from generator_evaluator.data.deepsets import make_cooperative_deepsets_test_tasks, validate_deepsets_test_tasks
         test_tasks = (test_factory or make_cooperative_deepsets_test_tasks)(test_spec)
         validate_deepsets_test_tasks(test_tasks, test_spec, train_tasks, selection_tasks)
-    save_torch(out / "test_tasks.pt", test_tasks)
+    _save_optional_torch(config, out / "test_tasks.pt", test_tasks)
     reports, examples = {}, []
     for task in progress(selection_tasks + test_tasks, desc="Frozen final evaluation", unit="task"):
-        measured = dict(zip(methods, measure_many([(mask, task, f"final:{name}") for name, mask in methods.items()])))
+        measured = dict(zip(methods, measure_many(
+            [(mask, task, f"final:{name}") for name, mask in methods.items()],
+            retain_results=task is test_tasks[0])))
         dense_losses = measured["dense"][0]["replica_losses"]
         reports[task.task_id] = {
             name: dict(**{("query_bce" if config.domain == "pattern" else "query_nmse"):row["quality"]},
@@ -1508,8 +1585,9 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                                               for task in test_tasks)
     summary["interval_improvement_every_test_task"] = all(reports[task.task_id]["common"]["comparison"]["interval_below_zero"]
                                                        for task in test_tasks)
-    replay.save(out / "replay.pt")
-    save_torch(out / "final_banks.pt", banks)
+    if config.persist_artifacts:
+        replay.save(out / "replay.pt")
+    _save_optional_torch(config, out / "final_banks.pt", banks)
     from generator_evaluator.storage.final_report import write_final_report
     summary["final_report"] = write_final_report(out, summary, methods, examples)
     save_json(out / "summary.json", summary)
@@ -1572,6 +1650,8 @@ def make_parser():
                         help="enable iterative generator exploration during bootstrap")
     parser.add_argument("--bootstrap-only", action="store_true",
                         help="Prepare banks and critic without opening heldout test tasks")
+    parser.add_argument("--persist-artifacts", action="store_true",
+                        help="Opt in to full resumable model/bank/child artifacts; default saves evaluator only")
     parser.add_argument("--data-root", type=Path, default=Path("datasets/mnist8m"))
     parser.add_argument("--measurement-devices", nargs="+",
                         help="Child-fit devices; auto uses all CUDA GPUs visible to this process")
@@ -1640,7 +1720,8 @@ def resolve_run_settings(args):
                      test_patterns=requested_test_patterns,
                      k=base.k if args.k is None else args.k, smoke=args.smoke,
                      phase="bootstrap" if args.bootstrap_only else "search",
-                     bootstrap_generators=args.bootstrap_generators)
+                     bootstrap_generators=args.bootstrap_generators,
+                     persist_artifacts=args.persist_artifacts)
     if args.latent_lr is not None:
         overrides["latent_lr"] = args.latent_lr
     if args.evaluator_lr is not None:
@@ -1836,7 +1917,8 @@ def main():
                 probe_count=args.probe_count, k=config.k, hidden=config.hidden,
                 train_task_count=len(config.train_patterns), test_task_count=config.test_task_count,
                 device=args.device, measurement_devices=measurement_devices,
-                out=args.out / "bank_build", fixed_test_spec=fixed_test_spec)
+                out=args.out / "bank_build", fixed_test_spec=fixed_test_spec,
+                persist_artifacts=config.persist_artifacts)
         else:
             banks, train, selection, sealed = build_cooperative_fixture(
             config.train_patterns,
@@ -1846,10 +1928,10 @@ def main():
             args.teachers, args.support_count, args.query_count, args.selection_count,
             config.k, args.device, probe_count=args.probe_count, batch_teachers=config.batch_children,
             bank_candidates=args.bank_candidates, teacher_batch_size=args.teacher_batch_size,
-            measurement_devices=measurement_devices)
+            measurement_devices=measurement_devices, persist_artifacts=config.persist_artifacts)
             # Preserve the expensive source fits even if a later runner
             # validation or initialization fails before the first checkpoint.
-            save_torch(args.out / "prepared_fixture.pt", dict(
+            _save_optional_torch(config, args.out / "prepared_fixture.pt", dict(
                 banks=banks, train_tasks=train, selection_tasks=selection,
                 test_spec=sealed, build_settings=build_settings,
                 config=_config_metadata(config), protocol=asdict(protocol)))

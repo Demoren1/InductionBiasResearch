@@ -33,6 +33,7 @@ class CooperativeConfig:
     candidates: int = 24
     initial_random: int = 8
     bootstrap_generators: bool = False
+    persist_artifacts: bool = False
     evaluator_epochs: int = 50
     evaluator_batch_size: int = 32
     generator_lr: float = .001

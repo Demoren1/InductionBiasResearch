@@ -20,7 +20,10 @@ from typing import Callable, Iterable, Sequence
 import torch
 
 from generator_evaluator.data.types import TaskData
-from generator_evaluator.evaluation.measurements import MeasurementStore, _payload, measurement_digest
+from generator_evaluator.evaluation.measurements import (
+    MeasurementStore, _compact_result, _payload, _result_key, _same_measurement_protocol,
+    measurement_digest,
+)
 from generator_evaluator.storage.progress import progress
 
 
@@ -208,8 +211,10 @@ class ParallelMeasurementStore(MeasurementStore):
 
     def __init__(self, out: str | Path, replay, device: str, *, devices: Sequence[str],
                  batch_size: int, measure_fn=None, batch_fit_fn: BatchFitFn | None = None,
-                 pattern_batch_fit_fn: BatchFitFn | None = None, save_torch_fn=None):
-        super().__init__(out, replay, device, measure_fn=measure_fn, save_torch_fn=save_torch_fn)
+                 pattern_batch_fit_fn: BatchFitFn | None = None, save_torch_fn=None,
+                 persist_artifacts: bool = True):
+        super().__init__(out, replay, device, measure_fn=measure_fn,
+                         save_torch_fn=save_torch_fn, persist_artifacts=persist_artifacts)
         if not devices:
             raise ValueError("devices must contain at least one device")
         if batch_size < 1:
@@ -284,34 +289,45 @@ class ParallelMeasurementStore(MeasurementStore):
         return [_cpu_value(result) for result in results]
 
     @staticmethod
-    def _write_chunk(chunk, fitted, results, store, bar) -> None:
+    def _write_chunk(chunk, fitted, results, store, bar, *, retain_results: bool) -> None:
         if len(fitted) != len(chunk):
             raise ValueError("batched fitter returned a result count different from its input batch")
         written = 0
         for (digest, mask, task, _, path), result in zip(chunk, fitted):
             if digest in results:
                 continue
-            if path.exists():
+            if store.persist_artifacts and path.exists():
                 # A concurrent writer or duplicate path can materialize the
                 # artifact after the initial cache scan; restore it here.
                 results[digest] = store._read(path, mask, task)
+            elif not store.persist_artifacts:
+                compact = _compact_result(result)
+                cached = store._result_cache.get(digest)
+                if cached is not None and not _same_measurement_protocol(cached, result):
+                    raise ValueError("transient refit differs from the cached measurement protocol")
+                store._result_cache.setdefault(digest, compact)
+                results[digest] = result if retain_results else compact
+                written += 1
             else:
                 results[digest] = result
                 store._save_torch(path, _payload(mask, task, store.replay.protocol, result))
                 written += 1
         bar.update(written)
 
-    def measure(self, mask: torch.Tensor, task: TaskData, origin: str, *, fresh: bool = False):
+    def measure(self, mask: torch.Tensor, task: TaskData, origin: str, *, fresh: bool = False,
+                retain_results: bool = False):
         self._ensure_open()
         # Fresh initializations intentionally stay on the well-tested single
         # measurement path: their cache key depends on replay append order.
         if fresh:
-            return super().measure(mask, task, origin, fresh=True)
-        return self.measure_many([(mask, task, origin)])[0]
+            return super().measure(mask, task, origin, fresh=True, retain_results=retain_results)
+        return self.measure_many([(mask, task, origin)], retain_results=retain_results)[0]
 
     def measure_many(self, entries: Iterable[tuple[torch.Tensor, TaskData, str]], *,
-                     desc: str = "Real labels", initialization_seeds: Sequence[int] | None = None):
+                     desc: str = "Real labels", initialization_seeds: Sequence[int] | None = None,
+                     retain_results: bool = False):
         self._ensure_open()
+        self.last_results = {}
         requested = list(entries)
         if not requested:
             return []
@@ -341,8 +357,11 @@ class ParallelMeasurementStore(MeasurementStore):
         results: dict[str, dict] = {}
         grouped: dict[tuple, list[tuple[str, torch.Tensor, TaskData, str, Path]]] = defaultdict(list)
         for digest, (mask, task, origin, path) in unique.items():
-            if path.exists():
+            if self.persist_artifacts and path.exists():
                 results[digest] = self._read(path, mask, task)
+            elif (not self.persist_artifacts and not retain_results and
+                  digest in self._result_cache):
+                results[digest] = self._result_cache[digest]
             grouped[self._group_key(mask, task)].append((digest, mask, task, origin, path))
 
         # Chunk before filtering cache hits.  A partially completed run must
@@ -357,10 +376,10 @@ class ParallelMeasurementStore(MeasurementStore):
                 all_chunks.append(rows[start:start + chunk_size])
                 start += chunk_size
         chunks = [chunk for chunk in all_chunks
-                  if not all(path.exists() for _, _, _, _, path in chunk)]
+                  if any(digest not in results for digest, _, _, _, _ in chunk)]
         if chunks:
             bar = progress(desc=desc, total=sum(
-                not path.exists() for chunk in chunks for _, _, _, _, path in chunk), unit="fit")
+                digest not in results for chunk in chunks for digest, _, _, _, _ in chunk), unit="fit")
             try:
                 parallel = all(self._is_parallel(chunk) for chunk in chunks)
                 if parallel:
@@ -394,13 +413,17 @@ class ParallelMeasurementStore(MeasurementStore):
                         for future in as_completed(futures):
                             fitted_by_offset[futures[future]] = _decode_payload(future.result())
                         for offset, chunk in enumerate(wave):
-                            self._write_chunk(chunk, fitted_by_offset[offset], results, self, bar)
+                            self._write_chunk(chunk, fitted_by_offset[offset], results, self, bar,
+                                              retain_results=retain_results)
+                        fitted_by_offset.clear()
                 else:
                     for chunk in chunks:
                         seed_values = (None if initialization_seeds is None else
                                        [seeds_by_digest[row[0]] for row in chunk])
                         fitted = self._fit_direct(chunk, seed_values)
-                        self._write_chunk(chunk, fitted, results, self, bar)
+                        self._write_chunk(chunk, fitted, results, self, bar,
+                                          retain_results=retain_results)
+                        del fitted
             except BaseException:
                 # Leave the store reusable after a partial artifact write.
                 # Submitted workers only compute results; parent-side cache
@@ -411,9 +434,15 @@ class ParallelMeasurementStore(MeasurementStore):
                 bar.close()
 
         output = []
+        retained_results = {}
         for mask, task, origin, path, digest in ordered:
             result = results[digest]
-            output.append((self._append(mask, task, origin, path, result), result))
+            row = self._append(mask, task, origin, path, result)
+            output.append((row, result))
+            if retain_results and (self.persist_artifacts or digest not in self._result_cache or
+                                   result is not self._result_cache.get(digest)):
+                retained_results[_result_key(row)] = result
+        self.last_results = retained_results
         return output
 
     def close(self, *, wait: bool = True, cancel_futures: bool = False) -> None:
@@ -435,7 +464,8 @@ class ParallelMeasurementStore(MeasurementStore):
 class CooperativeBatchedMeasurementStore(ParallelMeasurementStore):
     """Preserve the cooperative entry point with injectable fit/write hooks."""
 
-    def __init__(self, out, replay, device, *, devices=None, batch_size=128):
+    def __init__(self, out, replay, device, *, devices=None, batch_size=128,
+                 persist_artifacts: bool = True):
         selected_devices = tuple(devices) if devices else (device,)
 
         def fit_pattern(masks, tasks, protocol, target, **kwargs):
@@ -447,4 +477,5 @@ class CooperativeBatchedMeasurementStore(ParallelMeasurementStore):
                              all(str(target).startswith("cuda") for target in selected_devices))
         super().__init__(out, replay, device, devices=selected_devices, batch_size=batch_size,
                          pattern_batch_fit_fn=None if spawned_multi_gpu else fit_pattern,
-                         save_torch_fn=lambda *args, **kwargs: save_torch(*args, **kwargs))
+                         save_torch_fn=lambda *args, **kwargs: save_torch(*args, **kwargs),
+                         persist_artifacts=persist_artifacts)

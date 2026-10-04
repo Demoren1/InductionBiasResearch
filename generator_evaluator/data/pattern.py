@@ -357,14 +357,16 @@ def _build_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, bank_steps
                 teachers_per_pattern: int, k: int, probe_x: Tensor, probe_ids: Tensor,
                 device: str, batch_teachers: bool = False, bank_candidates: int | None = None,
                 teacher_batch_size: int = 128,
-                measurement_devices: tuple[str, ...] | None = None) -> FunctionalBank:
+                measurement_devices: tuple[str, ...] | None = None,
+                persist_artifacts: bool = False) -> FunctionalBank:
     """Build a bank, optionally selecting retained teachers from a larger search."""
     if bank_candidates is not None:
         return _build_selected_bank(pattern, parts, seed=seed, bank_steps=bank_steps,
                                     teachers_per_pattern=teachers_per_pattern, bank_candidates=bank_candidates,
                                     k=k, probe_x=probe_x, probe_ids=probe_ids, device=device,
                                     teacher_batch_size=teacher_batch_size,
-                                    measurement_devices=measurement_devices or (device,))
+                                    measurement_devices=measurement_devices or (device,),
+                                    persist_artifacts=persist_artifacts)
     ids, x = _pattern_table()
     labels = _pattern_labels(x, pattern)
     bank_query_count = _balanced_query_budget(labels, parts["bank_query"])
@@ -393,11 +395,17 @@ def _build_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, bank_steps
         token, raw = extract_pattern_tokens(state, masks[row], probe_x)
         row_hash = _state_row_hash(state, masks[row])
         tokens.append(token)
-        states.append({**raw, "state_dict": {name: value.detach().cpu().clone() for name, value in state.items()},
-                       "optimizer_state": deepcopy(fitted["optimizer_state"][0]),
-                       "history": deepcopy(fitted["history"][0]),
-                       "row_hash": row_hash, "source": {"kind": "initial_teacher", "pattern": pattern,
-                                                           "teacher": row, "active_edges": int(masks[row].sum())}})
+        teacher_state = {**raw, "state_dict": {name: value.detach().cpu().clone()
+                                                for name, value in state.items()},
+                         "history": deepcopy(fitted["history"][0]),
+                         "row_hash": row_hash,
+                         "source": {"kind": "initial_teacher", "pattern": pattern,
+                                    "teacher": row, "active_edges": int(masks[row].sum()),
+                                    "artifact_storage": "memory"}}
+        if persist_artifacts:
+            teacher_state["optimizer_state"] = deepcopy(fitted["optimizer_state"][0])
+        states.append(teacher_state)
+    del fits
     q_abs = torch.stack([item["q_abs"] for item in states])
     aligned, column_orders, column_centroids = _centroid_align_pattern_maps(q_abs)
     baseline = _exact_topk(aligned.mean(0), k)
@@ -412,7 +420,9 @@ def _build_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, bank_steps
                   "functional_alignment_summary": "mean absolute probe response over ordered input coordinates",
                   "functional_alignment_tie_break": "lexicographic absolute functional column values",
                   "functional_alignment_scope": "baseline only; teacher tokens and masks keep their original pairing",
-                  "accepted_feedback_task_ids": [f"pattern:{pattern}"], "feedback_hashes": []}
+                  "accepted_feedback_task_ids": [f"pattern:{pattern}"], "feedback_hashes": [],
+                  "persist_artifacts": bool(persist_artifacts),
+                  "artifact_storage": "memory"}
     return FunctionalBank(torch.stack(tokens)[None], None, masks, baseline, provenance, states=states,
                           diagnostics={"aligned_q_abs": aligned, "functional_column_orders": column_orders,
                                        "functional_column_centroids": column_centroids,
@@ -422,7 +432,8 @@ def _build_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, bank_steps
 def _build_selected_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, bank_steps: int,
                          teachers_per_pattern: int, bank_candidates: int, k: int, probe_x: Tensor,
                          probe_ids: Tensor, device: str, teacher_batch_size: int,
-                         measurement_devices: tuple[str, ...]) -> FunctionalBank:
+                         measurement_devices: tuple[str, ...],
+                         persist_artifacts: bool = False) -> FunctionalBank:
     """Fit many independent candidates and retain the best fixed-query maps per stratum."""
     from generator_evaluator.evaluation.parallel import _balanced_chunk_sizes, iter_pattern_candidate_batches
 
@@ -500,7 +511,8 @@ def _build_selected_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, b
                        "source": {"kind": "initial_teacher", "pattern": pattern, "teacher": len(states),
                                   "candidate_id": candidate_id, "active_edges": int(masks[index].sum()),
                                   "density_stratum": strata[index],
-                                  "initialization_seed": candidate_seeds[candidate_id]}})
+                                  "initialization_seed": candidate_seeds[candidate_id],
+                                  "artifact_storage": "memory"}})
     q_abs = torch.stack(q_abs_values)
     aligned, column_orders, column_centroids = _centroid_align_pattern_maps(q_abs)
     baseline = _exact_topk(aligned.mean(0), k)
@@ -525,7 +537,8 @@ def _build_selected_bank(pattern: str, parts: dict[str, Tensor], *, seed: int, b
                   "functional_alignment_tie_break": "lexicographic absolute functional column values",
                   "functional_alignment_scope": "baseline only; teacher tokens and masks keep their original pairing",
                   "quality_source": None, "accepted_feedback_task_ids": [f"pattern:{pattern}"],
-                  "feedback_hashes": []}
+                  "feedback_hashes": [], "persist_artifacts": bool(persist_artifacts),
+                  "artifact_storage": "memory"}
     return FunctionalBank(torch.stack(tokens)[None], None, selected_masks, baseline, provenance, states=states,
                           diagnostics={"aligned_q_abs": aligned, "functional_column_orders": column_orders,
                                        "functional_column_centroids": column_centroids,
@@ -541,7 +554,8 @@ def build_cooperative_fixture(train_patterns: tuple[str, ...] = ("0001", "0011")
                               k: int = 32, device: str = "cpu", probe_count: int = 128,
                               batch_teachers: bool = False, bank_candidates: int | None = None,
                               teacher_batch_size: int = 128,
-                              measurement_devices: Sequence[str] | None = None) -> tuple[dict[str, FunctionalBank], list[TaskData], list[TaskData], dict[str, Any]]:
+                              measurement_devices: Sequence[str] | None = None,
+                              persist_artifacts: bool = False) -> tuple[dict[str, FunctionalBank], list[TaskData], list[TaskData], dict[str, Any]]:
     """Build two train-only banks, global-evaluator tasks, and a sealed test spec."""
     _validate_roles(train_patterns, test_pattern)
     _require_count("bank_steps", bank_steps, 10_000)
@@ -573,7 +587,7 @@ def build_cooperative_fixture(train_patterns: tuple[str, ...] = ("0001", "0011")
                                   teachers_per_pattern=teachers_per_pattern, k=k, probe_x=probe_x,
                                   probe_ids=probe_ids, device=primary_device, batch_teachers=batch_teachers,
                                   bank_candidates=bank_candidates, teacher_batch_size=teacher_batch_size,
-                                  measurement_devices=devices)
+                                  measurement_devices=devices, persist_artifacts=persist_artifacts)
              for number, pattern in enumerate(train_patterns)}
     # This intentionally contains no features, labels, TaskData, or materialized test task.
     return banks, train_tasks, selection_tasks, test_spec
@@ -733,7 +747,7 @@ def _stratified_rows(bank: FunctionalBank, max_teachers: int) -> list[int]:
 
 
 def append_feedback(bank: FunctionalBank, mask: Tensor, measurement: dict[str, Any], probe_x: Tensor, *,
-                    task_id: str, artifact_path: str | Path, max_teachers: int = 64,
+                    task_id: str, artifact_path: str | Path | None = None, max_teachers: int = 64,
                     eligible: bool = True) -> FunctionalBank:
     """Add terminal fresh-fit replica profiles without importing query quality.
 
@@ -764,8 +778,8 @@ def append_feedback(bank: FunctionalBank, mask: Tensor, measurement: dict[str, A
             raise ValueError(f"feedback requires one {field} record per replica")
     if not torch.isfinite(torch.as_tensor(measurement["replica_losses"], dtype=torch.float32)).all():
         raise ValueError("feedback replica losses must be finite")
-    path = Path(artifact_path).resolve()
-    if not path.is_file():
+    path = Path(artifact_path).resolve() if artifact_path is not None else None
+    if path is not None and not path.is_file():
         raise ValueError("feedback artifact_path must name the saved real measurement")
     mask = torch.as_tensor(mask, dtype=torch.float32).detach().cpu()
     if mask.shape != bank.baseline_mask.shape or not bool(((mask == 0) | (mask == 1)).all()):
@@ -783,13 +797,18 @@ def append_feedback(bank: FunctionalBank, mask: Tensor, measurement: dict[str, A
             continue
         token, raw = extract_pattern_tokens(state, mask, probe_x)
         new_tokens.append(token); new_masks.append(mask.clone()); existing.add(row_hash)
-        new_states.append({**raw, "state_dict": {name: torch.as_tensor(value).detach().cpu().clone()
-                                                   for name, value in state.items()}, "row_hash": row_hash,
-                           "optimizer_state": deepcopy(measurement.get("optimizer_state", [None] * replicas)[replica]),
-                           "history": deepcopy(measurement.get("history", [None] * replicas)[replica]),
-                           "source": {"kind": "feedback", "task_id": task_id, "replica": replica,
-                                      "artifact_path": str(path), "source_mask": mask.clone(),
-                                      "protocol_id": measurement.get("protocol_id")}})
+        addition = {**raw, "state_dict": {name: torch.as_tensor(value).detach().cpu().clone()
+                                            for name, value in state.items()}, "row_hash": row_hash,
+                    "source": {"kind": "feedback", "task_id": task_id, "replica": replica,
+                               "artifact_path": str(path) if path is not None else None,
+                               "artifact_storage": "file" if path is not None else "memory",
+                               "source_mask": mask.clone(),
+                               "protocol_id": measurement.get("protocol_id")}}
+        if bank.provenance.get("persist_artifacts", False):
+            addition["optimizer_state"] = deepcopy(
+                measurement.get("optimizer_state", [None] * replicas)[replica])
+            addition["history"] = deepcopy(measurement.get("history", [None] * replicas)[replica])
+        new_states.append(addition)
     if not new_tokens:
         return bank
     combined = FunctionalBank(torch.cat((bank.tokens, torch.stack(new_tokens)[None]), dim=1), None,

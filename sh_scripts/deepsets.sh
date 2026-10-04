@@ -1,26 +1,29 @@
 #!/usr/bin/env bash
 GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 
-# Build the initial functional banks, then jointly optimize own-task quality,
-# aligned hard-mask agreement and aligned distillation to the real-mask archive.
-# EVALUATOR_EPOCHS trains once from bank-origin cross-fits; evaluator stays frozen.
+# The search invocation prepares functional banks and the initial evaluator,
+# then jointly optimizes own-task quality, agreement and archive distillation.
+# EVALUATOR_EPOCHS trains the initial evaluator from bank-origin cross-fits; it stays frozen.
 # REFRESH_EVERY schedules measurement rounds and feedback, not evaluator updates.
 # Keep the best common mask across refreshes, using independent selection queries.
-# Bootstrap trains the evaluator only by default; BOOTSTRAP_GENERATORS=1 opts into generator exploration.
-# WARM_START_FROM=/path/to/cooperative/bootstrap skips bank/evaluator preparation.
+# BOOTSTRAP_GENERATORS=1 is retained for CLI compatibility.
+# WARM_START_FROM accepts a full legacy run; evaluator-only compact output lacks banks.
 # GPU_IDS selects cards for task generators, bank creation, and batched child fits.
-# TRAIN_TASKS and TEST_TASKS set task counts for both bootstrap and search.
+# TRAIN_TASKS and TEST_TASKS set the search run's task counts.
 # FIXED_TEST_FROM keeps prior sealed test costs and pools when expanding train.
 # Budget overrides: BANK_CANDIDATES, TEACHERS, BANK_STEPS, CHILD_STEPS,
-# BOOTSTRAP_EPOCHS, GENERATOR_EPOCHS, UPDATES_PER_EPOCH and CHILD_MASK_BATCH.
-# Trailing CLI arguments apply to search; solver changes must match bootstrap.
+# GENERATOR_EPOCHS, UPDATES_PER_EPOCH and CHILD_MASK_BATCH.
+# Trailing CLI arguments apply to search.
 # ELITE_LIMIT bounds the archive of measured real masks used for distillation.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
 GE_OUT="${GE_OUT:-outputs/generator_evaluator/${GE_STAMP}_deepsets_seed${GE_SEED}}"
 GE_DATA="${DATA_ROOT:-datasets/mnist8m}"
-GE_SOURCE="${WARM_START_FROM:-}"
+GE_WARM_START_ARGS=()
+if [[ -n "${WARM_START_FROM:-}" ]]; then
+  GE_WARM_START_ARGS+=(--warm-start-from "$WARM_START_FROM")
+fi
 GE_COMMON_ARGS=(
   --domain deepsets --preset deepsets --training-mode joint --data-root "$GE_DATA"
   --train-task-count "${TRAIN_TASKS:-6}" --test-task-count "${TEST_TASKS:-4}"
@@ -65,15 +68,8 @@ if [[ -n "${FIXED_TEST_FROM:-}" ]]; then
   GE_COMMON_ARGS+=(--fixed-test-from "$FIXED_TEST_FROM")
 fi
 
-if [[ -z "$GE_SOURCE" ]]; then
-  GE_SOURCE="$GE_OUT/bootstrap"
-  ge_run python -u -m generator_evaluator.cooperative_run "${GE_COMMON_ARGS[@]}" \
-    --bootstrap-only --generator-epochs "${BOOTSTRAP_EPOCHS:-10}" \
-    --updates-per-epoch "${BOOTSTRAP_UPDATES:-10}" --out "$GE_SOURCE"
-fi
-
 ge_run python -u -m generator_evaluator.cooperative_run "${GE_COMMON_ARGS[@]}" \
-  --warm-start-from "$GE_SOURCE" \
+  "${GE_WARM_START_ARGS[@]}" \
   --generator-epochs "${GENERATOR_EPOCHS:-20}" \
   --updates-per-epoch "${UPDATES_PER_EPOCH:-10}" \
   --elite-limit "${ELITE_LIMIT:-8}" \

@@ -349,7 +349,8 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
                 probe_x: Tensor, probe_ids: Tensor, *, seed: int, bank_steps: int,
                 bank_candidates: int, teachers_per_task: int, support_count: int,
                 query_count: int, teacher_batch_size: int, k: int, hidden: int,
-                device: str, measurement_devices: tuple[str, ...], bank_out: Path) -> FunctionalBank:
+                device: str, measurement_devices: tuple[str, ...], bank_out: Path,
+                persist_artifacts: bool = False) -> FunctionalBank:
     from deepsets_vaae.core import MaskedDeepSets
 
     features = _FEATURES
@@ -382,15 +383,15 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
     best_by_density: dict[int, list[tuple[float, int, Tensor, dict[str, Any], dict[str, Any]]]] = {
         density: [] for density in buckets
     }
-    bank_out.mkdir(parents=True, exist_ok=True)
-    candidate_artifact_paths: set[Path] = set()
-    candidate_children = (bank_out / "children").resolve()
+    if persist_artifacts:
+        bank_out.mkdir(parents=True, exist_ok=True)
     replay = RealReplay(protocol)
     store = ParallelMeasurementStore(bank_out, replay, device, devices=measurement_devices,
-                                     batch_size=teacher_batch_size)
+                                     batch_size=teacher_batch_size,
+                                     persist_artifacts=False)
     try:
-        # Chunking limits the live Adam/history tensors while retaining the
-        # same packed fit and cache semantics as evaluator measurements.
+        # Chunking limits live fit tensors. Source candidates always stay in
+        # memory; ``persist_artifacts`` controls only selected functional cards.
         execution_batch_size = teacher_batch_size * max(1, len(measurement_devices))
         for start in progress(range(0, bank_candidates, execution_batch_size),
                               desc=f"DeepSets bank candidates {task_index}", unit="batch"):
@@ -401,20 +402,27 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
             initialization_seeds = [_candidate_initialization_seed(seed, candidate_id)
                                     for candidate_id in range(start, stop)]
             measured = store.measure_many(entries, desc=f"Bank {task_index} fits",
-                                          initialization_seeds=initialization_seeds)
+                                          initialization_seeds=initialization_seeds,
+                                          retain_results=True)
             for candidate_id, (record, result) in zip(range(start, stop), measured):
-                artifact_path = Path(record["artifact_path"]).resolve()
-                if artifact_path.parent != candidate_children or artifact_path.suffix != ".pt":
-                    raise ValueError("source candidate artifacts must be direct files in this bank's children directory")
-                candidate_artifact_paths.add(artifact_path)
                 density = strata[candidate_id]
                 score = float(result["replica_losses"][0])
                 retained = best_by_density[density]
-                retained.append((score, candidate_id, masks[candidate_id], result, record))
+                retained_result = result
+                if not persist_artifacts:
+                    # Ranking and tokenization need only the terminal model
+                    # weights and score; Adam moments and fit histories are
+                    # never used to train a source teacher again.
+                    retained_result = {"state_dict": result["state_dict"],
+                                       "replica_losses": result["replica_losses"]}
+                retained.append((score, candidate_id, masks[candidate_id], retained_result, record))
                 retained.sort(key=lambda row: (row[0], row[1]))
                 del retained[quotas[buckets.index(density)]:]
     finally:
         store.close()
+    store.last_results.clear()
+    del measured
+    del record, result
 
     selected: list[tuple[float, int, Tensor, dict[str, Any], dict[str, Any]]] = []
     for density, quota in zip(buckets, quotas):
@@ -434,47 +442,54 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
         token, raw = extract_deepsets_functional_token(state, mask, probe_x)
         row_hash = _state_hash(state, mask)
         initialization_seed = _candidate_initialization_seed(seed, candidate_id)
-        card_path = bank_out / "maps" / f"candidate_{candidate_id:06d}_init_{initialization_seed}.pt"
+        card_path = (bank_out / "maps" / f"candidate_{candidate_id:06d}_init_{initialization_seed}.pt"
+                     if persist_artifacts else None)
         card_state = {name: state[name] for name in ("weight", "bias", "readout", "per_image_offset")}
-        write_functional_card(
-            card_path, token=token, mask=mask, state=card_state,
-            metadata={
-                "kind": "initial_teacher",
-                "candidate_id": int(candidate_id),
-                "initialization_seed": int(initialization_seed),
-                "score_name": "source_query_nmse",
-                "score": float(score),
-                "row_hash": row_hash,
-                "task_source": {
-                    "task_id": task.task_id,
-                    "task_index": int(task_index),
-                    "bank_task_id": source_task.task_id,
-                    "task_provenance": deepcopy(task.provenance),
-                    "bank_task_provenance": deepcopy(source_task.provenance),
-                    "probe_ids": probe_ids.detach().cpu().tolist(),
-                    "probe_fingerprint": tensor_hash(probe_x),
-                },
-                "measurement": {
-                    "protocol_id": protocol.fingerprint,
-                    "mask_key": record.get("mask_key"),
-                    "active_edges": int(mask.sum()),
-                    "density_stratum": int(strata[candidate_id]),
-                    "candidate_seed_rule": "seed + 1000003 * (candidate_id + 1)",
-                },
-            })
+        if persist_artifacts:
+            write_functional_card(
+                card_path, token=token, mask=mask, state=card_state,
+                metadata={
+                    "kind": "initial_teacher",
+                    "candidate_id": int(candidate_id),
+                    "initialization_seed": int(initialization_seed),
+                    "score_name": "source_query_nmse",
+                    "score": float(score),
+                    "row_hash": row_hash,
+                    "task_source": {
+                        "task_id": task.task_id,
+                        "task_index": int(task_index),
+                        "bank_task_id": source_task.task_id,
+                        "task_provenance": deepcopy(task.provenance),
+                        "bank_task_provenance": deepcopy(source_task.provenance),
+                        "probe_ids": probe_ids.detach().cpu().tolist(),
+                        "probe_fingerprint": tensor_hash(probe_x),
+                    },
+                    "measurement": {
+                        "protocol_id": protocol.fingerprint,
+                        "mask_key": record.get("mask_key"),
+                        "active_edges": int(mask.sum()),
+                        "density_stratum": int(strata[candidate_id]),
+                        "candidate_seed_rule": "seed + 1000003 * (candidate_id + 1)",
+                    },
+                })
         tokens.append(token)
         selected_masks.append(mask.detach().cpu().clone())
-        states.append({**raw, "state_dict": state,
-                       "optimizer_state": deepcopy(result["optimizer_state"]),
-                       "history": deepcopy(result["history"]), "row_hash": row_hash,
-                       "source": {"kind": "initial_teacher", "task_id": task.task_id,
-                                  "task_index": task_index, "teacher": teacher_index,
-                                  "candidate_id": candidate_id, "density_stratum": strata[candidate_id],
-                                  "active_edges": int(mask.sum()), "source_query_nmse": score,
-                                  "artifact_path": str(card_path.resolve()),
-                                  "card_schema": "generator_evaluator.functional_map_card:v1"}})
+        teacher_state = {**raw, "state_dict": state, "row_hash": row_hash,
+                         "source": {"kind": "initial_teacher", "task_id": task.task_id,
+                                    "task_index": task_index, "teacher": teacher_index,
+                                    "candidate_id": candidate_id, "density_stratum": strata[candidate_id],
+                                    "active_edges": int(mask.sum()), "source_query_nmse": score,
+                                    "artifact_path": (str(card_path.resolve()) if card_path is not None else None),
+                                    "artifact_storage": ("file" if card_path is not None else "memory"),
+                                    "card_schema": ("generator_evaluator.functional_map_card:v1"
+                                                    if card_path is not None else None)}}
+        if persist_artifacts:
+            teacher_state["optimizer_state"] = deepcopy(result["optimizer_state"])
+            teacher_state["history"] = deepcopy(result["history"])
+        states.append(teacher_state)
 
     selected_masks_tensor = torch.stack(selected_masks)
+    selected_masks.clear()
     reference_q_abs = states[0]["q_abs_mean"]
     aligned_q_abs = torch.stack([reference_q_abs] + [
         _align_hidden_columns(reference_q_abs, row["q_abs_mean"]) for row in states[1:]])
@@ -482,7 +497,18 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
     baseline = _exact_topk(mean_q_abs, k)
     density_counts = {int(density): int((selected_masks_tensor.sum((1, 2)) == density).sum())
                       for density in buckets}
+    selected_ids = [int(row[1]) for row in selected]
     selected_scores = {str(row[1]): row[0] for row in selected}
+    selected_initialization_seeds = [_candidate_initialization_seed(seed, candidate_id)
+                                     for candidate_id in selected_ids]
+    # Release the search-only candidate matrix and optimizer results once the
+    # retained terminal states have been materialized into the bank.
+    best_by_density.clear()
+    selected.clear()
+    del masks, mask, result, record
+    bank_tokens = torch.stack(tokens)[None]
+    tokens.clear()
+    del token
     partitions = {"bank_support_ids": support_ids.reshape(-1).unique().tolist(),
                   "bank_query_ids": query_ids.reshape(-1).unique().tolist(),
                   "probe_ids": probe_ids.detach().cpu().tolist()}
@@ -495,9 +521,8 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
                   "candidate_count": int(bank_candidates),
                   "candidate_density_counts": {str(density): int(candidate_counts[index])
                                                for index, density in enumerate(buckets)},
-                  "selected_candidate_ids": [int(row[1]) for row in selected],
-                  "selected_initialization_seeds": [_candidate_initialization_seed(seed, row[1])
-                                                     for row in selected],
+                  "selected_candidate_ids": selected_ids,
+                  "selected_initialization_seeds": selected_initialization_seeds,
                   "candidate_seed_rule": "seed + 1000003 * (candidate_id + 1)",
                   "selected_candidate_query_nmse": selected_scores,
                   "selection_density_buckets": list(buckets),
@@ -506,19 +531,15 @@ def _build_bank(task_index: int, task: TaskData, support_split: Any, query_split
                   "selection_rule": "lowest fixed-horizon source-query NMSE per density; candidate ID breaks ties",
                   "quality_source": None, "bank_support_count": support_count,
                   "bank_query_count": query_count, "accepted_feedback_task_ids": [task.task_id],
-                  "feedback_hashes": []}
-    bank = FunctionalBank(torch.stack(tokens)[None], None, selected_masks_tensor, baseline,
+                  "feedback_hashes": [], "persist_artifacts": bool(persist_artifacts),
+                  "artifact_storage": "file" if persist_artifacts else "memory"}
+    bank = FunctionalBank(bank_tokens, None, selected_masks_tensor, baseline,
                           provenance, states=states,
                           diagnostics={"probe_x": probe_x.detach().cpu().clone(),
                                        "aligned_q_abs": aligned_q_abs,
                                        "bank_support_ids": support_ids.detach().cpu().clone(),
                                        "bank_query_ids": query_ids.detach().cpu().clone(),
                                        "feedback_rows_added": 0})
-    # Only files returned for candidates in this successful build are eligible
-    # for cleanup. Preserve unrelated files that may share the children folder.
-    for artifact_path in candidate_artifact_paths:
-        if artifact_path.is_file():
-            artifact_path.unlink()
     return bank
 
 
@@ -544,8 +565,13 @@ def build_cooperative_deepsets_fixture(
     measurement_devices: Sequence[str] | None = None,
     out: str | Path | None = None,
     fixed_test_spec: dict[str, Any] | None = None,
+    persist_artifacts: bool = False,
 ) -> tuple[dict[str, FunctionalBank], list[TaskData], list[TaskData], dict[str, Any]]:
-    """Build own-task banks, matched train/selection tasks and sealed tests."""
+    """Build own-task banks, matched train/selection tasks and sealed tests.
+
+    Source fit artifacts are memory-only unless ``persist_artifacts`` is
+    explicitly enabled.
+    """
     _require_count("train_task_count", train_task_count, 100_000, minimum=2)
     _require_count("test_task_count", test_task_count, 100_000)
     _require_count("bank_steps", bank_steps, 10_000)
@@ -689,7 +715,8 @@ def build_cooperative_deepsets_fixture(
                                             len(source_validation_splits[index].features) // _SET_SIZE),
                                teacher_batch_size=teacher_batch_size, k=k, hidden=hidden,
                                device=primary_device, measurement_devices=devices,
-                               bank_out=bank_root / str(index))
+                               bank_out=bank_root / str(index),
+                               persist_artifacts=persist_artifacts)
             banks[str(index)] = bank
     finally:
         if temporary is not None:
@@ -1049,7 +1076,8 @@ def _stratified_rows(bank: FunctionalBank, max_teachers: int) -> list[int]:
 
 
 def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: dict[str, Any],
-                             probe_x: Tensor, *, task_id: str, artifact_path: str | Path,
+                             probe_x: Tensor, *, task_id: str,
+                             artifact_path: str | Path | None = None,
                              max_teachers: int = 100, eligible: bool = True) -> FunctionalBank:
     """Add distinct terminal training replicas as normalized functional rows."""
     if not isinstance(bank, FunctionalBank) or bank.provenance.get("family") != "cooperative_deepsets":
@@ -1077,8 +1105,8 @@ def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: di
             raise ValueError(f"feedback requires a protocol record for all {field}")
     if not torch.isfinite(torch.as_tensor(measurement["replica_losses"], dtype=torch.float32)).all():
         raise ValueError("feedback replica losses must be finite")
-    path = Path(artifact_path).resolve()
-    if not path.is_file():
+    path = Path(artifact_path).resolve() if artifact_path is not None else None
+    if path is not None and not path.is_file():
         raise ValueError("feedback artifact_path must name the saved real measurement")
     probe_x = torch.as_tensor(probe_x, dtype=torch.float32).detach().cpu()
     if tensor_hash(probe_x) != bank.provenance.get("probe_fingerprint"):
@@ -1102,15 +1130,19 @@ def append_deepsets_feedback(bank: FunctionalBank, mask: Tensor, measurement: di
         token, raw = extract_deepsets_functional_token(state, mask, probe_x)
         tokens.append(token)
         masks.append(mask.clone())
-        additions.append({**raw, "state_dict": state, "row_hash": row_hash,
-                          "optimizer_state": _optimizer_replica(measurement.get("optimizer_state", {}),
-                                                                 replica, replica_count),
-                          "history": _history_replica(measurement.get("history", {}),
-                                                      replica, replica_count),
-                          "source": {"kind": "feedback", "task_id": task_id,
-                                     "replica": replica, "artifact_path": str(path),
-                                     "source_mask": mask.clone(),
-                                     "protocol_id": measurement["protocol_id"]}})
+        addition = {**raw, "state_dict": state, "row_hash": row_hash,
+                    "source": {"kind": "feedback", "task_id": task_id,
+                               "replica": replica,
+                               "artifact_path": str(path) if path is not None else None,
+                               "artifact_storage": "file" if path is not None else "memory",
+                               "source_mask": mask.clone(),
+                               "protocol_id": measurement["protocol_id"]}}
+        if bank.provenance.get("persist_artifacts", False):
+            addition["optimizer_state"] = _optimizer_replica(
+                measurement.get("optimizer_state", {}), replica, replica_count)
+            addition["history"] = _history_replica(measurement.get("history", {}),
+                                                    replica, replica_count)
+        additions.append(addition)
         existing.add(row_hash)
     if not tokens:
         return bank

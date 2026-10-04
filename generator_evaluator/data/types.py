@@ -148,10 +148,13 @@ class RealReplay:
         return "holdout" if int.from_bytes(digest[:8], "big") / 2**64 < self.holdout_fraction else "train"
 
     def append(self, mask: Tensor, task: TaskData, result: dict[str, Any], *,
-               origin: str, artifact_path: str | Path) -> dict[str, Any]:
+               origin: str, artifact_path: str | Path | None = None,
+               measurement_key: str | None = None) -> dict[str, Any]:
         identity = topology_id(mask)
         if result.get("label_source") != "fresh_terminal_query" or not result.get("fixed_horizon"):
             raise ValueError("replay accepts only fresh fixed-horizon terminal query measurements")
+        if result.get("task_id", task.task_id) != task.task_id:
+            raise ValueError("measurement task identity differs from its replay task")
         if result.get("protocol_id") != self.protocol.fingerprint:
             raise ValueError("measurement protocol differs from replay protocol")
         losses = torch.as_tensor(result["replica_losses"]).detach().cpu().float()
@@ -160,9 +163,10 @@ class RealReplay:
             raise ValueError("measurement must contain the prescribed replica count")
         if not torch.isfinite(losses).all() or len(set(seeds)) != len(seeds):
             raise ValueError("replica losses must be finite and initializations independent")
-        artifact_path = Path(artifact_path).resolve()
-        if not artifact_path.is_file():
-            raise ValueError("full child measurement artifact must exist before adding its label")
+        if artifact_path is not None:
+            artifact_path = Path(artifact_path).resolve()
+            if not artifact_path.is_file():
+                raise ValueError("full child measurement artifact must exist before adding its label")
         fingerprint = task.fingerprint
         if task.task_id in self.task_fingerprints and self.task_fingerprints[task.task_id] != fingerprint:
             raise ValueError("task data changed within the replay")
@@ -184,10 +188,14 @@ class RealReplay:
         row = dict(topology_id=identity, mask_key=mask_key, task_id=task.task_id,
                    task_split=task.split, split=split, protocol_id=self.protocol.fingerprint,
                    task_fingerprint=fingerprint, origin=origin, label_source=result["label_source"],
+                   fixed_horizon=True,
                    quality=float(losses.mean()), replica_losses=losses.tolist(), seeds=seeds,
                    density=float(mask.float().mean()), active_edges=int(mask.sum()),
                    plateau_flags=torch.as_tensor(result["plateau_flags"]).bool().tolist(),
-                   artifact_path=str(artifact_path), support_ids_hash=tensor_hash(task.support_ids),
+                   artifact_path=None if artifact_path is None else str(artifact_path),
+                   artifact_ephemeral=artifact_path is None,
+                   measurement_key=measurement_key,
+                   support_ids_hash=tensor_hash(task.support_ids),
                    query_ids_hash=tensor_hash(task.query_ids), provenance=task.provenance)
         self.records.append(row)
         return row
@@ -224,14 +232,26 @@ class RealReplay:
         for row in self.records:
             if row["protocol_id"] != self.protocol.fingerprint or row["label_source"] != "fresh_terminal_query":
                 raise ValueError("invalid replay label provenance")
+            losses = torch.as_tensor(row.get("replica_losses", []), dtype=torch.float32)
+            seeds = list(row.get("seeds", []))
+            if (losses.shape != (self.protocol.replicas,) or len(seeds) != self.protocol.replicas or
+                    len(set(seeds)) != len(seeds) or not torch.isfinite(losses).all() or
+                    not math.isfinite(float(row.get("quality", float("nan")))) or
+                    row["quality"] != float(losses.mean())):
+                raise ValueError("replay terminal labels or initialization provenance are corrupt")
             mask = self.masks[row["mask_key"]]
             identity = topology_id(mask)
             if row["mask_key"] != tensor_hash(mask) or row["topology_id"] != identity:
                 raise ValueError("replay mask identity is corrupt")
+            if (row.get("density") != float(mask.float().mean()) or
+                    row.get("active_edges") != int(mask.sum())):
+                raise ValueError("replay mask summary is corrupt")
             if self.mask_splits[identity] != self.mask_split(mask):
                 raise ValueError("replay topology partition is corrupt")
             task_id = row["task_id"]
-            if self.task_splits[task_id] != row["task_split"] or self.task_fingerprints[task_id] != row["task_fingerprint"]:
+            if (task_id not in self.task_splits or task_id not in self.task_fingerprints or
+                    self.task_splits[task_id] != row["task_split"] or
+                    self.task_fingerprints[task_id] != row["task_fingerprint"]):
                 raise ValueError("replay task identity/partition is corrupt")
             expected_split = ("control" if self.mask_split(mask) == "control" else
                               "joint_validation" if row["task_split"] == "validation" and self.mask_split(mask) == "holdout" else
@@ -243,6 +263,15 @@ class RealReplay:
             context = self.contexts[task_id]
             if context.ndim != 1 or not torch.isfinite(context).all():
                 raise ValueError("replay context is corrupt")
+            if row.get("artifact_ephemeral") is True:
+                if (row.get("artifact_path") is not None or
+                        row.get("fixed_horizon") is not True or
+                        (row.get("measurement_key") is not None and
+                         (not isinstance(row["measurement_key"], str) or not row["measurement_key"]))):
+                    raise ValueError("ephemeral replay rows cannot reference a child artifact")
+                continue
+            if row.get("artifact_ephemeral") not in (None, False) or row.get("artifact_path") is None:
+                raise ValueError("replay artifact provenance is corrupt")
             path = Path(row["artifact_path"])
             if not path.is_file():
                 raise ValueError(f"missing real measurement artifact: {path}")
@@ -252,10 +281,10 @@ class RealReplay:
                 result.get("label_source") != "fresh_terminal_query" or
                 not result.get("fixed_horizon")):
                 raise ValueError("child artifact is not a measurement of this protocol")
-            losses = torch.as_tensor(result["replica_losses"]).float()
-            if not torch.equal(losses, torch.tensor(row["replica_losses"]).float()):
+            artifact_losses = torch.as_tensor(result["replica_losses"]).float()
+            if not torch.equal(artifact_losses, losses):
                 raise ValueError("replay label differs from its child measurement")
-            if row["quality"] != float(losses.mean()) or row["seeds"] != list(result["seeds"]):
+            if row["seeds"] != list(result["seeds"]):
                 raise ValueError("replay quality/initialization provenance is corrupt")
             if payload.get("mask_key", row["mask_key"]) != row["mask_key"]:
                 raise ValueError("child artifact mask does not match replay")
