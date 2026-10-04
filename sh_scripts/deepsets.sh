@@ -7,7 +7,8 @@ GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 # REFRESH_EVERY schedules measurement rounds and feedback, not evaluator updates.
 # Keep the best common mask across refreshes, using independent selection queries.
 # BOOTSTRAP_GENERATORS=1 is retained for CLI compatibility.
-# WARM_START_FROM accepts a full legacy run; evaluator-only compact output lacks banks.
+# RESTART_FROM reuses saved binary banks and evaluator with fresh generators.
+# WARM_START_FROM accepts a full legacy checkpoint.
 # GPU_IDS selects cards for task generators, bank creation, and batched child fits.
 # TRAIN_TASKS and TEST_TASKS set the search run's task counts.
 # FIXED_TEST_FROM keeps prior sealed test costs and pools when expanding train.
@@ -23,6 +24,9 @@ GE_DATA="${DATA_ROOT:-datasets/mnist8m}"
 GE_WARM_START_ARGS=()
 if [[ -n "${WARM_START_FROM:-}" ]]; then
   GE_WARM_START_ARGS+=(--warm-start-from "$WARM_START_FROM")
+fi
+if [[ -n "${RESTART_FROM:-}" ]]; then
+  GE_WARM_START_ARGS+=(--restart-from "$RESTART_FROM")
 fi
 GE_COMMON_ARGS=(
   --domain deepsets --preset deepsets --training-mode joint --data-root "$GE_DATA"

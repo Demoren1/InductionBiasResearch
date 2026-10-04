@@ -7,7 +7,8 @@ GPU_IDS="${GPU_IDS:-0 1 2 4 5}"  # Например: "1 2 3".
 # Search refreshes add measurements and feedback, not evaluator updates.
 # Keep the best common mask across refreshes, using independent selection queries.
 # BOOTSTRAP_GENERATORS=1 is retained for CLI compatibility.
-# WARM_START_FROM accepts a full legacy run; evaluator-only compact output lacks banks.
+# RESTART_FROM reuses saved binary banks and evaluator with fresh generators.
+# WARM_START_FROM accepts a full legacy checkpoint.
 # TRAIN_PATTERNS and TEST_PATTERNS set the search run's task roles.
 # The defaults use 12 training patterns and four held-out patterns.
 # GE_OUT, GE_SEED, CHILD_STEPS, GENERATOR_EPOCHS, UPDATES_PER_EPOCH,
@@ -21,6 +22,9 @@ GE_CHILD_STEPS="${CHILD_STEPS:-1000}"
 GE_WARM_START_ARGS=()
 if [[ -n "${WARM_START_FROM:-}" ]]; then
   GE_WARM_START_ARGS+=(--warm-start-from "$WARM_START_FROM")
+fi
+if [[ -n "${RESTART_FROM:-}" ]]; then
+  GE_WARM_START_ARGS+=(--restart-from "$RESTART_FROM")
 fi
 read -r -a GE_TRAIN_PATTERNS <<< "${TRAIN_PATTERNS:-0000 0001 0011 0101 0110 0111 1000 1001 1010 1100 1110 1111}"
 read -r -a GE_TEST_PATTERNS <<< "${TEST_PATTERNS:-0010 0100 1011 1101}"

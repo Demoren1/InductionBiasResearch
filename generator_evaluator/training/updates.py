@@ -576,6 +576,66 @@ def direct_generator_update(
     }
 
 
+def _proposal_logits_from_shared_bank(
+    generator: nn.Module,
+    tokens: Tensor,
+    quality: Tensor | None,
+    noise: Tensor,
+) -> Tensor:
+    """Decode proposal logits from one bank encoding and many noise draws.
+
+    The production Transformer encodes each bank independently of the noise.
+    Reusing its compact solution and neuron memories avoids expanding the raw
+    functional profiles across proposal draws.  Other generators use a
+    count-one forward fallback so they also never receive an expanded bank.
+    """
+    base = generator
+    encode_tokens = tokens
+    if isinstance(generator, TransformerMaskGenerator):
+        # A subclass with a custom forward path may define different logits;
+        # leave that behavior to its public forward method below.
+        if (type(generator).forward is not TransformerMaskGenerator.forward or
+                type(generator)._forward_validated is not TransformerMaskGenerator._forward_validated):
+            base = None
+    else:
+        inner = getattr(generator, "inner", None)
+        augment = getattr(generator, "_augment_validated", None)
+        if isinstance(inner, TransformerMaskGenerator) and callable(augment):
+            base = inner
+            # DensityConditionedGenerator adds the requested target density
+            # before encoding.  Its current budget is set from proposal k.
+            encode_tokens = augment(tokens, None, tokens.shape[0])
+        else:
+            base = None
+
+    encode_components = getattr(base, "_encode_bank_components_validated", None)
+    if callable(encode_components):
+        batch, solutions = encode_tokens.shape[:2]
+        count = len(noise)
+        solution_memory, neuron_memory = encode_components(
+            encode_tokens, quality, batch, solutions
+        )
+        noise_memory = base.noise_projection(noise).unsqueeze(1)
+        solution_memory = solution_memory + noise_memory
+        neuron_memory = neuron_memory + solution_memory.unsqueeze(2)
+        neuron_memory = neuron_memory.reshape(count, -1, base.width)
+        # The encoded bank has batch size one.  Adding the count-shaped noise
+        # expands only these width-sized memories across the proposal draws.
+        memory = torch.cat((solution_memory, neuron_memory), dim=1)
+        queries = base.output_queries.unsqueeze(0).expand(count, -1, -1)
+        decoded = base.decoder(tgt=queries, memory=memory)
+        hidden_terms = decoded.unsqueeze(1).expand(-1, base.features, -1, -1)
+        feature_terms = base.feature_embeddings.unsqueeze(0).unsqueeze(2).expand(
+            count, -1, base.hidden, -1
+        )
+        return base.output_head(torch.cat((hidden_terms, feature_terms), dim=-1)).squeeze(-1)
+
+    return torch.cat([
+        generator(tokens, noise[index:index + 1], quality)
+        for index in range(len(noise))
+    ], dim=0)
+
+
 def propose_candidates(
     model: TransformerMaskGenerator,
     tokens: Tensor,
@@ -590,10 +650,11 @@ def propose_candidates(
     tokens, quality = _bank_inputs(model, tokens, quality)
     if tokens.shape[0] != 1:
         raise ValueError("proposals require one bank (batch size 1)")
+    if hasattr(model, "set_budget"):
+        model.set_budget(k)  # type: ignore[attr-defined]
     with torch.no_grad():
         noise = _random_noise((count, model.noise_dim), rng, tokens.device, tokens.dtype)
-        logits = model(tokens.expand(count, *tokens.shape[1:]), noise,
-                       None if quality is None else quality.expand(count, *quality.shape[1:]))
+        logits = _proposal_logits_from_shared_bank(model, tokens, quality, noise)
         gumbel = _random_gumbels(logits.shape, rng, logits.device, logits.dtype)
         masks, _, _ = sample_ordered_topk(logits, k, gumbel=gumbel)
     return masks

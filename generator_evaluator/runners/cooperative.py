@@ -41,6 +41,7 @@ from generator_evaluator.storage.runtime import RunSession
 from generator_evaluator.training.updates import train_evaluators
 from generator_evaluator.storage.toeplitz import write_toeplitz_report
 from generator_evaluator.storage.warm_start import evaluator_bank_fingerprint, load_cooperative_warm_start
+from generator_evaluator.storage.prepared import load_labels, load_prepared, save_labels, save_prepared
 from generator_evaluator.search.schedule import (STAGE_BOOTSTRAP_QUALITY, STAGE_COOPERATION, STAGE_JOINT,
                             STAGE_QUALITY, STAGE_TRAINING_COMPLETE,
                             joint_search_stages, search_stages)
@@ -291,6 +292,7 @@ class CooperativeSearchController:
         self.evaluator_bank_rows = list(manifest["row_ids"])
         self.evaluator_bank_fingerprint = manifest["fingerprint"]
         if not self.config.persist_artifacts:
+            save_labels(self.out, self.replay)
             save_json(self.out / "evaluator_bank.json", dict(
                 fingerprint=manifest["fingerprint"], topology_count=len(manifest["topology_ids"]),
                 rows=len(manifest["rows"]), policy=self.evaluator_policy))
@@ -918,7 +920,8 @@ def run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, o
                                protocol, config, *, device="cpu", resume=False,
                                dense_learning_rates=None, test_factory=None, build_settings=None,
                                warm_start=None, measurement_devices=None, measurement_batch_size=8,
-                               generator_devices=None, generator_pretrained_from=None):
+                               generator_devices=None, generator_pretrained_from=None,
+                               prepared_restart=None):
     with ExitStack() as cleanup:
         return _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec,
             out, protocol, config, device=device, resume=resume,
@@ -927,6 +930,7 @@ def run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, o
             measurement_devices=measurement_devices, measurement_batch_size=measurement_batch_size,
             generator_devices=generator_devices,
             generator_pretrained_from=generator_pretrained_from,
+            prepared_restart=prepared_restart,
             cleanup=cleanup)
 
 
@@ -1016,11 +1020,11 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                                 protocol, config, *, device, resume, dense_learning_rates,
                                 test_factory, build_settings, warm_start, measurement_devices,
                                 measurement_batch_size, generator_devices,
-                                generator_pretrained_from, cleanup):
+                                generator_pretrained_from, prepared_restart, cleanup):
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     if resume and not config.persist_artifacts:
-        raise ValueError("resuming generator search requires --persist-artifacts; compact runs save evaluator weights only")
+        raise ValueError("exact search resume requires --persist-artifacts; use --restart-from to reuse compact banks and evaluator")
     if generator_pretrained_from is not None and config.phase != "search":
         raise ValueError("generator-pretrained-from is only valid for search runs")
     generator_devices = _device_list(generator_devices, device, len(config.train_patterns),
@@ -1093,8 +1097,15 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         raise
     if completed is not None:
         return completed
+    if not config.persist_artifacts:
+        save_prepared(out, banks, train_tasks, selection_tasks, test_spec,
+                      config=_config_metadata(config), protocol=asdict(protocol),
+                      build_settings=build_settings,
+                      bank_source=None if prepared_restart is None else prepared_restart["source"])
     if warm_start is not None:
         protocol = warm_start.protocol
+    elif prepared_restart is not None:
+        protocol = prepared_restart["protocol"]
     banks = copy.deepcopy(banks)
     torch.manual_seed(config.seed)
     rng = torch.Generator().manual_seed(config.seed + 101)
@@ -1106,7 +1117,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
     if (out / "protocol.json").exists():
         protocol = InnerProtocol(**json.loads((out / "protocol.json").read_text())["inner_protocol"])
     else:
-        if warm_start is not None:
+        if warm_start is not None or prepared_restart is not None:
             tuning = dict(settings=[], selected=dict(lr=protocol.lr, protocol_id=protocol.fingerprint),
                           selection_rule="reuse source fixed solver", label_measurements=0,
                           test_used=False, fixed_solver_for_all_methods=True)
@@ -1131,6 +1142,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                   smoke_only=config.smoke))
     replay = (RealReplay(protocol, split_seed=config.seed) if warm_start is None
               else warm_start.materialize_replay(out))
+    if prepared_restart is not None and prepared_restart["replay"] is not None:
+        replay = prepared_restart["replay"]
     starting_bank_topology_ids = initial_evaluator_topology_ids
     if not config.persist_artifacts or measurement_devices is not None or config.domain == "deepsets":
         from generator_evaluator.evaluation.parallel import ParallelMeasurementStore
@@ -1177,6 +1190,14 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                   for name, model in models.items()}
     ensemble = QualityEnsemble(config.features, contexts.shape[1], num_members=config.ensemble_members,
                                width=config.width, heads=config.heads, layers=config.layers).to(device)
+    if prepared_restart is not None and prepared_restart["evaluator"] is not None:
+        evaluator = prepared_restart["evaluator"]
+        architecture = dict(features=config.features, context_dim=contexts.shape[1],
+                            width=config.width, heads=config.heads, layers=config.layers,
+                            ensemble_members=config.ensemble_members)
+        if evaluator["architecture"] != architecture or evaluator["protocol"] != asdict(protocol):
+            raise ValueError("saved evaluator architecture or solver differs from requested run")
+        ensemble.load_state_dict(evaluator["ensemble"], strict=True)
     if warm_start is not None:
         if warm_start.reuse_evaluator:
             ensemble.load_state_dict(warm_start.ensemble_state)
@@ -1250,7 +1271,16 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
 
     bootstrap_critic_only = config.phase == "bootstrap" and not config.bootstrap_generators
     if not controller.initialization_done:
-        if warm_start is not None:
+        if prepared_restart is not None and prepared_restart["evaluator"] is not None:
+            controller.fit_evaluator(initial_evaluator_topology_ids, train=False,
+                expected_fingerprint=prepared_restart["evaluator"]["bank_fingerprint"])
+            if not bootstrap_critic_only:
+                controller.feedback()
+            controller.update_actual_archive()
+            controller.select([bank.baseline_mask for bank in banks.values()] +
+                list(functional_controls.values()) + [row["mask"] for row in controller.actual_archive] +
+                list(controller.common_elites()), 0, stage="restart")
+        elif warm_start is not None:
             if warm_start.reuse_evaluator:
                 controller.fit_evaluator(
                     warm_start.evaluator_bank_topology_ids,
@@ -1300,6 +1330,8 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                 seen.add(identity)
                 entries.extend((mask, task, origin) for task in train_tasks)
             measure_many(entries)
+            if not config.persist_artifacts:
+                save_labels(out, replay)
             controller.fit_evaluator(initial_evaluator_topology_ids)
             if not bootstrap_critic_only:
                 controller.feedback()
@@ -1651,7 +1683,7 @@ def make_parser():
     parser.add_argument("--bootstrap-only", action="store_true",
                         help="Prepare banks and critic without opening heldout test tasks")
     parser.add_argument("--persist-artifacts", action="store_true",
-                        help="Opt in to full resumable model/bank/child artifacts; default saves evaluator only")
+                        help="Opt in to full resumable child/model artifacts; default saves binary banks and evaluator")
     parser.add_argument("--data-root", type=Path, default=Path("datasets/mnist8m"))
     parser.add_argument("--measurement-devices", nargs="+",
                         help="Child-fit devices; auto uses all CUDA GPUs visible to this process")
@@ -1681,6 +1713,8 @@ def make_parser():
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--warm-start-from", type=Path,
                         help="Reuse live banks, measurements and latest critic; initialize new generators")
+    parser.add_argument("--restart-from", type=Path,
+                        help="Reuse binary input banks, cached labels and evaluator; start a new generator search")
     parser.add_argument("--fixed-test-from", type=Path,
                         help="DeepSets: retain sealed test costs and image pools from a prior run directory")
     parser.add_argument("--generator-pretrained-from", type=Path,
@@ -1767,7 +1801,7 @@ def resolve_run_settings(args):
     if (is_deepsets and not args.smoke and
             any(getattr(args, name) is None for name in
                 ("support_count", "query_count", "selection_count"))):
-        source_run = args.warm_start_from or args.fixed_test_from
+        source_run = args.restart_from or args.warm_start_from or args.fixed_test_from
         if source_run is not None:
             source_spec = json.loads((source_run / "run_spec.json").read_text())
             for name in ("support_count", "query_count", "selection_count"):
@@ -1836,6 +1870,8 @@ def main():
         os.environ["GENERATOR_EVALUATOR_PROGRESS"] = "1" if args.progress else "0"
     torch.set_num_threads(1)
     config, protocol, build_settings = resolve_run_settings(args)
+    if args.restart_from is not None and (args.resume or args.warm_start_from is not None or args.persist_artifacts):
+        parser.error("--restart-from is a compact fresh search; cannot combine with --resume, --warm-start-from or --persist-artifacts")
     fixed_test_spec = None
     if args.fixed_test_from is not None:
         if config.domain != "deepsets":
@@ -1876,6 +1912,34 @@ def main():
     except ValueError as error:
         parser.error(str(error))
     warm_start = None
+    prepared_restart = None
+    if args.restart_from is not None:
+        source = args.restart_from.resolve()
+        if args.out.resolve() == source:
+            parser.error("--restart-from requires a new --out")
+        prepared = load_prepared(source)
+        requested_config = json.loads(json.dumps(_config_metadata(config)))
+        for name in ("domain", "features", "hidden", "k", "seed", "train_patterns", "test_pattern",
+                     "test_patterns", "test_task_count", "width", "heads", "layers", "ensemble_members"):
+            if prepared["config"][name] != requested_config[name]:
+                parser.error(f"saved banks/evaluator configuration differs: {name}")
+        if prepared["requested_protocol"] != asdict(protocol):
+            parser.error("requested child protocol differs from saved preparation")
+        if ({key: value for key, value in prepared["build_settings"].items() if key != "teacher_batch_size"} !=
+                {key: value for key, value in build_settings.items() if key != "teacher_batch_size"}):
+            parser.error("bank/data arguments differ from saved preparation")
+        prior_tasks = prepared["train_tasks"] + prepared["selection_tasks"]
+        prior_replay = load_labels(source, prior_tasks)
+        selected_protocol = (prior_replay.protocol if prior_replay is not None else
+            InnerProtocol(**json.loads((source / "protocol.json").read_text())["inner_protocol"])
+            if (source / "protocol.json").is_file() else protocol)
+        evaluator_path = source / "evaluator.pt"
+        evaluator = (torch.load(evaluator_path, map_location="cpu", weights_only=False)
+                     if evaluator_path.is_file() else None)
+        if evaluator is not None and prior_replay is None:
+            parser.error("saved evaluator requires its prepared label manifest")
+        prepared_restart = dict(source=source, protocol=selected_protocol,
+                                replay=prior_replay, evaluator=evaluator)
     if args.warm_start_from is not None:
         warm_start = load_cooperative_warm_start(args.warm_start_from, config, protocol)
         if args.out.resolve() == args.warm_start_from.resolve():
@@ -1891,7 +1955,13 @@ def main():
           f"latent_lr={config.latent_lr:g}, generators={generator_devices}, "
           f"batched={config.batch_children}", flush=True)
     inputs_path = args.out / "inputs.pt"
-    if warm_start is not None:
+    if prepared_restart is not None:
+        banks, train, selection, sealed = (prepared[key] for key in
+                                          ("banks", "train_tasks", "selection_tasks", "test_spec"))
+        print(f"Restart: {args.restart_from.resolve()}; binary banks reused, "
+              f"evaluator {'loaded' if evaluator is not None else 'will be trained'}, "
+              "new generators initialized", flush=True)
+    elif warm_start is not None:
         banks, train, selection, sealed = (warm_start.banks, warm_start.train_tasks,
                                           warm_start.selection_tasks, warm_start.test_spec)
         print(f"Warm start: {args.warm_start_from.resolve()}; banks reused, "
@@ -1945,7 +2015,8 @@ def main():
               build_settings=build_settings, warm_start=warm_start,
               measurement_devices=measurement_devices, measurement_batch_size=args.measurement_batch_size,
               generator_devices=generator_devices,
-              generator_pretrained_from=args.generator_pretrained_from)
+              generator_pretrained_from=args.generator_pretrained_from,
+              prepared_restart=prepared_restart)
     if config.phase == "bootstrap":
         print(json.dumps(dict(out=str(args.out.resolve()), phase="bootstrap",
               generators=result["generators"], real_label_measurements=result["real_label_measurements"],
