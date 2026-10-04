@@ -28,6 +28,7 @@ if [[ -n "${RESTART_FROM:-}" ]]; then
 fi
 read -r -a GE_TRAIN_PATTERNS <<< "${TRAIN_PATTERNS:-0000 0001 0011 0101 0110 0111 1000 1001 1010 1100 1110 1111}"
 read -r -a GE_TEST_PATTERNS <<< "${TEST_PATTERNS:-0010 0100 1011 1101}"
+read -r -a GE_EVALUATOR_DEVICES <<< "${EVALUATOR_DEVICES:-auto}"
 GE_PATTERN_ROLES=(--train-patterns "${GE_TRAIN_PATTERNS[@]}")
 if (( ${#GE_TEST_PATTERNS[@]} == 1 )); then
   GE_PATTERN_ROLES+=(--test-pattern "${GE_TEST_PATTERNS[0]}")
@@ -48,6 +49,7 @@ GE_DATA_ARGS=(
 )
 GE_DEVICE_ARGS=(
   --device cuda:0 --generator-devices auto --measurement-devices auto
+  --evaluator-devices "${GE_EVALUATOR_DEVICES[@]}"
   --measurement-batch-size "${CHILD_MASK_BATCH:-128}"
 )
 GE_BANK_ARGS=(

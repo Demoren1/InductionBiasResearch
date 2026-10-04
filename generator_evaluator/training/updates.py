@@ -18,9 +18,12 @@ from torch import Tensor, nn
 from deepsets_vaae.permutation_utility_loss import quality_policy_loss, sample_ordered_topk
 
 from generator_evaluator.data.types import RealReplay, topology_id
-from generator_evaluator.models.transformer import QualityEnsemble, TransformerMaskGenerator, permute_bank
+from generator_evaluator.models.transformer import (
+    MaskQualityEvaluator, QualityEnsemble, TransformerMaskGenerator, permute_bank,
+)
 from generator_evaluator.storage.progress import progress
 from generator_evaluator.search.quality import quality_objective_cost, validate_quality_objective
+from generator_evaluator.training.device_executor import PerDeviceGeneratorExecutor
 
 
 def _finite_float(value: Tensor | float) -> float:
@@ -134,10 +137,354 @@ def _ensemble_members(ensemble: QualityEnsemble) -> list[nn.Module]:
 
 def _optimizer_to_device(optimizer: torch.optim.Optimizer, device: torch.device) -> None:
     """Make a CPU-restored optimizer usable with members moved to ``device``."""
+    step_on_device = any(
+        group.get("capturable", False) or group.get("fused", False)
+        for group in optimizer.param_groups
+    )
     for state in optimizer.state.values():
         for name, value in state.items():
             if isinstance(value, Tensor):
-                state[name] = value.to(device)
+                state[name] = value.to(device) if name != "step" or step_on_device else value.cpu()
+
+
+def _optimizer_state_dict_on_device(optimizer: torch.optim.Optimizer,
+                                    device: torch.device) -> dict[str, Any]:
+    """Snapshot Adam state on the primary device without moving its CPU step counter."""
+    result = deepcopy(optimizer.state_dict())
+    step_on_device = any(
+        group.get("capturable", False) or group.get("fused", False)
+        for group in result["param_groups"]
+    )
+    for state in result["state"].values():
+        for name, value in state.items():
+            if isinstance(value, Tensor):
+                state[name] = value.to(device) if name != "step" or step_on_device else value.cpu()
+    return result
+
+
+_MASK_EVALUATOR_FORWARD = MaskQualityEvaluator.forward
+
+
+def _evaluator_forward_validated(member: nn.Module, masks: Tensor, contexts: Tensor) -> Tensor:
+    """Skip repeated validation only for the unmodified built-in evaluator."""
+    if (type(member) is MaskQualityEvaluator and
+            type(member).forward is _MASK_EVALUATOR_FORWARD and
+            "forward" not in member.__dict__):
+        return member._forward_validated(masks, contexts)
+    return member(masks, contexts)
+
+
+def _tensor_bytes(tensors: Sequence[Tensor]) -> int:
+    return sum(tensor.numel() * tensor.element_size() for tensor in tensors)
+
+
+def _gpu_cache_fits(device: torch.device, tensors: Sequence[Tensor],
+                    free_fraction: float) -> bool:
+    if device.type != "cuda" or not torch.cuda.is_available():
+        return False
+    try:
+        free, _total = torch.cuda.mem_get_info(device)
+    except RuntimeError:
+        return False
+    return _tensor_bytes(tensors) <= int(free * free_fraction)
+
+
+def _gpu_input_cache(device: torch.device, tensors: Sequence[Tensor],
+                     free_fraction: float) -> tuple[Tensor, ...] | None:
+    if not _gpu_cache_fits(device, tensors, free_fraction):
+        return None
+    cached = []
+    try:
+        for value in tensors:
+            cached.append(value.to(device, non_blocking=True))
+    except torch.cuda.OutOfMemoryError:
+        cached.clear()
+        return None
+    return tuple(cached)
+
+
+def _bounded_pin(tensors: Sequence[Tensor], *, limit_bytes: int = 256 * 1024 * 1024
+                 ) -> tuple[Tensor, ...]:
+    """Pin modest CPU input caches; large partitions stay pageable and bounded."""
+    values = tuple(tensors)
+    if _tensor_bytes(values) > limit_bytes or not torch.cuda.is_available():
+        return values
+    try:
+        return tuple(value if value.is_pinned() else value.pin_memory() for value in values)
+    except RuntimeError:
+        return values
+
+
+def _member_predictions(
+    members: Sequence[nn.Module],
+    member_devices: Sequence[torch.device],
+    executor: PerDeviceGeneratorExecutor,
+    masks: Tensor,
+    contexts: Tensor,
+    *,
+    gpu_inputs: dict[str, tuple[Tensor, Tensor, Tensor]],
+    chunk_size: int = 256,
+) -> Tensor:
+    """Return [members, rows] CPU predictions using bounded forward chunks."""
+    names = tuple(str(index) for index in range(len(members)))
+
+    def predict_one(name: str) -> Tensor:
+        index = int(name)
+        member, target = members[index], member_devices[index]
+        cached = gpu_inputs.get(str(target))
+        source_masks, source_contexts = (masks, contexts) if cached is None else cached[:2]
+        member.eval()
+        outputs = []
+        with torch.no_grad():
+            for start in range(0, len(masks), chunk_size):
+                end = min(start + chunk_size, len(masks))
+                batch_masks = source_masks[start:end]
+                batch_contexts = source_contexts[start:end]
+                if batch_masks.device != target:
+                    batch_masks = batch_masks.to(target, non_blocking=True)
+                    batch_contexts = batch_contexts.to(target, non_blocking=True)
+                outputs.append(_evaluator_forward_validated(member, batch_masks, batch_contexts).detach())
+        return torch.cat(outputs).float().cpu()
+
+    by_name = executor.map(predict_one)
+    return torch.stack([by_name[name] for name in names])
+
+
+def _train_evaluators_distributed(
+    ensemble: QualityEnsemble,
+    replay: RealReplay,
+    members: Sequence[nn.Module],
+    masks: Tensor,
+    contexts: Tensor,
+    targets: Tensor,
+    *,
+    epochs: int,
+    batch_size: int,
+    lr: float,
+    seed: int,
+    primary_device: torch.device,
+    member_devices: Sequence[torch.device],
+    restore_best: bool,
+    selection_active_edges: int | None,
+) -> list[dict[str, Any]]:
+    """Train independent evaluator members concurrently across assigned devices."""
+    names = tuple(str(index) for index in range(len(members)))
+    for member, target in zip(members, member_devices):
+        member.to(target)
+    optimizers = [torch.optim.Adam(member.parameters(), lr=lr) for member in members]
+
+    saved_state = getattr(ensemble, "training_state", None)
+    if saved_state is not None and not isinstance(saved_state, dict):
+        raise TypeError("ensemble.training_state must be a plain dictionary")
+    if saved_state and saved_state.get("member_count") == len(members):
+        for index, (optimizer, state) in enumerate(zip(
+                optimizers, saved_state.get("optimizer_states", []))):
+            optimizer.load_state_dict(state)
+            _optimizer_to_device(optimizer, member_devices[index])
+
+    bootstrap_rngs: list[torch.Generator] = []
+    shufflers: list[torch.Generator] = []
+    for index in range(len(members)):
+        sample_rng = torch.Generator(device="cpu").manual_seed(seed + 10_003 * (index + 1))
+        shuffle_rng = torch.Generator(device="cpu").manual_seed(seed + 20_011 * (index + 1))
+        if saved_state and saved_state.get("member_count") == len(members):
+            bootstrap_states = saved_state.get("bootstrap_rng_states", [])
+            shuffle_states = saved_state.get("shuffle_rng_states", [])
+            if index < len(bootstrap_states):
+                sample_rng.set_state(bootstrap_states[index].cpu())
+            if index < len(shuffle_states):
+                shuffle_rng.set_state(shuffle_states[index].cpu())
+        bootstrap_rngs.append(sample_rng)
+        shufflers.append(shuffle_rng)
+
+    def training_state() -> dict[str, Any]:
+        return {
+            "member_count": len(members),
+            "optimizer_states": [
+                _optimizer_state_dict_on_device(optimizer, primary_device)
+                for optimizer in optimizers
+            ],
+            "bootstrap_rng_states": [rng.get_state().cpu() for rng in bootstrap_rngs],
+            "shuffle_rng_states": [rng.get_state().cpu() for rng in shufflers],
+        }
+
+    # Keep train rows resident once per target GPU when the free-memory check
+    # leaves room for activations and Adam state. Otherwise retain a bounded
+    # pinned CPU copy and stage only the current batch.
+    use_cuda = any(target.type == "cuda" for target in member_devices)
+    train_cpu = (_bounded_pin((masks, contexts, targets)) if use_cuda
+                 else (masks, contexts, targets))
+    train_gpu: dict[str, tuple[Tensor, Tensor, Tensor]] = {}
+    for target in dict.fromkeys(member_devices):
+        cached = _gpu_input_cache(target, train_cpu, 0.50)
+        if cached is not None:
+            train_gpu[str(target)] = cached
+
+    partitions: dict[str, tuple[Tensor, Tensor, Tensor]] = {}
+    task_ids_by_split: dict[str, list[str] | None] = {}
+    records = getattr(replay, "records", None)
+    for split in ("mask_validation", "meta_validation", "joint_validation"):
+        try:
+            part_masks, part_contexts, part_targets = replay.tensors(split)
+        except ValueError:
+            continue
+        _require_float(part_masks, f"{split} masks", 3)
+        _require_float(part_contexts, f"{split} contexts", 2)
+        _require_float(part_targets, f"{split} quality", 1)
+        if not (len(part_masks) == len(part_contexts) == len(part_targets)):
+            raise ValueError(f"{split} replay tensors must have equal row counts")
+        task_ids = None if records is None else [
+            row["task_id"] for row in records if row["split"] == split
+        ]
+        if task_ids is not None and len(task_ids) != len(part_targets):
+            raise ValueError("replay records and partition tensors disagree")
+        partition = (part_masks, part_contexts, part_targets)
+        partitions[split] = _bounded_pin(partition) if use_cuda else partition
+        task_ids_by_split[split] = task_ids
+
+    partition_gpu: dict[str, dict[str, tuple[Tensor, Tensor, Tensor]]] = {}
+    for target in dict.fromkeys(member_devices):
+        for split, partition in partitions.items():
+            cached = _gpu_input_cache(target, partition, 0.25)
+            if cached is not None:
+                partition_gpu.setdefault(str(target), {})[split] = cached
+
+    selection = _evaluator_selection_data(replay, selection_active_edges) if restore_best else None
+    best_score, best_epoch, best_model, best_training_state = math.inf, 0, None, None
+    history: list[dict[str, Any]] = []
+    epochs_bar = progress(range(epochs), desc="Quality evaluator", unit="epoch")
+
+    def predict_partition(split: str, values: tuple[Tensor, Tensor, Tensor]) -> Tensor:
+        cached_inputs: dict[str, tuple[Tensor, Tensor, Tensor]] = {}
+        for target in dict.fromkeys(member_devices):
+            cached = partition_gpu.get(str(target), {}).get(split)
+            if cached is not None:
+                cached_inputs[str(target)] = cached
+        return _member_predictions(
+            members, member_devices, executor, values[0], values[1], gpu_inputs=cached_inputs,
+        )
+
+    with PerDeviceGeneratorExecutor(names, member_devices) as executor:
+        for epoch in epochs_bar:
+            # Draw with the same independent CPU generators as the legacy
+            # path, then copy each member's complete ordered index vector once.
+            epoch_rows = []
+            for sample_rng, shuffle_rng in zip(bootstrap_rngs, shufflers):
+                rows = torch.randint(len(masks), (len(masks),), generator=sample_rng)
+                order = torch.randperm(len(rows), generator=shuffle_rng)
+                epoch_rows.append(rows[order])
+
+            def train_one(name: str) -> tuple[Tensor, Tensor, int]:
+                index = int(name)
+                member, optimizer, target = members[index], optimizers[index], member_devices[index]
+                cached = train_gpu.get(str(target))
+                ordered = epoch_rows[index].to(target, non_blocking=True)
+                member.train()
+                bad = torch.zeros((), device=target, dtype=torch.bool)
+                loss_sum = torch.zeros((), device=target)
+                batch_count = 0
+                for start in range(0, len(ordered), batch_size):
+                    end = min(start + batch_size, len(ordered))
+                    if cached is None and target.type == "cuda":
+                        cpu_rows = epoch_rows[index][start:end]
+                        batch_masks = train_cpu[0].index_select(0, cpu_rows).to(target, non_blocking=True)
+                        batch_contexts = train_cpu[1].index_select(0, cpu_rows).to(target, non_blocking=True)
+                        batch_targets = train_cpu[2].index_select(0, cpu_rows).to(target, non_blocking=True)
+                    elif cached is None:
+                        rows_on_target = epoch_rows[index][start:end]
+                        batch_masks, batch_contexts, batch_targets = (
+                            value.index_select(0, rows_on_target) for value in train_cpu
+                        )
+                    else:
+                        batch_rows = ordered[start:end]
+                        batch_masks, batch_contexts, batch_targets = (
+                            value.index_select(0, batch_rows) for value in cached
+                        )
+                    prediction = _evaluator_forward_validated(member, batch_masks, batch_contexts)
+                    loss = (prediction - batch_targets).square().mean()
+                    optimizer.zero_grad(set_to_none=True)
+                    loss.backward()
+                    grad_norm = torch.nn.utils.clip_grad_norm_(member.parameters(), max_norm=10.0)
+                    bad = bad | ~torch.isfinite(loss) | ~torch.isfinite(grad_norm)
+                    optimizer.step()
+                    loss_sum = loss_sum + loss.detach()
+                    batch_count += 1
+                return loss_sum, bad, batch_count
+
+            summaries = executor.map(train_one)
+            loss_sums = torch.stack([summaries[name][0].to(primary_device) for name in names])
+            bad_flags = torch.stack([summaries[name][1].to(primary_device) for name in names])
+            total_batches = sum(summaries[name][2] for name in names)
+            bootstrap_mse = loss_sums.sum() / total_batches
+            bad_epoch = bad_flags.any() | ~torch.isfinite(bootstrap_mse)
+            # This single small transfer is the epoch's aggregate finite check.
+            epoch_summary = torch.stack((bad_epoch.to(bootstrap_mse.dtype), bootstrap_mse)).cpu()
+            if bool(epoch_summary[0]):
+                raise FloatingPointError("non-finite evaluator training loss or gradient")
+
+            train_predictions = _member_predictions(
+                members, member_devices, executor, masks, contexts, gpu_inputs=train_gpu,
+            )
+            train_mean = train_predictions.mean(dim=0)
+            train_std = train_predictions.std(dim=0, unbiased=False)
+            train_task_ids = None if records is None else [
+                row["task_id"] for row in records if row["split"] == "train"
+            ]
+            if train_task_ids is not None and len(train_task_ids) != len(targets):
+                raise ValueError("replay records and train tensors disagree")
+            train_metrics = evaluator_metrics(train_mean, targets.float().cpu(), task_ids=train_task_ids)
+            event: dict[str, Any] = {
+                "epoch": epoch + 1,
+                "train_mse": train_metrics["mse"],
+                "train_bootstrap_mse": float(epoch_summary[1]),
+                "train_spearman": train_metrics["spearman"],
+                "train_mean_std": _finite_float(train_std.mean()),
+            }
+            for split, values in partitions.items():
+                prediction = predict_partition(split, values)
+                mean, std = prediction.mean(dim=0), prediction.std(dim=0, unbiased=False)
+                metrics = evaluator_metrics(mean, values[2].float().cpu(),
+                                            task_ids=task_ids_by_split[split])
+                metrics["mean_std"] = _finite_float(std.mean())
+                event.update({f"{split}_{key}": value for key, value in metrics.items()})
+
+            if selection is not None:
+                selection_prediction = _member_predictions(
+                    members, member_devices, executor, selection[0], selection[1], gpu_inputs={},
+                ).mean(dim=0)
+                groups, count = selection[3], selection[4]
+                group_counts = torch.bincount(groups, minlength=count).float()
+                mean_prediction = torch.zeros(count).scatter_add_(0, groups, selection_prediction) / group_counts
+                mean_target = torch.zeros(count).scatter_add_(0, groups, selection[2]) / group_counts
+                selected = dict(evaluator_metrics(mean_prediction, mean_target),
+                                masks=count, target_budget=selection[-1])
+                event.update({f"selection_{key}": value for key, value in selected.items()})
+                if selected["mse"] < best_score:
+                    best_score, best_epoch = selected["mse"], epoch + 1
+                    best_model = {key: value.detach().cpu().clone()
+                                  for key, value in ensemble.state_dict().items()}
+                    best_training_state = deepcopy(training_state())
+            history.append(event)
+            epochs_bar.set_postfix(train_mse=f"{event['train_mse']:.5f}", refresh=False)
+
+    ensemble.training_state = training_state()
+    if best_model is not None:
+        ensemble.load_state_dict(best_model)
+        ensemble.training_state = best_training_state
+        ensemble.training_state["validation_selection"] = {
+            "epoch": best_epoch, "epochs_evaluated": epochs,
+            "metric": "mean_task_mask_validation_mse", "mse": best_score,
+            "active_edges": selection_active_edges if selection[-1] else None,
+        }
+        history[-1].update(selected_epoch=best_epoch, selection_restored=True)
+
+    # The ensemble remains a single-device predictor for generator updates and
+    # existing checkpoint consumers; only the evaluator fitting work is split.
+    for member in members:
+        member.to(primary_device)
+    for optimizer in optimizers:
+        _optimizer_to_device(optimizer, primary_device)
+    return history
 
 
 def _partition_metrics(ensemble: QualityEnsemble, replay: RealReplay, split: str, device: torch.device) -> dict[str, float]:
@@ -197,6 +544,7 @@ def train_evaluators(
     *,
     restore_best: bool = False,
     selection_active_edges: int | None = None,
+    member_devices: Sequence[str | torch.device] | None = None,
 ) -> list[dict[str, Any]]:
     """Fit independent bootstrap evaluator members from replay's train rows.
 
@@ -215,6 +563,17 @@ def train_evaluators(
     _require_float(targets, "train quality", 1)
     if not (len(masks) == len(contexts) == len(targets)):
         raise ValueError("train replay tensors must have equal row counts")
+    if member_devices is not None:
+        if len(member_devices) != len(members):
+            raise ValueError("member_devices must assign one device to every evaluator")
+        assigned = [torch.device(target) for target in member_devices]
+        return _train_evaluators_distributed(
+            ensemble, replay, members, masks, contexts, targets,
+            epochs=epochs, batch_size=batch_size, lr=lr, seed=seed,
+            primary_device=device, member_devices=assigned,
+            restore_best=restore_best,
+            selection_active_edges=selection_active_edges,
+        )
     ensemble.to(device)
     optimizers = [torch.optim.Adam(member.parameters(), lr=lr) for member in members]
     # The checkpointable state deliberately holds generators rather than an

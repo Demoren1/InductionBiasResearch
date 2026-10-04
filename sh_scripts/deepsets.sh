@@ -21,6 +21,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
 GE_OUT="${GE_OUT:-outputs/generator_evaluator/${GE_STAMP}_deepsets_seed${GE_SEED}}"
 GE_DATA="${DATA_ROOT:-datasets/mnist8m}"
+read -r -a GE_EVALUATOR_DEVICES <<< "${EVALUATOR_DEVICES:-auto}"
 GE_WARM_START_ARGS=()
 if [[ -n "${WARM_START_FROM:-}" ]]; then
   GE_WARM_START_ARGS+=(--warm-start-from "$WARM_START_FROM")
@@ -41,6 +42,7 @@ GE_COMMON_ARGS=(
   --refresh-every "${REFRESH_EVERY:-2}" --minimum-refresh-every "${MINIMUM_REFRESH_EVERY:-2}"
   --evaluator-epochs "${EVALUATOR_EPOCHS:-100}"
   --evaluator-batch-size "${EVALUATOR_BATCH_SIZE:-64}" --evaluator-lr "${EVALUATOR_LR:-0.0003}"
+  --evaluator-devices "${GE_EVALUATOR_DEVICES[@]}"
   --acquisition-budget 6 --candidates 24 --initial-random 8
   --auxiliary-budget "${AUXILIARY_BUDGET:-0}" --feedback-masks 2
   --agreement-weight "${AGREEMENT_WEIGHT:-0.1}"

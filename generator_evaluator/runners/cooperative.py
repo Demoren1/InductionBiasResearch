@@ -39,6 +39,7 @@ from generator_evaluator.storage.progress import progress
 from generator_evaluator.runners.legacy import MeasurementStore, _cpu_state, _dense_tune, _random_masks
 from generator_evaluator.storage.runtime import RunSession
 from generator_evaluator.training.updates import train_evaluators
+from generator_evaluator.training.evaluator_devices import select_evaluator_devices
 from generator_evaluator.storage.toeplitz import write_toeplitz_report
 from generator_evaluator.storage.warm_start import evaluator_bank_fingerprint, load_cooperative_warm_start
 from generator_evaluator.storage.prepared import load_labels, load_prepared, save_labels, save_prepared
@@ -178,7 +179,7 @@ class CooperativeSearchController:
                  selection_tasks, replay, store, models, optimizers, ensemble,
                  dense_rows, dense_quality, contexts, rng, cpu_rng, own_rngs, checkpoint,
                  measure_many, session, trainer, generator_devices,
-                 generator_pretraining=None, initial_bank_topology_ids=()):
+                 generator_pretraining=None, initial_bank_topology_ids=(), evaluator_devices=None):
         self.out, self.config, self.device, self.patterns = out, config, device, patterns
         self.banks, self.train_tasks, self.selection_tasks = banks, train_tasks, selection_tasks
         self.replay, self.store = replay, store
@@ -187,6 +188,7 @@ class CooperativeSearchController:
         self.rng, self.cpu_rng, self.own_rngs, self.checkpoint = rng, cpu_rng, own_rngs, checkpoint
         self.measure_many, self.session = measure_many, session
         self.trainer, self.generator_devices = trainer, tuple(generator_devices)
+        self.evaluator_devices = evaluator_devices
         self.initial_shared_latent = trainer.shared_latent.detach().cpu().clone()
         self.history, self.evaluator_history, self.calibration, self.refresh_history = [], [], [], []
         self.pretraining_history = []
@@ -285,6 +287,7 @@ class CooperativeSearchController:
                 self.ensemble, replay_view, epochs=self.config.evaluator_epochs,
                 batch_size=self.config.evaluator_batch_size, lr=self.config.evaluator_lr,
                 seed=self.config.seed if seed is None else seed, device=self.device,
+                member_devices=self.evaluator_devices,
                 restore_best=self.config.domain == "deepsets",
                 selection_active_edges=self.config.k))
         self.evaluator_policy = _EVALUATOR_POLICY
@@ -921,7 +924,7 @@ def run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, o
                                dense_learning_rates=None, test_factory=None, build_settings=None,
                                warm_start=None, measurement_devices=None, measurement_batch_size=8,
                                generator_devices=None, generator_pretrained_from=None,
-                               prepared_restart=None):
+                               prepared_restart=None, evaluator_devices=None):
     with ExitStack() as cleanup:
         return _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec,
             out, protocol, config, device=device, resume=resume,
@@ -931,6 +934,7 @@ def run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, o
             generator_devices=generator_devices,
             generator_pretrained_from=generator_pretrained_from,
             prepared_restart=prepared_restart,
+            evaluator_devices=evaluator_devices,
             cleanup=cleanup)
 
 
@@ -1020,7 +1024,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                                 protocol, config, *, device, resume, dense_learning_rates,
                                 test_factory, build_settings, warm_start, measurement_devices,
                                 measurement_batch_size, generator_devices,
-                                generator_pretrained_from, prepared_restart, cleanup):
+                                generator_pretrained_from, prepared_restart, evaluator_devices, cleanup):
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     if resume and not config.persist_artifacts:
@@ -1029,6 +1033,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         raise ValueError("generator-pretrained-from is only valid for search runs")
     generator_devices = _device_list(generator_devices, device, len(config.train_patterns),
                                     label="generator")
+    evaluator_devices = select_evaluator_devices(evaluator_devices, str(device), config.ensemble_members)
     if measurement_devices is not None:
         measurement_devices = tuple(map(str, measurement_devices))
         if not measurement_devices or measurement_batch_size < 1:
@@ -1070,6 +1075,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
                          ("core.py", "utility_graph_child.py", "followup_batched_eval.py")]
     spec = dict(config=_config_metadata(config), requested_protocol=asdict(protocol), device=str(device),
                 generator_devices=list(generator_devices),
+                evaluator_devices=list(evaluator_devices),
                 measurement_execution=dict(devices=measurement_devices,
                                            batch_size=measurement_batch_size),
                 banks={name: bank_input_fingerprint(bank) for name, bank in banks.items()},
@@ -1244,6 +1250,7 @@ def _run_cooperative_experiment(banks, train_tasks, selection_tasks, test_spec, 
         dense_quality=dense_quality, contexts=contexts, rng=rng, cpu_rng=cpu_rng, own_rngs=own_rngs,
         checkpoint=checkpoint, measure_many=measure_many, session=session,
         trainer=trainer, generator_devices=generator_devices,
+        evaluator_devices=evaluator_devices,
         generator_pretraining=generator_pretraining,
         initial_bank_topology_ids=starting_bank_topology_ids)
     if saved is not None:
@@ -1690,6 +1697,8 @@ def make_parser():
     parser.add_argument("--measurement-batch-size", type=int, default=8)
     parser.add_argument("--generator-devices", nargs="+", default=None,
                         help="Generator devices; auto assigns generators round-robin across visible CUDA GPUs")
+    parser.add_argument("--evaluator-devices", nargs="+", default=None,
+                        help="Evaluator member devices; auto prefers visible GPUs with most free memory")
     parser.add_argument("--bank-support-count", type=int, default=None,
                         help="DeepSets source support sets; default uses the full private pool budget")
     parser.add_argument("--bank-query-count", type=int, default=None,
@@ -1909,6 +1918,7 @@ def main():
     try:
         generator_devices = list(_device_list(generator_devices, args.device,
                                                len(config.train_patterns), label="generator"))
+        evaluator_devices = select_evaluator_devices(args.evaluator_devices, args.device, config.ensemble_members)
     except ValueError as error:
         parser.error(str(error))
     warm_start = None
@@ -1953,6 +1963,7 @@ def main():
           f"heads={config.heads}, layers={config.layers}, probe={args.probe_count}, "
           f"training_mode={config.training_mode} {training_schedule}, "
           f"latent_lr={config.latent_lr:g}, generators={generator_devices}, "
+          f"evaluators={list(evaluator_devices)}, "
           f"batched={config.batch_children}", flush=True)
     inputs_path = args.out / "inputs.pt"
     if prepared_restart is not None:
@@ -2016,7 +2027,7 @@ def main():
               measurement_devices=measurement_devices, measurement_batch_size=args.measurement_batch_size,
               generator_devices=generator_devices,
               generator_pretrained_from=args.generator_pretrained_from,
-              prepared_restart=prepared_restart)
+              prepared_restart=prepared_restart, evaluator_devices=evaluator_devices)
     if config.phase == "bootstrap":
         print(json.dumps(dict(out=str(args.out.resolve()), phase="bootstrap",
               generators=result["generators"], real_label_measurements=result["real_label_measurements"],
