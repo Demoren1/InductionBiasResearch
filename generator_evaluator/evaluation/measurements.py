@@ -91,6 +91,9 @@ class MeasurementStore:
         self.persist_artifacts = bool(persist_artifacts)
         self._result_cache: dict[str, dict] = {}
         self.last_results: dict[tuple[str, str, str], dict] = {}
+        self._record_index: dict[str, dict] = {}
+        self._indexed_records = None
+        self._indexed_row_count = 0
         if not self.persist_artifacts:
             for row in replay.records:
                 key = row.get("measurement_key")
@@ -130,19 +133,27 @@ class MeasurementStore:
 
     def _append(self, mask: torch.Tensor, task: TaskData, origin: str, path: Path, result: dict,
                 *, fresh: bool = False):
-        if self.persist_artifacts:
-            resolved = str(path.resolve())
-            existing = (None if fresh else next((row for row in self.replay.records
-                                                 if row.get("artifact_path") == resolved), None))
-            artifact_path = path
-        else:
-            existing = (None if fresh else next((row for row in self.replay.records
-                                                 if row.get("artifact_ephemeral") is True and
-                                                 row.get("measurement_key") == path.stem), None))
-            artifact_path = None
-        return existing if existing is not None else self.replay.append(
-            mask, task, result, origin=origin, artifact_path=artifact_path,
-            measurement_key=path.stem if not self.persist_artifacts else None)
+        records = self.replay.records
+        if self._indexed_records is not records or self._indexed_row_count != len(records):
+            self._record_index = {}
+            for row in records:
+                key = (row.get("artifact_path") if self.persist_artifacts else
+                       row.get("measurement_key") if row.get("artifact_ephemeral") is True else None)
+                if key is not None:
+                    self._record_index.setdefault(key, row)
+            self._indexed_records = records
+            self._indexed_row_count = len(records)
+        key = str(path.resolve()) if self.persist_artifacts else path.stem
+        existing = None if fresh else self._record_index.get(key)
+        if existing is not None:
+            return existing
+        row = self.replay.append(
+            mask, task, result, origin=origin,
+            artifact_path=path if self.persist_artifacts else None,
+            measurement_key=None if self.persist_artifacts else key)
+        self._record_index.setdefault(key, row)
+        self._indexed_row_count = len(records)
+        return row
 
     def measure(self, mask: torch.Tensor, task: TaskData, origin: str, *, fresh: bool = False,
                 retain_results: bool = False):

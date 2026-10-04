@@ -435,7 +435,9 @@ class ParallelMeasurementStore(MeasurementStore):
 
         output = []
         retained_results = {}
-        for mask, task, origin, path, digest in ordered:
+        registrations = (progress(ordered, desc="Register real labels", unit="label")
+                         if len(ordered) >= 1000 else ordered)
+        for mask, task, origin, path, digest in registrations:
             result = results[digest]
             row = self._append(mask, task, origin, path, result)
             output.append((row, result))

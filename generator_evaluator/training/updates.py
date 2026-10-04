@@ -65,14 +65,12 @@ def _rankdata(values: Tensor) -> Tensor:
     values = values.detach().flatten().double().cpu()
     order = torch.argsort(values, stable=True)
     sorted_values = values[order]
+    _, counts = torch.unique_consecutive(sorted_values, return_counts=True)
+    stops = counts.cumsum(0)
+    starts = stops - counts
+    group_ranks = (starts + stops - 1).to(values.dtype) / 2.0
     ranks = torch.empty_like(values)
-    start = 0
-    while start < len(values):
-        stop = start + 1
-        while stop < len(values) and sorted_values[stop].item() == sorted_values[start].item():
-            stop += 1
-        ranks[order[start:stop]] = (start + stop - 1) / 2.0
-        start = stop
+    ranks[order] = torch.repeat_interleave(group_ranks, counts)
     return ranks
 
 
