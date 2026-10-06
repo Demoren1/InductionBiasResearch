@@ -2,7 +2,7 @@
 GPU_IDS="${GPU_IDS:-0 1 2 3 4 5 6 7}"  # Например: "1 2 3".
 
 # The search invocation prepares functional banks and the initial evaluator,
-# then optimizes quality across TRAIN tasks, agreement and a spatial functional anchor.
+# then optimizes quality across TRAIN tasks, agreement and a ranked functional anchor.
 # EVALUATOR_EPOCHS trains the initial evaluator from bank-origin cross-fits.
 # REFRESH_EVERY schedules real measurements and map feedback; evaluator updates are optional.
 # Keep the best common mask across refreshes, using independent selection queries.
@@ -58,7 +58,7 @@ GE_COMMON_ARGS=(
   --generator-pretrain-source "${GENERATOR_PRETRAIN_SOURCE:-functional_mean}"
   --generator-pretrain-lr "${GENERATOR_PRETRAIN_LR:-0.003}"
   --pretrain-updates-per-epoch "${PRETRAIN_UPDATES_PER_EPOCH:-100}"
-  --functional-anchor-spatial-jitter "${FUNCTIONAL_ANCHOR_SPATIAL_JITTER:-0.2}"
+  --functional-anchor-spatial-jitter "${FUNCTIONAL_ANCHOR_SPATIAL_JITTER:-0}"
   --functional-anchor-seed "${FUNCTIONAL_ANCHOR_SEED:-$((GE_SEED + 1))}"
   --generator-quality-scope "${GENERATOR_QUALITY_SCOPE:-all_train}"
   --reconstruction-weight "${RECONSTRUCTION_WEIGHT:-1.0}"
@@ -68,6 +68,9 @@ GE_COMMON_ARGS=(
 )
 if [[ "${GENERATOR_PRETRAIN_FIXED_ALIGNMENT:-1}" == "1" ]]; then
   GE_COMMON_ARGS+=(--generator-pretrain-fixed-alignment)
+fi
+if [[ "${FUNCTIONAL_ANCHOR_RANKED:-1}" == "1" ]]; then
+  GE_COMMON_ARGS+=(--functional-anchor-ranked)
 fi
 if [[ "${GENERATOR_BILINEAR_HEAD:-0}" == "1" ]]; then
   GE_COMMON_ARGS+=(--generator-bilinear-head)

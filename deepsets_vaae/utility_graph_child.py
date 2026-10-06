@@ -135,6 +135,7 @@ def fit_children(
     start_step: int = 0,
     checkpoint_every: int = 25,
     plateau_tolerance: float = 0.01,
+    metrics_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Fit fresh children for paired task conditions and candidate masks.
 
@@ -163,6 +164,7 @@ def fit_children(
         lr_floor: Minimum learning-rate multiplier relative to ``lr``.
         checkpoint_every: Diagnostic cadence; the terminal step is always saved.
         plateau_tolerance: Relative tolerance for the support-objective audit.
+        metrics_callback: CPU scalar metrics at checkpoints, without copying weights.
 
     Returns CPU tensors. ``support_loss`` and ``query_loss`` are the per-child
     normalized MSE used by ``followup_batched_eval.losses``. The optimizer
@@ -266,6 +268,10 @@ def fit_children(
         penalty_history.append(penalty.detach().cpu().clone())
         plateau_history.append(plateau.detach().cpu().clone())
         learning_rate_history.append(float(optimizer.param_groups[0]["lr"]))
+        if metrics_callback is not None:
+            metrics_callback({"step": step, "support_nmse": float(support_history[-1].mean()),
+                              "query_nmse": float(query_history[-1].mean()),
+                              "lr": learning_rate_history[-1]})
         if checkpoint_callback is not None:
             callback_state = {
                 name: parameter.detach().cpu().clone()

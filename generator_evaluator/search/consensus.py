@@ -69,6 +69,32 @@ def _global_topk(importance: Tensor, k: int) -> Tensor:
     return proposal
 
 
+def _column_percentile_ranks(importance: Tensor) -> np.ndarray:
+    if (not isinstance(importance, Tensor) or importance.ndim != 2 or
+            min(importance.shape) < 1 or not importance.is_floating_point() or
+            not bool(torch.isfinite(importance).all())):
+        raise ValueError("functional importance must be a finite floating [features, hidden] tensor")
+    scores = importance.detach().to(device="cpu", dtype=torch.float64).contiguous().numpy()
+    ranks = np.empty_like(scores)
+    feature_count = len(scores)
+    positions = (feature_count - np.arange(feature_count, dtype=np.float64)) / feature_count
+    for column in range(scores.shape[1]):
+        order = np.argsort(-scores[:, column], kind="stable")
+        ranks[order, column] = positions
+    return ranks
+
+
+def build_ranked_functional_anchor(importance: Tensor, k: int) -> Tensor:
+    """Select global top-K percentile ranks without spatial assumptions or noise."""
+    ranks = _column_percentile_ranks(importance)
+    if type(k) is not int or not 0 < k <= ranks.size:
+        raise ValueError("ranked anchor k must be a positive exact-K budget within mask size")
+    order = np.argsort(-ranks.reshape(-1), kind="stable")[:k]
+    mask = np.zeros(ranks.size, dtype=np.float32)
+    mask[order] = 1.
+    return torch.from_numpy(mask.reshape(ranks.shape)).contiguous()
+
+
 def build_spatial_jittered_anchor(importance: Tensor, k: int, jitter: float,
                                  seed: int) -> Tensor:
     """Build a stable exact-K anchor from per-column ranks and tiled spatial jitter."""
@@ -85,13 +111,8 @@ def build_spatial_jittered_anchor(importance: Tensor, k: int, jitter: float,
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError("spatial anchor seed must be an integer")
 
-    scores = importance.detach().to(device="cpu", dtype=torch.float64).contiguous().numpy()
-    ranks = np.empty_like(scores)
-    feature_count, hidden = scores.shape
-    positions = (feature_count - np.arange(feature_count, dtype=np.float64)) / feature_count
-    for column in range(hidden):
-        order = np.argsort(-scores[:, column], kind="stable")
-        ranks[order, column] = positions
+    ranks = _column_percentile_ranks(importance)
+    feature_count, hidden = ranks.shape
 
     spatial_rng_seed = seed
     if spatial_rng_seed < 0:

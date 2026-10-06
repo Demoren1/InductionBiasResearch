@@ -71,6 +71,7 @@ class CooperativeConfig:
     initial_global_density: bool = False
     output_budgets: tuple[int, ...] = ()
     generator_pretrain_fixed_alignment: bool = False
+    functional_anchor_ranked: bool = False
     functional_anchor_spatial_jitter: float = 0.
     functional_anchor_seed: int | None = None
     generator_bilinear_head: bool = False
@@ -102,6 +103,8 @@ class CooperativeConfig:
             raise ValueError("generator_pretrain_source must be teacher, bank, selected, or functional_mean")
         if self.elite_target_source not in ("train_archive", "selected", "functional_mean"):
             raise ValueError("elite_target_source must be train_archive, selected, or functional_mean")
+        if not isinstance(self.functional_anchor_ranked, bool):
+            raise ValueError("functional_anchor_ranked must be a boolean")
         if (isinstance(self.functional_anchor_spatial_jitter, bool) or
                 not isinstance(self.functional_anchor_spatial_jitter, (int, float)) or
                 not math.isfinite(self.functional_anchor_spatial_jitter) or

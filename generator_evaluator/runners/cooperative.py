@@ -255,11 +255,13 @@ class CooperativeSearchController:
             config.domain == "pattern" or
             config.generator_pretrain_source == "functional_mean" or
             config.elite_target_source == "functional_mean" or
+            config.functional_anchor_ranked or
             config.functional_anchor_spatial_jitter > 0 or
             (config.domain == "deepsets" and config.phase != "bootstrap"))
         if needs_functional_mean:
             from generator_evaluator.search.consensus import (
                 build_functional_consensus_proposals, build_spatial_jittered_anchor,
+                build_ranked_functional_anchor,
             )
             self.functional_consensus = build_functional_consensus_proposals(list(banks.values()), config.k)
             self.functional_mean = self.functional_consensus.global_topk
@@ -269,18 +271,22 @@ class CooperativeSearchController:
             self.functional_anchor = (build_spatial_jittered_anchor(
                 self.functional_consensus.importance, config.k, jitter,
                 self.functional_anchor_seed,
-            ) if jitter > 0 else self.functional_mean)
+            ) if jitter > 0 else build_ranked_functional_anchor(
+                self.functional_consensus.importance, config.k,
+            ) if config.functional_anchor_ranked else self.functional_mean)
             spatial_rng_seed = self.functional_anchor_seed
             if spatial_rng_seed < 0:
                 spatial_rng_seed %= 1 << 128
             self.functional_anchor_provenance = dict(
                 source=("functional_mean_spatially_jittered_rank_anchor" if jitter > 0
+                        else "functional_mean_rank_anchor" if config.functional_anchor_ranked
                         else "functional_mean_global_topk"),
                 mask_hash=tensor_hash(self.functional_anchor),
                 spatial_jitter=jitter,
                 seed=self.functional_anchor_seed,
                 rng_seed=(spatial_rng_seed if jitter > 0 else None),
-                rank_strategy=("stable descending per-column percentile ranks" if jitter > 0 else None),
+                rank_strategy=("stable descending per-column percentile ranks"
+                               if jitter > 0 or config.functional_anchor_ranked else None),
                 jitter_tile_shape=([7, 7, config.hidden] if jitter > 0 else None),
                 jitter_tile_repeat=([4, 4, 1] if jitter > 0 else None),
             )
@@ -2235,6 +2241,8 @@ def make_parser():
                         help="align each fixed full-bank reconstruction target once before warmup")
     parser.add_argument("--functional-anchor-spatial-jitter", type=float,
                         help="spatial jitter strength for the functional-mean fixed anchor (requires 784 features)")
+    parser.add_argument("--functional-anchor-ranked", action="store_true",
+                        help="use per-column importance ranks without spatial jitter for the fixed anchor")
     parser.add_argument("--functional-anchor-seed", type=int)
     parser.add_argument("--generator-bilinear-head", action="store_true",
                         help="add a parameter-free hidden-feature bilinear term to generator logits")
@@ -2339,6 +2347,8 @@ def resolve_run_settings(args):
             overrides[setting] = value
     if args.generator_pretrain_fixed_alignment:
         overrides["generator_pretrain_fixed_alignment"] = True
+    if args.functional_anchor_ranked:
+        overrides["functional_anchor_ranked"] = True
     if args.generator_bilinear_head:
         overrides["generator_bilinear_head"] = True
     if args.latent_lr is not None:
