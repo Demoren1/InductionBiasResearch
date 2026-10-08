@@ -70,7 +70,8 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
                 validations[task]={"loss":float(loss),**{key:float(value) for key,value in parts.items()}}
         validation=sum(v["loss"] for v in validations.values())/len(validations)
         row={"epoch":epoch,"train_loss":total/batches,"beta":beta,
-             "validation_loss":validation,"per_task_train":train_parts,"per_task_validation":validations}
+             "validation_loss":validation,"validation_beta":options["beta"],
+             "per_task_train":train_parts,"per_task_validation":validations}
         history.append(row);save_json(destination/"history.json",history)
         checkpoint={"config":config,"model_state":model.state_dict(),"epoch":epoch,
                     "validation_loss":validation,"bank_reference":reference}

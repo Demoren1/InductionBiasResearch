@@ -46,6 +46,9 @@ def load_config(path):
     tasks = config.get("tasks", [])
     if not tasks or len(tasks) != len(set(tasks)) or any(len(t) != 4 or set(t)-set("01") for t in tasks):
         raise ValueError("tasks must be unique four-bit patterns")
+    test_tasks = config.get("test_tasks", [])
+    if len(test_tasks) != len(set(test_tasks)) or set(tasks) & set(test_tasks) or any(len(t) != 4 or set(t)-set("01") for t in test_tasks):
+        raise ValueError("test_tasks must be unique four-bit patterns disjoint from tasks")
     bank, model, train = config["bank"], config["model"], config["training"]
     for key in ("maps_per_task", "steps_per_round", "support_count", "query_count", "probe_count"):
         if bank[key] < 1:

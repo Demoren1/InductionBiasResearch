@@ -15,6 +15,7 @@
     "1110",
     "1111"
   ],
+  "test_tasks": ["0010", "0100", "1011", "1101"],
   "bank": {
     "maps_per_task": 128,
     "steps_per_round": 1000,
@@ -32,11 +33,24 @@
     "decoder_width": 128
   },
   "training": {
-    "epochs": 200,
-    "batch_size": 32,
+    "epochs": 600,
+    "batch_size": 96,
     "lr": 0.001,
     "beta": 0.001,
-    "kl_warmup_epochs": 30,
+    "kl_warmup_epochs": 90,
     "hard_loss_weight": 0.2
+  },
+  "evaluation": {
+    "z_starts": 8,
+    "z_steps": 100,
+    "z_lr": 0.05,
+    "inner_steps": 64,
+    "inner_lr": 0.2,
+    "support_count": 256,
+    "query_count": 64,
+    "child_steps": 500,
+    "child_lr": 0.03,
+    "replicas": 3,
+    "log_every": 10
   }
 }

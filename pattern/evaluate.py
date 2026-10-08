@@ -1,4 +1,4 @@
-"""Evaluate unseen bank networks, structure and optional fresh child quality."""
+"""Evaluate source-only latent transfer or reconstruction on unseen bank networks."""
 import argparse
 import json
 from pathlib import Path
@@ -11,6 +11,7 @@ from .masks import exact_topk, toeplitz_metrics
 from .models.task_model import Experiment
 from .losses import mask_vae_loss
 from .reporting import progress, save_losses, save_task_masks, save_prior
+from .latent_evaluate import evaluate_latent
 
 
 def reconstruction_metrics(predicted,target):
@@ -127,19 +128,34 @@ def evaluate(run, split="test", device="cpu", evaluation_id=None, child_steps=0,
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run",type=Path,required=True)
+    parser.add_argument("--mode",choices=("latent","reconstruction"),default="latent")
     parser.add_argument("--split",choices=("validation","test"),default="test")
     parser.add_argument("--evaluation-id")
     parser.add_argument("--device",default="auto")
     parser.add_argument("--threads",type=int,default=1)
     parser.add_argument("--no-progress",action="store_true")
-    parser.add_argument("--loss-log-every",type=int,default=10)
-    parser.add_argument("--child-steps",type=int,default=0,help="0 skips fresh-network quality evaluation")
-    parser.add_argument("--replicas",type=int,default=3)
+    parser.add_argument("--loss-log-every",type=int)
+    parser.add_argument("--child-steps",type=int,help="fresh-network steps; reconstruction accepts 0 to skip")
+    parser.add_argument("--replicas",type=int)
+    for flag in ("z-starts","z-steps","inner-steps","support-count","query-count"):
+        parser.add_argument("--"+flag,type=int)
+    for flag in ("z-lr","inner-lr","child-lr"):
+        parser.add_argument("--"+flag,type=float)
     args=parser.parse_args()
     if args.threads<1:raise ValueError("threads must be positive")
     torch.set_num_threads(args.threads)
     device=device_name(args.device)
     print(f"Device: {device}",flush=True)
-    print(f"Evaluation saved: {evaluate(args.run,args.split,device,args.evaluation_id,args.child_steps,args.replicas,not args.no_progress,args.loss_log_every)}")
+    if args.mode == "latent":
+        options={key:getattr(args,key) for key in ("z_starts","z_steps","z_lr","inner_steps","inner_lr",
+                    "support_count","query_count","child_steps","child_lr","replicas")}
+        options["log_every"]=args.loss_log_every
+        destination=evaluate_latent(args.run,device,args.evaluation_id,not args.no_progress,**options)
+    else:
+        destination=evaluate(args.run,args.split,device,args.evaluation_id,
+            args.child_steps if args.child_steps is not None else 0,
+            args.replicas if args.replicas is not None else 3,not args.no_progress,
+            args.loss_log_every if args.loss_log_every is not None else 10)
+    print(f"Evaluation saved: {destination}")
 
 if __name__=="__main__":main()

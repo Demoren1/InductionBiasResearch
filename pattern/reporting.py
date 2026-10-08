@@ -30,13 +30,25 @@ def save_losses(destination, history, x_key="epoch"):
         for group in ("per_task_train","per_task_validation"):
             for task,values in row.get(group,{}).items():
                 flat.update({f"{group}.{task}.{key}":value for key,value in values.items()})
+            kl_values=[values["kl"] for values in row.get(group,{}).values() if "kl" in values]
+            if kl_values:
+                prefix="train" if group=="per_task_train" else "validation"
+                flat[f"{prefix}_kl"]=sum(kl_values)/len(kl_values)
+                beta=row.get("beta",0.) if prefix=="train" else row.get("validation_beta")
+                if beta is not None:flat[f"{prefix}_beta_kl"]=beta*flat[f"{prefix}_kl"]
         rows.append(flat)
     if not rows:return
     fields=list(dict.fromkeys(key for row in rows for key in row))
     stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=fields)
     writer.writeheader();writer.writerows(rows)
     atomic(Path(destination)/"losses.csv",lambda handle:handle.write(stream.getvalue()),False)
-    plt=pyplot();fig,ax=plt.subplots(figsize=(7,4),constrained_layout=True)
+    plt=pyplot()
+    has_kl=any("train_kl" in row or "validation_kl" in row for row in rows)
+    has_weighted_kl=any("train_beta_kl" in row or "validation_beta_kl" in row for row in rows)
+    panel_count=1+int(has_kl)+int(has_weighted_kl)
+    fig,axes=plt.subplots(panel_count,1,figsize=(7,3*panel_count+1),
+                         constrained_layout=True,squeeze=False)
+    ax=axes[0,0]
     groups=sorted({row.get("method","") for row in rows})
     for group in groups:
         for key in ("train_loss","validation_loss","loss","reconstruction","bce","hard_mse","kl","support_bce","objective"):
@@ -50,6 +62,15 @@ def save_losses(destination, history, x_key="epoch"):
                         label=f"{group}/{key}" if group else key)
     ax.set_xlabel(x_key);ax.set_ylabel("Loss");ax.grid(alpha=.2)
     if ax.lines:ax.legend()
+    for panel,keys,label in ((1,("train_kl","validation_kl"),"KL divergence (unweighted)"),
+                             (2,("train_beta_kl","validation_beta_kl"),"KL contribution (beta × KL)")):
+        if panel>=panel_count:continue
+        kl_ax=axes[panel,0]
+        for key in keys:
+            values=[row for row in rows if key in row and x_key in row]
+            if values:kl_ax.plot([row[x_key] for row in values],[row[key] for row in values],label=key)
+        kl_ax.set_xlabel(x_key);kl_ax.set_ylabel(label)
+        kl_ax.grid(alpha=.2);kl_ax.legend()
     for suffix in ("png","pdf"):fig.savefig(Path(destination)/f"losses.{suffix}",dpi=160)
     plt.close(fig)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# BANK=data/pattern/banks/imp32_v1 EPOCHS=300 BATCH_SIZE=64 bash pattern/sh_scripts/train.sh
+# M4 Pro / 48 GB: full source-task batches, 600 optimizer updates, MPS preferred.
+# BANK=data/pattern/banks/imp32_v1 bash pattern/sh_scripts/train.sh
 # Run from any directory. Paths are resolved from the repository root.
 # Edit defaults here, set environment variables, or append Python CLI options.
 set -euo pipefail
@@ -14,16 +15,19 @@ export PYTHONUNBUFFERED=1
 CONFIG="${CONFIG:-pattern/configs/experiment.json}"
 BANK="${BANK:-${1:-}}"
 RUN_ID="${RUN_ID:-}"
-EPOCHS="${EPOCHS:-}"
-BATCH_SIZE="${BATCH_SIZE:-}"
-LR="${LR:-}"
-BETA="${BETA:-}"
-KL_WARMUP_EPOCHS="${KL_WARMUP_EPOCHS:-}"
-HARD_LOSS_WEIGHT="${HARD_LOSS_WEIGHT:-}"
-NF_CHANNELS="${NF_CHANNELS:-}"
-LATENT_DIM="${LATENT_DIM:-}"
-ENCODER_WIDTH="${ENCODER_WIDTH:-}"
-DECODER_WIDTH="${DECODER_WIDTH:-}"
+# Custom CONFIG keeps its own defaults; the M4 defaults below apply to the main config.
+if [[ "$CONFIG" == "pattern/configs/experiment.json" ]]; then
+  EPOCHS="${EPOCHS:-600}"
+  BATCH_SIZE="${BATCH_SIZE:-96}"
+  LR="${LR:-0.001}"
+  BETA="${BETA:-0.001}"
+  KL_WARMUP_EPOCHS="${KL_WARMUP_EPOCHS:-90}"
+  HARD_LOSS_WEIGHT="${HARD_LOSS_WEIGHT:-0.2}"
+  NF_CHANNELS="${NF_CHANNELS:-16}"
+  LATENT_DIM="${LATENT_DIM:-16}"
+  ENCODER_WIDTH="${ENCODER_WIDTH:-128}"
+  DECODER_WIDTH="${DECODER_WIDTH:-128}"
+fi
 
 if [[ -z "$BANK" ]]; then
   echo "Set BANK or pass the bank directory as the first argument." >&2
@@ -32,16 +36,16 @@ fi
 if [[ ${1:-} != --* && $# -gt 0 ]]; then shift; fi
 args=(--config "$CONFIG" --bank "$BANK" --device "$DEVICE" --threads "$THREADS")
 [[ -z "$RUN_ID" ]] || args+=(--run-id "$RUN_ID")
-[[ -z "$EPOCHS" ]] || args+=(--epochs "$EPOCHS")
-[[ -z "$BATCH_SIZE" ]] || args+=(--batch-size "$BATCH_SIZE")
-[[ -z "$LR" ]] || args+=(--lr "$LR")
-[[ -z "$BETA" ]] || args+=(--beta "$BETA")
-[[ -z "$KL_WARMUP_EPOCHS" ]] || args+=(--kl-warmup-epochs "$KL_WARMUP_EPOCHS")
-[[ -z "$HARD_LOSS_WEIGHT" ]] || args+=(--hard-loss-weight "$HARD_LOSS_WEIGHT")
-[[ -z "$NF_CHANNELS" ]] || args+=(--nf-channels "$NF_CHANNELS")
-[[ -z "$LATENT_DIM" ]] || args+=(--latent-dim "$LATENT_DIM")
-[[ -z "$ENCODER_WIDTH" ]] || args+=(--encoder-width "$ENCODER_WIDTH")
-[[ -z "$DECODER_WIDTH" ]] || args+=(--decoder-width "$DECODER_WIDTH")
+[[ -z "${EPOCHS:-}" ]] || args+=(--epochs "$EPOCHS")
+[[ -z "${BATCH_SIZE:-}" ]] || args+=(--batch-size "$BATCH_SIZE")
+[[ -z "${LR:-}" ]] || args+=(--lr "$LR")
+[[ -z "${BETA:-}" ]] || args+=(--beta "$BETA")
+[[ -z "${KL_WARMUP_EPOCHS:-}" ]] || args+=(--kl-warmup-epochs "$KL_WARMUP_EPOCHS")
+[[ -z "${HARD_LOSS_WEIGHT:-}" ]] || args+=(--hard-loss-weight "$HARD_LOSS_WEIGHT")
+[[ -z "${NF_CHANNELS:-}" ]] || args+=(--nf-channels "$NF_CHANNELS")
+[[ -z "${LATENT_DIM:-}" ]] || args+=(--latent-dim "$LATENT_DIM")
+[[ -z "${ENCODER_WIDTH:-}" ]] || args+=(--encoder-width "$ENCODER_WIDTH")
+[[ -z "${DECODER_WIDTH:-}" ]] || args+=(--decoder-width "$DECODER_WIDTH")
 
 [[ "$PROGRESS" != "0" ]] || args+=(--no-progress)
 mkdir -p "$LOG_DIR"
