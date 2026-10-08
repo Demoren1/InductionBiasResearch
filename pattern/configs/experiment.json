@@ -1,0 +1,42 @@
+{
+  "seed": 4100,
+  "k": 32,
+  "tasks": [
+    "0000",
+    "0001",
+    "0011",
+    "0101",
+    "0110",
+    "0111",
+    "1000",
+    "1001",
+    "1010",
+    "1100",
+    "1110",
+    "1111"
+  ],
+  "bank": {
+    "maps_per_task": 128,
+    "steps_per_round": 1000,
+    "prune_fraction": 0.2,
+    "lr": 0.03,
+    "l2": 0.001,
+    "support_count": 256,
+    "query_count": 64,
+    "probe_count": 128
+  },
+  "model": {
+    "nf_channels": 16,
+    "latent_dim": 16,
+    "encoder_width": 128,
+    "decoder_width": 128
+  },
+  "training": {
+    "epochs": 200,
+    "batch_size": 32,
+    "lr": 0.001,
+    "beta": 0.001,
+    "kl_warmup_epochs": 30,
+    "hard_loss_weight": 0.2
+  }
+}
