@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 from .io import digest
 from .masks import canonical_columns
+from .bank.functional_maps import NF_CHANNELS, NF_BANK_SCHEMA
 
 def input_table():
     ids = torch.arange(2048)
@@ -32,6 +33,8 @@ def balanced_rows(labels, pool, count, seed):
 def load_task(bank, task, split):
     bank = Path(bank)
     manifest = json.loads((bank/"manifest.json").read_text())
+    if manifest.get("schema") != NF_BANK_SCHEMA or manifest.get("input_representation",{}).get("channels") != list(NF_CHANNELS):
+        raise ValueError("bank must contain weight/gradient/functional channels (v2); collect a new bank ID")
     if manifest["status"] != "complete" or manifest["k"] != 32:
         raise ValueError("bank must be complete and use IMP K=32")
     records = [r for r in manifest["tasks"][task] if r["split"] == split]
@@ -43,18 +46,19 @@ def load_task(bank, task, split):
         for filename, expected in record["hashes"].items():
             if digest(directory/filename) != expected:
                 raise ValueError(f"bank artifact changed: {directory/filename}")
-        raw = torch.load(directory/"functional_map.pt", weights_only=True)
+        raw = torch.load(directory/"nf_features.pt", weights_only=True)
         mask = torch.load(directory/"imp_mask.pt", weights_only=True).float()
         if mask.shape != (11,8) or not ((mask==0)|(mask==1)).all() or int(mask.sum()) != 32:
             raise ValueError("each IMP target must contain exactly 32 binary connections")
-        order = canonical_columns(raw["q_abs"])
-        # No training-mask/state channel is exposed to the predictor.
-        scale = raw["q_rms"].amax().clamp_min(1e-8)
-        feature = torch.stack([raw[key][:,order]/scale for key in ("q_signed","q_abs","q_rms")], -1)
+        if raw.get("channels") != list(NF_CHANNELS) or any(raw[key].shape != (11,8) for key in NF_CHANNELS):
+            raise ValueError("NF artifact must contain weight/gradient/functional tensors with shape [11,8]")
+        order = canonical_columns(raw["functional_map"])
+        feature = torch.stack([raw[key][:,order] for key in NF_CHANNELS], -1)
+        feature = feature/feature.abs().amax(dim=(0,1)).clamp_min(1e-8)
         if not torch.isfinite(feature).all():
-            raise ValueError("functional maps must be finite")
+            raise ValueError("NF input channels must be finite")
         features.append(feature); targets.append(mask[:,order]); orders.append(order)
-        signed_scores.append(raw["q_abs"][:,order]); names.append(record["network_seed"])
+        signed_scores.append(raw["functional_map"][:,order]); names.append(record["network_seed"])
     return {"features": torch.stack(features), "targets": torch.stack(targets),
             "seeds": names, "column_orders": torch.stack(orders),
             "functional_scores": torch.stack(signed_scores)}

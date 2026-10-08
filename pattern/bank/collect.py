@@ -5,7 +5,7 @@ import torch
 from ..datasets import input_table, labels_for, partitions, balanced_rows
 from ..io import ROOT, load_config, new_directory, save_json, save_torch, digest, device_name
 from .imp import run_imp
-from .functional_maps import extract_maps
+from .functional_maps import extract_maps, extract_nf_channels, NF_CHANNELS, NF_BANK_SCHEMA
 
 DEFAULT_CONFIG=ROOT/"pattern/configs/experiment.json"
 
@@ -21,8 +21,13 @@ def collect(config, parent=None, bank_id=None, device="cpu"):
         balanced_rows(y,pools["support"],options["support_count"],config["seed"])
         query_rows[task]=balanced_rows(y,pools["query"],options["query_count"],config["seed"]+91009)
     destination=new_directory(parent,bank_id)
-    manifest={"schema":"pattern.imp_bank.v1","status":"running","k":32,
+    manifest={"schema":NF_BANK_SCHEMA,"status":"running","k":32,
         "bank_id":destination.name,"config":config,"tasks":{},
+        "input_representation":{"channels":list(NF_CHANNELS),"shape":[11,8,3],
+            "normalization":"per-network, per-channel max(abs), clamped at 1e-8",
+            "gradient":{"loss":"mean BCE, excluding L2","observations":"network support_ids",
+                        "wrt":"first-layer W in W*IMP_mask","point":"terminal sparse trained state"},
+            "functional_map":"q_abs = E_probe |x_i * d(psi_j)/dx_i|"},
         "partitions":{key:value.tolist() for key,value in pools.items()}}
     save_json(destination/"manifest.json",manifest)
     save_torch(destination/"probe.pt",{"x":x[pools["probe"][:options["probe_count"]]],
@@ -44,16 +49,18 @@ def collect(config, parent=None, bank_id=None, device="cpu"):
                 lr=options["lr"],l2=options["l2"],device=device)
             target=destination/task/str(seed); target.mkdir(parents=True,exist_ok=False)
             raw=extract_maps(state,mask,x[pools["probe"][:options["probe_count"]]])
+            channels=extract_nf_channels(state,mask,x[rows],y[rows],raw["q_abs"])
+            save_torch(target/"nf_features.pt",{**channels,"support_ids":ids[rows],"channels":list(NF_CHANNELS)})
             save_torch(target/"functional_map.pt",raw)
             save_torch(target/"imp_mask.pt",mask.bool())
             save_torch(target/"network_state.pt",{"state_dict":state,"initial_state":initial,
                 "network_seed":seed,"support_ids":ids[rows],"query_ids":ids[query]})
             save_json(target/"pruning_history.json",history)
-            files=("functional_map.pt","imp_mask.pt","network_state.pt","pruning_history.json")
+            files=("nf_features.pt","functional_map.pt","imp_mask.pt","network_state.pt","pruning_history.json")
             manifest["tasks"][task].append({"network_seed":seed,"split":roles[number],
                 "path":str(target.relative_to(destination)),"hashes":{name:digest(target/name) for name in files}})
             save_json(destination/"manifest.json",manifest)
-            print(f"{task}: {number+1}/{count} IMP maps, active connections={int(mask.sum())}",flush=True)
+            print(f"{task}: {number+1}/{count} weight/gradient/functional maps, active connections={int(mask.sum())}",flush=True)
     manifest["status"]="complete"; save_json(destination/"manifest.json",manifest)
     return destination
 

@@ -46,6 +46,7 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
     optimizer=torch.optim.Adam(model.parameters(),lr=options["lr"])
     destination=new_directory(parent or ROOT/"pattern/runs",run_id)
     reference={"bank_path":str(bank),"manifest_sha256":digest(bank/"manifest.json"),
+               "bank_schema":manifest["schema"],"input_representation":manifest["input_representation"],
                "splits":{task:{split:values[split]["seeds"] for split in values} for task,values in data.items()}}
     save_json(destination/"config.json",config)
     save_json(destination/"bank_reference.json",reference)

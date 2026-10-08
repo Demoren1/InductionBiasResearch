@@ -3,7 +3,10 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 from torch.nn import functional as F
+from .imp import logits
 _FEATURES, _HIDDEN = 11, 8
+NF_CHANNELS = ("weights", "loss_gradient", "functional_map")
+NF_BANK_SCHEMA = "pattern.imp_bank.v2"
 
 def extract_pattern_tokens(state: dict[str, Tensor], mask: Tensor, probe_x: Tensor) -> tuple[Tensor, dict[str, Tensor]]:
     """Make normalized generator tokens from a terminal pattern-child state.
@@ -45,3 +48,24 @@ def extract_pattern_tokens(state: dict[str, Tensor], mask: Tensor, probe_x: Tens
 def extract_maps(state, mask, probe):
     _, raw = extract_pattern_tokens(state, mask, probe)
     return {key: raw[key] for key in ("psi", "q_signed", "q_abs", "q_rms", "psi_scale", "q_scale")}
+
+
+@torch.enable_grad()
+def extract_nf_channels(state, mask, support_x, support_y, functional_map):
+    """Capture terminal sparse W, d(mean support BCE)/dW and E|q|.
+
+    The gradient includes the fixed pruning mask, so inactive connections have
+    zero gradient. It excludes the L2 training penalty and never uses query/test.
+    Differentiating a copy leaves the trained network and its gradients untouched.
+    """
+    state = {key:value.detach().cpu() for key,value in state.items()}
+    weight = state["w"].clone().requires_grad_()
+    mask = mask.detach().float().cpu()
+    prediction = logits({**state,"w":weight},mask,support_x.detach().cpu())
+    loss = F.binary_cross_entropy_with_logits(prediction,support_y.detach().cpu())
+    gradient, = torch.autograd.grad(loss,weight)
+    channels = {"weights":weight.detach()*mask,"loss_gradient":gradient,
+                "functional_map":functional_map.detach().cpu()}
+    if any(value.shape != (_FEATURES,_HIDDEN) or not torch.isfinite(value).all() for value in channels.values()):
+        raise ValueError("NF channels must be finite tensors with shape [11,8]")
+    return {**channels,"support_bce":float(loss.detach())}

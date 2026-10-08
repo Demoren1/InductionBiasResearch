@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Collect a new immutable pattern IMP bank with exactly 32 connections.
+"""Collect sparse weights, support-BCE gradients and functional maps (IMP K=32).
 
 From the project root:
-    python data/collect_pattern_maps.py --bank-id imp32_v1 --device auto
+    python data/collect_pattern_maps.py --bank-id imp32_wgf_v2 --device auto
 See pattern/README.md for configuration and model training.
 """
 from pathlib import Path
