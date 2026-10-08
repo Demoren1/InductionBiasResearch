@@ -10,6 +10,7 @@ cd "$PROJECT_ROOT"
 PYTHON="${PYTHON:-python3}"
 DEVICE="${DEVICE:-auto}"  # auto: MPS (Mac) -> CUDA -> CPU; explicit mps/cpu/cuda:N accepted
 THREADS="${THREADS:-1}"
+BANK_BATCH_SIZE="${BANK_BATCH_SIZE:-128}"  # Independent MLPs per IMP batch.
 PROGRESS="${PROGRESS:-1}"
 LOG_DIR="${LOG_DIR:-pattern/runs/launch_logs}"
 export PYTHONUNBUFFERED=1
@@ -54,15 +55,16 @@ args=(--config "$CONFIG" --bank "$BANK" --device "$DEVICE" --threads "$THREADS")
 [[ -z "${DECODER_WIDTH:-}" ]] || args+=(--decoder-width "$DECODER_WIDTH")
 
 [[ "$PROGRESS" != "0" ]] || args+=(--no-progress)
+collection_args=(--config "$CONFIG" --parent "$(dirname "$BANK")" --bank-id "$(basename "$BANK")"
+                 --device "$DEVICE" --threads "$THREADS" --network-batch-size "$BANK_BATCH_SIZE")
+[[ "$PROGRESS" != "0" ]] || collection_args+=(--no-progress)
 mkdir -p "$LOG_DIR"
 LOG_FILE="$(mktemp "$LOG_DIR/train_$(date -u +%Y%m%dT%H%M%SZ)_log_XXXXXX")"
 echo "Console log: $LOG_FILE"
 {
   if [[ ! -e "$BANK" ]]; then
     echo "Bank not found; collecting weight/gradient/functional maps: $BANK"
-    "$PYTHON" -u data/collect_pattern_maps.py --config "$CONFIG" \
-      --parent "$(dirname "$BANK")" --bank-id "$(basename "$BANK")" \
-      --device "$DEVICE" --threads "$THREADS"
+    "$PYTHON" -u data/collect_pattern_maps.py "${collection_args[@]}"
   else
     echo "Using existing bank: $BANK"
   fi
