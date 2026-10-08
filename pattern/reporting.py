@@ -4,10 +4,11 @@ import io
 import os
 from pathlib import Path
 import tempfile
+from collections import defaultdict
 import torch
 from tqdm.auto import tqdm
 from .io import atomic, save_json, save_torch
-from .masks import analytical_mask, exact_topk, align_to_reference
+from .masks import analytical_mask, exact_topk, align_to_reference, align_masks
 
 
 def progress(iterable, enabled=True, **kwargs):
@@ -20,6 +21,17 @@ def pyplot():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     return plt
+
+
+def save_loss_history(destination,history,x_key="step"):
+    destination=Path(destination);destination.mkdir(parents=True,exist_ok=True)
+    save_json(destination/"history.json",history)
+    save_losses(destination,history,x_key)
+
+
+def save_figure(fig,path):
+    for suffix in ("png","pdf"):fig.savefig(Path(path).with_suffix("."+suffix),dpi=160)
+    pyplot().close(fig)
 
 
 def save_losses(destination, history, x_key="epoch"):
@@ -42,49 +54,37 @@ def save_losses(destination, history, x_key="epoch"):
     stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=fields)
     writer.writeheader();writer.writerows(rows)
     atomic(Path(destination)/"losses.csv",lambda handle:handle.write(stream.getvalue()),False)
-    plt=pyplot()
-    has_kl=any("train_kl" in row or "validation_kl" in row for row in rows)
-    has_weighted_kl=any("train_beta_kl" in row or "validation_beta_kl" in row for row in rows)
-    panel_count=1+int(has_kl)+int(has_weighted_kl)
-    fig,axes=plt.subplots(panel_count,1,figsize=(7,3*panel_count+1),
-                         constrained_layout=True,squeeze=False)
-    ax=axes[0,0]
-    groups=sorted({row.get("method","") for row in rows})
-    for group in groups:
-        for key in ("train_loss","validation_loss","loss","reconstruction","bce","hard_mse","kl","support_bce","objective"):
-            grouped={}
-            for row in rows:
-                if row.get("method","")==group and key in row and x_key in row:
-                    grouped.setdefault(row[x_key],[]).append(row[key])
-            if grouped:
-                ticks=sorted(grouped)
-                ax.plot(ticks,[sum(grouped[t])/len(grouped[t]) for t in ticks],
-                        label=f"{group}/{key}" if group else key)
-    ax.set_xlabel(x_key);ax.set_ylabel("Loss");ax.grid(alpha=.2)
-    if ax.lines:ax.legend()
-    for panel,keys,label in ((1,("train_kl","validation_kl"),"KL divergence (unweighted)"),
-                             (2,("train_beta_kl","validation_beta_kl"),"KL contribution (beta × KL)")):
-        if panel>=panel_count:continue
-        kl_ax=axes[panel,0]
-        for key in keys:
-            values=[row for row in rows if key in row and x_key in row]
-            if values:kl_ax.plot([row[x_key] for row in values],[row[key] for row in values],label=key)
-        kl_ax.set_xlabel(x_key);kl_ax.set_ylabel(label)
-        kl_ax.grid(alpha=.2);kl_ax.legend()
-    for suffix in ("png","pdf"):fig.savefig(Path(destination)/f"losses.{suffix}",dpi=160)
-    plt.close(fig)
+    specs=(("Loss",("train_loss","validation_loss","loss","reconstruction","bce","hard_mse","kl","support_bce","objective")),
+           ("KL divergence (unweighted)",("train_kl","validation_kl")),
+           ("KL contribution (beta × KL)",("train_beta_kl","validation_beta_kl")))
+    curves=defaultdict(lambda:defaultdict(list))
+    for row in rows:
+        if x_key not in row:continue
+        for _,keys in specs:
+            for key in keys:
+                if key in row:curves[row.get("method",""),key][row[x_key]].append(row[key])
+    present={key for _,key in curves}
+    panels=[spec for i,spec in enumerate(specs) if i==0 or present.intersection(spec[1])]
+    fig,axes=pyplot().subplots(len(panels),1,figsize=(7,3*len(panels)+1),constrained_layout=True,squeeze=False)
+    for ax,(label,keys) in zip(axes[:,0],panels):
+        for (group,key),points in sorted(curves.items()):
+            if key not in keys:continue
+            ticks=sorted(points)
+            ax.plot(ticks,[sum(points[t])/len(points[t]) for t in ticks],label=f"{group}/{key}" if group else key)
+        ax.set_xlabel(x_key);ax.set_ylabel(label);ax.grid(alpha=.2)
+        if ax.lines:ax.legend()
+    save_figure(fig,Path(destination)/"losses")
 
 
 def plot_panels(path, panels, title, continuous=False):
-    plt=pyplot();fig,axes=plt.subplots(1,len(panels),figsize=(3*len(panels),4),constrained_layout=True)
-    for ax,(label,mask) in zip(axes,panels.items()):
+    fig,axes=pyplot().subplots(1,len(panels),figsize=(3*len(panels),4),constrained_layout=True,squeeze=False)
+    for ax,(label,mask) in zip(axes[0],panels.items()):
         picture=ax.imshow(mask.detach().float().cpu().numpy(),vmin=0,vmax=1,cmap="Blues",origin="upper",aspect="equal")
         ax.set_title(label);ax.set_xlabel("Hidden column");ax.set_ylabel("Input position")
         ax.set_xticks(range(8));ax.set_yticks(range(11))
-    if continuous:fig.colorbar(picture,ax=list(axes),label="Connection frequency",shrink=.8)
+    if continuous:fig.colorbar(picture,ax=list(axes[0]),label="Connection frequency",shrink=.8)
     fig.suptitle(title)
-    for suffix in ("png","pdf"):fig.savefig(Path(path).with_suffix("."+suffix),dpi=160)
-    plt.close(fig)
+    save_figure(fig,path)
 
 
 def save_task_masks(destination, task, data, output, centroid, split):
@@ -100,8 +100,7 @@ def save_task_masks(destination, task, data, output, centroid, split):
                "functional":exact_topk(data["functional_scores"])}
     aligned={};orders={}
     for name,batch in canonical.items():
-        pairs=[align_to_reference(mask,reference) for mask in batch]
-        aligned[name]=torch.stack([p[0] for p in pairs]);orders[name]=torch.stack([p[1] for p in pairs])
+        aligned[name],orders[name]=align_masks(batch,reference)
     aligned_centroid,centroid_order=align_to_reference(centroid,reference)
     save_torch(directory/f"{task}.pt",{"split":split,"network_seeds":data["seeds"],
         "logits":output["logits"].detach().cpu(),"canonical":canonical,
@@ -139,12 +138,10 @@ def save_prior(model,destination,device,seed):
     with torch.no_grad():
         z=torch.randn(128,model.decoder.body[0].in_features,generator=generator).to(device)
         generated=exact_topk(model.decoder(z)).cpu()
-        pairs=[align_to_reference(mask,analytical_mask()) for mask in generated]
-        aligned=torch.stack([p[0] for p in pairs])
+        reference=analytical_mask();aligned,orders=align_masks(generated,reference)
         save_torch(Path(destination)/"generated_masks/shared_prior.pt",{"z":z.cpu(),"canonical":generated,
-            "aligned_to_analytical":aligned,"alignment_permutations":torch.stack([p[1] for p in pairs]),
-            "analytical":analytical_mask()})
+            "aligned_to_analytical":aligned,"alignment_permutations":orders,"analytical":reference})
         plot_panels(Path(destination)/"heatmaps/shared_prior",{
-            "Analytical Toeplitz":analytical_mask(),"Prior frequency aligned":aligned.mean(0)},
+            "Analytical Toeplitz":reference,"Prior frequency aligned":aligned.mean(0)},
             "Shared prior: 128 samples; independently aligned columns",True)
         return z, generated

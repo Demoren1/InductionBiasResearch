@@ -47,6 +47,17 @@ def analytical_mask():
     return ((rows-cols >= 0) & (rows-cols < 4)).float()
 
 
+def mean_structure(masks):
+    """Compute each mask's structural diagnostics once, then average them."""
+    metrics=[toeplitz_metrics(mask) for mask in masks]
+    return {key:sum(row[key] for row in metrics)/len(metrics) for key in metrics[0]}
+
+
+def align_masks(masks, reference):
+    pairs=[align_to_reference(mask,reference) for mask in masks]
+    return tuple(torch.stack(values) for values in zip(*pairs))
+
+
 def align_to_reference(mask, reference):
     """Assign hidden columns to a fixed reference for visualization only.
 

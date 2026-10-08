@@ -39,6 +39,14 @@ def save_json(path, payload):
 def save_torch(path, payload):
     atomic(path, lambda stream: torch.save(payload, stream), True)
 
+def load_run(run):
+    """Load a checkpoint only with its unchanged source-bank manifest."""
+    checkpoint=torch.load(Path(run)/"checkpoints/best.pt",weights_only=True,map_location="cpu")
+    reference=checkpoint["bank_reference"]; bank=Path(reference["bank_path"])
+    if digest(bank/"manifest.json") != reference["manifest_sha256"]:
+        raise ValueError("bank manifest changed after training")
+    return checkpoint,bank,json.loads((bank/"manifest.json").read_text())
+
 def load_config(path):
     config = json.loads(Path(path).read_text())
     if config.get("k") != 32:

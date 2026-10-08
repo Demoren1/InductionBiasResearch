@@ -22,8 +22,17 @@ class Experiment(nn.Module):
         self.decoder=SharedDecoder(config["latent_dim"],config["decoder_width"])
 
     def forward(self,task,x,sample=True):
-        mu,logvar=self.encoders[task](x)
-        z=mu+torch.randn_like(mu)*(logvar*.5).exp() if sample else mu
-        logits=self.decoder(z)
-        return {"logits":logits,"mask":exact_topk(logits,32,self.training),
-                "mu":mu,"logvar":logvar,"z":z}
+        return self.forward_tasks({task:x},sample)[task]
+
+    def forward_tasks(self,inputs,sample=True):
+        """Keep separate encoders, but decode all tasks in a single batch."""
+        encoded={}
+        for task,x in inputs.items():
+            mu,logvar=self.encoders[task](x)
+            z=mu+torch.randn_like(mu)*(logvar*.5).exp() if sample else mu
+            encoded[task]={"mu":mu,"logvar":logvar,"z":z}
+        sizes=[len(value["z"]) for value in encoded.values()]
+        logits=self.decoder(torch.cat([value["z"] for value in encoded.values()]))
+        masks=exact_topk(logits,32,self.training)
+        return {task:{**value,"logits":scores,"mask":mask}
+                for (task,value),scores,mask in zip(encoded.items(),logits.split(sizes),masks.split(sizes))}

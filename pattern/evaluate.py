@@ -1,16 +1,15 @@
 """Evaluate source-only latent transfer or reconstruction on unseen bank networks."""
 import argparse
-import json
 from pathlib import Path
 import torch
 from torch.nn import functional as F
 from .bank.imp import initialization, fit_fixed_mask, logits
 from .datasets import load_task, input_table, labels_for, balanced_rows
-from .io import new_directory, save_json, save_torch, digest, device_name
-from .masks import exact_topk, toeplitz_metrics
+from .io import new_directory, save_json, save_torch, load_run, device_name
+from .masks import exact_topk, toeplitz_metrics, mean_structure
 from .models.task_model import Experiment
 from .losses import mask_vae_loss
-from .reporting import progress, save_losses, save_task_masks, save_prior
+from .reporting import progress, save_losses, save_loss_history, save_task_masks, save_prior
 from .latent_evaluate import evaluate_latent
 
 
@@ -18,8 +17,7 @@ def reconstruction_metrics(predicted,target):
     overlap=(predicted*target).sum((-2,-1))
     return {"edge_f1":float((overlap/32).mean()),"iou":float((overlap/(64-overlap)).mean()),
             "exact_mask_fraction":float((predicted==target).flatten(1).all(1).float().mean()),
-            **{key:sum(toeplitz_metrics(m)[key] for m in predicted)/len(predicted)
-               for key in ("toeplitz_mse","toeplitz_exact","diagonal_agreement")}}
+            **mean_structure(predicted)}
 
 
 def fresh_quality(task, masks, manifest, steps, replicas, device, destination=None, show_progress=True, log_every=10):
@@ -49,9 +47,7 @@ def fresh_quality(task, masks, manifest, steps, replicas, device, destination=No
                                 "initialization_seed":seed,"test_bce":loss,"test_accuracy":accuracy})
     fits.close()
     if destination is not None:
-        loss_dir=Path(destination)/"child_losses"/task;loss_dir.mkdir(parents=True,exist_ok=True)
-        save_json(loss_dir/"history.json",loss_records)
-        save_losses(loss_dir,loss_records,x_key="step")
+        save_loss_history(Path(destination)/"child_losses"/task,loss_records)
     summary={method:{"test_bce":sum(r["test_bce"] for r in records if r["method"]==method)/(len(masks[method])*replicas),
                      "test_accuracy":sum(r["test_accuracy"] for r in records if r["method"]==method)/(len(masks[method])*replicas)}
              for method in masks}
@@ -63,12 +59,8 @@ def evaluate(run, split="test", device="cpu", evaluation_id=None, child_steps=0,
     if split not in ("validation","test") or child_steps<0 or replicas<1 or log_every<1:
         raise ValueError("invalid evaluation split or child budget")
     run=Path(run)
-    checkpoint=torch.load(run/"checkpoints/best.pt",weights_only=True,map_location="cpu")
+    checkpoint,bank,manifest=load_run(run)
     config=checkpoint["config"];reference=checkpoint["bank_reference"]
-    bank=Path(reference["bank_path"])
-    if digest(bank/"manifest.json") != reference["manifest_sha256"]:
-        raise ValueError("bank manifest changed after training")
-    manifest=json.loads((bank/"manifest.json").read_text())
     model=Experiment(config["tasks"],config["model"]).to(device)
     model.load_state_dict(checkpoint["model_state"]);model.eval()
     # Check all data before opening an output directory.
@@ -99,8 +91,7 @@ def evaluate(run, split="test", device="cpu", evaluation_id=None, child_steps=0,
                      "functional_top32":functional,"random32":random}
             task_metrics={name:reconstruction_metrics(masks,target) for name,masks in methods.items()}
             task_metrics["vae_loss"]=loss_row
-            task_metrics["target_structure"]={key:sum(toeplitz_metrics(m)[key] for m in target)/len(target)
-               for key in ("toeplitz_mse","toeplitz_exact","diagonal_agreement")}
+            task_metrics["target_structure"]=mean_structure(target)
             task_metrics["train_latent_centroid_structure"]=toeplitz_metrics(centroid)
             report["tasks"][task]=task_metrics
             save_torch(destination/f"predicted_masks/{task}.pt",{

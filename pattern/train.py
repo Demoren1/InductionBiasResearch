@@ -12,6 +12,22 @@ from .losses import mask_vae_loss
 from .reporting import progress, save_losses, save_generation
 
 
+def task_losses(model, samples, beta, hard_weight, sample=True):
+    outputs=model.forward_tasks({task:x for task,(x,_) in samples.items()},sample)
+    values={task:mask_vae_loss(outputs[task],target,beta,hard_weight)
+            for task,(_,target) in samples.items()}
+    objective=torch.stack([loss for loss,_ in values.values()]).mean()
+    metrics={task:torch.stack([loss,*parts.values()]).detach() for task,(loss,parts) in values.items()}
+    return objective,metrics
+
+
+def metric_rows(metrics):
+    """Transfer the complete metric table once instead of synchronizing each scalar."""
+    keys=("loss","bce","hard_mse","kl","reconstruction")
+    rows=torch.stack(list(metrics.values())).cpu().tolist()
+    return {task:dict(zip(keys,row)) for task,row in zip(metrics,rows)}
+
+
 def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=True):
     bank=Path(bank).resolve()
     manifest=json.loads((bank/"manifest.json").read_text())
@@ -24,6 +40,8 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
             raise ValueError(f"network seeds overlap for {task}")
     torch.manual_seed(config["seed"])
     model=Experiment(config["tasks"],config["model"]).to(device)
+    tensors={task:{split:tuple(card[key].to(device) for key in ("features","targets"))
+                  for split,card in values.items()} for task,values in data.items()}
     options=config["training"]
     optimizer=torch.optim.Adam(model.parameters(),lr=options["lr"])
     destination=new_directory(parent or ROOT/"pattern/runs",run_id)
@@ -37,39 +55,34 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
     for epoch in epochs:
         model.train()
         beta=options["beta"]*min(1,epoch/max(1,options["kl_warmup_epochs"]))
-        permutations={task:torch.randperm(len(values["train"]["features"]),generator=generator)
+        permutations={task:torch.randperm(len(values["train"]["features"]),generator=generator).to(device)
                       for task,values in data.items()}
         batches=max(math.ceil(len(p)/options["batch_size"]) for p in permutations.values())
-        total=0.; train_parts={task:{} for task in data}
+        train_metrics={}
         minibatches=progress(range(batches),show_progress,desc="Train batches",unit="batch",leave=False)
         for batch in minibatches:
             optimizer.zero_grad(set_to_none=True)
-            objective=0.
-            for task,values in data.items():
-                indices=permutations[task]
+            samples={}
+            for task,indices in permutations.items():
                 start=(batch*options["batch_size"])%len(indices)
                 rows=indices[start:start+options["batch_size"]]
-                x=values["train"]["features"][rows].to(device)
-                target=values["train"]["targets"][rows].to(device)
-                output=model(task,x,sample=True)
-                loss,parts=mask_vae_loss(output,target,beta,options["hard_loss_weight"])
-                for key,value in {"loss":loss,**parts}.items():
-                    train_parts[task][key]=train_parts[task].get(key,0.)+float(value.detach())/batches
-                objective=objective+loss/len(data)
+                samples[task]=tuple(tensor[rows] for tensor in tensors[task]["train"])
+            objective,metrics=task_losses(model,samples,beta,options["hard_loss_weight"])
+            for task,value in metrics.items():train_metrics[task]=train_metrics.get(task,0.)+value/batches
             if not torch.isfinite(objective): raise RuntimeError("nonfinite VAE loss")
             objective.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(),1.,error_if_nonfinite=True)
-            optimizer.step(); total+=float(objective.detach())
-            minibatches.set_postfix(loss=f"{float(objective.detach()):.5f}")
-        model.eval(); validations={}
+            optimizer.step()
+            if show_progress:minibatches.set_postfix(loss=f"{float(objective.detach()):.5f}")
+        train_parts=metric_rows(train_metrics)
+        train_loss=sum(row["loss"] for row in train_parts.values())/len(data)
+        model.eval()
         with torch.no_grad():
-            for task,values in progress(data.items(),show_progress,desc="Validation",unit="task",leave=False):
-                output=model(task,values["validation"]["features"].to(device),sample=False)
-                loss,parts=mask_vae_loss(output,values["validation"]["targets"].to(device),
-                                       options["beta"],options["hard_loss_weight"])
-                validations[task]={"loss":float(loss),**{key:float(value) for key,value in parts.items()}}
+            _,metrics=task_losses(model,{task:values["validation"] for task,values in tensors.items()},
+                                  options["beta"],options["hard_loss_weight"],sample=False)
+        validations=metric_rows(metrics)
         validation=sum(v["loss"] for v in validations.values())/len(validations)
-        row={"epoch":epoch,"train_loss":total/batches,"beta":beta,
+        row={"epoch":epoch,"train_loss":train_loss,"beta":beta,
              "validation_loss":validation,"validation_beta":options["beta"],
              "per_task_train":train_parts,"per_task_validation":validations}
         history.append(row);save_json(destination/"history.json",history)
@@ -82,9 +95,9 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
             save_torch(destination/"checkpoints/shared_decoder.pt",model.decoder.state_dict())
             for task,encoder in model.encoders.items():
                 save_torch(destination/f"checkpoints/task_encoders/{task}.pt",encoder.state_dict())
-        epochs.set_postfix(train=f"{total/batches:.5f}",validation=f"{validation:.5f}")
+        epochs.set_postfix(train=f"{train_loss:.5f}",validation=f"{validation:.5f}")
         if not show_progress:
-            print(f"epoch {epoch}/{options['epochs']}: train={total/batches:.5f}, validation={validation:.5f}",flush=True)
+            print(f"epoch {epoch}/{options['epochs']}: train={train_loss:.5f}, validation={validation:.5f}",flush=True)
     save_losses(destination,history)
     selected=torch.load(destination/"checkpoints/best.pt",weights_only=True,map_location="cpu")
     model.load_state_dict(selected["model_state"])
