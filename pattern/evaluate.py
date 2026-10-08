@@ -64,7 +64,7 @@ def evaluate(run, split="test", device="cpu", evaluation_id=None, child_steps=0,
     model=Experiment(config["tasks"],config["model"]).to(device)
     model.load_state_dict(checkpoint["model_state"]);model.eval()
     # Check all data before opening an output directory.
-    datasets={task:{"train":load_task(bank,task,"train"),split:load_task(bank,task,split)}
+    datasets={task:{role:load_task(bank,task,role,manifest=manifest) for role in ("train",split)}
               for task in config["tasks"]}
     destination=new_directory(run/"evaluations",evaluation_id)
     report={"checkpoint_epoch":checkpoint["epoch"],"split":split,"k":32,

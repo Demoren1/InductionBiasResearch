@@ -30,9 +30,10 @@ def balanced_rows(labels, pool, count, seed):
     rows = torch.cat([g[torch.randperm(len(g), generator=generator)[:count//2]] for g in groups])
     return rows[torch.randperm(count, generator=generator)]
 
-def load_task(bank, task, split):
+def load_task(bank, task, split, *, manifest=None):
     bank = Path(bank)
-    manifest = json.loads((bank/"manifest.json").read_text())
+    if manifest is None:
+        manifest = json.loads((bank/"manifest.json").read_text())
     if manifest.get("schema") != NF_BANK_SCHEMA or manifest.get("input_representation",{}).get("channels") != list(NF_CHANNELS):
         raise ValueError("bank must contain weight/gradient/functional channels (v2); collect a new bank ID")
     if manifest["status"] != "complete" or manifest["k"] != 32:
@@ -40,7 +41,7 @@ def load_task(bank, task, split):
     records = [r for r in manifest["tasks"][task] if r["split"] == split]
     if not records:
         raise ValueError(f"no maps for {task}/{split}")
-    features, targets, names, orders, signed_scores = [], [], [], [], []
+    samples = []
     for record in records:
         directory = bank/record["path"]
         for filename, expected in record["hashes"].items():
@@ -53,12 +54,12 @@ def load_task(bank, task, split):
         if raw.get("channels") != list(NF_CHANNELS) or any(raw[key].shape != (11,8) for key in NF_CHANNELS):
             raise ValueError("NF artifact must contain weight/gradient/functional tensors with shape [11,8]")
         order = canonical_columns(raw["functional_map"])
-        feature = torch.stack([raw[key][:,order] for key in NF_CHANNELS], -1)
+        feature = torch.stack([raw[key] for key in NF_CHANNELS], -1)[:,order]
         feature = feature/feature.abs().amax(dim=(0,1)).clamp_min(1e-8)
         if not torch.isfinite(feature).all():
             raise ValueError("NF input channels must be finite")
-        features.append(feature); targets.append(mask[:,order]); orders.append(order)
-        signed_scores.append(raw["functional_map"][:,order]); names.append(record["network_seed"])
+        samples.append((feature, mask[:,order], record["network_seed"], order, raw["functional_map"][:,order]))
+    features, targets, names, orders, signed_scores = zip(*samples)
     return {"features": torch.stack(features), "targets": torch.stack(targets),
-            "seeds": names, "column_orders": torch.stack(orders),
+            "seeds": list(names), "column_orders": torch.stack(orders),
             "functional_scores": torch.stack(signed_scores)}

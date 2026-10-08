@@ -33,7 +33,7 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
     manifest=json.loads((bank/"manifest.json").read_text())
     if manifest["config"]["bank"] != config["bank"] or manifest["config"]["seed"] != config["seed"]:
         raise ValueError("bank protocol and seed must match training config")
-    data={task:{split:load_task(bank,task,split) for split in ("train","validation")}
+    data={task:{split:load_task(bank,task,split,manifest=manifest) for split in ("train","validation")}
           for task in config["tasks"]}
     for task, values in data.items():
         if set(values["train"]["seeds"]) & set(values["validation"]["seeds"]):

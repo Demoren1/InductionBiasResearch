@@ -15,9 +15,8 @@ def collect(config, parent=None, bank_id=None, device="cpu"):
     if not parent.resolve().is_relative_to(data_root):
         raise ValueError("functional banks must be saved under the repository data directory")
     options=config["bank"]; ids,x=input_table(); pools=partitions(config["seed"])
-    query_rows={}
-    for task in config["tasks"]:
-        y=labels_for(x,task)
+    query_rows={}; labels={task:labels_for(x,task) for task in config["tasks"]}
+    for task,y in labels.items():
         balanced_rows(y,pools["support"],options["support_count"],config["seed"])
         query_rows[task]=balanced_rows(y,pools["query"],options["query_count"],config["seed"]+91009)
     destination=new_directory(parent,bank_id)
@@ -30,12 +29,12 @@ def collect(config, parent=None, bank_id=None, device="cpu"):
             "functional_map":"q_abs = E_probe |x_i * d(psi_j)/dx_i|"},
         "partitions":{key:value.tolist() for key,value in pools.items()}}
     save_json(destination/"manifest.json",manifest)
-    save_torch(destination/"probe.pt",{"x":x[pools["probe"][:options["probe_count"]]],
-               "ids":ids[pools["probe"][:options["probe_count"]]]})
+    probe=pools["probe"][:options["probe_count"]]; probe_x=x[probe]
+    save_torch(destination/"probe.pt",{"x":probe_x,"ids":ids[probe]})
     count=options["maps_per_task"]
     nval=max(1,count//8); ntest=max(1,count//8)
     for task_index,task in enumerate(config["tasks"]):
-        y=labels_for(x,task); task_seed=config["seed"]+100003*task_index
+        y=labels[task]; task_seed=config["seed"]+100003*task_index
         allocation=torch.randperm(count,generator=torch.Generator().manual_seed(task_seed+71)).tolist()
         roles={index:("test" if rank<ntest else "validation" if rank<ntest+nval else "train")
                for rank,index in enumerate(allocation)}
@@ -48,17 +47,17 @@ def collect(config, parent=None, bank_id=None, device="cpu"):
                 steps=options["steps_per_round"],prune_fraction=options["prune_fraction"],
                 lr=options["lr"],l2=options["l2"],device=device)
             target=destination/task/str(seed); target.mkdir(parents=True,exist_ok=False)
-            raw=extract_maps(state,mask,x[pools["probe"][:options["probe_count"]]])
+            raw=extract_maps(state,mask,probe_x)
             channels=extract_nf_channels(state,mask,x[rows],y[rows],raw["q_abs"])
-            save_torch(target/"nf_features.pt",{**channels,"support_ids":ids[rows],"channels":list(NF_CHANNELS)})
-            save_torch(target/"functional_map.pt",raw)
-            save_torch(target/"imp_mask.pt",mask.bool())
-            save_torch(target/"network_state.pt",{"state_dict":state,"initial_state":initial,
-                "network_seed":seed,"support_ids":ids[rows],"query_ids":ids[query]})
-            save_json(target/"pruning_history.json",history)
-            files=("nf_features.pt","functional_map.pt","imp_mask.pt","network_state.pt","pruning_history.json")
+            artifacts={"nf_features.pt":{**channels,"support_ids":ids[rows],"channels":list(NF_CHANNELS)},
+                "functional_map.pt":raw,"imp_mask.pt":mask.bool(),
+                "network_state.pt":{"state_dict":state,"initial_state":initial,
+                    "network_seed":seed,"support_ids":ids[rows],"query_ids":ids[query]},
+                "pruning_history.json":history}
+            for name,value in artifacts.items():
+                (save_json if name.endswith(".json") else save_torch)(target/name,value)
             manifest["tasks"][task].append({"network_seed":seed,"split":roles[number],
-                "path":str(target.relative_to(destination)),"hashes":{name:digest(target/name) for name in files}})
+                "path":str(target.relative_to(destination)),"hashes":{name:digest(target/name) for name in artifacts}})
             save_json(destination/"manifest.json",manifest)
             print(f"{task}: {number+1}/{count} weight/gradient/functional maps, active connections={int(mask.sum())}",flush=True)
     manifest["status"]="complete"; save_json(destination/"manifest.json",manifest)

@@ -27,10 +27,14 @@ def fit_fixed_mask(initial, mask, x, y, steps, lr, l2, *, loss_history=None, log
     from ..reporting import progress
     state = {key:value.detach().clone().requires_grad_() for key,value in initial.items()}
     optimizer = torch.optim.Adam(state.values(), lr=lr)
+    def losses():
+        weight = state["w"]*mask
+        loss = F.binary_cross_entropy_with_logits(F.relu(x@weight+state["b"])@state["a"]+state["c"],y)
+        # One reduction over all effective parameters avoids separate L2 kernels.
+        parameters = torch.cat((weight.flatten(), *(state[key].flatten() for key in ("b","a","c"))))
+        return loss, loss+.5*l2*parameters.square().sum()
     for step in progress(range(1,steps+1),show_progress,desc=description,unit="step",leave=False):
-        loss = F.binary_cross_entropy_with_logits(logits(state,mask,x),y)
-        penalty = (state["w"]*mask).square().sum() + sum(state[key].square().sum() for key in ("b","a","c"))
-        objective = loss+.5*l2*penalty
+        loss, objective = losses()
         if loss_history is not None and (step==1 or step==steps or (step-1)%log_every==0):
             loss_history.append({"step":step-1,"support_bce":float(loss.detach()),"objective":float(objective.detach())})
         if not torch.isfinite(objective):
@@ -40,9 +44,8 @@ def fit_fixed_mask(initial, mask, x, y, steps, lr, l2, *, loss_history=None, log
             state["w"].mul_(mask)
     if loss_history is not None:
         with torch.no_grad():
-            loss=F.binary_cross_entropy_with_logits(logits(state,mask,x),y)
-            penalty=(state["w"]*mask).square().sum()+sum(state[key].square().sum() for key in ("b","a","c"))
-            loss_history.append({"step":steps,"support_bce":float(loss),"objective":float(loss+.5*l2*penalty)})
+            loss, objective = losses()
+            loss_history.append({"step":steps,"support_bce":float(loss),"objective":float(objective)})
     return {key:value.detach().clone() for key,value in state.items()}
 
 def run_imp(seed, support_x, support_y, query_x, query_y, *, k=32,
@@ -52,9 +55,8 @@ def run_imp(seed, support_x, support_y, query_x, query_y, *, k=32,
     initial = initialization(seed,device)
     mask = torch.ones(11,8,device=device)
     support_x, support_y, query_x, query_y = [v.to(device) for v in (support_x,support_y,query_x,query_y)]
-    history = []
+    history, active = [], mask.numel()
     while True:
-        active = int(mask.sum())
         # Fresh parameters and Adam state at every round, same original values.
         state = fit_fixed_mask(initial,mask,support_x,support_y,steps,lr,l2)
         history.append({"round":len(history),"active_edges":active,"steps":steps,
@@ -62,7 +64,7 @@ def run_imp(seed, support_x, support_y, query_x, query_y, *, k=32,
             "query_bce":float(F.binary_cross_entropy_with_logits(logits(state,mask,query_x),query_y))})
         if active == k:
             break
-        keep = max(k, min(active-1, math.ceil(active*(1-prune_fraction))))
-        mask = prune(mask,state["w"],keep)
+        active = max(k, min(active-1, math.ceil(active*(1-prune_fraction))))
+        mask = prune(mask,state["w"],active)
     cpu = lambda mapping:{key:value.cpu().clone() for key,value in mapping.items()}
     return cpu(state), mask.cpu(), history, cpu(initial)
