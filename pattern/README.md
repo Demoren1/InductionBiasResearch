@@ -169,13 +169,19 @@ checkpoint. Лучшие encoder и единственный decoder сохра�
 NumPy, Matplotlib, SciPy и tqdm; зависимости перечислены в `pattern/requirements.txt`.
 Конфиги JSON читаются стандартной библиотекой, дополнительных зависимостей нет.
 
-Сначала один раз создаём банк, затем многократно используем его в обучении:
+Скрипт обучения автоматически собирает отсутствующий банк, затем запускает обучение:
 
 ```bash
-python data/collect_pattern_maps.py --bank-id imp32_wgf_v2 --device auto
 BANK=data/pattern/banks/imp32_wgf_v2 RUN_ID=nf_vae_wgf_v2 bash pattern/sh_scripts/train.sh
 RUN=pattern/runs/nf_vae_wgf_v2 bash pattern/sh_scripts/evaluate.sh
 ```
+
+Можно запустить `./train.sh` из `pattern/sh_scripts` без указания банка:
+по умолчанию используется `data/pattern/banks/imp32_wgf_v2`. Готовый банк читается
+повторно; незавершённый или несовместимый банк вызывает ошибку. Для другого
+протокола `CONFIG` укажи новый путь `BANK`. Сбор использует тот же `CONFIG`,
+`DEVICE` и `THREADS`, что и обучение, и попадает в общий лог запуска.
+Банк можно собрать отдельно: `python data/collect_pattern_maps.py --bank-id imp32_wgf_v2 --device auto`.
 
 `auto` сначала выбирает MPS — ускоритель Mac, затем CUDA и CPU. Можно явно
 указать `mps`, `cpu` или `cuda:0`. MPS должен быть доступен в установленной

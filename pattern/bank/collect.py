@@ -66,13 +66,15 @@ def collect(config, parent=None, bank_id=None, device="cpu"):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config",type=Path,default=DEFAULT_CONFIG)
+    parser.add_argument("--parent",type=Path,default=ROOT/"data/pattern/banks",
+                        help="bank parent directory beneath repository data")
     parser.add_argument("--bank-id",help="new identifier; existing banks cannot be overwritten")
     parser.add_argument("--device",default="auto")
     parser.add_argument("--threads",type=int,default=1)
     args=parser.parse_args()
     if args.threads<1: raise ValueError("threads must be positive")
     torch.set_num_threads(args.threads)
-    bank=collect(load_config(args.config),bank_id=args.bank_id,device=device_name(args.device))
+    bank=collect(load_config(args.config),parent=args.parent,bank_id=args.bank_id,device=device_name(args.device))
     print(f"Bank saved: {bank}")
 
 if __name__=="__main__": main()
