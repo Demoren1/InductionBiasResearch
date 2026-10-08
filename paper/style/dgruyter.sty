@@ -1676,7 +1676,10 @@
 \fi
 \newbox\dg@wordmark
 \AtBeginDocument{%
-  \sbox\dg@wordmark{\includegraphics[height=2.1mm]{\@publisherlogo}}}
+  \ifthenelse{\equal{\@publisherlogo}{warn}}%
+    {\sbox\dg@wordmark{}%
+     \PackageWarningNoLine{dgruyter}{Publisher logo not supplied; omitting draft wordmark}}%
+    {\sbox\dg@wordmark{\includegraphics[height=2.1mm]{\@publisherlogo}}}}
 \ifx\dgf@nts\@undefined
   \DeclareRobustCommand*\dg@barone{%
     \expandafter\ifdim\f@size\p@<10\p@\relax
