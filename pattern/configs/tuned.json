@@ -1,0 +1,56 @@
+{
+  "seed": 4100,
+  "k": 32,
+  "tasks": ["0000", "0001", "0011", "0101", "0110", "0111", "1000", "1001", "1010", "1100", "1110", "1111"],
+  "test_tasks": ["0010", "0100", "1011", "1101"],
+  "bank": {
+    "maps_per_task": 1000,
+    "steps_per_round": 1000,
+    "prune_fraction": 0.2,
+    "lr": 0.03,
+    "l2": 0.001,
+    "support_count": 768,
+    "query_count": 64,
+    "probe_count": 128,
+    "select_every": 25,
+    "support_sampling": "all support observations",
+    "support_loss": "class-balanced BCE",
+    "checkpoint_selection": "minimum query BCE in every IMP round"
+  },
+  "model": {
+    "nf_channels": 8,
+    "encoder_width": 64,
+    "latent_dim": 16,
+    "decoder_width": 128
+  },
+  "training": {
+    "epochs": 5,
+    "batch_size": 128,
+    "lr": 0.001,
+    "beta": 0.005,
+    "kl_warmup_epochs": 30,
+    "hard_loss_weight": 0.2,
+    "weight_decay": 0.01,
+    "patience": 60,
+    "initialization_seed": 4113,
+    "optimizer": "adamw",
+    "selection_metric": "aligned_iou"
+  },
+  "evaluation": {
+    "z_starts": 8,
+    "z_steps": 100,
+    "z_lr": 0.05,
+    "inner_steps": 64,
+    "inner_lr": 0.2,
+    "support_count": 768,
+    "query_count": 64,
+    "child_steps": 1000,
+    "child_lr": 0.03,
+    "replicas": 3,
+    "log_every": 10,
+    "support_sampling": "all support observations",
+    "support_loss": "class-balanced BCE",
+    "child_l2": 0.001,
+    "child_select_every": 25
+  }
+}

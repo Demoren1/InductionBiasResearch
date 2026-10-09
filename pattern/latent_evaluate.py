@@ -2,10 +2,10 @@
 from pathlib import Path
 import torch
 from torch.nn import functional as F
-from .bank.imp import initialization
+from .bank.imp import initialization, mean_bce, l2_penalty, QueryCheckpoint
 from .datasets import input_table, labels_for, balanced_rows
 from .io import new_directory, save_json, save_torch, load_run
-from .masks import exact_topk, analytical_mask, align_to_reference, align_masks, toeplitz_metrics
+from .masks import exact_topk, analytical_mask, align_to_reference, align_masks, toeplitz_metrics,aligned_iou
 from .models.shared_decoder import SharedDecoder
 from .reporting import progress, save_losses, save_loss_history, plot_panels
 
@@ -15,17 +15,19 @@ DEFAULTS = dict(z_starts=8, z_steps=100, z_lr=.05, inner_steps=64,
                 child_steps=500, child_lr=.03, replicas=3, log_every=10)
 
 
-def observations(tasks, manifest, support_count, query_count, device, final=False):
+def observations(tasks, manifest, support_count, query_count, device, final=False, full_support=False):
     """Only called for held-out task labels after source-only selection is saved."""
     _, x = input_table()
     parts = manifest["partitions"]; seed = manifest["config"]["seed"]
     samples,ids=[],[]
     for task in tasks:
         y = labels_for(x, task)
-        support = balanced_rows(y, torch.tensor(parts["support"]), support_count,
-                                seed + 117 + int(task, 2))
+        support = (torch.tensor(parts["support"]) if full_support else
+                   balanced_rows(y, torch.tensor(parts["support"]), support_count,seed + 117 + int(task,2)))
+        if full_support and len(support)!=support_count:raise ValueError("full support budget must match partition")
         query = (torch.tensor(parts["test"]) if final else
-                 balanced_rows(y, torch.tensor(parts["query"]), query_count, seed + 219 + int(task, 2)))
+                 balanced_rows(y,torch.tensor(parts["query"]),query_count,
+                               seed+91009 if full_support else seed+219+int(task,2)))
         samples.append((x[support],y[support],x[query],y[query]))
         ids.append({"task": task, "support": support.tolist(), "query": query.tolist()})
     return tuple(torch.stack(values).to(device) for values in zip(*samples)),ids
@@ -48,13 +50,12 @@ def child_logits(state, masks, x):
     return (hidden * state["a"][:, :, None]).sum(-1) + state["c"][:, :, None]
 
 
-def child_bce(state, masks, x, y):
+def child_bce(state, masks, x, y, class_balanced=False):
     predictions = child_logits(state, masks, x)
-    return F.binary_cross_entropy_with_logits(predictions, y.unsqueeze(0).expand_as(predictions),
-                                             reduction="none").mean(-1)
+    return mean_bce(predictions,y.unsqueeze(0).expand_as(predictions),class_balanced)
 
 
-def source_objective(decoder, z, tasks, data, seed, steps, lr, initial=None):
+def source_objective(decoder, z, tasks, data, seed, steps, lr, initial=None, class_balanced=False,l2=0.):
     """Unroll fresh child SGD; only z is an outer optimization variable.
 
     The forward mask has exactly 32 edges. Its surrogate derivative and the
@@ -66,34 +67,47 @@ def source_objective(decoder, z, tasks, data, seed, steps, lr, initial=None):
     state={key:value.detach().requires_grad_() for key,value in initial.items()}
     xs, ys, xq, yq = data
     for _ in range(steps):
-        loss = child_bce(state, mask, xs, ys).sum()
+        loss = (child_bce(state,mask,xs,ys,class_balanced)+l2_penalty(state,mask[:,None],l2)).sum()
         grads = torch.autograd.grad(loss, tuple(state.values()), create_graph=True)
         state = {key: value - lr * grad for (key, value), grad in zip(state.items(), grads)}
     return child_bce(state, mask, xq, yq).mean(-1), mask
 
 
 def fit_candidates(masks, tasks, data, seed, steps, lr, replicas, device,
-                   show_progress=True, log_every=10, description="Fresh networks"):
+                   show_progress=True, log_every=10, description="Fresh networks",
+                   class_balanced=False,l2=0.,select_every=0,selection_data=None):
     """Fit all candidates/tasks/replicas in one batch with independent Adam states."""
     masks = masks.to(device).repeat_interleave(replicas, dim=0)
     state, seeds = child_initial(tasks, len(masks)//replicas, replicas, seed, device)
     optimizer = torch.optim.Adam(state.values(), lr=lr)
     xs, ys, xq, yq = data
+    if select_every and selection_data is None:raise ValueError("child checkpoint selection needs separate query data")
+    checkpoint = QueryCheckpoint(state, (len(masks),len(tasks))) if select_every else None
     history = []
     loop = progress(range(1, steps + 1), show_progress, desc=description, unit="step")
     for step in loop:
         optimizer.zero_grad(set_to_none=True)
-        values = child_bce(state, masks, xs, ys)
+        values = child_bce(state,masks,xs,ys,class_balanced)+l2_penalty(state,masks[:,None],l2)
         values.sum().backward(); optimizer.step()
+        if select_every and (step%select_every==0 or step==steps):
+            with torch.no_grad():
+                score=child_bce(state,masks,*selection_data)
+                checkpoint.update(state, score, step)
         if step == 1 or step % log_every == 0 or step == steps:
             with torch.no_grad():
-                train = child_bce(state, masks, xs, ys).cpu()
+                train = child_bce(state,masks,xs,ys,class_balanced).cpu()
             for sample in range(len(masks)):
                 for t, task in enumerate(tasks):
                     history.append({"step": step, "method": f"candidate_{sample//replicas}",
                                     "task": task, "replica": sample % replicas,
                                     "support_bce": float(train[sample, t])})
             loop.set_postfix(bce=f"{float(train.mean()):.5f}")
+    if select_every:
+        state=checkpoint.state
+        # Last-step rows follow sample/task order; transfer the whole table once.
+        selections = zip(checkpoint.steps.cpu().flatten().tolist(), checkpoint.loss.cpu().flatten().tolist())
+        for row,(selected_step,score) in zip(history[-len(masks)*len(tasks):],selections):
+            row.update(selected_step=selected_step, selected_query_bce=score)
     with torch.no_grad():
         bce = child_bce(state, masks, xq, yq).reshape(-1, replicas, len(tasks)).cpu()
         prediction = child_logits(state, masks, xq)
@@ -127,18 +141,17 @@ def search_latents(decoder,tasks,source,config,options,destination,device,show_p
     with torch.no_grad(): initial_masks = exact_topk(decoder(z)).cpu()
     optimizer = torch.optim.Adam([z], lr=options["z_lr"])
     initial,_=child_initial(tasks,len(z),1,config["seed"]+310007,device)
-    history = []; best_bce = torch.full((len(z),), float("inf"), device=device)
-    best_z = z.detach().clone(); best_steps = torch.zeros(len(z), dtype=torch.long, device=device)
+    history = []; checkpoint = QueryCheckpoint({"z":z}, (len(z),))
     gradient_observed = False
     loop = progress(range(options["z_steps"]+1), show_progress, desc=f"Latent search ({device})", unit="step")
     for step in loop:
         optimizer.zero_grad(set_to_none=True)
         loss, _ = source_objective(decoder, z, tasks, source, config["seed"]+310007,
-                                   options["inner_steps"], options["inner_lr"],initial=initial)
+                                   options["inner_steps"],options["inner_lr"],initial=initial,
+                                   class_balanced=options.get("support_loss")=="class-balanced BCE",
+                                   l2=options.get("child_l2",0.))
         if not torch.isfinite(loss).all(): raise RuntimeError("nonfinite latent objective")
-        improved = loss.detach() < best_bce
-        best_bce = torch.minimum(best_bce, loss.detach())
-        best_z[improved] = z.detach()[improved]; best_steps[improved] = step
+        checkpoint.update({"z":z}, loss.detach(), step)
         for restart, value in enumerate(loss.detach().cpu()):
             history.append({"step":step,"method":f"restart_{restart}","bce":float(value)})
         save_json(destination/"latent_history.json", history)
@@ -152,9 +165,10 @@ def search_latents(decoder,tasks,source,config,options,destination,device,show_p
     if not gradient_observed: raise RuntimeError("source BCE produced no gradient to z")
     for key,value in decoder.state_dict().items():
         if not torch.equal(value.detach().cpu(),frozen_state[key]): raise RuntimeError("frozen decoder changed")
+    best_z=checkpoint.state["z"]
     with torch.no_grad(): masks = exact_topk(decoder(best_z)).cpu()
     return {"z":best_z,"masks":masks,"initial_z":initial_z,"initial_masks":initial_masks,
-            "best_steps":best_steps.cpu(),"history":history}
+            "best_steps":checkpoint.steps.cpu(),"history":history}
 
 
 def evaluate_latent(run, device="cpu", evaluation_id=None, show_progress=True, **overrides):
@@ -168,11 +182,15 @@ def evaluate_latent(run, device="cpu", evaluation_id=None, show_progress=True, *
         if options[key]<1:raise ValueError(f"{key} must be positive")
     for key in ("z_lr","inner_lr","child_lr"):
         if options[key]<=0:raise ValueError(f"{key} must be positive")
+    if options.get("child_l2",0.)<0 or options.get("child_select_every",0)<0:raise ValueError("invalid child regularization/selection")
     decoder=SharedDecoder(config["model"]["latent_dim"],config["model"]["decoder_width"]).to(device)
     decoder.load_state_dict({key.removeprefix("decoder."):value for key,value in checkpoint["model_state"].items()
                              if key.startswith("decoder.")})
     decoder.eval();decoder.requires_grad_(False)
-    source,source_ids=observations(tasks,manifest,options["support_count"],options["query_count"],device)
+    full_support=options.get("support_sampling")=="all support observations"
+    fit_options={"class_balanced":options.get("support_loss")=="class-balanced BCE",
+                 "l2":options.get("child_l2",0.),"select_every":options.get("child_select_every",0)}
+    source,source_ids=observations(tasks,manifest,options["support_count"],options["query_count"],device,full_support=full_support)
     destination=new_directory(run/"evaluations",evaluation_id)
     save_json(destination/"protocol.json",{"mode":"latent_transfer","train_tasks":tasks,"test_tasks":heldout,
         "options":options,"bank_reference":reference,"checkpoint_epoch":checkpoint["epoch"],
@@ -187,7 +205,7 @@ def evaluate_latent(run, device="cpu", evaluation_id=None, show_progress=True, *
                  torch.stack([labels_for(x,t)[rows] for t in tasks]).to(device))
     scores,_,selection_history,selection_seeds = fit_candidates(masks,tasks,selection,config["seed"]+710009,
         options["child_steps"],options["child_lr"],options["replicas"],device,show_progress,
-        options["log_every"],"Source-only restart selection")
+        options["log_every"],"Source-only restart selection",selection_data=source[2:],**fit_options)
     mean_scores = scores.mean((1,2)); selected = int(mean_scores.argmin())
     save_json(destination/"selection.json", {"selected_index":selected,"source_validation_bce":mean_scores.tolist(),
         "per_restart_replica_task_bce":scores.tolist(),"source_tasks":tasks,"validation_ids":rows.tolist(),
@@ -199,18 +217,24 @@ def evaluate_latent(run, device="cpu", evaluation_id=None, show_progress=True, *
     save_losses(destination,search["history"],x_key="step")
     save_loss_history(destination/"selection_losses",selection_history)
     # The selected mask is now sealed. Held-out labels appear for the first time here.
-    test_data,test_ids = observations(heldout,manifest,options["support_count"],options["query_count"],device,final=True)
+    test_data,test_ids = observations(heldout,manifest,options["support_count"],options["query_count"],device,
+                                      final=True,full_support=full_support)
+    checkpoint_data,checkpoint_ids=observations(heldout,manifest,options["support_count"],options["query_count"],device,
+                                                full_support=full_support)
     test_masks = torch.stack([masks[selected], analytical_mask()])
     test_bce,test_accuracy,test_history,test_seeds = fit_candidates(test_masks,heldout,test_data,config["seed"]+910019,
         options["child_steps"],options["child_lr"],options["replicas"],device,show_progress,
-        options["log_every"],"Held-out tasks: fixed generated / analytical masks")
+        options["log_every"],"Held-out tasks: fixed generated / analytical masks",
+        selection_data=checkpoint_data[2:],**fit_options)
     for row in test_history: row["method"] = ("generated","analytical")[int(row["method"].split("_")[-1])]
     save_loss_history(destination/"test_losses",test_history)
     report = {"mode":"latent_transfer","train_tasks":tasks,"test_tasks":heldout,"selected_index":selected,
               "decoder_frozen":True,"z_gradient_observed":True,"k":32,
+              "analytical_aligned_iou":float(aligned_iou(masks[selected])),
               "structure_canonical":toeplitz_metrics(masks[selected]),
               "structure_aligned":toeplitz_metrics(align_to_reference(masks[selected],analytical_mask())[0]),
-              "test_observation_ids":test_ids,"test_child_seeds":test_seeds,"tasks":{}}
+              "test_observation_ids":test_ids,"child_checkpoint_observation_ids":checkpoint_ids,
+              "test_child_seeds":test_seeds,"tasks":{}}
     for t,task in enumerate(heldout):
         report["tasks"][task] = {method:{"test_bce":float(test_bce[m,:,t].mean()),
             "test_accuracy":float(test_accuracy[m,:,t].mean()),"replica_bce":test_bce[m,:,t].tolist()}

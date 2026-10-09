@@ -56,7 +56,8 @@ def save_losses(destination, history, x_key="epoch"):
     atomic(Path(destination)/"losses.csv",lambda handle:handle.write(stream.getvalue()),False)
     specs=(("Loss",("train_loss","validation_loss","loss","reconstruction","bce","hard_mse","kl","support_bce","objective")),
            ("KL divergence (unweighted)",("train_kl","validation_kl")),
-           ("KL contribution (beta × KL)",("train_beta_kl","validation_beta_kl")))
+           ("KL contribution (beta × KL)",("train_beta_kl","validation_beta_kl")),
+           ("IoU with aligned analytical Toeplitz mask",("train_iou","validation_iou")))
     curves=defaultdict(lambda:defaultdict(list))
     for row in rows:
         if x_key not in row:continue

@@ -18,9 +18,14 @@ def collect(config, parent=None, bank_id=None, device="cpu", network_batch_size=
     if not parent.resolve().is_relative_to(data_root):
         raise ValueError("functional banks must be saved under the repository data directory")
     options=config["bank"]; ids,x=input_table(); pools=partitions(config["seed"])
+    full_support=options.get("support_sampling")=="all support observations"
+    class_balanced=options.get("support_loss")=="class-balanced BCE"
+    select_every=options.get("select_every",0)
+    if full_support and options["support_count"]!=len(pools["support"]):
+        raise ValueError("full-support budget must match the support partition")
     query_rows={}; labels={task:labels_for(x,task) for task in config["tasks"]}
     for task,y in labels.items():
-        balanced_rows(y,pools["support"],options["support_count"],config["seed"])
+        if not full_support:balanced_rows(y,pools["support"],options["support_count"],config["seed"])
         query_rows[task]=balanced_rows(y,pools["query"],options["query_count"],config["seed"]+91009)
     destination=new_directory(parent,bank_id)
     manifest={"schema":NF_BANK_SCHEMA,"status":"running","k":32,
@@ -28,8 +33,9 @@ def collect(config, parent=None, bank_id=None, device="cpu", network_batch_size=
         "collection":{"network_batch_size":network_batch_size,"independent_networks":True},
         "input_representation":{"channels":list(NF_CHANNELS),"shape":[11,8,3],
             "normalization":"per-network, per-channel max(abs), clamped at 1e-8",
-            "gradient":{"loss":"mean BCE, excluding L2","observations":"network support_ids",
-                        "wrt":"first-layer W in W*IMP_mask","point":"terminal sparse trained state"},
+            "gradient":{"loss":"class-balanced mean support BCE, excluding L2" if class_balanced else "mean BCE, excluding L2",
+                        "observations":"network support_ids","wrt":"first-layer W in W*IMP_mask",
+                        "point":"query-selected terminal sparse state" if select_every else "terminal sparse trained state"},
             "functional_map":"q_abs = E_probe |x_i * d(psi_j)/dx_i|"},
         "partitions":{key:value.tolist() for key,value in pools.items()}}
     save_json(destination/"manifest.json",manifest)
@@ -47,10 +53,12 @@ def collect(config, parent=None, bank_id=None, device="cpu", network_batch_size=
         for start in progress(range(0,count,network_batch_size),show_progress,desc=f"Collect {task}",unit="batch"):
             stop=min(count,start+network_batch_size)
             seeds=[task_seed+1000003*(number+1) for number in range(start,stop)]
-            support=torch.stack([balanced_rows(y,pools["support"],options["support_count"],seed) for seed in seeds])
+            support=(pools["support"].expand(len(seeds),-1) if full_support else
+                     torch.stack([balanced_rows(y,pools["support"],options["support_count"],seed) for seed in seeds]))
             states,masks,histories,initials=run_imp_batch(seeds,x[support],y[support],x[query],y[query],
                 steps=options["steps_per_round"],prune_fraction=options["prune_fraction"],
-                lr=options["lr"],l2=options["l2"],device=device,show_progress=show_progress)
+                lr=options["lr"],l2=options["l2"],device=device,show_progress=show_progress,
+                class_balanced=class_balanced,select_every=select_every)
             for index,seed in enumerate(seeds):
                 # Clone slices so a per-network file never serializes the entire batch storage.
                 state={key:value[index].clone() for key,value in states.items()}
@@ -58,7 +66,7 @@ def collect(config, parent=None, bank_id=None, device="cpu", network_batch_size=
                 rows,mask=support[index],masks[index].clone()
                 target=destination/task/str(seed); target.mkdir(parents=True,exist_ok=False)
                 raw=extract_maps(state,mask,probe_x)
-                channels=extract_nf_channels(state,mask,x[rows],y[rows],raw["q_abs"])
+                channels=extract_nf_channels(state,mask,x[rows],y[rows],raw["q_abs"],class_balanced)
                 artifacts={"nf_features.pt":{**channels,"support_ids":ids[rows],"channels":list(NF_CHANNELS)},
                     "functional_map.pt":raw,"imp_mask.pt":mask.bool(),
                     "network_state.pt":{"state_dict":state,"initial_state":initial,
@@ -68,8 +76,8 @@ def collect(config, parent=None, bank_id=None, device="cpu", network_batch_size=
                     (save_json if name.endswith(".json") else save_torch)(target/name,value)
                 manifest["tasks"][task].append({"network_seed":seed,"split":roles[start+index],
                     "path":str(target.relative_to(destination)),"hashes":{name:digest(target/name) for name in artifacts}})
-                save_json(destination/"manifest.json",manifest)
                 print(f"{task}: {start+index+1}/{count} weight/gradient/functional maps, active connections=32",flush=True)
+            save_json(destination/"manifest.json",manifest)
     manifest["status"]="complete"; save_json(destination/"manifest.json",manifest)
     return destination
 

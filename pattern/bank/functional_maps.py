@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-from .imp import logits
+from .imp import logits, mean_bce
 _FEATURES, _HIDDEN = 11, 8
 NF_CHANNELS = ("weights", "loss_gradient", "functional_map")
 NF_BANK_SCHEMA = "pattern.imp_bank.v2"
@@ -47,7 +47,7 @@ def extract_maps(state, mask, probe):
 
 
 @torch.enable_grad()
-def extract_nf_channels(state, mask, support_x, support_y, functional_map):
+def extract_nf_channels(state, mask, support_x, support_y, functional_map, class_balanced=False):
     """Capture terminal sparse W, d(mean support BCE)/dW and E|q|.
 
     The gradient includes the fixed pruning mask, so inactive connections have
@@ -58,7 +58,7 @@ def extract_nf_channels(state, mask, support_x, support_y, functional_map):
     weight = state["w"].clone().requires_grad_()
     mask = mask.detach().float().cpu()
     prediction = logits({**state,"w":weight},mask,support_x.detach().cpu())
-    loss = F.binary_cross_entropy_with_logits(prediction,support_y.detach().cpu())
+    loss = mean_bce(prediction,support_y.detach().cpu(),class_balanced)
     gradient, = torch.autograd.grad(loss,weight)
     channels = {"weights":weight.detach()*mask,"loss_gradient":gradient,
                 "functional_map":functional_map.detach().cpu()}

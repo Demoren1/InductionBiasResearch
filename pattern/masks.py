@@ -47,6 +47,19 @@ def analytical_mask():
     return ((rows-cols >= 0) & (rows-cols < 4)).float()
 
 
+def aligned_iou(masks, reference=None):
+    """Binary IoU after optimal hidden-column assignment; input rows stay fixed."""
+    from scipy.optimize import linear_sum_assignment
+    masks=masks.detach().float().cpu()
+    reference=analytical_mask() if reference is None else reference.detach().float().cpu()
+    batch=masks.reshape(-1,11,8)
+    overlaps=torch.einsum("brs,rt->bst",batch,reference)
+    intersection=torch.tensor([float(score[linear_sum_assignment(-score.numpy())].sum())
+                               for score in overlaps])
+    union=batch.sum((-2,-1))+reference.sum()-intersection
+    return (intersection/union.clamp_min(1)).reshape(masks.shape[:-2])
+
+
 def mean_structure(masks):
     """Compute each mask's structural diagnostics once, then average them."""
     metrics=[toeplitz_metrics(mask) for mask in masks]

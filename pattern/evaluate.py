@@ -23,7 +23,8 @@ def reconstruction_metrics(predicted,target):
 def fresh_quality(task, masks, manifest, steps, replicas, device, destination=None, show_progress=True, log_every=10):
     config=manifest["config"]; _,x=input_table();y=labels_for(x,task)
     pool=torch.tensor(manifest["partitions"]["support"])
-    rows=balanced_rows(y,pool,config["bank"]["support_count"],config["seed"]+117)
+    rows=(pool if config["bank"].get("support_sampling")=="all support observations" else
+          balanced_rows(y,pool,config["bank"]["support_count"],config["seed"]+117))
     query=torch.tensor(manifest["partitions"]["test"])
     xs,ys,xq,yq=[v.to(device) for v in (x[rows],y[rows],x[query],y[query])]
     records=[]; loss_records=[]
@@ -36,7 +37,8 @@ def fresh_quality(task, masks, manifest, steps, replicas, device, destination=No
                 mask=batch[sample].to(device)
                 loss_history=[]
                 state=fit_fixed_mask(initial,mask,xs,ys,steps,.03,.001,loss_history=loss_history,
-                    log_every=log_every,show_progress=show_progress,description=f"{task} {method} {sample}/{replica}")
+                    log_every=log_every,show_progress=show_progress,description=f"{task} {method} {sample}/{replica}",
+                    class_balanced=config["bank"].get("support_loss")=="class-balanced BCE")
                 loss_records.extend({"task":task,"method":method,"sample":sample,"replica":replica,**row} for row in loss_history)
                 fits.update(1)
                 with torch.no_grad():
@@ -132,6 +134,10 @@ def main():
         parser.add_argument("--"+flag,type=int)
     for flag in ("z-lr","inner-lr","child-lr"):
         parser.add_argument("--"+flag,type=float)
+    parser.add_argument("--child-l2",type=float)
+    parser.add_argument("--child-select-every",type=int)
+    parser.add_argument("--support-sampling",choices=("all support observations","balanced subset"))
+    parser.add_argument("--support-loss",choices=("class-balanced BCE","mean BCE"))
     args=parser.parse_args()
     if args.threads<1:raise ValueError("threads must be positive")
     torch.set_num_threads(args.threads)
@@ -139,7 +145,8 @@ def main():
     print(f"Device: {device}",flush=True)
     if args.mode == "latent":
         options={key:getattr(args,key) for key in ("z_starts","z_steps","z_lr","inner_steps","inner_lr",
-                    "support_count","query_count","child_steps","child_lr","replicas")}
+                    "support_count","query_count","child_steps","child_lr","replicas",
+                    "child_l2","child_select_every","support_sampling","support_loss")}
         options["log_every"]=args.loss_log_every
         destination=evaluate_latent(args.run,device,args.evaluation_id,not args.no_progress,**options)
     else:

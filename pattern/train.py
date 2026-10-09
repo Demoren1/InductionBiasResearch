@@ -9,11 +9,12 @@ from .datasets import load_task
 from .io import ROOT, load_config, new_directory, save_json, save_torch, digest, device_name
 from .models.task_model import Experiment
 from .losses import mask_vae_loss
+from .masks import aligned_iou
 from .reporting import progress, save_losses, save_generation
 
 
-def task_losses(model, samples, beta, hard_weight, sample=True):
-    outputs=model.forward_tasks({task:x for task,(x,_) in samples.items()},sample)
+def task_losses(model, samples, beta, hard_weight, sample=True, outputs=None):
+    if outputs is None:outputs=model.forward_tasks({task:x for task,(x,_) in samples.items()},sample)
     values={task:mask_vae_loss(outputs[task],target,beta,hard_weight)
             for task,(_,target) in samples.items()}
     objective=torch.stack([loss for loss,_ in values.values()]).mean()
@@ -28,6 +29,16 @@ def metric_rows(metrics):
     return {task:dict(zip(keys,row)) for task,row in zip(metrics,rows)}
 
 
+@torch.no_grad()
+def validation_metrics(model, samples, beta, hard_weight):
+    outputs=model.forward_tasks({task:x for task,(x,_) in samples.items()},sample=False)
+    _,metrics=task_losses(model,samples,beta,hard_weight,outputs=outputs)
+    rows=metric_rows(metrics)
+    for task,output in outputs.items():
+        rows[task]["aligned_iou"]=float(aligned_iou(output["mask"]).mean())
+    return rows
+
+
 def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=True):
     bank=Path(bank).resolve()
     manifest=json.loads((bank/"manifest.json").read_text())
@@ -38,20 +49,23 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
     for task, values in data.items():
         if set(values["train"]["seeds"]) & set(values["validation"]["seeds"]):
             raise ValueError(f"network seeds overlap for {task}")
-    torch.manual_seed(config["seed"])
+    initial_seed=config["training"].get("initialization_seed",config["seed"])
+    torch.manual_seed(initial_seed)
     model=Experiment(config["tasks"],config["model"]).to(device)
     tensors={task:{split:tuple(card[key].to(device) for key in ("features","targets"))
                   for split,card in values.items()} for task,values in data.items()}
     options=config["training"]
-    optimizer=torch.optim.Adam(model.parameters(),lr=options["lr"])
+    optimizer_class=torch.optim.AdamW if options.get("optimizer")=="adamw" else torch.optim.Adam
+    optimizer=optimizer_class(model.parameters(),lr=options["lr"],weight_decay=options.get("weight_decay",0.))
     destination=new_directory(parent or ROOT/"pattern/runs",run_id)
     reference={"bank_path":str(bank),"manifest_sha256":digest(bank/"manifest.json"),
                "bank_schema":manifest["schema"],"input_representation":manifest["input_representation"],
                "splits":{task:{split:values[split]["seeds"] for split in values} for task,values in data.items()}}
     save_json(destination/"config.json",config)
     save_json(destination/"bank_reference.json",reference)
-    best=float("inf"); history=[]
-    generator=torch.Generator().manual_seed(config["seed"]+17)
+    selection=options.get("selection_metric",config.get("selection_metric","validation_loss"))
+    best=float("inf");best_iou=0.;best_rank=(-float("inf"),-float("inf"));best_epoch=0;history=[]
+    generator=torch.Generator().manual_seed(initial_seed+17)
     epochs=progress(range(1,options["epochs"]+1),show_progress,desc=f"Training ({device})",unit="epoch")
     for epoch in epochs:
         model.train()
@@ -78,34 +92,44 @@ def train(config, bank, run_id=None, device="cpu", parent=None, show_progress=Tr
         train_parts=metric_rows(train_metrics)
         train_loss=sum(row["loss"] for row in train_parts.values())/len(data)
         model.eval()
-        with torch.no_grad():
-            _,metrics=task_losses(model,{task:values["validation"] for task,values in tensors.items()},
-                                  options["beta"],options["hard_loss_weight"],sample=False)
-        validations=metric_rows(metrics)
+        validations=validation_metrics(model,{task:values["validation"] for task,values in tensors.items()},
+                                       options["beta"],options["hard_loss_weight"])
+        optimization_loss=train_loss
+        if selection=="aligned_iou":
+            train_parts=validation_metrics(model,{task:values["train"] for task,values in tensors.items()},
+                                           options["beta"],options["hard_loss_weight"])
+            train_loss=sum(part["loss"] for part in train_parts.values())/len(data)
         validation=sum(v["loss"] for v in validations.values())/len(validations)
-        row={"epoch":epoch,"train_loss":train_loss,"beta":beta,
+        validation_iou=sum(v["aligned_iou"] for v in validations.values())/len(validations)
+        row={"epoch":epoch,"train_loss":train_loss,"beta":options["beta"] if selection=="aligned_iou" else beta,
+             "optimization_loss":optimization_loss,"optimization_beta":beta,"validation_iou":validation_iou,
              "validation_loss":validation,"validation_beta":options["beta"],
              "per_task_train":train_parts,"per_task_validation":validations}
+        if selection=="aligned_iou":row["train_iou"]=sum(p["aligned_iou"] for p in train_parts.values())/len(data)
         history.append(row);save_json(destination/"history.json",history)
         checkpoint={"config":config,"model_state":model.state_dict(),"epoch":epoch,
-                    "validation_loss":validation,"bank_reference":reference}
+                    "validation_loss":validation,"validation_iou":validation_iou,"selection_metric":selection,
+                    "bank_reference":reference}
         save_torch(destination/"checkpoints/last.pt",checkpoint)
-        if validation < best:
-            best=validation
+        rank=(validation_iou if selection=="aligned_iou" else -validation,-validation)
+        if rank>best_rank:
+            best_rank=rank;best=validation;best_iou=validation_iou;best_epoch=epoch
             save_torch(destination/"checkpoints/best.pt",checkpoint)
             save_torch(destination/"checkpoints/shared_decoder.pt",model.decoder.state_dict())
             for task,encoder in model.encoders.items():
                 save_torch(destination/f"checkpoints/task_encoders/{task}.pt",encoder.state_dict())
-        epochs.set_postfix(train=f"{train_loss:.5f}",validation=f"{validation:.5f}")
+        epochs.set_postfix(train=f"{train_loss:.5f}",validation=f"{validation:.5f}",iou=f"{validation_iou:.4f}")
         if not show_progress:
-            print(f"epoch {epoch}/{options['epochs']}: train={train_loss:.5f}, validation={validation:.5f}",flush=True)
+            print(f"epoch {epoch}/{options['epochs']}: train={train_loss:.5f}, validation={validation:.5f}, IoU={validation_iou:.4f}",flush=True)
+        if options.get("patience",0)>0 and epoch-best_epoch>=options["patience"]:break
     save_losses(destination,history)
     selected=torch.load(destination/"checkpoints/best.pt",weights_only=True,map_location="cpu")
     model.load_state_dict(selected["model_state"])
     save_generation(model,data,destination,device,config["seed"],enabled=show_progress)
     save_json(destination/"generation.json",{"checkpoint_epoch":selected["epoch"],"split":"validation",
         "alignment":"independent column matching to analytical mask; canonical arrays also saved"})
-    save_json(destination/"COMPLETE.json",{"best_validation_loss":best,"epochs":options["epochs"],
+    save_json(destination/"COMPLETE.json",{"best_validation_loss":best,"best_validation_iou":best_iou,
+                                          "selection_metric":selection,"selected_epoch":selected["epoch"],"epochs":len(history),
                                           "tasks":config["tasks"]})
     return destination
 
@@ -118,21 +142,25 @@ def main():
     parser.add_argument("--device",default="auto")
     parser.add_argument("--threads",type=int,default=1)
     parser.add_argument("--no-progress",action="store_true")
-    for flag in ("epochs","batch-size","kl-warmup-epochs","nf-channels","latent-dim","encoder-width","decoder-width"):
+    for flag in ("epochs","batch-size","kl-warmup-epochs","nf-channels","latent-dim","encoder-width","decoder-width","initialization-seed","patience"):
         parser.add_argument("--"+flag,type=int)
-    for flag in ("lr","beta","hard-loss-weight"):
+    for flag in ("lr","beta","hard-loss-weight","weight-decay"):
         parser.add_argument("--"+flag,type=float)
+    parser.add_argument("--optimizer",choices=("adam","adamw"))
+    parser.add_argument("--selection-metric",choices=("aligned_iou","validation_loss"))
     args=parser.parse_args()
     if args.threads < 1: raise ValueError("threads must be positive")
     torch.set_num_threads(args.threads)
     config=load_config(args.config)
-    for section,keys in (("training",("epochs","batch_size","lr","beta","kl_warmup_epochs","hard_loss_weight")),
+    for section,keys in (("training",("epochs","batch_size","lr","beta","kl_warmup_epochs","hard_loss_weight",
+                                     "weight_decay","optimizer","selection_metric","initialization_seed","patience")),
                          ("model",("nf_channels","latent_dim","encoder_width","decoder_width"))):
         for key in keys:
             if getattr(args,key) is not None:config[section][key]=getattr(args,key)
     options=config["training"]
     if min(options["epochs"],options["batch_size"])<1 or options["lr"]<=0 or options["beta"]<0 or options["kl_warmup_epochs"]<0 or not 0<=options["hard_loss_weight"]<=1:
         raise ValueError("invalid training overrides")
+    if options.get("weight_decay",0.)<0 or options.get("patience",0)<0:raise ValueError("invalid regularization or patience")
     if min(config["model"].values())<1:raise ValueError("model dimensions must be positive")
     device=device_name(args.device)
     print(f"Device: {device}",flush=True)

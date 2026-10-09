@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # M4 Pro / 48 GB: source-only latent selection, 12 source tasks -> 4 held-out tasks.
-# RUN=pattern/runs/nf_vae_v1 bash pattern/sh_scripts/evaluate.sh
+# RUN=pattern/runs/nf_vae_v2 bash pattern/sh_scripts/evaluate.sh
 # Run from any directory. Paths are resolved from the repository root.
 # Edit defaults here, set environment variables, or append Python CLI options.
 set -euo pipefail
@@ -12,11 +12,15 @@ THREADS="${THREADS:-1}"
 PROGRESS="${PROGRESS:-1}"
 LOG_DIR="${LOG_DIR:-pattern/runs/launch_logs}"
 export PYTHONUNBUFFERED=1
-RUN="${RUN:-${1:-}}"
+if [[ $# -gt 0 && "$1" != --* ]]; then
+  RUN="${RUN:-$1}"
+  shift
+fi
+RUN="${RUN:-pattern/runs/nf_vae_v2}"
 EVALUATION_ID="${EVALUATION_ID:-}"
 SPLIT="${SPLIT:-test}"
 MODE="${MODE:-latent}"  # latent: transfer; reconstruction: legacy bank-map diagnostic
-CHILD_STEPS="${CHILD_STEPS:-500}"
+CHILD_STEPS="${CHILD_STEPS:-1000}"
 REPLICAS="${REPLICAS:-3}"
 LOSS_LOG_EVERY="${LOSS_LOG_EVERY:-10}"
 Z_STARTS="${Z_STARTS:-8}"
@@ -24,21 +28,22 @@ Z_STEPS="${Z_STEPS:-100}"
 Z_LR="${Z_LR:-0.05}"
 INNER_STEPS="${INNER_STEPS:-64}"
 INNER_LR="${INNER_LR:-0.2}"
-SUPPORT_COUNT="${SUPPORT_COUNT:-256}"
+SUPPORT_COUNT="${SUPPORT_COUNT:-768}"
+SUPPORT_SAMPLING="${SUPPORT_SAMPLING:-all support observations}"
+SUPPORT_LOSS="${SUPPORT_LOSS:-class-balanced BCE}"
 QUERY_COUNT="${QUERY_COUNT:-64}"
 CHILD_LR="${CHILD_LR:-0.03}"
+CHILD_L2="${CHILD_L2:-0.001}"
+CHILD_SELECT_EVERY="${CHILD_SELECT_EVERY:-25}"
 
-if [[ -z "$RUN" ]]; then
-  echo "Set RUN or pass the training run directory as the first argument." >&2
-  exit 2
-fi
-if [[ ${1:-} != --* && $# -gt 0 ]]; then shift; fi
 args=(--run "$RUN" --mode "$MODE" --split "$SPLIT" --device "$DEVICE" --threads "$THREADS"
       --child-steps "$CHILD_STEPS" --replicas "$REPLICAS" --loss-log-every "$LOSS_LOG_EVERY")
 if [[ "$MODE" == "latent" ]]; then
   args+=(--z-starts "$Z_STARTS" --z-steps "$Z_STEPS" --z-lr "$Z_LR"
          --inner-steps "$INNER_STEPS" --inner-lr "$INNER_LR"
-         --support-count "$SUPPORT_COUNT" --query-count "$QUERY_COUNT" --child-lr "$CHILD_LR")
+         --support-count "$SUPPORT_COUNT" --query-count "$QUERY_COUNT" --child-lr "$CHILD_LR"
+         --support-sampling "$SUPPORT_SAMPLING" --support-loss "$SUPPORT_LOSS"
+         --child-l2 "$CHILD_L2" --child-select-every "$CHILD_SELECT_EVERY")
 fi
 [[ -z "$EVALUATION_ID" ]] || args+=(--evaluation-id "$EVALUATION_ID")
 
