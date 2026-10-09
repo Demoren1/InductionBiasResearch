@@ -7,7 +7,7 @@ from .datasets import input_table, labels_for, balanced_rows
 from .io import new_directory, save_json, save_torch, load_run
 from .masks import exact_topk, analytical_mask, align_to_reference, align_masks, toeplitz_metrics,aligned_iou
 from .models.shared_decoder import SharedDecoder
-from .reporting import progress, save_losses, save_loss_history, plot_panels
+from .reporting import progress, save_losses, save_loss_history, plot_panels, save_decoder_probabilities
 
 
 DEFAULTS = dict(z_starts=8, z_steps=100, z_lr=.05, inner_steps=64,
@@ -115,10 +115,12 @@ def fit_candidates(masks, tasks, data, seed, steps, lr, replicas, device,
     return bce, accuracy, history, seeds
 
 
-def save_masks(destination, z, masks, selected, initial_masks):
+def save_masks(destination, z, masks, selected, initial_masks, logits):
     reference = analytical_mask()
     aligned,orders=align_masks(masks,reference)
+    probabilities=save_decoder_probabilities(destination,"latent_search",logits,orders,selected)
     save_torch(destination/"generated_masks/latent_search.pt", {
+        **probabilities,
         "z": z.cpu(), "canonical": masks.cpu(), "initial_masks": initial_masks.cpu(),
         "selected_index": selected, "selected_mask": masks[selected].cpu(),
         "analytical": reference, "aligned_to_analytical": aligned,
@@ -166,8 +168,8 @@ def search_latents(decoder,tasks,source,config,options,destination,device,show_p
     for key,value in decoder.state_dict().items():
         if not torch.equal(value.detach().cpu(),frozen_state[key]): raise RuntimeError("frozen decoder changed")
     best_z=checkpoint.state["z"]
-    with torch.no_grad(): masks = exact_topk(decoder(best_z)).cpu()
-    return {"z":best_z,"masks":masks,"initial_z":initial_z,"initial_masks":initial_masks,
+    with torch.no_grad(): logits=decoder(best_z).cpu();masks=exact_topk(logits)
+    return {"z":best_z,"masks":masks,"logits":logits,"initial_z":initial_z,"initial_masks":initial_masks,
             "best_steps":checkpoint.steps.cpu(),"history":history}
 
 
@@ -211,9 +213,10 @@ def evaluate_latent(run, device="cpu", evaluation_id=None, show_progress=True, *
         "per_restart_replica_task_bce":scores.tolist(),"source_tasks":tasks,"validation_ids":rows.tolist(),
         "child_seeds":selection_seeds,"best_search_steps":search["best_steps"].tolist()})
     save_torch(destination/"selected_mask.pt", {"z":best_z[selected].cpu(),"mask":masks[selected],
+        "logits":search["logits"][selected],"probabilities":search["logits"][selected].sigmoid(),
         "selected_index":selected,"source_validation_bce":float(mean_scores[selected])})
     save_torch(destination/"latent_codes.pt",{"initial":search["initial_z"],"best":best_z.cpu(),"best_steps":search["best_steps"]})
-    save_masks(destination,best_z,masks,selected,search["initial_masks"])
+    save_masks(destination,best_z,masks,selected,search["initial_masks"],search["logits"])
     save_losses(destination,search["history"],x_key="step")
     save_loss_history(destination/"selection_losses",selection_history)
     # The selected mask is now sealed. Held-out labels appear for the first time here.

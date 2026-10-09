@@ -77,15 +77,29 @@ def save_losses(destination, history, x_key="epoch"):
     save_figure(fig,Path(destination)/"losses")
 
 
-def plot_panels(path, panels, title, continuous=False):
+def plot_panels(path, panels, title, continuous=False, colorbar_label="Connection frequency"):
     fig,axes=pyplot().subplots(1,len(panels),figsize=(3*len(panels),4),constrained_layout=True,squeeze=False)
     for ax,(label,mask) in zip(axes[0],panels.items()):
         picture=ax.imshow(mask.detach().float().cpu().numpy(),vmin=0,vmax=1,cmap="Blues",origin="upper",aspect="equal")
         ax.set_title(label);ax.set_xlabel("Hidden column");ax.set_ylabel("Input position")
         ax.set_xticks(range(8));ax.set_yticks(range(11))
-    if continuous:fig.colorbar(picture,ax=list(axes[0]),label="Connection frequency",shrink=.8)
+    if continuous:fig.colorbar(picture,ax=list(axes[0]),label=colorbar_label,shrink=.8)
     fig.suptitle(title)
     save_figure(fig,path)
+
+
+def save_decoder_probabilities(destination, name, logits, orders, index=0):
+    """Use the hard masks' column assignments for the corresponding soft scores."""
+    logits=logits.detach().cpu();probabilities=logits.sigmoid()
+    aligned=probabilities.gather(-1,orders.cpu()[:,None,:].expand_as(probabilities))
+    path=Path(destination)/"heatmaps"/f"{name}_probabilities"
+    path.parent.mkdir(parents=True,exist_ok=True)
+    panels={"Analytical Toeplitz":analytical_mask(),"Decoder probabilities":aligned[index],
+            "Mean decoder probabilities":aligned.mean(0)}
+    plot_panels(path,panels,f"{name}: sample {index}; same alignment as binary masks",
+                continuous=True,colorbar_label="sigmoid(logit)")
+    save_torch(path.with_name(path.name+"_values.pt"),panels)
+    return {"logits":logits,"probabilities":probabilities,"probabilities_aligned":aligned}
 
 
 def save_task_masks(destination, task, data, output, centroid, split):
@@ -102,9 +116,10 @@ def save_task_masks(destination, task, data, output, centroid, split):
     aligned={};orders={}
     for name,batch in canonical.items():
         aligned[name],orders[name]=align_masks(batch,reference)
+    probabilities=save_decoder_probabilities(destination,task,output["logits"],orders["generated"])
     aligned_centroid,centroid_order=align_to_reference(centroid,reference)
     save_torch(directory/f"{task}.pt",{"split":split,"network_seeds":data["seeds"],
-        "logits":output["logits"].detach().cpu(),"canonical":canonical,
+        **probabilities,"canonical":canonical,
         "analytical":reference,"aligned_to_analytical":aligned,
         "alignment_permutations":orders,"functional_column_orders":data["column_orders"],
         "train_latent_centroid":centroid.detach().cpu(),
@@ -138,10 +153,11 @@ def save_prior(model,destination,device,seed):
     generator=torch.Generator().manual_seed(seed+9927)
     with torch.no_grad():
         z=torch.randn(128,model.decoder.body[0].in_features,generator=generator).to(device)
-        generated=exact_topk(model.decoder(z)).cpu()
+        logits=model.decoder(z);generated=exact_topk(logits).cpu()
         reference=analytical_mask();aligned,orders=align_masks(generated,reference)
+        probabilities=save_decoder_probabilities(destination,"shared_prior",logits,orders)
         save_torch(Path(destination)/"generated_masks/shared_prior.pt",{"z":z.cpu(),"canonical":generated,
-            "aligned_to_analytical":aligned,"alignment_permutations":orders,"analytical":reference})
+            **probabilities,"aligned_to_analytical":aligned,"alignment_permutations":orders,"analytical":reference})
         plot_panels(Path(destination)/"heatmaps/shared_prior",{
             "Analytical Toeplitz":reference,"Prior frequency aligned":aligned.mean(0)},
             "Shared prior: 128 samples; independently aligned columns",True)

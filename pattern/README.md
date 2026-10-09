@@ -360,6 +360,14 @@ MPS: 3.878 → 0.042 с (примерно в 93 раза быстрее). Это
 CSV сохраняет эти средние и KL каждой задачи. В latent-оценке используется
 только BCE, поэтому её графики не содержат KL-штрафа.
 
+Мягкие выходы `sigmoid(logits)` сохраняются отдельно: при latent-оценке —
+`heatmaps/latent_search_probabilities.png/pdf` (выбранный restart и среднее по всем),
+при реконструкции — `heatmaps/<task>_probabilities.png/pdf` (пример и среднее по сетям).
+Для prior используется `heatmaps/shared_prior_probabilities.png/pdf`. Выравнивание
+повторяет перестановку столбцов соответствующих бинарных масок. В `generated_masks/*.pt`
+сохраняются `logits`, `probabilities` и `probabilities_aligned`; значения панелей —
+в `heatmaps/*_probabilities_values.pt`. Это мягкие оценки BCE, без ограничения суммы на 32.
+
 ## Диагностика восстановления карт
 
 Прежняя оценка сетей банка доступна отдельно:
