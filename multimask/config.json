@@ -1,0 +1,10 @@
+{
+  "seed": 4200,
+  "train_patterns": ["0000", "0001", "0011", "0101", "0110", "1111"],
+  "test_patterns": ["1001", "1010"],
+  "data": {"support": 1024, "query": 256, "probe": 256, "validation": 512, "test": 4096},
+  "bank": {"maps_per_task": 1024, "steps": 1000, "batch_size": 64, "lr": 0.03, "l2": 0.0, "prune_fraction": 0.2, "select_every": 25},
+  "model": {"nf_channels": 8, "encoder_width": 64, "latent_dim": 16, "decoder_width": 128},
+  "training": {"epochs": 100, "batch_size": 64, "lr": 0.001, "weight_decay": 0.01, "beta": 0.005, "warmup": 30, "hard_weight": 0.2, "patience": 20},
+  "evaluation": {"z_starts": 8, "z_steps": 100, "z_lr": 0.05, "inner_steps": 64, "inner_lr": 0.2, "child_steps": 1000, "child_lr": 0.03, "select_every": 25, "replicas": 3, "log_every": 10}
+}
