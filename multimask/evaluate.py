@@ -1,6 +1,7 @@
 """Freeze the decoder, select z on source tasks, then evaluate sealed masks."""
 
 import argparse
+import json
 from pathlib import Path
 
 import torch
@@ -9,6 +10,7 @@ from pattern.bank.imp import QueryCheckpoint
 from pattern.io import ROOT, device_name, new_directory
 
 from .common import (
+    DEFAULT_CONFIG,
     HIDDEN,
     ROWS,
     K,
@@ -54,6 +56,27 @@ def observations(data, task_ids, device):
     }
 
 
+def relaxed_topk(scores, temperature):
+    """Successive softmax selection (Xie & Ermon, IJCAI 2019, Eq. 5)."""
+    logits = scores.flatten(-2)
+    relaxed = torch.zeros_like(logits)
+    for _ in range(K):
+        selection = (logits / temperature).softmax(-1)
+        relaxed = relaxed + selection
+        logits = logits + (1 - selection).clamp_min(1e-7).log()
+    return relaxed.reshape_as(scores)
+
+
+def gumbel_topk(scores, temperature, noise_scale, generator):
+    """Exactly K edges forward; RelaxedTopK gradients backward."""
+    uniform = torch.rand(
+        scores.shape, device=scores.device, generator=generator
+    ).clamp(1e-7, 1 - 1e-7)
+    perturbed = scores - noise_scale * (-uniform.log()).log()
+    relaxed = relaxed_topk(perturbed, temperature)
+    return topk(perturbed) + (relaxed - relaxed.detach())
+
+
 def source_bce(masks, template, x, y, options, mlp, differentiable=False):
     """Fit fresh source MLPs; each candidate uses the same seeded weights."""
     count = len(masks)
@@ -97,15 +120,17 @@ def search(
     )
     seed = config["seed"] + (task_ids[0][0] == "B")
     generator = torch.Generator().manual_seed(seed + 9001)
-    method = options.get("z_method", "evolution")
+    method = options.get("z_method", "gumbel")
     z = torch.randn(
         options["z_starts"], config["model"]["latent_dim"], generator=generator
     ).to(device)
-    z.requires_grad_(method == "gradient")
+    z.requires_grad_(method != "evolution")
     with torch.no_grad():
         initial_scores = decoder(z).cpu()
     optimizer = torch.optim.Adam([z], lr=options["z_lr"])
-    noise_generator = torch.Generator(device=device).manual_seed(seed + 9101)
+    noise_generator = torch.Generator(device=device).manual_seed(
+        seed + (9201 if method == "gumbel" else 9101)
+    )
     checkpoint = QueryCheckpoint({"z": z}, (len(z),))
     template = repeated_initial(
         task_ids, 1, 1, config["seed"] + 310007, device, config["bank"]
@@ -159,8 +184,36 @@ def search(
                 config["bank"],
                 differentiable=True,
             )
-        elif step == 0:
-            loss = score(z)
+        elif method == "gumbel" or step == 0:
+            loss = score(z.detach())
+        if method == "gumbel" and step < options["z_steps"]:
+            fraction = step / max(1, options["z_steps"] - 1)
+            temperature, noise_scale = (
+                options[key]
+                * (options[key + "_end"] / options[key]) ** fraction
+                for key in ("gumbel_tau", "gumbel_noise")
+            )
+            samples = options["gumbel_samples"]
+            masks = gumbel_topk(
+                decoder(z).repeat(samples, 1, 1),
+                temperature,
+                noise_scale,
+                noise_generator,
+            )
+            optimizer.zero_grad(set_to_none=True)
+            sampled_loss = (
+                source_bce(
+                    masks,
+                    template,
+                    x,
+                    y,
+                    options,
+                    config["bank"],
+                    differentiable=True,
+                )
+                .reshape(samples, len(z))
+                .mean(0)
+            )
         checkpoint.update({"z": z}, loss.detach(), step)
         history.append(
             {
@@ -175,14 +228,33 @@ def search(
         save_json(destination / "search/history.json", history)
         loop.set_postfix(bce=f"{history[-1]['source_query_bce']:.5f}")
         if step == options["z_steps"]:
-            break
-        if method == "gradient":
-            loss.sum().backward()
+            continue
+        if method != "evolution":
+            objective = sampled_loss if method == "gumbel" else loss
+            history[-1]["optimization_bce"] = float(objective.detach().mean())
+            if method == "gumbel":
+                history[-1].update(
+                    temperature=temperature, gumbel_noise_scale=noise_scale
+                )
+            objective.sum().backward()
             if z.grad is None or not torch.isfinite(z.grad).all():
                 raise RuntimeError("invalid z gradient")
-            gradient_observed |= bool(z.grad.abs().sum() > 0)
+            history[-1]["z_gradient_norm"] = float(z.grad.detach().norm())
+            gradient_observed |= history[-1]["z_gradient_norm"] > 0
             torch.nn.utils.clip_grad_norm_([z], 5.0, error_if_nonfinite=True)
+            if method == "gumbel":
+                previous = z.detach().clone()
+                moments = {
+                    key: value.clone()
+                    for key, value in optimizer.state[z].items()
+                    if key != "step"
+                }
             optimizer.step()
+            if method == "gradient":
+                continue
+            # Search along the Adam direction, using actual hard-mask BCE.
+            scales = z.new_tensor([1.0, 0.5, 2.0])[:, None, None]
+            proposals = previous + scales * (z.detach() - previous)
         else:
             noise = torch.randn(
                 options["z_candidates"] // 2,
@@ -193,14 +265,27 @@ def search(
             proposals = z[None] + options["z_radius"] * torch.cat(
                 (noise, -noise)
             )
-            risks = score(proposals.flatten(0, 1)).reshape(-1, len(z))
-            best, indices = risks.min(0)
-            improved = best < loss
-            winners = proposals[indices, torch.arange(len(z), device=device)]
-            z = torch.where(improved[:, None], winners, z)
-            loss = torch.where(improved, best, loss)
-            accepted = int(improved.sum())
-    if method == "gradient" and not gradient_observed:
+        risks = score(proposals.flatten(0, 1)).reshape(-1, len(z))
+        best, indices = risks.min(0)
+        keep = best <= loss if method == "gumbel" else best < loss
+        winners = proposals[indices, torch.arange(len(z), device=device)]
+        if method == "gumbel":
+            with torch.no_grad():
+                z.copy_(torch.where(keep[:, None], winners, previous))
+                for key, value in optimizer.state[z].items():
+                    if key != "step":
+                        value.copy_(
+                            torch.where(
+                                keep[:, None],
+                                value,
+                                moments.get(key, torch.zeros_like(value)),
+                            )
+                        )
+        else:
+            z = torch.where(keep[:, None], winners, z)
+            loss = torch.where(keep, best, loss)
+        accepted = int(keep.sum())
+    if method != "evolution" and not gradient_observed:
         raise RuntimeError("source BCE did not produce a z gradient")
     save_history(destination / "search", history, "step")
     with torch.no_grad():
@@ -306,20 +391,30 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
     ):
         raise ValueError("training bank changed")
     _, _, cards, data = load_bank(reference["path"], config)
+    defaults = json.loads(DEFAULT_CONFIG.read_text())["evaluation"]
     options = {
-        "z_method": "evolution",
-        "z_candidates": 4,
-        "z_radius": 0.3,
+        **defaults,
         **config["evaluation"],
+        **{
+            key: value
+            for key, value in defaults.items()
+            if key.startswith("gumbel_")
+            or key in ("z_method", "z_lr", "z_steps")
+        },
         **{
             key: value for key, value in overrides.items() if value is not None
         },
     }
-    if options["z_method"] not in ("evolution", "gradient"):
-        raise ValueError("z_method must be evolution or gradient")
+    if options["z_method"] not in ("gumbel", "evolution", "gradient"):
+        raise ValueError("z_method must be gumbel, evolution or gradient")
     for key, value in options.items():
         if key != "z_method" and value <= 0:
             raise ValueError(f"evaluation {key} must be positive")
+    if any(
+        options[key + "_end"] > options[key]
+        for key in ("gumbel_tau", "gumbel_noise")
+    ):
+        raise ValueError("Gumbel temperature and noise must not increase")
     if options["z_candidates"] < 2 or options["z_candidates"] % 2:
         raise ValueError("z_candidates must be positive and even")
     if config["bank"].get("warmup_steps", 0) >= min(
@@ -351,7 +446,12 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
             "proposal_selection": (
                 "strict source-query improvement per restart"
                 if options["z_method"] == "evolution"
-                else "Adam; best source-query checkpoint per restart"
+                else (
+                    "Adam gradient direction, scales 1/0.5/2; accept "
+                    "nonincreasing deterministic source-query BCE"
+                    if options["z_method"] == "gumbel"
+                    else "Adam; best deterministic source-query checkpoint"
+                )
             ),
             "selection": "source validation BCE; held-out tasks excluded",
             "accuracy_target": "p > 0.5",
@@ -503,7 +603,7 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
         raise RuntimeError("frozen decoder changed")
     report.update(
         decoder_frozen=True,
-        z_gradient_observed=options["z_method"] == "gradient",
+        z_gradient_observed=options["z_method"] != "evolution",
         k=K,
     )
     save_json(destination / "metrics.json", report)
@@ -520,13 +620,16 @@ def main():
         "--run", type=Path, default=ROOT / "multimask/runs/nf_vae_v3"
     )
     parser.add_argument("--evaluation-id")
-    parser.add_argument("--z-method", choices=("evolution", "gradient"))
+    parser.add_argument(
+        "--z-method", choices=("gumbel", "evolution", "gradient")
+    )
     parser.add_argument("--device", default="mps")
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--no-progress", action="store_true")
     integers = (
         "z-starts",
         "z-candidates",
+        "gumbel-samples",
         "z-steps",
         "inner-steps",
         "child-steps",
@@ -534,7 +637,16 @@ def main():
         "replicas",
         "log-every",
     )
-    floats = ("z-lr", "z-radius", "inner-lr", "child-lr")
+    floats = (
+        "z-lr",
+        "z-radius",
+        "inner-lr",
+        "child-lr",
+        "gumbel-tau",
+        "gumbel-tau-end",
+        "gumbel-noise",
+        "gumbel-noise-end",
+    )
     for flag in integers:
         parser.add_argument("--" + flag, type=int)
     for flag in floats:

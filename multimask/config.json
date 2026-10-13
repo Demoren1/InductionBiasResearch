@@ -6,5 +6,5 @@
   "bank": {"maps_per_task": 128, "steps": 2000, "batch_size": 64, "lr": 0.01, "l2": 0.0, "prune_fraction": 0.2, "select_every": 25, "initial_readout": 0.5, "initial_output_bias": -1.0, "warmup_steps": 100, "warmup_slope": 1.0},
   "model": {"nf_channels": 8, "encoder_width": 64, "latent_dim": 16, "decoder_width": 128},
   "training": {"epochs": 100, "batch_size": 64, "lr": 0.001, "weight_decay": 0.01, "beta": 0.005, "warmup": 30, "hard_weight": 0.2, "patience": 20},
-  "evaluation": {"z_method": "evolution", "z_candidates": 4, "z_radius": 0.3, "z_starts": 8, "z_steps": 100, "z_lr": 0.05, "inner_steps": 512, "inner_lr": 2.0, "child_steps": 1000, "child_lr": 0.01, "select_every": 25, "replicas": 3, "log_every": 10}
+  "evaluation": {"z_method": "gumbel", "z_candidates": 4, "z_radius": 0.3, "z_starts": 8, "z_steps": 80, "z_lr": 0.05, "inner_steps": 512, "inner_lr": 2.0, "child_steps": 1000, "child_lr": 0.01, "select_every": 25, "replicas": 3, "log_every": 10, "gumbel_tau": 2.0, "gumbel_tau_end": 1.0, "gumbel_noise": 0.25, "gumbel_noise_end": 0.05, "gumbel_samples": 2}
 }
