@@ -187,20 +187,285 @@
   "prior_exact": 124,
   "prior_count": 128,
   "prior_distinct_raw_masks": 4,
-  "multimask_status": "running",
+  "multimask_status": "complete",
   "multimask_completed_tasks": {
     "A_0000": {
-      "query_bce": 0.6469118595123291,
+      "query_bce": 0.5689154863357544,
       "oracle_query_bce": 0.5452779531478882,
-      "nearest_iou": 0.3646649122238159,
-      "exact_fraction": 0.0,
+      "nearest_iou": 0.8371739387512207,
+      "exact_fraction": 0.125,
+      "exact_variant_counts": [
+        3,
+        3,
+        7,
+        3
+      ]
+    },
+    "A_0001": {
+      "query_bce": 0.5859003663063049,
+      "oracle_query_bce": 0.5616134405136108,
+      "nearest_iou": 0.8269044160842896,
+      "exact_fraction": 0.0703125,
       "exact_variant_counts": [
         0,
+        4,
+        4,
+        1
+      ]
+    },
+    "A_0011": {
+      "query_bce": 0.563836932182312,
+      "oracle_query_bce": 0.5449265241622925,
+      "nearest_iou": 0.8664983510971069,
+      "exact_fraction": 0.1171875,
+      "exact_variant_counts": [
+        5,
+        4,
+        3,
+        3
+      ]
+    },
+    "A_0101": {
+      "query_bce": 0.5664303302764893,
+      "oracle_query_bce": 0.5489239692687988,
+      "nearest_iou": 0.8615704774856567,
+      "exact_fraction": 0.140625,
+      "exact_variant_counts": [
+        5,
+        8,
+        2,
+        3
+      ]
+    },
+    "A_0110": {
+      "query_bce": 0.5575163960456848,
+      "oracle_query_bce": 0.5379860997200012,
+      "nearest_iou": 0.8635609745979309,
+      "exact_fraction": 0.125,
+      "exact_variant_counts": [
+        5,
+        2,
+        6,
+        3
+      ]
+    },
+    "A_1111": {
+      "query_bce": 0.5580238103866577,
+      "oracle_query_bce": 0.5399749279022217,
+      "nearest_iou": 0.8764130473136902,
+      "exact_fraction": 0.2109375,
+      "exact_variant_counts": [
+        4,
+        5,
+        10,
+        8
+      ]
+    },
+    "B_0000": {
+      "query_bce": 0.5648894309997559,
+      "oracle_query_bce": 0.5479838848114014,
+      "nearest_iou": 0.8965237140655518,
+      "exact_fraction": 0.1875,
+      "exact_variant_counts": [
+        4,
+        8,
+        8,
+        4
+      ]
+    },
+    "B_0001": {
+      "query_bce": 0.565613329410553,
+      "oracle_query_bce": 0.5442094802856445,
+      "nearest_iou": 0.855174720287323,
+      "exact_fraction": 0.109375,
+      "exact_variant_counts": [
+        3,
+        5,
+        2,
+        4
+      ]
+    },
+    "B_0011": {
+      "query_bce": 0.5665537714958191,
+      "oracle_query_bce": 0.5504525899887085,
+      "nearest_iou": 0.8841881155967712,
+      "exact_fraction": 0.2109375,
+      "exact_variant_counts": [
+        6,
+        5,
+        9,
+        7
+      ]
+    },
+    "B_0101": {
+      "query_bce": 0.5711203217506409,
+      "oracle_query_bce": 0.5565673112869263,
+      "nearest_iou": 0.8871120810508728,
+      "exact_fraction": 0.1953125,
+      "exact_variant_counts": [
+        7,
+        3,
+        7,
+        8
+      ]
+    },
+    "B_0110": {
+      "query_bce": 0.5738546848297119,
+      "oracle_query_bce": 0.5466781854629517,
+      "nearest_iou": 0.8119868040084839,
+      "exact_fraction": 0.0234375,
+      "exact_variant_counts": [
+        1,
         0,
-        0,
+        2,
         0
+      ]
+    },
+    "B_1111": {
+      "query_bce": 0.5565869212150574,
+      "oracle_query_bce": 0.53916335105896,
+      "nearest_iou": 0.8707669973373413,
+      "exact_fraction": 0.1796875,
+      "exact_variant_counts": [
+        7,
+        7,
+        6,
+        3
       ]
     }
   },
-  "multimask_completed_cards": 1024
+  "multimask_completed_cards": 1536,
+  "multimask": {
+    "bank": "imp32_128_mlp_v3",
+    "maps_per_task": 128,
+    "quality": {
+      "query_bce": 0.5666034817695618,
+      "oracle_query_bce": 0.5469798098007838,
+      "nearest_iou": 0.8614894698063532,
+      "exact_fraction": 0.14127604166666666
+    },
+    "checkpoint_epoch": 26,
+    "checkpoint_metrics": {
+      "epoch": 26,
+      "beta": 0.005,
+      "optimization_beta": 0.004333333333333334,
+      "train_loss": 0.418914794921875,
+      "train_kl": 7.873406887054443,
+      "train_beta_kl": 0.039367034435272216,
+      "train_iou": 0.9220069348812103,
+      "validation_loss": 0.42120614647865295,
+      "validation_kl": 7.830390453338623,
+      "validation_beta_kl": 0.039151952266693116,
+      "validation_iou": 0.9218487441539764
+    },
+    "options": {
+      "z_method": "gumbel",
+      "z_candidates": 4,
+      "z_radius": 0.3,
+      "z_starts": 8,
+      "z_steps": 80,
+      "z_lr": 0.05,
+      "inner_steps": 512,
+      "inner_lr": 2.0,
+      "child_steps": 1000,
+      "child_lr": 0.01,
+      "select_every": 25,
+      "replicas": 3,
+      "log_every": 10,
+      "gumbel_tau": 2.0,
+      "gumbel_tau_end": 1.0,
+      "gumbel_noise": 0.25,
+      "gumbel_noise_end": 0.05,
+      "gumbel_samples": 2
+    },
+    "transfer": [
+      {
+        "method": "random",
+        "family": "A",
+        "iou": 0.7777777910232544,
+        "bce": 0.5796176791191101,
+        "excess_bce": 0.0310396458953619,
+        "accuracy": 0.9186604619026184,
+        "selected_step": 0
+      },
+      {
+        "method": "sigmoid",
+        "family": "A",
+        "iou": 0.8823529481887817,
+        "bce": 0.5644556879997253,
+        "excess_bce": 0.015877654775977135,
+        "accuracy": 0.9598795771598816,
+        "selected_step": null
+      },
+      {
+        "method": "gumbel",
+        "family": "A",
+        "iou": 0.939393937587738,
+        "bce": 0.5595197081565857,
+        "excess_bce": 0.010941644199192524,
+        "accuracy": 0.96728515625,
+        "selected_step": 28
+      },
+      {
+        "method": "evolution",
+        "family": "A",
+        "iou": 1.0,
+        "bce": 0.5485780835151672,
+        "excess_bce": 0.0,
+        "accuracy": 1.0,
+        "selected_step": 24
+      },
+      {
+        "method": "random",
+        "family": "B",
+        "iou": 0.8823529481887817,
+        "bce": 0.5621976256370544,
+        "excess_bce": 0.016795525327324867,
+        "accuracy": 0.9608154296875,
+        "selected_step": 0
+      },
+      {
+        "method": "sigmoid",
+        "family": "B",
+        "iou": 0.8823529481887817,
+        "bce": 0.5621976256370544,
+        "excess_bce": 0.016795525327324867,
+        "accuracy": 0.9608154296875,
+        "selected_step": null
+      },
+      {
+        "method": "gumbel",
+        "family": "B",
+        "iou": 1.0,
+        "bce": 0.5454020500183105,
+        "excess_bce": -3.973643103449831e-08,
+        "accuracy": 1.0,
+        "selected_step": 72
+      },
+      {
+        "method": "evolution",
+        "family": "B",
+        "iou": 1.0,
+        "bce": 0.5454020500183105,
+        "excess_bce": -3.973643103449831e-08,
+        "accuracy": 1.0,
+        "selected_step": 1
+      }
+    ],
+    "coverage": {
+      "sigmoid": {
+        "A": 0,
+        "B": 0
+      },
+      "gumbel": {
+        "A": 0,
+        "B": 1
+      },
+      "evolution": {
+        "A": 1,
+        "B": 1
+      }
+    },
+    "note": "Source-only tuning; same frozen decoder and bank. One run and fixed starts; no independent replicate."
+  }
 }
