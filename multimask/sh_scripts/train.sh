@@ -7,9 +7,9 @@ PYTHON="${PYTHON:-python3}"
 DEVICE="${DEVICE:-mps}"  # Explicit auto/cpu/cuda:N also supported.
 THREADS="${THREADS:-1}"
 CONFIG="${CONFIG:-multimask/config.json}"
-BANK="${BANK:-data/multimask/banks/imp32_1024_v1}"
-RUN_ID="${RUN_ID:-nf_vae_v1}"
-MAPS_PER_TASK="${MAPS_PER_TASK:-1024}"
+BANK="${BANK:-data/multimask/banks/imp32_128_mlp_v3}"
+RUN_ID="${RUN_ID:-nf_vae_v3}"
+MAPS_PER_TASK="${MAPS_PER_TASK:-128}"
 BANK_BATCH="${BANK_BATCH:-64}"
 PROGRESS="${PROGRESS:-1}"
 LOG_DIR="${LOG_DIR:-multimask/runs/launch_logs}"
@@ -18,7 +18,9 @@ if [[ $# -gt 0 && "$1" != --* ]]; then BANK="$1"; shift; fi
 args=(--config "$CONFIG" --bank "$BANK" --run-id "$RUN_ID" --device "$DEVICE"
       --threads "$THREADS" --maps-per-task "$MAPS_PER_TASK" --bank-batch "$BANK_BATCH")
 # Optional env overrides; otherwise Python uses CONFIG's training/IMP values.
-for option in BANK_STEPS:bank-steps EPOCHS:epochs BATCH_SIZE:batch-size LR:lr BETA:beta; do
+for option in BANK_STEPS:bank-steps BANK_LR:bank-lr BANK_L2:bank-l2 \
+              MLP_WARMUP:mlp-warmup EPOCHS:epochs BATCH_SIZE:batch-size \
+              LR:lr BETA:beta; do
   variable="${option%%:*}"; value="${!variable:-}"
   [[ -z "$value" ]] || args+=(--"${option#*:}" "$value")
 done

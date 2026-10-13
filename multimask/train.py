@@ -85,7 +85,7 @@ def collect(config, bank, device, enabled):
                     start, min(count, start + options["batch_size"])
                 )
             ]
-            original = initial(seeds, device)
+            original = initial(seeds, device, options)
             mask = torch.ones_like(original["w"])
             rounds = []
             while True:
@@ -101,6 +101,7 @@ def collect(config, bank, device, enabled):
                     options["select_every"],
                     enabled,
                     options["select_every"],
+                    mlp=options,
                 )
                 with torch.no_grad():
                     scores = torch.stack(
@@ -212,6 +213,13 @@ def collect(config, bank, device, enabled):
                 variant[iou == 1], minlength=4
             ).tolist(),
         }
+        quality = manifest["quality"][task]
+        print(
+            f"{task}: query BCE={quality['query_bce']:.5f}, "
+            f"oracle={quality['oracle_query_bce']:.5f}, "
+            f"IoU={quality['nearest_iou']:.4f}",
+            flush=True,
+        )
         save_json(bank / "manifest.json", manifest)
     manifest["status"] = "complete"
     save_json(bank / "manifest.json", manifest)
@@ -371,9 +379,9 @@ def main():
     parser.add_argument(
         "--bank",
         type=Path,
-        default=ROOT / "data/multimask/banks/imp32_1024_v1",
+        default=ROOT / "data/multimask/banks/imp32_128_mlp_v3",
     )
-    parser.add_argument("--run-id", default="nf_vae_v1")
+    parser.add_argument("--run-id", default="nf_vae_v3")
     parser.add_argument("--device", default="mps")
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--no-progress", action="store_true")
@@ -381,11 +389,12 @@ def main():
         "maps-per-task",
         "bank-steps",
         "bank-batch",
+        "mlp-warmup",
         "epochs",
         "batch-size",
     ):
         parser.add_argument("--" + flag, type=int)
-    for flag in ("lr", "beta"):
+    for flag in ("lr", "beta", "bank-lr", "bank-l2"):
         parser.add_argument("--" + flag, type=float)
     args = parser.parse_args()
     if args.threads < 1:

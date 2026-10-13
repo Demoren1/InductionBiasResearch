@@ -6,14 +6,18 @@ cd "$ROOT"
 PYTHON="${PYTHON:-python3}"
 DEVICE="${DEVICE:-mps}"
 THREADS="${THREADS:-1}"
-RUN="${RUN:-multimask/runs/nf_vae_v1}"
+RUN="${RUN:-multimask/runs/nf_vae_v3}"
+Z_METHOD="${Z_METHOD:-evolution}"  # Accept candidates using actual source BCE.
+Z_CANDIDATES="${Z_CANDIDATES:-4}"  # Two Gaussian directions and their opposites.
+Z_RADIUS="${Z_RADIUS:-0.3}"
 PROGRESS="${PROGRESS:-1}"
 LOG_DIR="${LOG_DIR:-multimask/runs/launch_logs}"
 export PYTHONUNBUFFERED=1
 if [[ $# -gt 0 && "$1" != --* ]]; then RUN="$1"; shift; fi
 args=(--run "$RUN" --device "$DEVICE" --threads "$THREADS")
-# All unspecified values come from the saved run config.
-for option in Z_STARTS:z-starts Z_STEPS:z-steps Z_LR:z-lr INNER_STEPS:inner-steps \
+# Other unspecified values come from the saved run config.
+for option in Z_METHOD:z-method Z_CANDIDATES:z-candidates Z_RADIUS:z-radius \
+              Z_STARTS:z-starts Z_STEPS:z-steps Z_LR:z-lr INNER_STEPS:inner-steps \
               INNER_LR:inner-lr CHILD_STEPS:child-steps CHILD_LR:child-lr \
               SELECT_EVERY:select-every REPLICAS:replicas LOG_EVERY:log-every EVALUATION_ID:evaluation-id; do
   variable="${option%%:*}"; value="${!variable:-}"

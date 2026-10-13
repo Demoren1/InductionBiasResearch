@@ -31,13 +31,13 @@ from .common import (
 )
 
 
-def repeated_initial(task_ids, candidates, replicas, seed, device):
+def repeated_initial(task_ids, candidates, replicas, seed, device, mlp=None):
     seeds = [
         seed + 1009 * (int(task[2:], 2) + 16 * (task[0] == "B")) + replica * 13
         for replica in range(replicas)
         for task in task_ids
     ]
-    template = initial(seeds, device)
+    template = initial(seeds, device, mlp)
     return {
         key: value.repeat(candidates, *([1] * (value.ndim - 1)))
         for key, value in template.items()
@@ -54,33 +54,92 @@ def observations(data, task_ids, device):
     }
 
 
+def source_bce(masks, template, x, y, options, mlp, differentiable=False):
+    """Fit fresh source MLPs; each candidate uses the same seeded weights."""
+    count = len(masks)
+    masks = masks.repeat_interleave(len(y["support"]), 0)
+    state = {
+        key: value.repeat(count, *([1] * (value.ndim - 1))).requires_grad_()
+        for key, value in template.items()
+    }
+    ys, yq = (y[key].repeat(count, 1) for key in ("support", "query"))
+    for step in range(1, options["inner_steps"] + 1):
+        slope = (
+            mlp.get("warmup_slope", 0.0)
+            if step <= mlp.get("warmup_steps", 0)
+            else 0.0
+        )
+        gradients = torch.autograd.grad(
+            bce(state, masks, x["support"], ys, slope).sum(),
+            tuple(state.values()),
+            create_graph=differentiable,
+        )
+        state = {
+            key: value - options["inner_lr"] * gradient
+            for (key, value), gradient in zip(state.items(), gradients)
+        }
+        if not differentiable:
+            state = {
+                key: value.detach().requires_grad_()
+                for key, value in state.items()
+            }
+    loss = bce(state, masks, x["query"], yq).reshape(count, -1).mean(1)
+    if not torch.isfinite(loss).all():
+        raise RuntimeError("nonfinite source objective")
+    return loss
+
+
 def search(
     decoder, task_ids, data, config, options, destination, device, enabled
 ):
     x, y = observations(
         {key: data[key] for key in ("support", "query")}, task_ids, device
     )
-    generator = torch.Generator().manual_seed(
-        config["seed"] + 9001 + (task_ids[0][0] == "B")
-    )
-    z = (
-        torch.randn(
-            options["z_starts"],
-            config["model"]["latent_dim"],
-            generator=generator,
-        )
-        .to(device)
-        .requires_grad_()
-    )
+    seed = config["seed"] + (task_ids[0][0] == "B")
+    generator = torch.Generator().manual_seed(seed + 9001)
+    method = options.get("z_method", "evolution")
+    z = torch.randn(
+        options["z_starts"], config["model"]["latent_dim"], generator=generator
+    ).to(device)
+    z.requires_grad_(method == "gradient")
     with torch.no_grad():
         initial_scores = decoder(z).cpu()
     optimizer = torch.optim.Adam([z], lr=options["z_lr"])
+    noise_generator = torch.Generator(device=device).manual_seed(seed + 9101)
     checkpoint = QueryCheckpoint({"z": z}, (len(z),))
     template = repeated_initial(
-        task_ids, len(z), 1, config["seed"] + 310007, device
+        task_ids, 1, 1, config["seed"] + 310007, device, config["bank"]
     )
-    ys, yq = (y[key].repeat(len(z), 1) for key in ("support", "query"))
+    cache = {}
+
+    def score(latent):
+        # The hard-mask objective is constant within a top-32 region.
+        with torch.no_grad():
+            masks = topk(decoder(latent))
+        keys = [mask.numpy().tobytes() for mask in masks.to(torch.uint8).cpu()]
+        missing = {}
+        for index, key in enumerate(keys):
+            if key not in cache:
+                missing.setdefault(key, index)
+        if missing:
+            values = (
+                source_bce(
+                    masks[list(missing.values())],
+                    template,
+                    x,
+                    y,
+                    options,
+                    config["bank"],
+                )
+                .detach()
+                .cpu()
+                .tolist()
+            )
+            cache.update(zip(missing, values))
+        return z.new_tensor([cache[key] for key in keys])
+
     history = []
+    accepted = 0
     gradient_observed = False
     loop = progress(
         range(options["z_steps"] + 1),
@@ -89,24 +148,19 @@ def search(
         unit="step",
     )
     for step in loop:
-        optimizer.zero_grad(set_to_none=True)
-        masks = topk(decoder(z), True).repeat_interleave(len(task_ids), 0)
-        state = {
-            key: value.detach().requires_grad_()
-            for key, value in template.items()
-        }
-        for _ in range(options["inner_steps"]):
-            objective = bce(state, masks, x["support"], ys).sum()
-            gradients = torch.autograd.grad(
-                objective, tuple(state.values()), create_graph=True
+        if method == "gradient":
+            optimizer.zero_grad(set_to_none=True)
+            loss = source_bce(
+                topk(decoder(z), True),
+                template,
+                x,
+                y,
+                options,
+                config["bank"],
+                differentiable=True,
             )
-            state = {
-                key: value - options["inner_lr"] * gradient
-                for (key, value), gradient in zip(state.items(), gradients)
-            }
-        loss = bce(state, masks, x["query"], yq).reshape(len(z), -1).mean(1)
-        if not torch.isfinite(loss).all():
-            raise RuntimeError("nonfinite source objective")
+        elif step == 0:
+            loss = score(z)
         checkpoint.update({"z": z}, loss.detach(), step)
         history.append(
             {
@@ -114,18 +168,39 @@ def search(
                 "source_query_bce": float(loss.detach().mean()),
                 "best_restart_bce": float(loss.detach().min()),
                 "restart_bce": loss.detach().cpu().tolist(),
+                "accepted_restarts": accepted,
+                "evaluated_masks": len(cache),
             }
         )
         save_json(destination / "search/history.json", history)
         loop.set_postfix(bce=f"{history[-1]['source_query_bce']:.5f}")
-        if step < options["z_steps"]:
+        if step == options["z_steps"]:
+            break
+        if method == "gradient":
             loss.sum().backward()
             if z.grad is None or not torch.isfinite(z.grad).all():
                 raise RuntimeError("invalid z gradient")
             gradient_observed |= bool(z.grad.abs().sum() > 0)
             torch.nn.utils.clip_grad_norm_([z], 5.0, error_if_nonfinite=True)
             optimizer.step()
-    if not gradient_observed:
+        else:
+            noise = torch.randn(
+                options["z_candidates"] // 2,
+                *z.shape,
+                device=device,
+                generator=noise_generator,
+            )
+            proposals = z[None] + options["z_radius"] * torch.cat(
+                (noise, -noise)
+            )
+            risks = score(proposals.flatten(0, 1)).reshape(-1, len(z))
+            best, indices = risks.min(0)
+            improved = best < loss
+            winners = proposals[indices, torch.arange(len(z), device=device)]
+            z = torch.where(improved[:, None], winners, z)
+            loss = torch.where(improved, best, loss)
+            accepted = int(improved.sum())
+    if method == "gradient" and not gradient_observed:
         raise RuntimeError("source BCE did not produce a z gradient")
     save_history(destination / "search", history, "step")
     with torch.no_grad():
@@ -138,7 +213,17 @@ def search(
     )
 
 
-def fresh(masks, task_ids, data, options, seed, device, enabled, final=False):
+def fresh(
+    masks,
+    task_ids,
+    data,
+    options,
+    seed,
+    device,
+    enabled,
+    final=False,
+    mlp=None,
+):
     """Match fresh seeds across methods, independently for each task."""
     # The caller seals candidate masks before passing held-out tasks.
     needed = ("support", "query", "test" if final else "validation")
@@ -154,7 +239,7 @@ def fresh(masks, task_ids, data, options, seed, device, enabled, final=False):
     ys, yq = (
         y[key].repeat(count * replicas, 1) for key in ("support", "query")
     )
-    original = repeated_initial(task_ids, count, replicas, seed, device)
+    original = repeated_initial(task_ids, count, replicas, seed, device, mlp)
     state, steps, history = fit(
         original,
         expanded,
@@ -165,6 +250,7 @@ def fresh(masks, task_ids, data, options, seed, device, enabled, final=False):
         select_every=options["select_every"],
         enabled=enabled,
         log_every=options["log_every"],
+        mlp=mlp,
     )
     split = "test" if final else "validation"
     expected = y[split].repeat(count * replicas, 1)
@@ -221,14 +307,25 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
         raise ValueError("training bank changed")
     _, _, cards, data = load_bank(reference["path"], config)
     options = {
+        "z_method": "evolution",
+        "z_candidates": 4,
+        "z_radius": 0.3,
         **config["evaluation"],
         **{
             key: value for key, value in overrides.items() if value is not None
         },
     }
+    if options["z_method"] not in ("evolution", "gradient"):
+        raise ValueError("z_method must be evolution or gradient")
     for key, value in options.items():
-        if value <= 0:
+        if key != "z_method" and value <= 0:
             raise ValueError(f"evaluation {key} must be positive")
+    if options["z_candidates"] < 2 or options["z_candidates"] % 2:
+        raise ValueError("z_candidates must be positive and even")
+    if config["bank"].get("warmup_steps", 0) >= min(
+        options["inner_steps"], options["child_steps"]
+    ):
+        raise ValueError("inner_steps and child_steps must exceed MLP warmup")
     model = Model(tasks(config), config["model"]).to(device)
     model.load_state_dict(checkpoint["model"])
     decoder = model.decoder.eval().requires_grad_(False)
@@ -237,7 +334,11 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
         for key, value in decoder.state_dict().items()
     }
     destination = new_directory(run / "evaluations", evaluation_id)
-    report = {"checkpoint_epoch": checkpoint["epoch"], "families": {}}
+    report = {
+        "checkpoint_epoch": checkpoint["epoch"],
+        "search_method": options["z_method"],
+        "families": {},
+    }
     save_json(
         destination / "protocol.json",
         {
@@ -245,7 +346,13 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
             "options": options,
             "bank": reference,
             "outer_trainable": "z only",
-            "outer_loss": "source-query soft-target BCE through fresh SGD",
+            "outer_loss": "source-query soft-target BCE after fresh SGD",
+            "search_method": options["z_method"],
+            "proposal_selection": (
+                "strict source-query improvement per restart"
+                if options["z_method"] == "evolution"
+                else "Adam; best source-query checkpoint per restart"
+            ),
             "selection": "source validation BCE; held-out tasks excluded",
             "accuracy_target": "p > 0.5",
             "reference_set": "four Bayes-optimal masks, modulo hidden columns",
@@ -268,6 +375,7 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
             config["seed"] + 710009,
             device,
             enabled,
+            mlp=config["bank"],
         )
         risks = selection["bce"].mean((1, 2))
         selected = int(risks[: len(masks)].argmin())
@@ -336,6 +444,7 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
             device,
             enabled,
             final=True,
+            mlp=config["bank"],
         )
         save_history(output / "test", result.pop("history"), "step")
         save_torch(
@@ -365,6 +474,11 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
             "source_tasks": source,
             "heldout_tasks": heldout,
             "selected_index": selected,
+            "selected_search_step": int(steps[selected]),
+            "selected_mask_changed": not torch.equal(
+                artifacts["canonical"][selected],
+                initial_artifacts["canonical"][selected],
+            ),
             "selected_iou": float(iou[selected]),
             "initial_mean_iou": float(initial_artifacts["iou"].mean()),
             "optimized_mean_iou": float(iou.mean()),
@@ -387,7 +501,11 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
         for key, value in decoder.state_dict().items()
     ):
         raise RuntimeError("frozen decoder changed")
-    report.update(decoder_frozen=True, z_gradient_observed=True, k=K)
+    report.update(
+        decoder_frozen=True,
+        z_gradient_observed=options["z_method"] == "gradient",
+        k=K,
+    )
     save_json(destination / "metrics.json", report)
     save_json(
         destination / "COMPLETE.json",
@@ -399,14 +517,16 @@ def evaluate(run, evaluation_id, device, enabled, overrides):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--run", type=Path, default=ROOT / "multimask/runs/nf_vae_v1"
+        "--run", type=Path, default=ROOT / "multimask/runs/nf_vae_v3"
     )
     parser.add_argument("--evaluation-id")
+    parser.add_argument("--z-method", choices=("evolution", "gradient"))
     parser.add_argument("--device", default="mps")
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--no-progress", action="store_true")
     integers = (
         "z-starts",
+        "z-candidates",
         "z-steps",
         "inner-steps",
         "child-steps",
@@ -414,7 +534,7 @@ def main():
         "replicas",
         "log-every",
     )
-    floats = ("z-lr", "inner-lr", "child-lr")
+    floats = ("z-lr", "z-radius", "inner-lr", "child-lr")
     for flag in integers:
         parser.add_argument("--" + flag, type=int)
     for flag in floats:
@@ -426,7 +546,7 @@ def main():
     device = device_name(args.device)
     overrides = {
         flag.replace("-", "_"): getattr(args, flag.replace("-", "_"))
-        for flag in (*integers, *floats)
+        for flag in (*integers, *floats, "z-method")
     }
     print(f"Device: {device}", flush=True)
     destination = evaluate(

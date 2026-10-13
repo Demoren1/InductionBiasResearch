@@ -32,6 +32,9 @@ def load_config(path, args=None):
         ("bank", "maps_per_task", "maps_per_task"),
         ("bank", "steps", "bank_steps"),
         ("bank", "batch_size", "bank_batch"),
+        ("bank", "lr", "bank_lr"),
+        ("bank", "l2", "bank_l2"),
+        ("bank", "warmup_steps", "mlp_warmup"),
         ("training", "epochs", "epochs"),
         ("training", "batch_size", "batch_size"),
         ("training", "lr", "lr"),
@@ -64,6 +67,9 @@ def load_config(path, args=None):
         or not 0 < bank["prune_fraction"] < 1
         or bank["lr"] <= 0
         or bank["l2"] < 0
+        or not 0 <= bank.get("warmup_steps", 0) < bank["steps"]
+        or not 0 <= bank.get("warmup_slope", 0.0) <= 1
+        or bank.get("initial_readout", 0.5) <= 0
     ):
         raise ValueError("invalid bank protocol")
     if (
@@ -133,7 +139,8 @@ def topk(scores, straight_through=False):
     return hard
 
 
-def initial(seeds, device):
+def initial(seeds, device, options=None):
+    options = options or {}
     states = []
     for seed in seeds:
         generator = torch.Generator().manual_seed(seed)
@@ -145,19 +152,25 @@ def initial(seeds, device):
                 "c": torch.zeros(()),
             }
         )
+        if "initial_readout" in options:
+            states[-1]["a"].fill_(options["initial_readout"])
+        states[-1]["c"].fill_(options.get("initial_output_bias", 0.0))
     return {
         key: torch.stack([state[key] for state in states]).to(device)
         for key in states[0]
     }
 
 
-def logits(state, masks, x):
-    hidden = F.relu(torch.matmul(x, state["w"] * masks) + state["b"][:, None])
+def logits(state, masks, x, negative_slope=0.0):
+    hidden = F.leaky_relu(
+        torch.matmul(x, state["w"] * masks) + state["b"][:, None],
+        negative_slope=negative_slope,
+    )
     return (hidden * state["a"][:, None]).sum(-1) + state["c"][:, None]
 
 
-def bce(state, masks, x, y):
-    prediction = logits(state, masks, x)
+def bce(state, masks, x, y, negative_slope=0.0):
+    prediction = logits(state, masks, x, negative_slope)
     return mean_bce(prediction, y.expand_as(prediction))
 
 
@@ -172,6 +185,7 @@ def fit(
     select_every=25,
     enabled=False,
     log_every=25,
+    mlp=None,
 ):
     """Independent Adam fits; query chooses each network's own checkpoint."""
     state = {
@@ -181,6 +195,10 @@ def fit(
     optimizer = torch.optim.Adam(state.values(), lr=lr)
     checkpoint = QueryCheckpoint(state, (len(masks),))
     history = []
+    mlp = mlp or {}
+    warmup = mlp.get("warmup_steps", 0)
+    if not 0 <= warmup < steps:
+        raise ValueError("MLP steps must exceed warmup_steps")
     loop = progress(
         range(1, steps + 1),
         enabled,
@@ -189,7 +207,9 @@ def fit(
         leave=False,
     )
     for step in loop:
-        loss = bce(state, masks, *support) + l2_penalty(state, masks, l2)
+        slope = mlp.get("warmup_slope", 0.0) if step <= warmup else 0.0
+        loss = bce(state, masks, *support, slope)
+        loss = loss + l2_penalty(state, masks, l2)
         optimizer.zero_grad(set_to_none=True)
         loss.sum().backward()
         optimizer.step()
