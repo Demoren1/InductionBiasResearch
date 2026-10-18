@@ -1,127 +1,117 @@
 \section{Preliminary}
 \label{sec:preliminary}
 
-\subsection{Tasks and hypothesis spaces}
+\subsection{Multi-task learning}
+\label{sec:tasks}
 
-We adopt the formulation of inductive bias learning introduced by
-\citet{baxter2000model}. Let $\mathcal X$ and $\mathcal Y$ denote the input
-and output spaces, and let $\ell:\mathcal Y\times\mathcal Y\to[0,\infty)$
-be a loss function. A supervised learning task is represented by a
-probability distribution $P$ on $\mathcal X\times\mathcal Y$.
-A hypothesis is a function $h:\mathcal X\to\mathcal Y$, whose population
-risk is
+Let $\mathcal{T}$ be a family of tasks with common input and target spaces
+$\mathcal{X}$ and $\mathcal{Y}$. Each task $\tau\in\mathcal{T}$ is associated
+with a distribution $P_\tau$ on $\mathcal{X}\times\mathcal{Y}$, while
+a distribution $p(\tau)$ over $\mathcal{T}$ describes the task environment
+\cite{baxter2000model}.
+Learning across this environment allows information from observed tasks
+to inform learning on new ones.
+
+We distinguish disjoint, nonempty finite collections of training and test tasks,
+$\mathcal{T}_{\mathrm{tr}}$ and $\mathcal{T}_{\mathrm{te}}$.
+For each task, a support sample $S_\tau^{\mathrm{s}}$ is used to learn
+its predictor, and an independent query sample $S_\tau^{\mathrm{q}}$
+is used to assess its performance; both consist of independent
+observations from $P_\tau$ \cite{finn2017model,zhou2021meta}.
+For a predictor $f$, a nonempty sample $S$, and a prediction loss $\ell$,
+the empirical loss is
 \begin{equation}
-  R_P(h)
-  :=\mathbb E_{(x,y)\sim P}\bigl[\ell(h(x),y)\bigr].
-  \label{eq:population-risk}
+    \mathcal{L}_S(f)
+    :=\frac{1}{|S|}\sum_{(x,y)\in S}\ell(f(x),y).
+    \label{eq:task-loss}
 \end{equation}
-We assume that the expectations appearing below are well defined and finite.
 
-For a single task, a task learner receives a sample
-$S=\{(x_j,y_j)\}_{j=1}^{m}$ drawn
-independently from $P$. Its empirical risk is
+\subsection{Masked predictors and network representations}
+\label{sec:masked-predictors}
+
+Let $f_{\theta,M}$ be a neural network with numerical parameters $\theta$
+and a binary mask $M\in\{0,1\}^{d\times h}$ applied to the incoming weight
+matrix $W\in\mathbb{R}^{d\times h}$ of a hidden layer with $d$ inputs
+and $h$ neurons. The effective weights are
+$\widetilde W=W\odot M$, where $\odot$ denotes elementwise multiplication.
+For an integer connection budget $1\le K\le dh$, the admissible masks are
+$\mathcal{M}_K:=\{M\in\{0,1\}^{d\times h}:\|M\|_0=K\}$.
+
+The mask specifies the available connections, while their values are
+learned separately for each task. We write $\widehat\theta_\tau(M)$ for
+the parameters obtained by fitting a task-specific predictor on
+$S_\tau^{\mathrm{s}}$ under a common learning rule, with $M$ held fixed.
+The effective weights and their loss gradients provide weight-space
+features of the resulting predictor. For a sample $S$, define
 \begin{equation}
-  \widehat R_S(h)
-  :=\frac{1}{m}\sum_{j=1}^{m}\ell(h(x_j),y_j).
-  \label{eq:empirical-risk}
+    \Gamma_S(\theta,M):=\nabla_W\mathcal{L}_S(f_{\theta,M}),
+    \label{eq:weight-gradient}
 \end{equation}
-A task learner $A_{\mathcal H}$ maps this sample to a hypothesis
-$A_{\mathcal H}(S)\in\mathcal H$ within a given hypothesis space
-$\mathcal H$. The choice of $\mathcal H$
-encodes an inductive bias: restricting the available functions can
-facilitate generalization from limited data, provided that the space
-retains sufficiently good solutions.
+where differentiation is with respect to $W$ at a fixed mask $M$.
 
-\subsection{Task environment and bias learner}
-
-Let $Q$ be a probability distribution over a collection $\mathcal P$ of
-task distributions. Source tasks $P_1,\ldots,P_n$ are drawn independently
-from $Q$, and each supplies a sample $S_i$ of independent observations.
-Given a family of hypothesis spaces $\mathbb H$, a bias learner $B$ uses
-these samples to select a shared hypothesis space:
+Such features depend on the numbering of hidden neurons, although
+this ordering has no effect on the network function.
+Let $b\in\mathbb{R}^h$ be the hidden biases and
+$W_2\in\mathbb{R}^{h\times r}$ the weights connecting the hidden layer
+to the next layer of width $r$.
+For a layer input $u\in\mathbb{R}^d$, an elementwise activation $\sigma$,
+and any permutation matrix $\Pi\in\mathbb{R}^{h\times h}$,
 \begin{equation}
-  \widehat{\mathcal H}
-  :=B(S_1,\ldots,S_n)\in\mathbb H,
-  \label{eq:bias-learner}
+    \begin{aligned}
+        &(\Pi^{\mathsf T}W_2)^{\mathsf T}
+        \sigma\!\left(
+            (\widetilde W\Pi)^{\mathsf T}u+\Pi^{\mathsf T}b
+        \right) \\
+        &\qquad= W_2^{\mathsf T}\sigma(\widetilde W^{\mathsf T}u+b).
+    \end{aligned}
+    \label{eq:hidden-permutation}
 \end{equation}
-Task learners use the selected space to learn their own hypotheses on
-new tasks drawn independently from $Q$. Following Baxter, the suitability
-of a space for this environment is measured by
+Thus, a consistent permutation of incoming weights, biases, and outgoing
+weights leaves the predictor unchanged. The same column permutation
+applies to $W$, $M$, and the loss gradients.
+
+Neural Functional (NF) layers account for this symmetry by producing
+weight-space features that transform equivariantly under hidden-neuron
+permutations \cite{zhou2023permutation}.
+Averaging these features over hidden neurons yields a representation
+independent of their ordering, making NF layers suitable for encoding
+solutions learned by different predictors.
+
+\subsection{Problem formulation}
+\label{sec:problem-formulation}
+
+Our aim is to learn a shared connectivity pattern that serves as a
+structural inductive bias for new tasks. The available training data are
+$\mathcal{D}_{\mathrm{tr}}:=\{(S_\tau^{\mathrm{s}},S_\tau^{\mathrm{q}}):
+\tau\in\mathcal{T}_{\mathrm{tr}}\}$.
+We consider a generative model $G_\phi:\mathcal{Z}\to\mathcal{M}_K$
+with latent space $\mathcal{Z}$, a fixed architecture, and trainable weights $\phi$.
+Let $\widehat\phi$ denote its weights learned from $\mathcal{D}_{\mathrm{tr}}$,
+and write $M(z):=G_{\widehat\phi}(z)$ for the mask associated with a
+latent code $z\in\mathcal{Z}$.
+Within the masks represented by this learned generator, we seek one
+that supports accurate task-specific predictors across the training
+tasks. This gives the ideal latent solution and shared mask
 \begin{equation}
-  R_Q(\mathcal H)
-  :=\mathbb E_{P\sim Q}
-    \left[\inf_{h\in\mathcal H}R_P(h)\right].
-  \label{eq:environment-risk}
+    \begin{aligned}
+        z^\star &\in \operatorname*{arg\,min}_{z\in\mathcal{Z}}
+        \frac{1}{|\mathcal{T}_{\mathrm{tr}}|}
+        \sum_{\tau\in\mathcal{T}_{\mathrm{tr}}}
+        \mathcal{L}_{S_\tau^{\mathrm{q}}}
+        \!\left(f_{\widehat\theta_\tau(M(z)),M(z)}\right), \\
+        M^\star &:=G_{\widehat\phi}(z^\star).
+    \end{aligned}
+    \label{eq:generative-transfer-objective}
 \end{equation}
-The task-specific infimum allows different hypotheses to solve different
-tasks within the same shared space.
-
-\subsection{Connectivity as a structural inductive bias}
-
-In our setting, hypothesis spaces are indexed by connectivity masks.
-Fix a network architecture with $E$ candidate connections in the layer
-whose structure is to be learned. A binary mask
+The value of this structure lies in its ability to transfer beyond
+the tasks used to identify it. We therefore assess $M^\star$ through
+the expected loss on a new task drawn independently from the same
+environment:
 \begin{equation}
-  M\in\mathcal M\subseteq\{0,1\}^{E}
-  \label{eq:admissible-masks}
+    \mathbb{E}_{\tau,\,S_\tau^{\mathrm{s}},\,S_\tau^{\mathrm{q}}}
+    \left[
+        \mathcal{L}_{S_\tau^{\mathrm{q}}}
+        \!\left(f_{\widehat\theta_\tau(M^\star),M^\star}\right)
+    \right].
+    \label{eq:transfer-query-loss}
 \end{equation}
-specifies which connections are available. The admissible set
-$\mathcal M$ may impose a fixed connection budget or additional
-connectivity constraints.
-
-Let $f_{w,M}$ denote a predictor with mask $M$ and numerical parameters
-$w$. Masked connections are set to zero, while $w$ includes the active
-weights and the remaining trainable parameters. Each mask defines a
-hypothesis space
-\begin{equation}
-  \mathcal H_M
-  :=\{f_{w,M}:w\in\Theta_M\},
-  \qquad
-  \mathbb H_{\mathcal M}
-  :=\{\mathcal H_M:M\in\mathcal M\},
-  \label{eq:masked-hypothesis-spaces}
-\end{equation}
-where $\Theta_M$ is the admissible parameter set.
-
-Learning a structural bias therefore amounts to selecting a mask whose
-induced space is suitable for the task environment. The corresponding
-population objective is
-\begin{equation}
-  \inf_{M\in\mathcal M}R_Q(\mathcal H_M)
-  =\inf_{M\in\mathcal M}\mathbb E_{P\sim Q}
-    \left[\inf_{w\in\Theta_M}R_P(f_{w,M})\right].
-  \label{eq:structural-bias-objective}
-\end{equation}
-In this setting, the bias learner $B$ selects a mask $\widehat M$ and
-thereby returns the space $\widehat{\mathcal H}=\mathcal H_{\widehat M}$.
-The selected mask is fixed across tasks, while a task learner trains
-numerical parameters from scratch for each new task. Connectivity constrains the
-support of the weights; equality constraints between active weights
-require an additional parameter-sharing mechanism.
-
-\subsection{Learning new tasks from finite samples}
-
-The environment risk measures the best solutions available within a
-hypothesis space. To describe learning from limited data, we also specify
-how a task learner uses that space.
-
-For a fixed mask $M$, let $A_M$ denote the task learner operating within
-$\mathcal H_M$. It returns a predictor $A_M(S)\in\mathcal H_M$
-using sample $S$. Its expected risk after observing $m$ labeled examples is
-\begin{equation}
-  \mathcal R_m(M)
-  :=\mathbb E_{P\sim Q}\,
-    \mathbb E_{S\sim P^m}
-      \left[R_P\bigl(A_M(S)\bigr)\right].
-  \label{eq:finite-sample-transfer-risk}
-\end{equation}
-For a mask $\widehat M$ selected by the bias learner $B$, this quantity
-is evaluated conditional on the source data and the selected mask.
-The new task and its sample are independent of this selection.
-
-Our objective is to learn a fixed structure that improves
-$\mathcal R_m$ at limited sample sizes, or reaches a prescribed risk
-level with fewer examples than comparison structures under a common
-training protocol. A low value of $R_Q(\mathcal H_M)$ establishes that
-good solutions are available. Whether the training procedure can obtain
-them efficiently from finite samples is a separate question.
