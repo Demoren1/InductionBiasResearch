@@ -41,6 +41,7 @@ def main():
     records = json.loads((RUN / "models.json").read_text())
     _, roles = load_cards()
     final_metrics = []
+    complete_training_history = True
     fig, axes = plt.subplots(2, 2, figsize=(12, 8), constrained_layout=True)
     for record in records:
         color = (
@@ -51,6 +52,7 @@ def main():
         label = f"{record['variant']} / {record['seed']}"
         history_path = (RUN / record["checkpoint"]).parent / "history.json"
         history = json.loads(history_path.read_text())
+        complete_training_history &= all("train" in row for row in history)
         epochs = [row["epoch"] for row in history]
         axes[0, 0].plot(
             epochs,
@@ -155,7 +157,11 @@ def main():
         {
             "best_checkpoint_metrics": final_metrics,
             "trajectory_scope": "128 independent source-task fits per policy on CPU; known mask is diagnostic, not a search result",
-            "history_limit": "Original VAE logs contain validation loss/exact recovery, not per-epoch train loss or edge Recall@2. No historical curves were fabricated; final train/validation Recall@2 evaluated at frozen best checkpoints.",
+            "history_limit": (
+                "Train/validation loss, KL and Recall@2 are recorded; training uses the current KL warmup."
+                if complete_training_history
+                else "Original VAE logs contain validation loss/exact recovery, not per-epoch train loss or edge Recall@2. Final train/validation Recall@2 evaluated at frozen best checkpoints."
+            ),
         },
     )
 

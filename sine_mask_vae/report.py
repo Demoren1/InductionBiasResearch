@@ -198,6 +198,33 @@ def main():
     bank = json.loads((RUN / "BANK_COMPLETE.json").read_text())
     manifest = json.loads((RUN / "bank/manifest.json").read_text())
     models = json.loads((RUN / "models.json").read_text())
+    pilot = json.loads((CONTROL / "pilot.json").read_text())
+    dense_pilots = [r for r in pilot["fits"] if r["kind"] == "dense"]
+    oracle_pilot = next(
+        r
+        for r in pilot["fits"]
+        if r["kind"] == "correct_support" and r["scale"] == 2.0
+    )
+    with np.load(CONTROL / "pilot_dense_2.0.npz") as pilot_arrays:
+        weak_amplitudes = float(
+            (np.abs(pilot_arrays["amplitude"]) < 0.05).all(1).mean()
+        )
+    complete_training_history = all(
+        all(
+            "train" in row
+            for row in json.loads(
+                ((RUN / r["checkpoint"]).parent / "history.json").read_text()
+            )
+        )
+        for r in models
+    )
+    history_description = (
+        "История содержит train/validation loss, KL и Recall@2 по эпохам; "
+        "train objective использует текущий KL warmup, validation — полный beta."
+        if complete_training_history
+        else "История содержит validation loss, KL и exact mask recovery. "
+        "Исторические train loss и Recall@2 по эпохам не записывались."
+    )
     summary = {
         "results": results,
         "curves": curves,
@@ -283,7 +310,7 @@ def main():
     ax.text(
         0.98,
         0.94,
-        "Both Hessians positive definite\nGood / poor curvature = 6.8×",
+        f"Both Hessians positive definite\nGood / poor curvature = {geometry['curvature_ratio_good_over_broad']:.1f}×",
         ha="right",
         va="top",
         transform=ax.transAxes,
@@ -417,8 +444,8 @@ SGD на свежих минибатчах из 64 примеров. Нет за
 
 ## Контроль до обучения генератора
 
-В пилоте плотный SGD дал 0/8192 хороших сетей при четырёх масштабах
-инициализации. Правильная маска при масштабе 2.0 дала 309/2048 успехов
+В пилоте плотный SGD дал {sum(r["success"] for r in dense_pilots)}/{sum(r["count"] for r in dense_pilots)} хороших сетей при четырёх масштабах
+инициализации. Правильная маска при масштабе 2.0 дала {oracle_pilot["success"]}/{oracle_pilot["count"]} успехов
 после 2048 шагов; это диагностический oracle, не метод поиска.
 Пилот использовал общий RNG для начальных весов и данных; основной
 протокол разделяет эти потоки. Исходный пилот сохранён отдельно.
@@ -426,7 +453,7 @@ SGD на свежих минибатчах из 64 примеров. Нет за
 На обычной эмпирической MSE по 16 384 примерам два решения дополнительно
 доведены до стационарных точек. Плохое: MSE {geometry["broad_low_frequency"]["empirical_mse"]:.5f},
 хорошее: {geometry["good_high_frequency"]["empirical_mse"]:.5f}.
-Градиенты меньше 5e-8; оба гессиана положительно определены.
+Максимальная норма градиента {max(geometry[n]["gradient_norm"] for n in ("broad_low_frequency", "good_high_frequency")):.2e}; оба гессиана положительно определены.
 Геометрическая средняя кривизна хорошего выше в
 {geometry["curvature_ratio_good_over_broad"]:.2f} раза. Это локальная резкость
 в данных координатах параметров; вероятность попадания измеряется
@@ -434,7 +461,7 @@ SGD на свежих минибатчах из 64 примеров. Нет за
 
 Поскольку основной SGD использует свежие примеры, отдельно проверена
 и ожидаемая MSE: оба её минимума также имеют положительные гессианы,
-градиенты меньше 8e-9, MSE соответственно
+максимальная норма градиента {max(population_geometry[n]["gradient_norm"] for n in ("broad_low_frequency", "good_high_frequency")):.2e}, MSE соответственно
 {population_geometry["broad_low_frequency"]["population_mse"]:.6f} и
 {population_geometry["good_high_frequency"]["population_mse"]:.6f}.
 Отношение средних геометрических кривизн —
@@ -503,9 +530,7 @@ validation среди трёх learning rate и четырёх масштабо�
 ![Обучение и восстановление](training.png)
 
 training_metrics.json содержит train/validation Recall@2 масок на замороженных
-лучших checkpoint. Сохранённая история VAE содержит validation loss,
-KL и exact mask recovery; исторические train loss и Recall@2 по эпохам
-не записывались. Они не восстанавливаются вымышленными кривыми.
+лучших checkpoint. {history_description}
 Отдельные 128 source-траекторий SGD на политику служат иллюстрацией
 обучения; известная маска в них — диагностический oracle. В основное
 сравнение поисков эти дополнительные траектории не входят.
@@ -513,7 +538,7 @@ KL и exact mask recovery; исторические train loss и Recall@2 по 
 ## Что показывает результат и его границы
 
 Неудачные запуски SGD неоднородны. В исходном пилоте при масштабе
-инициализации 2.0 у 97.9% плотных сетей обе выходные амплитуды стали
+инициализации 2.0 у {100 * weak_amplitudes:.1f}% плотных сетей обе выходные амплитуды стали
 меньше 0.05 по модулю. При угасших амплитудах градиенты входных весов
 слабы. Часть конечнобюджетных неудач связана с такой задержкой,
 поэтому достижение широкого плохого минимума не приписывается каждому
@@ -537,7 +562,7 @@ Replay исходных элит не создаёт test-пары.
 {summary["offline"]["bank_training_examples"]:,} обучающих примеров
 ({summary["offline"]["bank_seconds"]:.1f} с в векторизованном GPU-запуске),
 шесть VAE — {summary["offline"]["vae_training_seconds"]:.1f} с CPU.
-Банк равен 4096 бюджетам одиночного онлайн-поиска. Это не сравнение
+Банк равен {bank["fits"] / 64:g} бюджетам одиночного онлайн-поиска. Это не сравнение
 полной стоимости с нуля. Выбор масок и измерение качества учитываются
 отдельно от числа обучающих примеров. Векторизованное время не равно
 времени последовательного применения метода.
