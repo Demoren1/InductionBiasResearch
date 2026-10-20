@@ -11,6 +11,10 @@ INPUTS, HIDDEN, EDGES = 48, 8, 32
 
 def families(config):
     """Generate distinct groups, with 16–20 aligned common edges per pair."""
+    if config.get("structure") == "compositional":
+        from .composition import families as compositional_families
+
+        return compositional_families(config)
     rng = np.random.default_rng(config["seed"])
     accepted, assignments = [], []
     used_pairs = [set() for _ in range(HIDDEN)]

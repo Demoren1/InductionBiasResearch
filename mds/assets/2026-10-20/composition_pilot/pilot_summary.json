@@ -1,0 +1,112 @@
+{
+  "families": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    29
+  ],
+  "decoder_seeds": [
+    4213,
+    4214,
+    4215,
+    4216
+  ],
+  "methods": [
+    {
+      "method": "correct_mask",
+      "label": "Аналитическая маска",
+      "test_excess_bce": 6.622738308376736e-09,
+      "test_excess_bce_sem": 6.6227383083767366e-09,
+      "iou": 1.0,
+      "variable_iou": 1.0,
+      "exact": 6,
+      "unique_masks": 6
+    },
+    {
+      "method": "dense",
+      "label": "MLP без маски",
+      "test_excess_bce": 0.002763387229707506,
+      "test_excess_bce_sem": 0.00032350348222306215,
+      "iou": 0.08333333333333333,
+      "variable_iou": 0.125,
+      "exact": 0,
+      "unique_masks": 6
+    },
+    {
+      "method": "imp",
+      "label": "IMP на новой функции",
+      "test_excess_bce": 0.0015541629658805001,
+      "test_excess_bce_sem": 0.00019493579494939668,
+      "iou": 0.8449725087495984,
+      "variable_iou": 0.8366715911510804,
+      "exact": 8,
+      "unique_masks": 36
+    },
+    {
+      "method": "gumbel",
+      "label": "W/G Gumbel",
+      "test_excess_bce": 0.003636213226450814,
+      "test_excess_bce_sem": 0.0004215286995356572,
+      "iou": 0.7363680594330749,
+      "variable_iou": 0.5429185191400833,
+      "exact": 1,
+      "unique_masks": 24
+    },
+    {
+      "method": "evolution",
+      "label": "W/G evolution",
+      "test_excess_bce": 0.0011435668501589033,
+      "test_excess_bce_sem": 0.00021194648659533436,
+      "iou": 0.918378569152563,
+      "variable_iou": 0.8517899025638963,
+      "exact": 12,
+      "unique_masks": 24
+    },
+    {
+      "method": "random_budget",
+      "label": "W/G случайные z",
+      "test_excess_bce": 0.0016630784504943425,
+      "test_excess_bce_sem": 0.00030905758828414417,
+      "iou": 0.9015545721428074,
+      "variable_iou": 0.8212950677346961,
+      "exact": 4,
+      "unique_masks": 24
+    },
+    {
+      "method": "recombined_bank",
+      "label": "Сборка двух IMP-масок",
+      "test_excess_bce": 0.003224975119034449,
+      "test_excess_bce_sem": 0.00038511538082324994,
+      "iou": 0.8341769033719496,
+      "variable_iou": 0.747084476733277,
+      "exact": 1,
+      "unique_masks": 24
+    },
+    {
+      "method": "training_bank",
+      "label": "Выбор одной IMP-маски",
+      "test_excess_bce": 0.0029748065604103934,
+      "test_excess_bce_sem": 0.00016465556930490833,
+      "iou": 0.7617617617617617,
+      "variable_iou": 0.5873015873015873,
+      "exact": 0,
+      "unique_masks": 24
+    },
+    {
+      "method": "best_initial",
+      "label": "Лучший исходный z",
+      "test_excess_bce": 0.005098719977670246,
+      "test_excess_bce_sem": 0.0006081960680956653,
+      "iou": 0.6524798264999833,
+      "variable_iou": 0.419083920251121,
+      "exact": 0,
+      "unique_masks": 24
+    }
+  ],
+  "mean_random_pool_max_iou": 0.919140989729225,
+  "random_pools_with_exact_masks": 4,
+  "manifest_sha256": "81398abc0a5b5dce2ed4848718a33bebfa291640a422918581abb4d0a777c6c2",
+  "scope": "Validation pilot, six held-out combinations; six test combinations remain unused. IMP repeats across decoder seeds are counted once."
+}

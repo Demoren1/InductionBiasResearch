@@ -1,4 +1,4 @@
-"""CUDA transfer to unseen functions whose correct masks occurred in training."""
+"""CUDA transfer to new functions or held-out structural combinations."""
 
 import argparse
 import fcntl
@@ -72,6 +72,10 @@ def fresh_observations(root, manifest, family, functions, device):
             "split_sizes": manifest["config"]["data"],
             "splits": list(collected),
         }
+        if manifest["config"].get("structure") == "compositional":
+            metadata["groups"] = manifest["family_definitions"][family][
+                "groups"
+            ]
         with locked(directory / "write.lock"):
             marker = directory / "complete.json"
             if marker.exists():
@@ -216,6 +220,33 @@ def make_selection(
         destination / "training_bank_selection.pt",
         {"scores": bank_scores.cpu(), "selected": index},
     )
+    if options.get("recombine_bank", False):
+        from .composition import recombine
+
+        candidates, parents = recombine(
+            controls["bank_masks"], budget(options), sampler_seed + 727
+        )
+        candidate_fitness = Fitness(data, template, options)
+        values = torch.cat(
+            [
+                candidate_fitness(chunk.to(initial_z.device))
+                for chunk in candidates.split(options["hard_batch"])
+            ]
+        )
+        index = int(values.argmin())
+        masks["recombined_bank"] = candidates[index]
+        scores["recombined_bank"] = float(values[index])
+        budgets["recombined_bank"] = candidate_fitness.budget()
+        save_torch(
+            destination / "recombined_bank_selection.pt",
+            {
+                "masks": candidates.bool(),
+                "parents": parents,
+                "scores": values.cpu(),
+                "selected": index,
+                "scope": "Random training IMP pairs and four-column subsets; no family or analytical reference supplied.",
+            },
+        )
     with torch.no_grad():
         masks["zero_z"] = canonical_mask(
             topk(decoder(torch.zeros_like(initial_z[:1])))
@@ -235,6 +266,10 @@ def make_selection(
     for method in ["gumbel", "evolution", "random_budget", "training_bank"]:
         if budgets[method]["candidate_fits"] != budget(options):
             raise RuntimeError("Candidate-fit budgets are unequal")
+    if "recombined_bank" in budgets and budgets["recombined_bank"][
+        "candidate_fits"
+    ] != budget(options):
+        raise RuntimeError("Recombination must use the same candidate budget")
     return {
         "masks": masks,
         "z": latent,
@@ -481,6 +516,8 @@ def run(args):
         sha256(args.bank / "manifest.json"),
         args.seed,
         [args.family],
+        mode=config.get("transfer_mode", "known_mask"),
+        manifest=manifest,
     )
     controls = checked_load(args.root / "training_controls.pt")
     if controls["bank_sha256"] != source["bank_sha256"]:
@@ -488,7 +525,11 @@ def run(args):
     if len(controls["bank_masks"]) != budget(config["search"]):
         raise ValueError("Training-mask pool must match the search budget")
     protocol = {
-        "schema": "overlapping-groups.known-mask.v1",
+        "schema": (
+            "overlapping-groups.composition.v1"
+            if config.get("transfer_mode") == "composition"
+            else "overlapping-groups.known-mask.v1"
+        ),
         "family": args.family,
         "representation": "wg",
         "decoder_seed": args.seed,

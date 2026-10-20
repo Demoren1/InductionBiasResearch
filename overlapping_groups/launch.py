@@ -167,7 +167,12 @@ def main():
         available = {
             family["id"]
             for family in manifest["family_definitions"]
-            if family["split"] == "train"
+            if family["split"]
+            == (
+                "validation"
+                if config.get("transfer_mode") == "composition"
+                else "train"
+            )
         }
         families = (
             args.families if args.families is not None else sorted(available)
@@ -176,11 +181,18 @@ def main():
             len(set(families)) != len(families)
             or not set(families) <= available
         ):
-            parser.error("Use distinct source-family IDs present in the bank")
+            parser.error(
+                "Use distinct family IDs allowed by the transfer mode"
+            )
         bank_hash = sha256(args.bank / "manifest.json")
         for seed in args.seeds:
             load_decoder(
-                args.vae_runs / f"wg_{seed}", bank_hash, seed, families
+                args.vae_runs / f"wg_{seed}",
+                bank_hash,
+                seed,
+                families,
+                mode=config.get("transfer_mode", "known_mask"),
+                manifest=manifest,
             )
         args.runs.mkdir(parents=True, exist_ok=True)
         if args.cache_from:

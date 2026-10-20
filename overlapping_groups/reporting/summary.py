@@ -21,6 +21,7 @@ METHODS = [
     "dense",
     "imp",
     "training_bank",
+    "recombined_bank",
     "gumbel",
     "evolution",
     "best_initial",
@@ -33,6 +34,7 @@ LABELS = [
     "MLP без маски",
     "IMP",
     "Выбор из банка",
+    "Сборка из двух IMP-масок",
     "W/G Gumbel",
     "W/G эволюция",
     "Лучший исходный z",
@@ -66,6 +68,19 @@ def report(root, bank=DEFAULT_BANK):
         writer.writeheader()
         writer.writerows(rows)
     families = sorted({row["family"] for row in rows})
+    available = {row["method"] for row in rows}
+    methods = [method for method in METHODS if method in available]
+    labels = [LABELS[METHODS.index(method)] for method in methods]
+    first_protocol = json.loads((directories[0] / "protocol.json").read_text())
+    composition = (
+        first_protocol["config"].get("transfer_mode") == "composition"
+    )
+    experiment_title = (
+        "Новые сочетания известных блоков"
+        if composition
+        else "Знакомые маски, новые функции"
+    )
+    decoders = len({row["decoder_seed"] for row in rows})
     metrics = [
         "test_excess_bce",
         "test_bce",
@@ -77,7 +92,7 @@ def report(root, bank=DEFAULT_BANK):
         "noise_edges",
     ]
     summary = {}
-    for method in METHODS:
+    for method in methods:
         selected = [row for row in rows if row["method"] == method]
         family_values = {
             metric: np.array(
@@ -116,7 +131,7 @@ def report(root, bank=DEFAULT_BANK):
         "total_worker_seconds": sum(
             item["elapsed_seconds"] for item in complete
         ),
-        "scope": "Family means average decoder seeds, two new functions, and three MLP initializations. Cached IMP and dense/oracle controls are not independent across decoder seeds.",
+        "scope": "Family means average decoder seeds, evaluation functions, and MLP replicas. Cached IMP and dense/oracle controls are not independent across decoder seeds.",
     }
     save_json(root / "summary.json", payload)
     figures = root / "figures"
@@ -131,15 +146,15 @@ def report(root, bank=DEFAULT_BANK):
             "IoU переменных связей (больше — лучше)",
         ],
     ):
-        means = [summary[method][metric]["mean"] for method in METHODS]
-        errors = [summary[method][metric]["family_sem"] for method in METHODS]
+        means = [summary[method][metric]["mean"] for method in methods]
+        errors = [summary[method][metric]["family_sem"] for method in methods]
         colors = [
             "#7b9e87"
             if method in ["correct_mask", "dense", "imp"]
             else "#5379ac"
-            for method in METHODS
+            for method in methods
         ]
-        axis.barh(LABELS, means, xerr=errors, color=colors, alpha=0.9)
+        axis.barh(labels, means, xerr=errors, color=colors, alpha=0.9)
         axis.invert_yaxis()
         axis.set_title(title)
         axis.set_xlabel(
@@ -149,7 +164,7 @@ def report(root, bank=DEFAULT_BANK):
         )
         axis.grid(axis="x", alpha=0.2)
     fig.suptitle(
-        f"Знакомые маски, новые функции: {len(families)} семейств, 3 W/G-декодера\nПогрешности: SEM по семействам; выбор маски на функциях 4/5, оценка на 6/7"
+        f"{experiment_title}: {len(families)} семейств, {decoders} W/G-декодера\nПогрешности: SEM по семействам; выбор маски на функциях 4/5, оценка на 6/7"
     )
     fig.savefig(figures / "quality.png", dpi=170)
     plt.close(fig)

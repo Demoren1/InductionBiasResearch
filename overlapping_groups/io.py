@@ -128,7 +128,9 @@ def validate_config(config):
         )
 
 
-def load_decoder(run, bank_hash, seed, families):
+def load_decoder(
+    run, bank_hash, seed, families, mode="known_mask", manifest=None
+):
     """Validate either an archived or current frozen W/G decoder."""
     run = Path(run)
     protocol = json.loads((run / "protocol.json").read_text())
@@ -148,10 +150,44 @@ def load_decoder(run, bank_hash, seed, families):
             raise ValueError(
                 f"Decoder source snapshot changed: {run / 'source' / name}"
             )
-    if any(
-        f"family_{family:02d}_function_{function}" not in protocol["tasks"]
-        for family in families
-        for function in range(4)
-    ):
-        raise ValueError("Target family was absent from source training")
+    if mode == "known_mask":
+        if any(
+            f"family_{family:02d}_function_{function}" not in protocol["tasks"]
+            for family in families
+            for function in range(4)
+        ):
+            raise ValueError("Target family was absent from source training")
+    elif mode == "composition":
+        if (
+            manifest is None
+            or manifest["config"].get("structure") != "compositional"
+        ):
+            raise ValueError("Composition requires a compositional bank")
+        definitions = manifest["family_definitions"]
+        source = [
+            family for family in definitions if family["split"] == "train"
+        ]
+        expected = {
+            f"family_{family['id']:02d}_function_{function}"
+            for family in source
+            for function in range(4)
+        }
+        if set(protocol["tasks"]) != expected:
+            raise ValueError(
+                "Decoder must use exactly the training combinations"
+            )
+        for family_id in families:
+            family = definitions[family_id]
+            if family["split"] != "validation":
+                raise ValueError(
+                    "The pilot evaluates validation combinations only"
+                )
+            if not any(old["a"] == family["a"] for old in source) or not any(
+                old["b"] == family["b"] for old in source
+            ):
+                raise ValueError(
+                    "Both target blocks must have occurred in train"
+                )
+    else:
+        raise ValueError(f"Unknown transfer mode: {mode}")
     return protocol, payload

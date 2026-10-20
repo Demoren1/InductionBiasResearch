@@ -9,7 +9,7 @@ from .problem import EDGES, HIDDEN, INPUTS
 
 def column_order(mask):
     """Sort hard column profiles without using a reference or observations."""
-    hard = mask.detach().round().to(torch.int64)
+    hard = mask.detach().to(torch.float32).round().to(torch.int64)
     powers = 1 << torch.arange(INPUTS - 1, -1, -1, device=mask.device)
     codes = (hard * powers[:, None]).sum(-2)
     return codes.argsort(dim=-1, descending=True, stable=True)

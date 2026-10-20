@@ -148,3 +148,59 @@ python3 -m overlapping_groups.reporting.figures \
 Исторические протоколы, компактные результаты и рисунки сохранены в
 [архиве](../tmp/overlapping_groups_20261020/README.md). Разовые пилоты,
 проверки AGOP и старые отдельные диспетчеры удалены из рабочего кода.
+
+
+## Композиционный пилот
+
+Конфиги `composition_bank.json`, `composition_vae.json` и
+`composition_transfer.json` задают шесть вариантов каждого из двух блоков.
+24 сочетания входят в обучение, шесть новых сочетаний — в валидационный
+пилот, ещё шесть оставлены для будущего test. Каждый отдельный блок
+встречается в четырёх обучающих сочетаниях. Новая маска полностью
+собирается из частей двух обучающих, при этом целиком отсутствует в train.
+Генератор сохраняет родителей только как диагностическую информацию;
+поиск получает наблюдения, замороженный декодер и общий train-пул IMP.
+
+В отличие от `known_mask`, режим `composition` разрешает оценку только
+на новых валидационных сочетаниях и проверяет, что VAE обучен ровно
+на train-сочетаниях. Сборщик с `--source-only` не обучает IMP-банк
+для валидационных и итоговых сочетаний.
+
+Команды выполненного пилота на физических GPU 1 и 2:
+
+```bash
+python3 -m overlapping_groups.bank.collect \
+  --bank data/overlapping_groups/banks/composition_pilot_v1 \
+  --config overlapping_groups/configs/composition_bank.json \
+  --source-only --train-count 16 --devices cuda:1,cuda:2 \
+  --models-per-gpu 512 --gpu-memory-gib 12
+
+python3 -m overlapping_groups.launch --phase train \
+  --bank data/overlapping_groups/banks/composition_pilot_v1 \
+  --config overlapping_groups/configs/composition_vae.json \
+  --runs overlapping_groups/runs/composition_pilot_v1/vae \
+  --devices cuda:1,cuda:2 --seeds 4213 4214 4215 4216 \
+  --workers-per-device 2 --gpu-memory-gib 14
+
+python3 -m overlapping_groups.launch --phase evaluate \
+  --bank data/overlapping_groups/banks/composition_pilot_v1 \
+  --vae-runs overlapping_groups/runs/composition_pilot_v1/vae \
+  --runs overlapping_groups/runs/composition_pilot_v1/evaluation \
+  --config overlapping_groups/configs/composition_transfer.json \
+  --devices cuda:1,cuda:2 --seeds 4213 4214 4215 4216 \
+  --workers-per-device 4 --gpu-memory-gib 8
+```
+
+Дополнительный контроль `recombined_bank` случайно выбирает две
+train-маски IMP, сопоставляет колонки по их пересечению и берёт четыре
+колонки из каждой. Если число связей отличается от 32, оно корректируется
+внутри объединения родителей. Адаптационная query BCE выбирает кандидата
+из 1608 вариантов; аналитическая маска и её родители не используются.
+Это эвристический контроль сборки, а не полный поиск всех подмасок
+в объединениях. Его успех или неуспех нужно отличать от выразительности
+самого множества объединений.
+
+Рисунки сборки и сравнения воспроизводит модуль
+`overlapping_groups.reporting.composition`. Численные результаты и
+[отчёт пилота](../mds/COMPOSITION_PILOT_2026-10-20.md) хранятся отдельно
+от первого опыта с известными полными масками.

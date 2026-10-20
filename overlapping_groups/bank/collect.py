@@ -303,6 +303,7 @@ def main():
     )
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--only-task")
+    parser.add_argument("--source-only", action="store_true")
     parser.add_argument(
         "--devices", default=",".join(f"cuda:{i}" for i in range(8))
     )
@@ -358,6 +359,8 @@ def main():
     bank = args.bank.resolve()
     manifest_path = bank / "manifest.json"
     counts = {"train": args.train_count, "validation": args.validation_count}
+    if args.source_only:
+        counts = {"train": args.train_count}
     if args.resume:
         manifest = json.loads(manifest_path.read_text())
         if (
