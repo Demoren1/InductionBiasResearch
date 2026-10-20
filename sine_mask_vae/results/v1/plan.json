@@ -1,0 +1,125 @@
+{
+  "model": "f_j(x)=amplitude_j * sin(x @ W[:,j]); W shape 8x2",
+  "teacher": "y_j=small_j*sin(low_j*x[row_j])+sin(high_j*x[row_j])",
+  "data": "Fresh IID N(0,I_8) minibatches; normal MSE, autograd SGD",
+  "mask": "Exactly two of 16 input edges; both output amplitudes trained",
+  "optimizer": {
+    "steps": 1024,
+    "lr": 0.05,
+    "scale": 2.0,
+    "batch": 64
+  },
+  "quality_threshold": 0.1,
+  "bank_filter": "Measured MSE on 4096 fresh examples, never target supports",
+  "source_functions": [
+    0,
+    1
+  ],
+  "source_splits": {
+    "train": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        3
+      ]
+    ],
+    "validation": [
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "test": [
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        2
+      ]
+    ]
+  },
+  "validation_function": 100,
+  "test_functions": [
+    201,
+    202
+  ],
+  "generator_seeds": [
+    4213,
+    4214,
+    4215
+  ],
+  "variants": [
+    "vanilla",
+    "partwise_training"
+  ],
+  "vae": {
+    "epochs": 600,
+    "beta": 0.05,
+    "warmup": 90,
+    "patience": 120,
+    "lr": 0.001,
+    "batch_per_task": 16
+  },
+  "budget": {
+    "candidates": 64,
+    "steps": 1024,
+    "batch": 64,
+    "examples_per_search": 4194304
+  },
+  "validation_trials_per_family_seed": 16,
+  "test_trials_per_family_function_seed": 64,
+  "selection": "Only validation chooses dense settings; all decoder seeds retained",
+  "bank_max_blocks": 8,
+  "bank_fits_per_block": 8192,
+  "source_card_roles": "80/20 assigned before filtering; minimum 10/2 elites",
+  "scope": "Two labelled output roles known; sine activation, underparameterized student; no global-optimality claim"
+}
