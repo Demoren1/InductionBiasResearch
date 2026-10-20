@@ -1,0 +1,28 @@
+{
+  "seed": 20261020,
+  "families": {
+    "train": 24,
+    "validation": 8,
+    "test": 8
+  },
+  "functions_per_family": 4,
+  "data": {
+    "support": 2048,
+    "query": 2048,
+    "test": 8192
+  },
+  "training": {
+    "steps": 2000,
+    "select_every": 100,
+    "warmup_steps": 200,
+    "negative_slope": 0.1,
+    "l2": 1e-05,
+    "initialization": "positive_weights_zero_readout",
+    "lr": 0.03,
+    "layout": "packed"
+  },
+  "imp": {
+    "keep": 32,
+    "prune_fraction": 0.3
+  }
+}

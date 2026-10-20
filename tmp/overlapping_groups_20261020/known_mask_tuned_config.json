@@ -1,0 +1,57 @@
+{
+  "seed": 20261020,
+  "search": {
+    "starts": 8,
+    "steps": 40,
+    "inner_steps": 64,
+    "inner_lr": 0.1,
+    "inner_warmup_steps": 32,
+    "replicas": 1,
+    "l2": 1e-05,
+    "negative_slope": 0.1,
+    "z_lr": 0.05,
+    "z_clip_norm": 5.0,
+    "gumbel_samples": 2,
+    "proposal_scales": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "temperature": [
+      2.0,
+      0.5
+    ],
+    "gumbel_noise": [
+      0.5,
+      0.1
+    ],
+    "evolution_radius": [
+      0.5,
+      0.15
+    ],
+    "hard_batch": 1608,
+    "inner_optimizer": "adam",
+    "inner_adam_eps": 1e-06,
+    "gradient_checkpoint_steps": 1
+  },
+  "evaluation": {
+    "functions": [
+      6,
+      7
+    ],
+    "replicas": 3,
+    "steps": 2000,
+    "select_every": 100,
+    "warmup_steps": 200,
+    "negative_slope": 0.1,
+    "lr": 0.03,
+    "l2": 1e-05,
+    "initialization": "positive_weights_zero_readout",
+    "layout": "packed"
+  },
+  "calibration": {
+    "config_sha256": "c5e1c93c534331dc5207f3078a7e0dc85e19c1ccb397875fd60d688d5856c8e4",
+    "source": "runs/fitness_tuning_v1/selection_seal.json",
+    "runtime_change": "Checkpoint block length 1; numerical inner optimizer and selected training hyperparameters unchanged."
+  }
+}

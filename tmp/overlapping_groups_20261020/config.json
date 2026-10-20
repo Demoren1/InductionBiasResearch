@@ -1,0 +1,10 @@
+{
+  "seed": 20261020,
+  "families": {"train": 24, "validation": 8, "test": 8},
+  "functions_per_family": 4,
+  "pilot": {"train_families": 8, "validation_families": 2, "functions": 2, "initializations": 4},
+  "data": {"support": 2048, "query": 2048, "test": 8192},
+  "training": {"steps": 2000, "select_every": 100, "warmup_steps": 200, "negative_slope": 0.1, "l2": 0.00001, "learning_rates": [0.01, 0.03], "initialization": "positive_weights_zero_readout"},
+  "imp": {"keep": 32, "prune_fraction": 0.3},
+  "oracle_gate": {"mean_excess_bce": 0.001, "p95_excess_bce": 0.005}
+}
