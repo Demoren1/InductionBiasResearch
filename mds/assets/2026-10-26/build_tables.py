@@ -54,37 +54,8 @@ def main():
     codebook = load("codebook_summary.json")
     hidden = load("hidden_structure_summary.json")
     robustness = load("robustness_twolayer_summary.json")
-    composition = json.loads(
-        (
-            ROOT / "mds/assets/2026-10-21/composition_full/test_summary.json"
-        ).read_text()
-    )["summary"]
     example = json.loads((ASSETS / "solution_example.json").read_text())
     tables = {}
-    tables["relu"] = table(
-        ["Метод", "Test excess BCE ↓", "IoU ↑"],
-        [
-            [
-                label,
-                f"{composition[key]['test_excess_bce']['mean']:.7f}",
-                f"{composition[key]['iou']['mean']:.4f}"
-                if key != "dense"
-                else "—",
-            ]
-            for key, label in [
-                ("correct_mask", "Аналитическая маска"),
-                ("dense", "Плотная MLP"),
-                ("imp", "IMP на новой функции"),
-                ("evolution", "W/G evolution"),
-                ("random_budget", "Случайные латентные коды"),
-                ("gumbel", "W/G Gumbel"),
-                ("training_bank", "Выбор исходной IMP-маски"),
-                ("recombined_bank", "Пересочетание двух IMP-масок"),
-                ("best_initial", "Лучший из исходных кодов"),
-                ("source_frequency", "Частотная маска"),
-            ]
-        ],
-    )
     labels = [
         ("oracle", "Правильная маска (oracle)"),
         ("enumerate_roles", "Перебор 16 ролевых масок"),
