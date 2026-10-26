@@ -105,31 +105,31 @@ def analytical_figures():
         coordinate,
         amplitude * np.sin(high * coordinate),
         "--",
-        label="Одна синусоида при w = 4",
+        label=r"Одна синусоида при $w=4$",
         color=COLORS["simple"],
     )
     axes[0].set(
         title="Маски: учитель вне класса ученика",
-        xlabel="Полезная координата xᵣ",
+        xlabel=r"Полезная координата $x_r$",
         ylabel="Выход",
     )
     axes[0].legend(fontsize=9, loc="upper left")
     axes[1].plot(
         coordinate,
         np.sin(high * coordinate),
-        label="Цель и точное решение: sin(4t)",
+        label=r"Цель и точное решение: $\sin(4t)$",
         color=COLORS["simple"],
     )
     axes[1].plot(
         coordinate,
         np.sin(coordinate),
         "--",
-        label="Источник: sin(t)",
+        label=r"Источник: $\sin(t)$",
         color=COLORS["other"],
     )
     axes[1].set(
         title="Codebook: точное решение известно",
-        xlabel="x = tv, ‖v‖ = 1",
+        xlabel=r"$x=tv,\quad\|v\|=1$",
         ylabel="Выход",
     )
     axes[1].legend(fontsize=9, loc="upper left")
@@ -161,8 +161,8 @@ def analytical_figures():
     )
     axes[2].set(
         title="Точный риск после выбора амплитуды",
-        xlabel="Проекция w на v",
-        ylabel="‖w − (wᵀv)v‖",
+        xlabel=r"Проекция $w$ на $v$",
+        ylabel=r"$\|w-(w^\top v)v\|$",
     )
     fig.colorbar(plot, ax=axes[2], label="MSE после выбора амплитуды")
     for ax in axes[:2]:
@@ -208,8 +208,8 @@ def analytical_figures():
     axes[1].clabel(contours, fontsize=8, fmt="%.2f")
     axes[1].set(
         title="Точный учитель на двумерном срезе",
-        xlabel="x₀, остальные x = 0 кроме x₂",
-        ylabel="x₂",
+        xlabel=r"$x_0$ (остальные входы нулевые, кроме $x_2$)",
+        ylabel=r"$x_2$",
     )
     fig.colorbar(heatmap, ax=axes[1], label="Вероятность учителя")
     save_figure(fig, "relu_analytic")
@@ -233,11 +233,11 @@ def analytical_figures():
     ax.axhline(0.1, color="#465466", linestyle="--", label="Порог успеха: 0.1")
     critical = np.sqrt(-np.log(0.8))
     ax.axvline(critical, color="#7a8999", linestyle=":")
-    ax.text(critical + 0.04, 0.12, f"ε ≈ {critical:.3f}")
+    ax.text(critical + 0.04, 0.12, rf"$\varepsilon \approx {critical:.3f}$")
     ax.set(
-        xlabel="Норма ортогонального остатка ε",
+        xlabel=r"Норма ортогонального остатка $\varepsilon$",
         ylabel="Точная MSE",
-        title="Предел точности жёсткого связывания · ‖u‖ = 4",
+        title=r"Предел точности жёсткого связывания · $\|u\|=4$",
         ylim=(0, 0.53),
     )
     ax.grid(alpha=0.18)
@@ -310,7 +310,7 @@ def solution_figure(example):
             linewidth=1.8,
         )
     axes[1, 0].set(
-        title="Предсказания на срезе x = tv", xlabel="t", ylabel="Выход"
+        title=r"Предсказания на срезе $x=tv$", xlabel=r"$t$", ylabel="Выход"
     )
     axes[1, 0].legend(fontsize=9, loc="upper left")
     for index, (method, _, color) in enumerate(methods):
@@ -369,7 +369,7 @@ def codebook_coverage_figure(codebook):
             )
     for ax in axes:
         ax.set_xticks([16, 32, 48])
-        ax.set(xlabel="Количество весов P", ylim=(-3, 105))
+        ax.set(xlabel=r"Количество весов $P$", ylim=(-3, 105))
         ax.grid(alpha=0.18)
         ax.legend(fontsize=8)
     axes[0].set(
@@ -494,7 +494,7 @@ def main():
     axes[0].legend(fontsize=9, loc="upper right")
     success_panel(
         axes[1],
-        "Шум исходных весов · σ = 0.5",
+        r"Шум исходных весов · $\sigma=0.5$",
         robustness["robustness"]["noise_0.5/e0"],
         [
             ("vae_release", "VAE → свободные веса", "vae"),
