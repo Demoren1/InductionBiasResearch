@@ -10,7 +10,10 @@ import numpy as np
 ASSETS = Path(__file__).resolve().parent
 ROOT = ASSETS.parents[2]
 RESULTS = ROOT / "paper_vae_solver/results"
-REPORT = ROOT / "mds/FINAL_REPORT_2026-10-26.md"
+REPORTS = [
+    ROOT / "mds/FINAL_REPORT_2026-10-26.md",
+    ROOT / "mds/FINAL_REPORT_2026-10-26_APPENDIX.md",
+]
 
 
 def load(name):
@@ -350,19 +353,23 @@ def main():
             for dimension in dimensions
         ],
     )
-    text = REPORT.read_text()
+    texts = {path: path.read_text() for path in REPORTS}
     for name, content in tables.items():
         pattern = rf"(<!-- table:{name} -->).*?(<!-- /table:{name} -->)"
-        text, replacements = re.subn(
-            pattern,
-            lambda match: f"{match[1]}\n\n{content}\n\n{match[2]}",
-            text,
-            flags=re.DOTALL,
-        )
+        replacements = 0
+        for path, text in texts.items():
+            texts[path], count_replaced = re.subn(
+                pattern,
+                lambda match: f"{match[1]}\n\n{content}\n\n{match[2]}",
+                text,
+                flags=re.DOTALL,
+            )
+            replacements += count_replaced
         if replacements != 1:
             raise ValueError(f"Expected one report table marker: {name}")
-    REPORT.write_text(text)
-    print(f"Updated {len(tables)} tables in {REPORT}")
+    for path, text in texts.items():
+        path.write_text(text)
+    print(f"Updated {len(tables)} tables in {len(REPORTS)} documents")
 
 
 if __name__ == "__main__":
