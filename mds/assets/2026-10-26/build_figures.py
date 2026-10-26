@@ -164,7 +164,7 @@ def analytical_figures():
         xlabel="Проекция w на v",
         ylabel="‖w − (wᵀv)v‖",
     )
-    fig.colorbar(plot, ax=axes[2], label="min по γ: population MSE")
+    fig.colorbar(plot, ax=axes[2], label="MSE после выбора амплитуды")
     for ax in axes[:2]:
         ax.grid(alpha=0.15)
     save_figure(fig, "sine_analytic")
@@ -236,7 +236,7 @@ def analytical_figures():
     ax.text(critical + 0.04, 0.12, f"ε ≈ {critical:.3f}")
     ax.set(
         xlabel="Норма ортогонального остатка ε",
-        ylabel="Population MSE",
+        ylabel="Точная MSE",
         title="Предел точности жёсткого связывания · ‖u‖ = 4",
         ylim=(0, 0.53),
     )
@@ -250,7 +250,7 @@ def solution_figure(example):
     target = np.array(example["target_weights"])
     direction = target / np.linalg.norm(target)
     methods = [
-        ("dense_adam", "Dense Adam", "dense"),
+        ("dense_adam", "Плотный Adam", "dense"),
         ("code_vae", "VAE", "vae"),
         ("code_components", "Компоненты", "simple"),
         ("spectral_components", "Спектральный", "other"),
@@ -269,7 +269,7 @@ def solution_figure(example):
     axes[0, 0].set(
         title="Исходные назначения и новая цель (снизу)",
         xlabel="Координаты сгруппированы для показа",
-        ylabel="Source-решения",
+        ylabel="Исходные решения",
     )
     weights = np.vstack(
         [target]
@@ -325,7 +325,7 @@ def solution_figure(example):
     )
     axes[1, 1].set(
         title="Все возвращённые решения этого контекста",
-        ylabel="Population MSE",
+        ylabel="Точная MSE",
         ylim=(-0.025, 0.56),
     )
     axes[1, 1].text(0.05, 0.115, "Порог успеха")
@@ -338,8 +338,8 @@ def codebook_coverage_figure(codebook):
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), layout="constrained")
     for method, label, color in [
         ("code_vae", "VAE", "vae"),
-        ("code_blocks", "Эмпирические блоки", "simple"),
-        ("dense_adam", "Dense Adam", "dense"),
+        ("code_blocks", "Исходные блоки", "simple"),
+        ("dense_adam", "Плотный Adam", "dense"),
     ]:
         rows = sorted(
             [row for row in codebook["rows"] if row["method"] == method],
@@ -356,8 +356,8 @@ def codebook_coverage_figure(codebook):
         if method == "dense_adam":
             continue
         for metric, linestyle, suffix in [
-            ("correct_assignment_seen", "--", "правильное I встретилось"),
-            ("correct_assignment_chosen", "-", "правильное I выбрано"),
+            ("correct_assignment_seen", "--", "верный вариант предложен"),
+            ("correct_assignment_chosen", "-", "верный вариант выбран"),
         ]:
             axes[1].plot(
                 [row["dimension"] for row in rows],
@@ -411,10 +411,10 @@ def main():
         [
             ("enumerate_roles", "Перебор 16 масок", "simple"),
             ("uniform_roles", "Случайно по ролям", "simple"),
-            ("vae", "Partwise VAE", "vae"),
-            ("product", "Эмпирический prior", "simple"),
-            ("dense_adam", "Dense Adam", "dense"),
-            ("dense_sgd", "Dense SGD", "dense"),
+            ("vae", "VAE с раздельными частями", "vae"),
+            ("product", "Выбор по частотам", "simple"),
+            ("dense_adam", "Плотный Adam", "dense"),
+            ("dense_sgd", "Плотный SGD", "dense"),
         ],
     )
     success_panel(
@@ -427,8 +427,8 @@ def main():
         },
         [
             ("code_vae", "VAE", "vae"),
-            ("code_blocks", "Эмпирические блоки", "simple"),
-            ("dense_adam", "Dense Adam", "dense"),
+            ("code_blocks", "Исходные блоки", "simple"),
+            ("dense_adam", "Плотный Adam", "dense"),
             ("code_transfer", "Старые значения", "other"),
             ("code_replay", "Готовые назначения", "other"),
         ],
@@ -446,7 +446,7 @@ def main():
         [
             ("code_components", "Восстановленные группы", "simple"),
             ("code_vae", "VAE", "vae"),
-            ("dense_adam", "Dense Adam", "dense"),
+            ("dense_adam", "Плотный Adam", "dense"),
             ("code_replay", "Готовые назначения", "other"),
         ],
     )
@@ -456,10 +456,10 @@ def main():
     residuals = [0, 0.1, 0.3, 0.6, 1, 2]
     title = "Неточное связывание весов"
     for method, label, color in [
-        ("components_release", "Группы + освобождение", "simple"),
+        ("components_release", "Группы → свободные веса", "simple"),
         ("components_hard", "Жёсткое связывание", "hard"),
-        ("vae_release", "VAE + освобождение", "vae"),
-        ("dense_adam", "Dense Adam", "dense"),
+        ("vae_release", "VAE → свободные веса", "vae"),
+        ("dense_adam", "Плотный Adam", "dense"),
     ]:
         rates = []
         for residual in residuals:
@@ -494,13 +494,13 @@ def main():
     axes[0].legend(fontsize=9, loc="upper right")
     success_panel(
         axes[1],
-        "Шум source-весов · σ = 0.5",
+        "Шум исходных весов · σ = 0.5",
         robustness["robustness"]["noise_0.5/e0"],
         [
-            ("vae_release", "VAE + освобождение", "vae"),
-            ("components_release", "Группы + освобождение", "simple"),
+            ("vae_release", "VAE → свободные веса", "vae"),
+            ("components_release", "Группы → свободные веса", "simple"),
             ("components_hard", "Жёсткое связывание", "hard"),
-            ("dense_adam", "Dense Adam", "dense"),
+            ("dense_adam", "Плотный Adam", "dense"),
         ],
     )
     success_panel(
@@ -508,9 +508,9 @@ def main():
         "Двухслойная tanh-сеть",
         robustness["twolayer"]["two_layer_tanh"],
         [
-            ("dense_adam", "Dense Adam", "dense"),
+            ("dense_adam", "Плотный Adam", "dense"),
             ("numerical_transfer", "Перенос значений", "other"),
-            ("components_release", "Группы + освобождение", "simple"),
+            ("components_release", "Группы → свободные веса", "simple"),
             ("components", "Группы", "simple"),
             ("vae", "VAE", "vae"),
         ],
