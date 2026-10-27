@@ -1,0 +1,74 @@
+{
+  "protocol_sha256": "0756b1479058e8ebded1cea5457998f8addaf5ece59a4e0ef3464a2caf2fdb59",
+  "protocol": {
+    "name": "compositional_sine_v2_cpu_pilot",
+    "date": "2026-10-28",
+    "seed": 28102026,
+    "groups": 20,
+    "width": 8,
+    "threads": 2,
+    "source": {
+      "tasks": 40,
+      "restarts": 4,
+      "steps": 2048,
+      "batch_size": 64,
+      "learning_rate": 0.1,
+      "initial_norm": 1.0,
+      "frequency_range": [
+        0.8,
+        1.2
+      ],
+      "selection_examples": 4096,
+      "acceptance_mse": 0.0001
+    },
+    "target": {
+      "frequency_range": [
+        3.8,
+        4.2
+      ],
+      "amplitude_range": [
+        0.8,
+        1.2
+      ],
+      "validation_tasks": 2,
+      "evaluation_tasks": 8,
+      "hidden_units": 40,
+      "steps": 1024,
+      "batch_size": 64,
+      "tuning_restarts": 2,
+      "evaluation_restarts": 8,
+      "selection_examples": 4096,
+      "structure_examples": 4096,
+      "success_mse": 0.1
+    },
+    "tuning": {
+      "initial_norms": [
+        0.1,
+        1.0,
+        4.0
+      ],
+      "sgd_learning_rates": [
+        0.03,
+        0.1
+      ],
+      "adam_learning_rates": [
+        0.001,
+        0.01,
+        0.03
+      ]
+    },
+    "structure_search": {
+      "frequency_min": 0.125,
+      "frequency_max": 8.0,
+      "frequency_points": 64,
+      "blind_candidates": 32,
+      "refinement_rounds": 2,
+      "refinement_points": 17,
+      "refinement_radius": 0.125
+    }
+  },
+  "script_sha256": "c998c0c5e4d342a9825da9c719519d7727847a816352999879c06d11dbb5d94d",
+  "torch": "2.6.0+cu118",
+  "numpy": "2.2.6",
+  "device": "cpu"
+}
