@@ -350,7 +350,7 @@ def main():
     plt.close(fig)
     (ROOT / "runs" / "summary.json").write_text(json.dumps(summary, indent=2))
     with (ROOT / "runs" / "metrics.csv").open("w", newline="") as file:
-        writer = csv.writer(file)
+        writer = csv.writer(file, lineterminator="\n")
         writer.writerow(
             [
                 "experiment",
