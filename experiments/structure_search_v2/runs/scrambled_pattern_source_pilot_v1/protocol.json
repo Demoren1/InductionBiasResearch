@@ -1,0 +1,24 @@
+{
+  "run": "scrambled_pattern_source_pilot_v1",
+  "seed": 281120,
+  "source_tasks": 4,
+  "population": 64,
+  "restarts": 2,
+  "generations": 24,
+  "elite": 8,
+  "swaps": 2,
+  "inner_steps": 256,
+  "batch_size": 128,
+  "learning_rate": 0.01,
+  "support": 8192,
+  "query": 2048,
+  "rules": [
+    "64 inputs, eight hidden input groups, four shared ReLU filters of length eight.",
+    "The task codebook has 32 continuous nonzero values plus fixed zero.",
+    "The 64-input permutation is unknown; structure search never reads hidden_teacher.npz.",
+    "Inner Adam trains codebook, four shared biases, four shared readouts and one offset for each candidate and source task.",
+    "Evolution selects structures by mean source-query normalized MSE and mutates permutations by swaps.",
+    "Save useful partial solutions; no requirement to find exact solutions before fitting a prior.",
+    "This phase does not evaluate heldout tasks and does not claim a transfer advantage."
+  ]
+}

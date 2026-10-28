@@ -1,0 +1,125 @@
+{
+  "version": 3,
+  "seed": 281067,
+  "run": "pattern/runs/codebook_20261028_v3",
+  "source_patterns": [
+    "0000",
+    "0001",
+    "0011",
+    "0101",
+    "0110",
+    "0111",
+    "1000",
+    "1001",
+    "1010",
+    "1100",
+    "1110",
+    "1111"
+  ],
+  "target_patterns": [
+    "0010",
+    "0100",
+    "1011",
+    "1101"
+  ],
+  "bank": {
+    "networks_per_task": 512,
+    "train_networks": 384,
+    "validation_networks": 64,
+    "steps_per_round": 1024,
+    "active_edges": [
+      88,
+      71,
+      57,
+      46,
+      37,
+      32
+    ],
+    "learning_rate": 0.03,
+    "l2": 0.001,
+    "log_every": 64,
+    "checkpoint_every": 32
+  },
+  "extraction": {
+    "nonzero_edges": 32,
+    "nonzero_classes": 4,
+    "class_capacity": 8,
+    "cluster_starts": 16,
+    "cluster_iterations": 40,
+    "quality": "max(0, log(2) - balanced source-query BCE)",
+    "features": "canonical signed input weights folded by readout sign and normalized within hidden columns; profiles across source tasks",
+    "targets": "individual canonical IMP masks with nonzero edge classes assigned by inferred cross-task prototypes",
+    "maximum_query_bce": 0.5,
+    "maximum_training_maps_per_task": 128,
+    "alignment_starts": 12,
+    "alignment_iterations": 12,
+    "nonzero_per_column": 4,
+    "retain_fraction": 0.25
+  },
+  "vae": {
+    "nf_channels": 8,
+    "encoder_width": 64,
+    "latent_dim": 16,
+    "decoder_width": 128,
+    "epochs": 200,
+    "batch_per_task": 24,
+    "learning_rate": 0.001,
+    "beta": 0.005,
+    "kl_warmup_epochs": 50,
+    "checkpoint": "minimum inferred-index validation cross-entropy; no analytic indexator"
+  },
+  "fit": {
+    "tuning_steps": 2048,
+    "tuning_restarts": 8,
+    "evaluation_steps": 4096,
+    "evaluation_restarts": 32,
+    "codebook_learning_rates": [
+      0.01,
+      0.03,
+      0.1
+    ],
+    "codebook_initial_norms": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "dense_learning_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "z_learning_rate": 0.03,
+    "direct_index_learning_rate": 0.03,
+    "log_every": 128,
+    "checkpoint_every": 64,
+    "z_penalty": 0.0001,
+    "methods": [
+      "oracle_indices",
+      "inferred_indices",
+      "vae_sample",
+      "vae_z",
+      "untrained_vae_z",
+      "direct_indices",
+      "random_indices",
+      "dense_adam"
+    ]
+  },
+  "rules": [
+    "Pattern is the original 11-bit input and 4-bit substring task; a hidden unit corresponds to one possible window.",
+    "Source networks are ordinary independently weighted 11-8-1 MLPs, trained and magnitude-pruned with rewinding.",
+    "Index extraction uses only training-network weights/masks and source query quality; no analytic index labels.",
+    "NF encoders are separate per source task; the categorical index decoder is shared.",
+    "Codebook C[0]=0 is fixed; four other values, shared hidden bias, shared readout and output bias are trained on each task.",
+    "VAE is frozen during task solving; vae_z trains only z and the seven numeric task parameters.",
+    "No independent per-edge weights are trained in codebook methods. Dense Adam is an explicitly separate baseline.",
+    "Numeric hyperparameters are selected on source patterns only; target labels are opened after extraction, VAE fitting and tuning.",
+    "All final methods have 32 starts and 4096 gradient steps per target; compare against analytic indices without training on them.",
+    "Report held-out 512-input metrics and exact uniform-input metrics over all 2048 bit strings.",
+    "Pattern shares a common indexator across tasks: success need not demonstrate a benefit from optimizing z.",
+    "Align good masks to a reference learned from training solutions with Hungarian column assignments. Analytic masks are never alignment references.",
+    "Refine the consensus and choose its initialization by training-mask agreement. Infer tying by cross-source weight profiles after this alignment.",
+    "The bank retains the best quarter by source-query BCE separately for every task and seed split, excluding BCE >=0.5. Near-perfect classification is not required.",
+    "Collection is reused from v2; only source quality filtering, alignment and extraction change."
+  ],
+  "raw_collection": "pattern/runs/codebook_20261028_v2/raw_collection/bank.npz"
+}
