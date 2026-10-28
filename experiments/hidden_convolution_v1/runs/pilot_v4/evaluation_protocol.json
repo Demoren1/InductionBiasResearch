@@ -1,0 +1,78 @@
+{
+  "methods": [
+    "bank",
+    "best_bank",
+    "best_support",
+    "column_sample",
+    "column_search",
+    "entry_search",
+    "entry_uniform",
+    "column_vae_sample",
+    "column_vae_z",
+    "global_vae_z",
+    "untrained_column_vae_z",
+    "random_codes",
+    "shuffled_support",
+    "dense_adam",
+    "dense_sgd",
+    "dense_transfer",
+    "oracle"
+  ],
+  "steps": 2048,
+  "tasks": 8,
+  "starts": 4,
+  "support": 256,
+  "query": 512,
+  "test": 4096,
+  "tuning": {
+    "bank": {
+      "lr": 0.03,
+      "query_scores": [
+        0.9600287675857544,
+        0.7220677137374878,
+        0.6910123825073242,
+        0.6764190196990967
+      ]
+    },
+    "best_support": {
+      "lr": 0.03,
+      "query_scores": [
+        0.4201052784919739,
+        0.3356495797634125,
+        0.3506008982658386,
+        0.3157270550727844
+      ]
+    },
+    "dense_adam": {
+      "lr": 0.03,
+      "query_scores": [
+        0.7064708471298218,
+        0.6880442500114441,
+        0.613041341304779,
+        0.5167097449302673
+      ]
+    },
+    "dense_sgd": {
+      "lr": 0.3,
+      "query_scores": [
+        0.7081706523895264,
+        0.5929206609725952,
+        0.5308356285095215,
+        0.7942350506782532
+      ]
+    },
+    "dense_transfer": {
+      "lr": 0.01,
+      "query_scores": [
+        0.49132925271987915,
+        0.5005179643630981,
+        0.461908221244812,
+        0.48283833265304565
+      ]
+    }
+  },
+  "structural_lr": 0.03,
+  "structural_update_every": 4,
+  "frozen_support": "source-only majority over training indexators",
+  "calibration_reads_teacher": false
+}

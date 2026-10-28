@@ -1,0 +1,51 @@
+{
+  "raw_source_models": 128,
+  "good_bank": 64,
+  "train": 48,
+  "validation": 16,
+  "best_quantized_query_mean": 0.026636172086000443,
+  "quantization_inputs": [
+    "fitted weights",
+    "budget of codes",
+    "fixed zero code"
+  ],
+  "candidate_ranking": "refit numeric codebooks using source observations and source query",
+  "alignment_inputs": [
+    "inferred sparse indexators",
+    "source-query quality"
+  ],
+  "teacher_read": false,
+  "windows_or_filter_count_supplied": false,
+  "validation_split": "entire source functions with task id divisible by 4",
+  "code_group_distance": "complete-linkage Jaccard, cut .2",
+  "quantizer_variants": [
+    [
+      false,
+      null
+    ],
+    [
+      true,
+      null
+    ],
+    [
+      false,
+      0.5
+    ],
+    [
+      false,
+      1
+    ],
+    [
+      false,
+      2
+    ],
+    [
+      false,
+      4
+    ],
+    [
+      false,
+      8
+    ]
+  ]
+}
