@@ -8,11 +8,14 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from model import predict as network_predict
 from torch import nn
 from torch.nn import functional as F
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "runs" / "v2"
+ACTIVATION = "relu"
+NOISE = 0.0
 
 
 class IndexVAE(nn.Module):
@@ -114,11 +117,13 @@ def observations(seed, tasks, test_count, device):
     torch.manual_seed(seed)
     c = torch.rand(tasks, 32, device=device) * 2 - 1
     x = torch.randn(128 + 1024 + test_count, 32, device=device)
-    labels = (
-        torch.einsum(
-            "bd,tdh->tbh", x, c[:, torch.tensor(teacher, device=device)]
-        ).relu()
-    ).sum(-1) / 4
+    labels = network_predict(x, c[:, torch.tensor(teacher, device=device)], ACTIVATION)
+    if NOISE:
+        labels[:, :128] += (
+            NOISE
+            * labels[:, :128].std(1, unbiased=False)[:, None]
+            * torch.randn_like(labels[:, :128])
+        )
     return x, labels, c
 
 
@@ -157,6 +162,12 @@ def fit(x, y, method, rates, starts, steps, device, pretrained=None):
         indices = torch.tensor(bank["consensus"].reshape(-1), device=device)[
             None
         ].expand(count, -1)
+    elif method == "oracle":
+        # Explicit diagnostic control; other structural solvers never read it.
+        teacher_indices = np.load(OUT / "teacher.npz")["indexator"]
+        indices = torch.tensor(teacher_indices.reshape(-1), device=device)[None].expand(
+            count, -1
+        )
     elif method == "bank_sample":
         choices = torch.tensor(bank["indices"][bank["train"]], device=device).flatten(1)
         indices = choices[torch.randint(len(choices), (count,), device=device)]
@@ -196,9 +207,7 @@ def fit(x, y, method, rates, starts, steps, device, pretrained=None):
             if soft is None
             else (soft * numbers[:, None]).sum(-1)
         )
-        return (
-            torch.einsum("bd,mdh->mbh", batch, weights.reshape(count, 32, 16)).relu()
-        ).sum(-1) / 4
+        return network_predict(batch, weights.reshape(count, 32, 16), ACTIVATION)
 
     for step in range(steps + 1):
         if step % 64 == 0:
@@ -270,11 +279,23 @@ def fit(x, y, method, rates, starts, steps, device, pretrained=None):
 
 
 def main():
+    global OUT, ACTIVATION, NOISE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--stage", choices=["prior", "calibrate", "evaluate"], required=True
     )
+    parser.add_argument("--version", default="v2")
+    parser.add_argument("--steps", type=int, default=4096)
+    parser.add_argument("--starts", type=int, default=8)
+    parser.add_argument("--tasks", type=int, default=8)
+    parser.add_argument("--oracle-control", action="store_true")
     args = parser.parse_args()
+    if min(args.steps, args.starts, args.tasks) <= 0:
+        parser.error("--steps, --starts and --tasks must be positive")
+    OUT = ROOT / "runs" / args.version
+    source_protocol = json.loads((OUT / "protocol.json").read_text())
+    ACTIVATION = source_protocol.get("activation", "relu")
+    NOISE = source_protocol.get("noise_std_relative_to_clean_support", 0.0)
     torch.set_num_threads(4)
     device = torch.device("cuda")
     shutil.copy2(__file__, OUT / ("run_" + args.stage + "_snapshot.py"))
@@ -298,6 +319,8 @@ def main():
         "dense_sgd",
         "dense_transfer",
     ]
+    if args.oracle_control:
+        methods.append("oracle")
     if args.stage == "calibrate":
         x, y, c = observations(282030, 2, 0, device)
         np.savez_compressed(
@@ -314,7 +337,9 @@ def main():
                 else [0.001, 0.003, 0.01, 0.03]
             )
             repeated = [rate for rate in rates for _ in range(2)]
-            data, history = fit(x, y, method, repeated, 8, 4096, device, pretrained)
+            data, history = fit(
+                x, y, method, repeated, 8, args.steps, device, pretrained
+            )
             scores = data["query_nmse"].reshape(2, 4, 2).min(-1).mean(0)
             tuning[method] = {
                 "lr": rates[int(scores.argmin())],
@@ -329,9 +354,11 @@ def main():
             json.dumps(
                 {
                     "methods": methods,
-                    "steps": 4096,
-                    "starts": 8,
-                    "tasks": 8,
+                    "steps": args.steps,
+                    "starts": args.starts,
+                    "tasks": args.tasks,
+                    "activation": ACTIVATION,
+                    "noise_std_relative_to_clean_support": NOISE,
                     "support": 128,
                     "query": 1024,
                     "test": 8192,
@@ -344,12 +371,14 @@ def main():
         )
     else:
         spec = json.loads((OUT / "evaluation_protocol.json").read_text())
+        methods = spec["methods"]
         frozen = {
             name: hashlib.sha256((OUT / name).read_bytes()).hexdigest()
             for name in ["structure_bank.npz", "prior.pt", "evaluation_protocol.json"]
         }
         (OUT / "evaluation_frozen.json").write_text(json.dumps(frozen, indent=2))
-        x, y, c = observations(282040, 8, 8192, device)
+        tasks, starts, steps = spec["tasks"], spec["starts"], spec["steps"]
+        x, y, c = observations(282040, tasks, 8192, device)
         np.savez_compressed(
             OUT / "target_data.npz",
             x=x.cpu().numpy(),
@@ -361,11 +390,13 @@ def main():
                 continue
             reference = method if method.startswith("dense") else "consensus"
             rate = spec["tuning"][reference]["lr"]
-            data, history = fit(x, y, method, [rate], 8, 4096, device, pretrained)
+            data, history = fit(x, y, method, [rate], starts, steps, device, pretrained)
             np.savez_compressed(OUT / (method + ".npz"), **data)
             (OUT / (method + "_history.json")).write_text(json.dumps(history))
-            choice = data["query_nmse"].reshape(8, 8).argmin(1)
-            selected = data["test_nmse"].reshape(8, 8)[np.arange(8), choice]
+            choice = data["query_nmse"].reshape(tasks, starts).argmin(1)
+            selected = data["test_nmse"].reshape(tasks, starts)[
+                np.arange(tasks), choice
+            ]
             print(
                 "RESULT",
                 method,

@@ -1,0 +1,63 @@
+{
+  "methods": [
+    "consensus",
+    "bank_sample",
+    "vae_sample",
+    "vae_z",
+    "untrained_vae_z",
+    "random",
+    "shuffled_consensus",
+    "dense_adam",
+    "dense_sgd",
+    "dense_transfer",
+    "oracle"
+  ],
+  "steps": 2048,
+  "starts": 4,
+  "tasks": 8,
+  "activation": "relu",
+  "noise_std_relative_to_clean_support": 0.1,
+  "support": 128,
+  "query": 1024,
+  "test": 8192,
+  "tuning": {
+    "consensus": {
+      "lr": 0.01,
+      "source_query_grid": [
+        0.432722806930542,
+        0.4371728301048279,
+        0.38491421937942505,
+        0.4761517643928528
+      ]
+    },
+    "dense_adam": {
+      "lr": 0.003,
+      "source_query_grid": [
+        0.3040107488632202,
+        0.28278887271881104,
+        0.2887417674064636,
+        0.29356515407562256
+      ]
+    },
+    "dense_sgd": {
+      "lr": 0.3,
+      "source_query_grid": [
+        0.29777276515960693,
+        0.309756338596344,
+        0.3010751008987427,
+        0.2917780876159668
+      ]
+    },
+    "dense_transfer": {
+      "lr": 0.01,
+      "source_query_grid": [
+        0.31633442640304565,
+        0.3476640582084656,
+        0.2872394919395447,
+        0.29082822799682617
+      ]
+    }
+  },
+  "shared_teacher_layout": true,
+  "advantage_type": "transfer at small target support size, not proof of gradient local-minimum failure"
+}

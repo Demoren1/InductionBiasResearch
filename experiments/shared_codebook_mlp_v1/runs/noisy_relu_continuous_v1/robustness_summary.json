@@ -1,0 +1,279 @@
+{
+  "title": "MLP с ReLU и шумом",
+  "protocol": {
+    "methods": [
+      "consensus",
+      "bank_sample",
+      "vae_sample",
+      "vae_z",
+      "untrained_vae_z",
+      "random",
+      "shuffled_consensus",
+      "dense_adam",
+      "dense_sgd",
+      "dense_transfer",
+      "oracle"
+    ],
+    "steps": 2048,
+    "starts": 4,
+    "tasks": 8,
+    "activation": "relu",
+    "noise_std_relative_to_clean_support": 0.1,
+    "support": 128,
+    "query": 1024,
+    "test": 8192,
+    "tuning": {
+      "consensus": {
+        "lr": 0.01,
+        "source_query_grid": [
+          0.432722806930542,
+          0.4371728301048279,
+          0.38491421937942505,
+          0.4761517643928528
+        ]
+      },
+      "dense_adam": {
+        "lr": 0.003,
+        "source_query_grid": [
+          0.3040107488632202,
+          0.28278887271881104,
+          0.2887417674064636,
+          0.29356515407562256
+        ]
+      },
+      "dense_sgd": {
+        "lr": 0.3,
+        "source_query_grid": [
+          0.29777276515960693,
+          0.309756338596344,
+          0.3010751008987427,
+          0.2917780876159668
+        ]
+      },
+      "dense_transfer": {
+        "lr": 0.01,
+        "source_query_grid": [
+          0.31633442640304565,
+          0.3476640582084656,
+          0.2872394919395447,
+          0.29082822799682617
+        ]
+      }
+    },
+    "shared_teacher_layout": true,
+    "advantage_type": "transfer at small target support size, not proof of gradient local-minimum failure"
+  },
+  "source_query_best_mean": 0.002578271320089698,
+  "consensus_correct_of_512": 255,
+  "methods": {
+    "consensus": {
+      "method": "consensus",
+      "label": "Общий индексатор из банка",
+      "selected_mean_nmse": 0.5431423187255859,
+      "selected_median_nmse": 0.5708551406860352,
+      "selected_task_nmse": [
+        0.5961637496948242,
+        0.6653441190719604,
+        0.44730740785598755,
+        0.2885609567165375,
+        0.5455465912818909,
+        0.7631793022155762,
+        0.3383854925632477,
+        0.7006507515907288
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.582553505897522
+    },
+    "bank_sample": {
+      "method": "bank_sample",
+      "label": "Целая структура из банка",
+      "selected_mean_nmse": 0.4907064437866211,
+      "selected_median_nmse": 0.4992062449455261,
+      "selected_task_nmse": [
+        0.5718573331832886,
+        0.5301358103752136,
+        0.3021901249885559,
+        0.32662439346313477,
+        0.46827664971351624,
+        0.7526879906654358,
+        0.2596067190170288,
+        0.714272677898407
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.5829521417617798
+    },
+    "vae_sample": {
+      "method": "vae_sample",
+      "label": "VAE без обучения z",
+      "selected_mean_nmse": 0.5234612822532654,
+      "selected_median_nmse": 0.5871349573135376,
+      "selected_task_nmse": [
+        0.6757246255874634,
+        0.63186115026474,
+        0.2660277783870697,
+        0.2815361022949219,
+        0.54240882396698,
+        0.7516672611236572,
+        0.3613661229610443,
+        0.6770983934402466
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.6005719900131226
+    },
+    "vae_z": {
+      "method": "vae_z",
+      "label": "VAE + z",
+      "selected_mean_nmse": 0.4479469656944275,
+      "selected_median_nmse": 0.5071521401405334,
+      "selected_task_nmse": [
+        0.5230275392532349,
+        0.5675079822540283,
+        0.2660186290740967,
+        0.20822815597057343,
+        0.49127671122550964,
+        0.6328738331794739,
+        0.3238556385040283,
+        0.5707871317863464
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.5223289728164673
+    },
+    "untrained_vae_z": {
+      "method": "untrained_vae_z",
+      "label": "Необученный VAE + z",
+      "selected_mean_nmse": 0.5383869409561157,
+      "selected_median_nmse": 0.5734126567840576,
+      "selected_task_nmse": [
+        0.6497642397880554,
+        0.5364820957183838,
+        0.4103836715221405,
+        0.27664268016815186,
+        0.6103431582450867,
+        0.7232157588005066,
+        0.435237854719162,
+        0.6650257706642151
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.5847088098526001
+    },
+    "random": {
+      "method": "random",
+      "label": "Случайный индексатор",
+      "selected_mean_nmse": 0.5841022729873657,
+      "selected_median_nmse": 0.5890795588493347,
+      "selected_task_nmse": [
+        0.7296984195709229,
+        0.5689855217933655,
+        0.5157861113548279,
+        0.23898367583751678,
+        0.609173595905304,
+        0.7621275186538696,
+        0.48755180835723877,
+        0.7605114579200745
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.6735472083091736
+    },
+    "shuffled_consensus": {
+      "method": "shuffled_consensus",
+      "label": "Перемешанный общий индексатор",
+      "selected_mean_nmse": 0.5840470790863037,
+      "selected_median_nmse": 0.6418802738189697,
+      "selected_task_nmse": [
+        0.6421767473220825,
+        0.6415838599205017,
+        0.3577583432197571,
+        0.26960134506225586,
+        0.6756870150566101,
+        0.7806024551391602,
+        0.48224329948425293,
+        0.8227234482765198
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.679129958152771
+    },
+    "dense_adam": {
+      "method": "dense_adam",
+      "label": "Плотный Adam",
+      "selected_mean_nmse": 0.46378475427627563,
+      "selected_median_nmse": 0.4811689257621765,
+      "selected_task_nmse": [
+        0.5429361462593079,
+        0.5102462768554688,
+        0.3918766677379608,
+        0.27541103959083557,
+        0.4520915746688843,
+        0.6035234332084656,
+        0.32035350799560547,
+        0.6138396859169006
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.4827001094818115
+    },
+    "dense_sgd": {
+      "method": "dense_sgd",
+      "label": "Плотный SGD с моментом",
+      "selected_mean_nmse": 0.4257361888885498,
+      "selected_median_nmse": 0.4269546866416931,
+      "selected_task_nmse": [
+        0.5180639624595642,
+        0.44842904806137085,
+        0.35241591930389404,
+        0.2385733723640442,
+        0.405480295419693,
+        0.5281367301940918,
+        0.3028608560562134,
+        0.6119295358657837
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.4548717141151428
+    },
+    "dense_transfer": {
+      "method": "dense_transfer",
+      "label": "Градиентный перенос",
+      "selected_mean_nmse": 0.46216121315956116,
+      "selected_median_nmse": 0.48229122161865234,
+      "selected_task_nmse": [
+        0.5339323878288269,
+        0.4872319996356964,
+        0.3093217611312866,
+        0.2875145375728607,
+        0.4773504436016083,
+        0.6606984734535217,
+        0.31513306498527527,
+        0.6261069774627686
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.5078198313713074
+    },
+    "oracle": {
+      "method": "oracle",
+      "label": "Заданный истинный индексатор",
+      "selected_mean_nmse": 0.0029494385235011578,
+      "selected_median_nmse": 0.002971020294353366,
+      "selected_task_nmse": [
+        0.002908108290284872,
+        0.00298219732940197,
+        0.003936219494789839,
+        0.0020148807670921087,
+        0.002959843259304762,
+        0.0033671760465949774,
+        0.0017301023472100496,
+        0.0036969813518226147
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.0031576850451529026
+    }
+  }
+}

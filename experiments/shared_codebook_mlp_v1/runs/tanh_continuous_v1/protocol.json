@@ -1,0 +1,21 @@
+{
+  "inputs": 32,
+  "hidden": 16,
+  "codebook": 32,
+  "source_tasks": 6,
+  "starts": 4,
+  "steps": 8192,
+  "support": 8192,
+  "query": 2048,
+  "fixed_readout": 0.25,
+  "fixed_bias": 0,
+  "activation": "tanh",
+  "noise_std_relative_to_clean_support": 0.0,
+  "source_values": "continuous_uniform",
+  "query_labels": "clean",
+  "extraction_inputs": [
+    "fitted weights",
+    "source query quality"
+  ],
+  "alignment": "Hungarian on within-column equality patterns, then label support overlap; no observations or teacher read by extraction"
+}

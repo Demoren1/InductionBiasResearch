@@ -1,0 +1,279 @@
+{
+  "title": "MLP с tanh",
+  "protocol": {
+    "methods": [
+      "consensus",
+      "bank_sample",
+      "vae_sample",
+      "vae_z",
+      "untrained_vae_z",
+      "random",
+      "shuffled_consensus",
+      "dense_adam",
+      "dense_sgd",
+      "dense_transfer",
+      "oracle"
+    ],
+    "steps": 2048,
+    "starts": 4,
+    "tasks": 8,
+    "activation": "tanh",
+    "noise_std_relative_to_clean_support": 0.0,
+    "support": 128,
+    "query": 1024,
+    "test": 8192,
+    "tuning": {
+      "consensus": {
+        "lr": 0.03,
+        "source_query_grid": [
+          0.01535292062908411,
+          0.0004915646277368069,
+          6.247633521638818e-10,
+          4.149932215360627e-14
+        ]
+      },
+      "dense_adam": {
+        "lr": 0.01,
+        "source_query_grid": [
+          0.2624279856681824,
+          0.26782435178756714,
+          0.2608312666416168,
+          0.269849956035614
+        ]
+      },
+      "dense_sgd": {
+        "lr": 0.01,
+        "source_query_grid": [
+          0.24522359669208527,
+          0.2483903169631958,
+          0.2505108714103699,
+          0.2832983732223511
+        ]
+      },
+      "dense_transfer": {
+        "lr": 0.01,
+        "source_query_grid": [
+          0.3882341682910919,
+          0.3925187587738037,
+          0.35273727774620056,
+          0.3544219732284546
+        ]
+      }
+    },
+    "shared_teacher_layout": true,
+    "advantage_type": "transfer at small target support size, not proof of gradient local-minimum failure"
+  },
+  "source_query_best_mean": 3.4264637568254264e-14,
+  "consensus_correct_of_512": 512,
+  "methods": {
+    "consensus": {
+      "method": "consensus",
+      "label": "Общий индексатор из банка",
+      "selected_mean_nmse": 2.9176564864206306e-14,
+      "selected_median_nmse": 2.1736803437928665e-14,
+      "selected_task_nmse": [
+        1.99004800539946e-14,
+        1.9277219658877728e-14,
+        7.324135330340209e-14,
+        2.937035583814272e-14,
+        2.3573128515928625e-14,
+        3.4774615777005344e-14,
+        1.8069730146853466e-14,
+        1.5205630537248188e-14
+      ],
+      "selected_successes": 8,
+      "successful_starts": 31,
+      "all_starts_mean_nmse": 0.01664797030389309
+    },
+    "bank_sample": {
+      "method": "bank_sample",
+      "label": "Целая структура из банка",
+      "selected_mean_nmse": 3.451872712363982e-14,
+      "selected_median_nmse": 3.4077924401625104e-14,
+      "selected_task_nmse": [
+        2.2302951789543966e-14,
+        3.719372154557289e-14,
+        7.191454056603222e-14,
+        3.9177123730468194e-14,
+        3.991813864591236e-14,
+        3.0962130645809105e-14,
+        1.8612871389555447e-14,
+        1.606832173556543e-14
+      ],
+      "selected_successes": 8,
+      "successful_starts": 24,
+      "all_starts_mean_nmse": 0.03463281691074371
+    },
+    "vae_sample": {
+      "method": "vae_sample",
+      "label": "VAE без обучения z",
+      "selected_mean_nmse": 1.5988569517823292e-13,
+      "selected_median_nmse": 4.036406083506028e-14,
+      "selected_task_nmse": [
+        3.058224653336092e-14,
+        6.965796347938383e-14,
+        1.2445726144550556e-13,
+        3.219733507586753e-14,
+        4.480499697927416e-14,
+        2.9882949684634924e-14,
+        9.115796225506179e-13,
+        3.5923124690846395e-14
+      ],
+      "selected_successes": 8,
+      "successful_starts": 13,
+      "all_starts_mean_nmse": 0.15799708664417267
+    },
+    "vae_z": {
+      "method": "vae_z",
+      "label": "VAE + z",
+      "selected_mean_nmse": 1.7406092029954162e-13,
+      "selected_median_nmse": 2.5806952603547872e-14,
+      "selected_task_nmse": [
+        2.6685202103040283e-14,
+        2.6434954689103472e-14,
+        1.2195228550962445e-12,
+        2.5178952212058167e-14,
+        1.8670711881391654e-14,
+        3.9284744348614536e-14,
+        1.897618076129176e-14,
+        1.7733774857115782e-14
+      ],
+      "selected_successes": 8,
+      "successful_starts": 23,
+      "all_starts_mean_nmse": 0.12822765111923218
+    },
+    "untrained_vae_z": {
+      "method": "untrained_vae_z",
+      "label": "Необученный VAE + z",
+      "selected_mean_nmse": 0.5461868643760681,
+      "selected_median_nmse": 0.5411765575408936,
+      "selected_task_nmse": [
+        0.8589184284210205,
+        0.5412470102310181,
+        0.4494108259677887,
+        0.20172247290611267,
+        0.5411060452461243,
+        0.6998127698898315,
+        0.39076533913612366,
+        0.6865122318267822
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.6420873403549194
+    },
+    "random": {
+      "method": "random",
+      "label": "Случайный индексатор",
+      "selected_mean_nmse": 0.5256550312042236,
+      "selected_median_nmse": 0.478882372379303,
+      "selected_task_nmse": [
+        0.8503667116165161,
+        0.4983859658241272,
+        0.45937877893447876,
+        0.17982566356658936,
+        0.5370224118232727,
+        0.7798771858215332,
+        0.4484219551086426,
+        0.4519619047641754
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.6339224576950073
+    },
+    "shuffled_consensus": {
+      "method": "shuffled_consensus",
+      "label": "Перемешанный общий индексатор",
+      "selected_mean_nmse": 0.5696851015090942,
+      "selected_median_nmse": 0.6370140910148621,
+      "selected_task_nmse": [
+        0.6800058484077454,
+        0.5940223336219788,
+        0.455813467502594,
+        0.3030620515346527,
+        0.7007737755775452,
+        0.7035028338432312,
+        0.4299403131008148,
+        0.6903603672981262
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.6616653203964233
+    },
+    "dense_adam": {
+      "method": "dense_adam",
+      "label": "Плотный Adam",
+      "selected_mean_nmse": 0.38658028841018677,
+      "selected_median_nmse": 0.3650996685028076,
+      "selected_task_nmse": [
+        0.6619557738304138,
+        0.4110293686389923,
+        0.25373777747154236,
+        0.15666572749614716,
+        0.3191699683666229,
+        0.4986576437950134,
+        0.28622737526893616,
+        0.5051987171173096
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.4092622995376587
+    },
+    "dense_sgd": {
+      "method": "dense_sgd",
+      "label": "Плотный SGD с моментом",
+      "selected_mean_nmse": 0.3698745369911194,
+      "selected_median_nmse": 0.3557467460632324,
+      "selected_task_nmse": [
+        0.6241350769996643,
+        0.4020501375198364,
+        0.24491865932941437,
+        0.15118016302585602,
+        0.3094433844089508,
+        0.48562219738960266,
+        0.28075918555259705,
+        0.4608873724937439
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.39222267270088196
+    },
+    "dense_transfer": {
+      "method": "dense_transfer",
+      "label": "Градиентный перенос",
+      "selected_mean_nmse": 0.5213857889175415,
+      "selected_median_nmse": 0.5200038552284241,
+      "selected_task_nmse": [
+        0.9078012704849243,
+        0.5532678961753845,
+        0.3653286397457123,
+        0.24003925919532776,
+        0.486739844083786,
+        0.6119009256362915,
+        0.36091458797454834,
+        0.6450942158699036
+      ],
+      "selected_successes": 0,
+      "successful_starts": 0,
+      "all_starts_mean_nmse": 0.5686242580413818
+    },
+    "oracle": {
+      "method": "oracle",
+      "label": "Заданный истинный индексатор",
+      "selected_mean_nmse": 3.140787326397221e-14,
+      "selected_median_nmse": 3.1012566375620415e-14,
+      "selected_task_nmse": [
+        2.9241620382687225e-14,
+        3.2783515756685394e-14,
+        3.392301223996766e-14,
+        2.795698988609062e-14,
+        3.2843563616382146e-14,
+        4.2730013592121724e-14,
+        2.899843044726694e-14,
+        2.2785826638048803e-14
+      ],
+      "selected_successes": 8,
+      "successful_starts": 32,
+      "all_starts_mean_nmse": 3.0958248117829434e-12
+    }
+  }
+}

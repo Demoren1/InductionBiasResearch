@@ -1,4 +1,4 @@
-"""Fit full source ReLU networks; infer sharing only from their saved weights."""
+"""Fit dense source MLPs; infer sharing only from their saved weights."""
 
 import argparse
 import json
@@ -8,6 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from model import predict
 from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import KMeans
 
@@ -18,10 +19,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--steps", type=int, default=4096)
     parser.add_argument("--version", default="v1")
+    parser.add_argument("--activation", choices=["relu", "tanh"], default="relu")
+    parser.add_argument("--noise", type=float, default=0.0)
+    parser.add_argument("--continuous-source", action="store_true")
     args = parser.parse_args()
+    if args.noise < 0:
+        parser.error("--noise must be nonnegative")
     out = ROOT / "runs" / args.version
     out.mkdir(parents=True, exist_ok=False)
     shutil.copy2(__file__, out / "source_snapshot.py")
+    shutil.copy2(ROOT / "model.py", out / "model_snapshot.py")
     torch.set_num_threads(4)
     device = torch.device("cuda")
     torch.manual_seed(282000)
@@ -33,19 +40,34 @@ def main():
             for _ in range(tasks)
         ]
     )
+    if args.continuous_source:
+        values = torch.rand(tasks, k, device=device) * 2 - 1
     x = torch.randn(8192 + 2048, d, device=device)
     teacher = values[:, hidden_i]
-    y = (torch.einsum("bd,tdh->tbh", x, teacher).relu()).sum(-1) / math.sqrt(h)
+    y = predict(x, teacher, args.activation)
+    training_y = y.clone()
+    if args.noise:
+        training_y[:, :8192] += (
+            args.noise
+            * y[:, :8192].std(1, unbiased=False)[:, None]
+            * torch.randn_like(y[:, :8192])
+        )
     np.savez_compressed(
         out / "teacher.npz",
         indexator=hidden_i.cpu().numpy(),
         values=values.cpu().numpy(),
     )
-    np.savez_compressed(out / "source_data.npz", x=x.cpu().numpy(), y=y.cpu().numpy())
+    np.savez_compressed(
+        out / "source_data.npz",
+        x=x.cpu().numpy(),
+        y=y.cpu().numpy(),
+        training_y=training_y.cpu().numpy(),
+    )
     torch.manual_seed(282001)
     weights = (torch.randn(tasks * starts, d, h, device=device) * 0.3).requires_grad_()
     optimizer = torch.optim.Adam([weights], lr=0.01)
     labels = y.repeat_interleave(starts, 0)
+    training_labels = training_y.repeat_interleave(starts, 0)
     scale = labels[:, :8192].var(1, unbiased=False)
     best = weights.detach().clone()
     best_loss = torch.full((tasks * starts,), torch.inf, device=device)
@@ -55,9 +77,7 @@ def main():
             with torch.no_grad():
                 error = torch.zeros(tasks * starts, device=device)
                 for ids in torch.arange(8192, 10240, device=device).split(256):
-                    pred = (torch.einsum("bd,mdh->mbh", x[ids], weights).relu()).sum(
-                        -1
-                    ) / math.sqrt(h)
+                    pred = predict(x[ids], weights, args.activation)
                     error += (pred - labels[:, ids]).square().sum(1) / 2048 / scale
                 good = error < best_loss
                 best_loss[good] = error[good]
@@ -73,10 +93,8 @@ def main():
         if step == args.steps:
             break
         ids = torch.randint(8192, (256,), device=device)
-        pred = (torch.einsum("bd,mdh->mbh", x[ids], weights).relu()).sum(
-            -1
-        ) / math.sqrt(h)
-        loss = ((pred - labels[:, ids]).square().mean(1) / scale).sum()
+        pred = predict(x[ids], weights, args.activation)
+        loss = ((pred - training_labels[:, ids]).square().mean(1) / scale).sum()
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
@@ -144,6 +162,12 @@ def main():
                 "query": 2048,
                 "fixed_readout": 1 / math.sqrt(h),
                 "fixed_bias": 0,
+                "activation": args.activation,
+                "noise_std_relative_to_clean_support": args.noise,
+                "source_values": "continuous_uniform"
+                if args.continuous_source
+                else "permuted_grid",
+                "query_labels": "clean",
                 "extraction_inputs": ["fitted weights", "source query quality"],
                 "alignment": "Hungarian on within-column equality patterns, then label support overlap; no observations or teacher read by extraction",
             },
