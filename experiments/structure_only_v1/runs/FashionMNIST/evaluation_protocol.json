@@ -1,0 +1,35 @@
+{
+  "dataset": "FashionMNIST",
+  "steps": 1024,
+  "restarts": 4,
+  "split_seeds": 8,
+  "methods": [
+    "bank_sample",
+    "frequency",
+    "task_consensus",
+    "vae_mode",
+    "vae_sample",
+    "vae_z",
+    "untrained_vae_z",
+    "shuffled_frequency",
+    "shuffled_vae_z"
+  ],
+  "extractor_inputs": "only good source mask indices and task/lineage IDs",
+  "excludes": [
+    "input correlations",
+    "functional utility",
+    "source weights",
+    "source gradients",
+    "group count",
+    "oracle layout"
+  ],
+  "source_numerical_calibration_uses_source_labels": true,
+  "target_evaluation": "retrospective paired ablation on previous held-class splits; not a new blind test",
+  "reused_baselines": [
+    "dense_adam",
+    "dense_sgd",
+    "pretrained_adam",
+    "frozen_pretrained",
+    "random"
+  ]
+}

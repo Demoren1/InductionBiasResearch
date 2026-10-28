@@ -1,0 +1,60 @@
+{
+  "methods": [
+    "consensus",
+    "bank_sample",
+    "vae_sample",
+    "vae_z",
+    "untrained_vae_z",
+    "random",
+    "shuffled_consensus",
+    "dense_adam",
+    "dense_sgd",
+    "dense_transfer"
+  ],
+  "steps": 4096,
+  "starts": 8,
+  "tasks": 8,
+  "support": 128,
+  "query": 1024,
+  "test": 8192,
+  "tuning": {
+    "consensus": {
+      "lr": 0.03,
+      "source_query_grid": [
+        1.3430721992335748e-05,
+        1.844682826629418e-12,
+        3.473940292332209e-14,
+        2.6638877871154945e-14
+      ]
+    },
+    "dense_adam": {
+      "lr": 0.003,
+      "source_query_grid": [
+        0.2781111001968384,
+        0.26814401149749756,
+        0.2703341543674469,
+        0.28656989336013794
+      ]
+    },
+    "dense_sgd": {
+      "lr": 0.01,
+      "source_query_grid": [
+        0.2795725464820862,
+        0.2974235415458679,
+        0.2885204553604126,
+        0.28258267045021057
+      ]
+    },
+    "dense_transfer": {
+      "lr": 0.03,
+      "source_query_grid": [
+        0.29709377884864807,
+        0.3269754648208618,
+        0.2875666320323944,
+        0.2683016061782837
+      ]
+    }
+  },
+  "shared_teacher_layout": true,
+  "advantage_type": "transfer at small target support size, not proof of gradient local-minimum failure"
+}

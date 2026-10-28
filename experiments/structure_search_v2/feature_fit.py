@@ -115,6 +115,22 @@ def fit(x, y, xv, yv, method, options, out, spec, steps, restarts, device):
     noise = None
     if dense:
         selected = torch.arange(inputs, device=device)[None].expand(count, -1)
+    elif method == "bank_sample":
+        bank = np.load(out / "good_bank.npz")
+        candidates = torch.tensor(bank["indices"][bank["role"] == 0], device=device)
+        chosen = torch.randint(len(candidates), (base_count,), device=device)
+        selected = candidates[chosen.repeat(len(options))]
+    elif method == "task_consensus":
+        bank = np.load(out / "good_bank.npz")
+        per_task = []
+        for task in np.unique(bank["task"]):
+            ids = (bank["task"] == task) & (bank["role"] == 0)
+            votes = np.zeros((int(ids.sum()), inputs))
+            np.put_along_axis(votes, bank["indices"][ids], 1.0, axis=1)
+            per_task.append(votes.mean(0))
+        scores = np.log(np.array(per_task) + slots / inputs).mean(0)
+        indices = np.sort(np.argsort(-scores, kind="stable")[:slots])
+        selected = torch.tensor(indices, device=device)[None].expand(count, -1)
     elif method in ["frequency", "functional"]:
         bank = np.load(out / "good_bank.npz")
         training = bank["role"] == 0
