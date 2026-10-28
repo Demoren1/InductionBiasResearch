@@ -6,15 +6,15 @@
 
 12 source-задач, 4 отложенные. IMP оставляет **32 связи**. Три канала банка: веса, градиенты BCE, функциональные карты. Модель: два NF-слоя → VAE encoder задачи → общий decoder. При переносе обучается только z; decoder заморожен. Поиск и выбор маски используют только source-данные; отложенные задачи оцениваются после её фиксации.
 
-![Схема сбора, обучения и переноса на Pattern](assets/2026-10-13/protocol.svg)
+![Схема сбора, обучения и переноса на Pattern](../mds/assets/2026-10-13/protocol.svg)
 
-Схема — для Pattern; в Multimask эпизод использует шесть source-задач семейства. Математика SVG отрисована из [LaTeX](assets/2026-10-13/protocol_math.tex), без Unicode-математики.
+Схема — для Pattern; в Multimask эпизод использует шесть source-задач семейства. Математика SVG отрисована из [LaTeX](../mds/assets/2026-10-13/protocol_math.tex), без Unicode-математики.
 
 ## Pattern
 
 Банк: **12 000 карт**, средняя query BCE MLP — **0,2371**, aligned IoU — **0,5969**. Генератор достиг validation IoU = **1** за пять эпох; KL = **4,157**.
 
-![Pattern: loss, IoU и KL](assets/2026-10-13/pattern_training.png)
+![Pattern: loss, IoU и KL](../mds/assets/2026-10-13/pattern_training.png)
 
 На четырёх отложенных задачах: **test BCE = 0,3710; accuracy = 83,22%**. Generated и аналитическая маски совпали. Все восемь стартовых масок уже имели IoU = 1; выбран шаг **0**. Польза оптимизации z не подтверждена.
 
@@ -24,7 +24,7 @@
 
 Лучший checkpoint по validation IoU — **эпоха 26**: validation IoU = **0,9218**, KL = **7,830**. К эпохе 46 loss снизился, но IoU упал до 0,8889: меньший VAE loss не гарантирует лучшую структуру.
 
-![Multimask: обучение, IoU и KL](assets/2026-10-13/multimask_training.png)
+![Multimask: обучение, IoU и KL](../mds/assets/2026-10-13/multimask_training.png)
 
 ## Multimask: поиск z и перенос
 
@@ -32,7 +32,7 @@
 
 **Gumbel-Top-k / RelaxedTopK:** Adam обучает z по BCE через обучение MLP; маска в прямом проходе бинарная. Проверяются длины шага 1/0,5/2 вдоль направления Adam; ухудшающий BCE без шума шаг откатывается. Настройки: **80 шагов, lr = 0,05, температура 2→1, шум 0,25→0,05, две выборки на шаг**. Evolution: 100 шагов, четыре Gaussian-предложения на рестарт, радиус 0,3.
 
-![Source-only поиск: средняя BCE восьми рестартов](assets/2026-10-13/multimask_search.png)
+![Source-only поиск: средняя BCE восьми рестартов](../mds/assets/2026-10-13/multimask_search.png)
 
 Пунктир — BCE Gumbel-выборок для градиента; синяя сплошная линия — BCE без шума для принятия шага. Показаны средние восьми рестартов, а не loss выбранной маски. Прежний sigmoid-ST ухудшал B.
 
@@ -43,11 +43,11 @@
 | **Gumbel + проверка шага** | **0,9394 / 1,0000** | **0,55952 / 0,54540** |
 | **Evolution baseline** | **1,0000 / 1,0000** | **0,54858 / 0,54540** |
 
-![IoU и превышение аналитического BCE-минимума на отложенных задачах](assets/2026-10-13/multimask_transfer.png)
+![IoU и превышение аналитического BCE-минимума на отложенных задачах](../mds/assets/2026-10-13/multimask_transfer.png)
 
 Gumbel выбрал шаги **28 / 72** для A/B. Для B достигнут аналитический риск; для A excess BCE = **0,01094**, evolution лучше. Здесь BCE имеет мягкую цель и минимум BCE(p,p); абсолютные значения несопоставимы с Pattern.
 
-![Выровненные маски и sigmoid decoder](assets/2026-10-13/multimask_masks.png)
+![Выровненные маски и sigmoid decoder](../mds/assets/2026-10-13/multimask_masks.png)
 
 Каждая маска выровнена к своему ближайшему эталону только для визуализации; sigmoid переставлен вместе с Gumbel-маской. Evolution нашёл по одному варианту A/B, Gumbel — один вариант B. Покрытие всех четырёх оптимумов не показано.
 
@@ -55,6 +55,6 @@ Gumbel выбрал шаги **28 / 72** для A/B. Для B достигнут
 
 ## Данные
 
-[Сводка](assets/2026-10-13/summary.json) · [источники и SHA-256](assets/2026-10-13/sources.json) · CSV: [обучение](assets/2026-10-13/multimask_training.csv), [поиск](assets/2026-10-13/multimask_search.csv), [перенос](assets/2026-10-13/multimask_transfer.csv) · [значения хитмапов](assets/2026-10-13/multimask_masks.json).
+[Сводка](../mds/assets/2026-10-13/summary.json) · [источники и SHA-256](../mds/assets/2026-10-13/sources.json) · CSV: [обучение](../mds/assets/2026-10-13/multimask_training.csv), [поиск](../mds/assets/2026-10-13/multimask_search.csv), [перенос](../mds/assets/2026-10-13/multimask_transfer.csv) · [значения хитмапов](../mds/assets/2026-10-13/multimask_masks.json).
 
 Графики и таблицы включены в репозиторий. Обновление выполнено по сохранённым ранам, без нового обучения.

@@ -11,8 +11,8 @@ ASSETS = Path(__file__).resolve().parent
 ROOT = ASSETS.parents[2]
 RESULTS = ROOT / "paper_vae_solver/results"
 REPORTS = [
-    ROOT / "mds/FINAL_REPORT_2026-10-26.md",
-    ROOT / "mds/FINAL_REPORT_2026-10-26_APPENDIX.md",
+    ROOT / "final_mds/FINAL_REPORT_2026-10-26.md",
+    ROOT / "final_mds/FINAL_REPORT_2026-10-26_APPENDIX.md",
 ]
 
 
