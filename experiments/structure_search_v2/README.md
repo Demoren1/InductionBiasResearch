@@ -156,6 +156,21 @@ IDs, and renders six figures under `mds/assets/2026-10-28/structure_transfer`.
 Reported summary metrics select each restart by query, then average test
 metrics. All-start averages and per-pair values are also available.
 
+Task drawings and actual saved indexators of every method are reproduced with:
+
+```bash
+MPLCONFIGDIR=/tmp/induction-mpl python experiments/structure_search_v2/study_structure_examples.py
+```
+
+This draws eight additional figures and writes `runs/structure_examples.json`
+and `runs/structure_examples.npz`. Examples use the first target function / first
+target pair and support split, with each method's restart selected by query.
+Teacher layouts only restore coordinates and rename equivalent groups for
+diagnostic display; they do not change saved fits. Dense methods are displayed
+as actual numeric weights, without inventing a sparse discrete indexator.
+The complete gallery and per-example table are in
+[the indexator appendix](../../mds/STRUCTURE_TRANSFER_INDEXATORS_2026-10-28.md).
+
 The numerical states for all final target starts are saved in each method NPZ,
 including selected indices, numeric parameters, best z and checkpoint step.
 `prior_samples.npz` stores latent-only projected masks without Gumbel noise;
