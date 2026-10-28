@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "seed": 281200,
+  "hidden": 16,
+  "active_features": 64,
+  "population": 32,
+  "generations": 8,
+  "inner_steps": 256,
+  "learning_rate": 0.01,
+  "source_classes": [0, 1, 2, 3, 4, 5],
+  "reserved_pairs": [[0, 5], [2, 3]],
+  "target_classes": [6, 7, 8, 9],
+  "source_support_per_class": 24,
+  "source_query_per_class": 128,
+  "source_pool_per_class": 500,
+  "source_query_pool_per_class": 256,
+  "source_roles": [16, 8, 8],
+  "elite_per_role": [4, 2, 2],
+  "mutations": 4,
+  "rules": [
+    "Use original class labels; source classes 0..5 and target classes 6..9 never overlap.",
+    "This is the mask special case of a codebook: C[0]=0; every selected feature-hidden edge has a separate learned nonzero value.",
+    "A mask chooses 64 of 196 image pixels; it is repeated across 16 hidden neurons. There are binomial(196,64) candidates, not an enumerable small catalogue.",
+    "Within each task, separate source train/validation/test lineages evolve independently. Parent selection never crosses these roles.",
+    "Retain the best quarter of source solutions by query BCE for the prior; near-perfect accuracy is not required.",
+    "Source-only tuning must finish before inspecting target tasks or official test metrics.",
+    "Do not claim that a predefined DeepSets architecture is structure discovered by this experiment."
+  ]
+}

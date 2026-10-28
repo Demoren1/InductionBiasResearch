@@ -1,1 +1,11 @@
 datasets/
+# Regenerable exploratory checkpoints; keep their protocols and histories.
+runs/feature_bank_*/*.npz
+runs/feature_bank_*/*.pt
+runs/distractor_*_v1/*.npz
+runs/distractor_*_v1/*.pt
+runs/distractor_*_v2/*.npz
+runs/distractor_*_v2/*.pt
+# Full weight grids of rejected source hyperparameters are local only.
+runs/**/tuning_*.npz
+!runs/**/tuning_splits.npz

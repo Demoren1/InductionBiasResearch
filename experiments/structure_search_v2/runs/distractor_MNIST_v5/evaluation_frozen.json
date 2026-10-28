@@ -1,0 +1,94 @@
+{
+  "effective_spec": {
+    "seed": 281400,
+    "blocks": 8,
+    "hidden": 16,
+    "slots": 64,
+    "population": 32,
+    "generations": 4,
+    "inner_steps": 256,
+    "learning_rate": 0.01,
+    "source_classes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "reserved_pairs": [
+      [
+        0,
+        5
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "target_classes": [
+      6,
+      7,
+      8,
+      9
+    ],
+    "roles": [
+      16,
+      8,
+      8
+    ],
+    "elite_per_role": [
+      4,
+      2,
+      2
+    ],
+    "mutations": 4,
+    "rules": [
+      "Labels are original MNIST/Fashion-MNIST labels, considered in binary pairs.",
+      "The main 14x14 image is mixed with seven independent images from the same empirical class-pair image pool; all blocks have matching marginals.",
+      "A fixed unknown coordinate permutation hides the informative image. The same layout is shared across source and target tasks.",
+      "The learner receives no block identity or permutation. Hidden layout is used only for diagnostic/oracle controls.",
+      "Indexators choose 64 distinct input coordinates; codebook C[64,16] is trained afresh per task.",
+      "Source and target classes are disjoint. Source train, source query and source calibration images are separated.",
+      "Keep best quarter by source-query BCE within task and lineage split; perfect source accuracy is not required.",
+      "Report both ordinary-image controls and this distractor-image modification; do not call it the standard unmodified dataset benchmark.",
+      "Compare against multitask gradient pretraining with the same source observations, not only fresh dense gradient training."
+    ],
+    "sampling": "balanced_without_replacement",
+    "pool_size": 5000,
+    "source_train": [
+      0,
+      2000
+    ],
+    "source_query": [
+      2000,
+      4000
+    ],
+    "calibration_support": [
+      4000,
+      4500
+    ],
+    "calibration_query": [
+      4500,
+      5000
+    ],
+    "test_per_class": 512,
+    "proposal_pool": "experiments/structure_search_v2/runs/distractor_MNIST_v4/component_proposal.npz",
+    "active_features": 64,
+    "binary_prior": true,
+    "structure_start": 512,
+    "structure_every": 16,
+    "sampling_temperature": 1.0
+  },
+  "official_test_main_seed": 281500,
+  "official_test_donor_seed": 281550,
+  "sha256": {
+    "evaluation_protocol.json": "28c8074d46f16d3fd1d6568b064f5afb4385383b8f2d1c1bb2da00d38d90b4a0",
+    "tuning.json": "eee0d77683ae7656ec49aac50ad740df39464f413b1bddfc2abceafc0501b2cc",
+    "prior.pt": "7107019365895daef8fbc017149cffe44d8a3d4cbcfab1259ba8b002d8a47808",
+    "pretrained.pt": "00c83a8f051c9ac1a38e29b483420904cb839cf3125e168f7bb987e7cf4b91a9",
+    "distractor_protocol.json": "e10ade0ad7d01a8c3df74e24224305c74269407dc5929342df95da2cbc3ecf4f",
+    "good_bank.npz": "0573adb3770f440e3762aae28e3e6756133776595373b65f370cc291a77f54d6"
+  },
+  "source_snapshot": "source_evaluate_1793158904181830005"
+}
