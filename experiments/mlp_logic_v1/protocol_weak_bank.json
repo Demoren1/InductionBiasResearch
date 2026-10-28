@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "seed": 281066,
+  "source_refit": "results/refit_v1",
+  "output": "results/weak_bank_v1",
+  "bank": {
+    "quality": "max(0, entropy(validation class frequency) - validation BCE - 0.005)",
+    "minimum_bce_gain": 0.005,
+    "use_all_refit_models": true,
+    "coassociation": "normalized squared input weights weighted by absolute outgoing paths; fitness-weighted mean",
+    "mask_control": "same accepted candidates and quality weights; replace fitted values by binary masks",
+    "input_groups": 8,
+    "group_size": 8,
+    "permutation_diagnostics": 200
+  },
+  "transfer": {
+    "tuning_tasks": 2,
+    "evaluation_tasks": 8,
+    "tuning_steps": 2048,
+    "evaluation_steps": 8192,
+    "tuning_restarts": 2,
+    "evaluation_restarts": 4,
+    "batch_size": 128,
+    "selection_examples": 4096,
+    "evaluation_examples": 16384,
+    "log_every": 512,
+    "adam_learning_rates": [0.001, 0.003, 0.01],
+    "sgd_learning_rates": [0.03, 0.1, 0.3],
+    "gradient_norm_clip": 5.0,
+    "methods": [
+      {"name": "weak_values", "optimizer": "adam"},
+      {"name": "weak_masks", "optimizer": "adam"},
+      {"name": "shuffled", "optimizer": "adam"},
+      {"name": "oracle", "optimizer": "adam"},
+      {"name": "dense_adam", "optimizer": "adam"},
+      {"name": "dense_sgd", "optimizer": "sgd"}
+    ]
+  },
+  "rules": [
+    "A complete source solution is not required: use partial solutions that beat a constant-class-probability predictor on validation BCE.",
+    "Do not weight or select source models using source final evaluation labels.",
+    "Pool all four completed search schemes; report quality mass and structural diagnostics per source scheme separately.",
+    "Extract balanced input groups and paired higher groups without teacher labels; freeze priors before generating new tasks.",
+    "Teacher groups are used only for structural diagnostics, label generation, and the explicitly privileged oracle control.",
+    "A shuffled prior preserves mask sizes but permutes input coordinates; it is not selected against teacher groups.",
+    "Tune each transfer method's learning rate only on two new tuning tasks.",
+    "Evaluate eight separate new complete tasks of the same family; weights restart without source weight transfer.",
+    "Compare BCE and both-class recall, even when no method attains 97% accuracy.",
+    "This extension was designed after seeing source failures; fresh target tasks remain independent of that development."
+  ]
+}

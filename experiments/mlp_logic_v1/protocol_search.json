@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "seed": 281065,
+  "tasks_from": "results/calibration_v1/source_tasks.npz",
+  "tasks": 4,
+  "model": {
+    "dimensions": [64, 64, 16, 4, 1],
+    "fan_in_options": [[8, 16, 32, 64], [8, 16, 32, 64], [4, 8, 16], [4]],
+    "center_inputs": true,
+    "codebook_base": [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+    "codebook_scale_range": [0.5, 2.0],
+    "bias_codebook_step": 0.5
+  },
+  "search": {
+    "generations": 16,
+    "population": 16,
+    "elite": 4,
+    "immigrants": 4,
+    "mutated_rows_fraction": 0.1,
+    "codebook_log_scale_mutation": 0.2,
+    "candidate_steps": 512,
+    "batch_size": 128,
+    "log_every": 128,
+    "selection_examples": 4096,
+    "evaluation_examples": 16384,
+    "numeric_learning_rates": [0.03, 0.1, 0.3],
+    "index_learning_rates": [0.03, 0.1, 0.3],
+    "momentum": 0.9,
+    "gradient_norm_clip": 5.0,
+    "index_surrogate": "nearest-codebook forward, identity backward; project shadow values onto codebook range",
+    "success_accuracy": 0.97,
+    "success_minimum_class_recall": 0.95
+  },
+  "methods": [
+    {"name": "random_indices", "outer": "random", "inner": "indices"},
+    {"name": "evolution_indices", "outer": "evolution", "inner": "indices"},
+    {"name": "random_weights", "outer": "random", "inner": "weights"},
+    {"name": "evolution_weights", "outer": "evolution", "inner": "weights"}
+  ],
+  "rules": [
+    "These are source feasibility tasks already viewed in calibration, not held-out transfer tasks.",
+    "Use only full input/output labels; no teacher groups, parents or intermediate targets in proposal/fitness.",
+    "A candidate fixes a binary support mask and scalar codebooks for each layer's weights and biases.",
+    "Index training keeps codebooks fixed, chooses nearest codebook values in forward, and uses identity straight-through gradients for real shadow parameters.",
+    "Weight training keeps the support mask fixed and trains numeric weights/biases using SGD.",
+    "Evolution recombines masks neuron-wise and mutates edges/scales; all numeric or shadow values restart independently.",
+    "All methods evaluate 256 candidates/task with 512 SGD steps each; no free survivor training.",
+    "All methods start from the same initial population, use paired inner seeds, and share training/selection/evaluation data.",
+    "Choose candidate and checkpoint by selection BCE; evaluation labels are used only after all searches finish.",
+    "Save all candidate structures and fitness; archive only independently qualified solutions as a successful bank.",
+    "If no bank is obtained, report that result without training a prior or claiming transfer."
+  ]
+}

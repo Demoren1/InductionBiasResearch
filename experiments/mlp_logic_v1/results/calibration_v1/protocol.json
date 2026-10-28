@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "seed": 281064,
+  "family": {
+    "dimension": 64,
+    "groups": 8,
+    "group_size": 8,
+    "first_gates_per_group": 2,
+    "fan_in": 4,
+    "xor_probability": 0.5,
+    "balance_examples": 4096,
+    "positive_rate_range": [0.2, 0.8]
+  },
+  "model": {"hidden": [128, 64, 16]},
+  "calibration": {
+    "tasks": 4,
+    "restarts": 2,
+    "steps": 8192,
+    "batch_size": 128,
+    "selection_examples": 4096,
+    "evaluation_examples": 16384,
+    "log_every": 512,
+    "adam_learning_rates": [0.001, 0.003, 0.01],
+    "initial_gains": [0.5, 1.0, 2.0],
+    "sgd_learning_rates": [0.03, 0.1, 0.3],
+    "sgd_momentum": 0.9,
+    "success_accuracy": 0.97,
+    "success_minimum_class_recall": 0.95,
+    "minimum_successful_tasks": 3
+  },
+  "bank": {
+    "tasks": 8,
+    "restarts": 4,
+    "steps": 16384,
+    "minimum_successful_tasks": 6
+  },
+  "target": {
+    "tuning_tasks": 2,
+    "evaluation_tasks": 8,
+    "steps": 4096,
+    "restarts": 4,
+    "batch_size": 128,
+    "selection_examples": 4096,
+    "evaluation_examples": 16384,
+    "log_every": 512,
+    "methods": ["dense_adam", "dense_sgd", "weight_transfer", "learned_hierarchy", "random_hierarchy", "replayed_mask", "local_mask_search", "oracle_hierarchy"]
+  },
+  "gates": [
+    "Do not fit elementary gate tasks or use intermediate teacher labels.",
+    "Calibration must solve at least 3/4 complete tasks before collecting a bank.",
+    "At least 6/8 bank tasks must pass the same accuracy and class-recall gate.",
+    "Extract hierarchy only from accepted fitted weights, before opening target labels.",
+    "Evaluate new full circuits from the same family; no easier source distribution.",
+    "Report all failures and stop at the first failed prerequisite."
+  ]
+}

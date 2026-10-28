@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "search_from": "results/search_v1",
+  "output": "results/refit_v1",
+  "seed_offset": 50000,
+  "restarts": 6,
+  "steps": 16384,
+  "log_every": 512,
+  "evaluation_seed_offset": 8000,
+  "purpose": "Check whether a selected structure was limited by the short 512-step inner fit, rather than treating short-fit failure as structural impossibility.",
+  "rules": [
+    "Select one structure per task and method by the original selection BCE only.",
+    "Restart numeric or shadow values six times; keep the chosen masks/codebooks fixed.",
+    "Use each original SGD learning rate twice; same new seeds and data for all methods.",
+    "Select checkpoint/restart using selection BCE; evaluate on a fresh independent sample after all refits.",
+    "This is a diagnostic extension after looking at source search progress, not a preregistered new-task comparison."
+  ]
+}
