@@ -1,0 +1,59 @@
+{
+  "seed": 1101067,
+  "source_run": "pattern/runs/codebook_20261028_v4",
+  "source_protocol": "pattern/codebook/protocol_v4.json",
+  "run": "pattern/runs/autoregressive_20261101_v2",
+  "prior": {
+    "width": 256,
+    "steps": 2000,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "checkpoint_every": 100,
+    "diagnostic_samples": 8192
+  },
+  "fit": {
+    "steps": 4096,
+    "restarts": 32,
+    "checkpoint_every": 64,
+    "log_every": 128,
+    "codebook_learning_rate": 0.1,
+    "codebook_initial_norm": 0.5,
+    "dense_adam_learning_rate": 0.01,
+    "dense_sgd_learning_rate": 0.3,
+    "methods": [
+      "autoregressive",
+      "frequency",
+      "bank",
+      "uniform",
+      "untrained_ar",
+      "vae_sample",
+      "vae_z",
+      "inferred",
+      "dense_adam",
+      "dense_sgd",
+      "oracle"
+    ]
+  },
+  "rules": [
+    "Reuse the source-only quality-filtered and Hungarian-aligned Pattern bank; no additional source collection.",
+    "Use only split 0 for training and split 1 for model selection; split 2 is a source-network likelihood audit.",
+    "Use the existing cross-source inferred code labels, globally renamed by first occurrence in the inferred consensus. No teacher labels enter generator training.",
+    "MADE models the unconstrained 88-position, five-class joint distribution. No top-32 or class-capacity constraint is imposed on AR or frequency proposals.",
+    "Uniform proposals use the global training-bank code histogram at every position. Frequency proposals use the per-position histogram with additive smoothing 0.01.",
+    "Use fresh observation partitions and numeric seeds, with the same four previously studied held-out patterns. This is a replication, not unseen benchmark tasks.",
+    "Numeric settings were selected on source patterns in the earlier v4 protocol; no target-based tuning is performed.",
+    "Each method uses 32 starts and 4096 full-support updates per target. VAE+z additionally optimizes latent variables; all other structural proposals are fixed before numeric fitting.",
+    "Only query BCE selects checkpoints and starts. Report disjoint test-512 and full-domain-2048 results separately.",
+    "Pattern has one shared correct indexator, so this experiment does not establish novel combinatorial transfer.",
+    "The inherited extraction assumes four active connections per column and four shared groups of eight; generator receives the resulting bank, not the analytic structure.",
+    "Plot training/query losses and recalls against optimizer steps. Do not create or run tests.",
+    "Development follow-up to v1: the original bank was selected before tying. Filter indexators using only their source-codebook query BCE <0.3; this cutoff was fixed from source diagnostics, without optimizing target metrics.",
+    "Use the same target partitions, initialization seeds and budgets as v1 for a paired comparison. The previous target results have been seen, so v2 is a developmental replication, not a fresh confirmatory test.",
+    "The inherited VAE is unchanged and was trained on the earlier unfiltered bank; report this asymmetry explicitly."
+  ],
+  "bank_filter": {
+    "audit": "pattern/runs/autoregressive_20261101_v1/source_codebook_audit.npz",
+    "maximum_codebook_query_bce": 0.3,
+    "criterion": "balanced source-query BCE after refitting seven numeric parameters, four starts x 2048 steps; retain original split roles"
+  }
+}

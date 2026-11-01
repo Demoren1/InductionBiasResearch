@@ -1,0 +1,71 @@
+{
+  "seed": 1101067,
+  "source_run": "pattern/runs/codebook_20261028_v4",
+  "source_protocol": "pattern/codebook/protocol_v4.json",
+  "run": "pattern/runs/autoregressive_20261101_v1",
+  "prior": {
+    "width": 256,
+    "steps": 2000,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "checkpoint_every": 100,
+    "diagnostic_samples": 8192
+  },
+  "fit": {
+    "steps": 4096,
+    "restarts": 32,
+    "checkpoint_every": 64,
+    "log_every": 128,
+    "codebook_learning_rate": 0.1,
+    "codebook_initial_norm": 0.5,
+    "dense_adam_learning_rate": 0.01,
+    "dense_sgd_learning_rate": 0.3,
+    "methods": [
+      "autoregressive",
+      "frequency",
+      "bank",
+      "uniform",
+      "untrained_ar",
+      "vae_sample",
+      "vae_z",
+      "inferred",
+      "dense_adam",
+      "dense_sgd",
+      "oracle"
+    ]
+  },
+  "rules": [
+    "Reuse the source-only quality-filtered and Hungarian-aligned Pattern bank; no additional source collection.",
+    "Use only split 0 for training and split 1 for model selection; split 2 is a source-network likelihood audit.",
+    "Use the existing cross-source inferred code labels, globally renamed by first occurrence in the inferred consensus. No teacher labels enter generator training.",
+    "MADE models the unconstrained 88-position, five-class joint distribution. No top-32 or class-capacity constraint is imposed on AR or frequency proposals.",
+    "Uniform proposals use the global training-bank code histogram at every position. Frequency proposals use the per-position histogram with additive smoothing 0.01.",
+    "Use fresh observation partitions and numeric seeds, with the same four previously studied held-out patterns. This is a replication, not unseen benchmark tasks.",
+    "Numeric settings were selected on source patterns in the earlier v4 protocol; no target-based tuning is performed.",
+    "Each method uses 32 starts and 4096 full-support updates per target. VAE+z additionally optimizes latent variables; all other structural proposals are fixed before numeric fitting.",
+    "Only query BCE selects checkpoints and starts. Report disjoint test-512 and full-domain-2048 results separately.",
+    "Pattern has one shared correct indexator, so this experiment does not establish novel combinatorial transfer.",
+    "The inherited extraction assumes four active connections per column and four shared groups of eight; generator receives the resulting bank, not the analytic structure.",
+    "Plot training/query losses and recalls against optimizer steps. Do not create or run tests."
+  ],
+  "hashes": {
+    "pattern/autoregressive/protocol.json": "bb722e07ce997a632b90f5b5758354f7e4cae9588f61d519dcc627672fd6cf31",
+    "pattern/codebook/protocol_v4.json": "268464df3ebda9d0d05f757a579efd5a7687df5519ca3024ee98fd8e2ed8e888",
+    "pattern/autoregressive/model.py": "83bd738a991904c20b7adaf029c8466ec98ab11f8dc82c47e2f4a1398b103a73",
+    "pattern/autoregressive/run.py": "e19057357538f1bcd399d076793ab0194c651897289c2929f1f4e9174c470e52",
+    "pattern/autoregressive/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "pattern/codebook/run.py": "7898d90f73b063213817faf1e873001a3b4734c761e21d8faf586f29cdd36d2f",
+    "pattern/codebook/models.py": "68cf5092beed0c5e214753367dbe90aa9af13929802379ba10dbebfd491682e1",
+    "pattern/codebook/extract.py": "bb5d50cb2bada3de716f4fea54e52caf9374de6f45632fd95ac293a97837005b",
+    "pattern/codebook/__init__.py": "bc8f0785376faf2a588e2665c1a15faf3a912030239bedee85df4e24b0e9ff63",
+    "pattern/codebook/fit.py": "9583105caabc3daf52a5790c484e398c99df3872835717bf1b477a6fa0430bb1",
+    "pattern/codebook/bank.py": "4ed3ed45cc5ab578d2a4e537ce5676b005285f259d69665697d633e9f024c5be",
+    "pattern/codebook/report.py": "597691599443c391303ef4478c06b2f91359c45089df5edf675d4997c657f0d3",
+    "pattern/datasets.py": "f685e62cb39024e45917ca4e31f40bd29c82d4dd879dc6e5fc07b0e44cfde911",
+    "pattern/runs/codebook_20261028_v4/bank.npz": "8a01e66c7b843b14525e912765b51fd8635d8baacb606934e432e12e77b03ddc",
+    "pattern/runs/codebook_20261028_v4/extracted.npz": "761902a24110d9da1bfb17f2d49921168b5476072f7f322218da3f998ba43459",
+    "pattern/runs/codebook_20261028_v4/prior.pt": "2fd7b543bffd30e675229491583caac36e9bd6e6eb563a6d126940292e2f78dc"
+  },
+  "gpu": "Tesla V100-PCIE-32GB",
+  "torch": "2.6.0+cu118"
+}
