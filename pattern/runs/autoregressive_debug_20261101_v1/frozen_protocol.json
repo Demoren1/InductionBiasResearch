@@ -1,0 +1,60 @@
+{
+  "seed": 1101067,
+  "source_protocol": "pattern/codebook/protocol_v4.json",
+  "source_run": "pattern/runs/codebook_20261028_v4",
+  "prior_run": "pattern/runs/autoregressive_20261101_v2",
+  "run": "pattern/runs/autoregressive_debug_20261101_v1",
+  "temperatures": [
+    1.0,
+    0.75,
+    0.5,
+    0.25,
+    0.1,
+    0.0
+  ],
+  "calibration_patterns": [
+    "0001",
+    "0110",
+    "1001",
+    "1110"
+  ],
+  "calibration_steps": 2048,
+  "calibration_restarts": 8,
+  "near_best_query_bce": 0.0001,
+  "diagnostic_samples": 8192,
+  "fit": {
+    "steps": 4096,
+    "restarts": 32,
+    "checkpoint_every": 64,
+    "log_every": 128,
+    "codebook_learning_rate": 0.1,
+    "codebook_initial_norm": 0.5,
+    "dense_adam_learning_rate": 0.01,
+    "dense_sgd_learning_rate": 0.3
+  },
+  "rules": [
+    "Use the frozen v2 MADE and frequency distribution. No generator retraining and no new source-bank collection.",
+    "Change only conditional decoding temperature. T=1 reproduces the original sampler, T=0 is greedy decoding.",
+    "Choose temperature by mean best-of-eight source-query BCE on four source patterns. No target or analytic index labels enter calibration.",
+    "Among temperatures within 0.0001 of the minimum calibration query BCE, choose the highest to preserve randomness when it does not hurt source performance.",
+    "Apply the same temperature grid, budget and selection rule to independent frequencies.",
+    "Freeze temperature choices before fitting target patterns. Use the same target partitions and numerical initializations as v2 for a paired developmental comparison.",
+    "Final methods: AR T1/calibrated/greedy, frequencies T1/calibrated/greedy, inferred consensus, dense Adam and SGD.",
+    "Use no top-k support or tying-capacity constraint in decoding. The inherited bank preprocessing assumptions remain unchanged.",
+    "Evaluate 8192 proposal samples only after final target choices are frozen; never use exact-indexator metrics for selection.",
+    "Pattern has a single shared indexator. Greedy frequency success would limit evidence for conditional dependencies or combinatorial generalization.",
+    "This is debugging on a previously viewed benchmark, not an independent confirmatory evaluation. Do not write or run tests."
+  ],
+  "hashes": {
+    "pattern/autoregressive/debug_protocol.json": "c65cb3494168c37f1b43eee607bb0b905f03868643299ee0c9c5ba49d5a47c30",
+    "pattern/runs/autoregressive_20261101_v2/prior.pt": "00206c02be10ac021cbaab0b5f6a708794a78be52fe2968a027860defe394cea",
+    "pattern/runs/autoregressive_20261101_v2/bank_inputs.npz": "dc3922d5053576058c77f2f14a8c3e700d7f9f9fa3bdf01a555145ca3496c4cb",
+    "pattern/codebook/protocol_v4.json": "268464df3ebda9d0d05f757a579efd5a7687df5519ca3024ee98fd8e2ed8e888",
+    "pattern/autoregressive/model.py": "2e8fe920c55c8c196b59761ea33bb9e88da4051d8463187ff53366cb88699468",
+    "pattern/autoregressive/debug.py": "6d7e98f9b7503fdc00711c9cf01fe0982dd8cbdc454f2d103fd95ae1b69eaf08",
+    "pattern/autoregressive/run.py": "01def2b8824f4167c22b3d849d5454f99052415ab71c237718c5ab3bf7996678",
+    "pattern/autoregressive/bank_quality.py": "4109b415c138ff1e45dea3ea975e84a3b219fa802791332b0c20c1c12a729d91",
+    "pattern/autoregressive/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "pattern/autoregressive/report.py": "87ed4ea12dd53863ca81587543a9cc081f22fae904b20426fecde5726a9d4301"
+  }
+}

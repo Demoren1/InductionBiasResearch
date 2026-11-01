@@ -1,0 +1,36 @@
+{
+  "seed": 1101067,
+  "source_protocol": "pattern/codebook/protocol_v4.json",
+  "source_run": "pattern/runs/codebook_20261028_v4",
+  "prior_run": "pattern/runs/autoregressive_20261101_v2",
+  "run": "pattern/runs/autoregressive_debug_20261101_v1",
+  "temperatures": [1.0, 0.75, 0.5, 0.25, 0.1, 0.0],
+  "calibration_patterns": ["0001", "0110", "1001", "1110"],
+  "calibration_steps": 2048,
+  "calibration_restarts": 8,
+  "near_best_query_bce": 0.0001,
+  "diagnostic_samples": 8192,
+  "fit": {
+    "steps": 4096,
+    "restarts": 32,
+    "checkpoint_every": 64,
+    "log_every": 128,
+    "codebook_learning_rate": 0.1,
+    "codebook_initial_norm": 0.5,
+    "dense_adam_learning_rate": 0.01,
+    "dense_sgd_learning_rate": 0.3
+  },
+  "rules": [
+    "Use the frozen v2 MADE and frequency distribution. No generator retraining and no new source-bank collection.",
+    "Change only conditional decoding temperature. T=1 reproduces the original sampler, T=0 is greedy decoding.",
+    "Choose temperature by mean best-of-eight source-query BCE on four source patterns. No target or analytic index labels enter calibration.",
+    "Among temperatures within 0.0001 of the minimum calibration query BCE, choose the highest to preserve randomness when it does not hurt source performance.",
+    "Apply the same temperature grid, budget and selection rule to independent frequencies.",
+    "Freeze temperature choices before fitting target patterns. Use the same target partitions and numerical initializations as v2 for a paired developmental comparison.",
+    "Final methods: AR T1/calibrated/greedy, frequencies T1/calibrated/greedy, inferred consensus, dense Adam and SGD.",
+    "Use no top-k support or tying-capacity constraint in decoding. The inherited bank preprocessing assumptions remain unchanged.",
+    "Evaluate 8192 proposal samples only after final target choices are frozen; never use exact-indexator metrics for selection.",
+    "Pattern has a single shared indexator. Greedy frequency success would limit evidence for conditional dependencies or combinatorial generalization.",
+    "This is debugging on a previously viewed benchmark, not an independent confirmatory evaluation. Do not write or run tests."
+  ]
+}

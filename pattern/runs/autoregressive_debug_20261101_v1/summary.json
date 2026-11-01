@@ -1,0 +1,355 @@
+{
+  "summary": [
+    {
+      "method": "ar_original",
+      "name": "AR: исходная генерация",
+      "selected_test_accuracy": 0.87353515625,
+      "selected_population_accuracy": 0.8770751953125,
+      "selected_test_bce": 0.25828489661216736,
+      "mean_start_test_accuracy": 0.74664306640625,
+      "perfect_starts": 0,
+      "perfect_tasks": 0,
+      "per_task_population_accuracy": [
+        0.8857421875,
+        0.859375,
+        0.87744140625,
+        0.8857421875
+      ],
+      "selected_exact_indexators": 0
+    },
+    {
+      "method": "ar_calibrated",
+      "name": "AR: выбранная температура",
+      "selected_test_accuracy": 1.0,
+      "selected_population_accuracy": 1.0,
+      "selected_test_bce": 1.584374695084989e-05,
+      "mean_start_test_accuracy": 0.868927001953125,
+      "perfect_starts": 59,
+      "perfect_tasks": 4,
+      "per_task_population_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "selected_exact_indexators": 4
+    },
+    {
+      "method": "ar_greedy",
+      "name": "AR: жадный выбор",
+      "selected_test_accuracy": 1.0,
+      "selected_population_accuracy": 1.0,
+      "selected_test_bce": 1.5842830180190504e-05,
+      "mean_start_test_accuracy": 0.8701019287109375,
+      "perfect_starts": 62,
+      "perfect_tasks": 4,
+      "per_task_population_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "selected_exact_indexators": 4
+    },
+    {
+      "method": "frequency_original",
+      "name": "Частоты: исходная генерация",
+      "selected_test_accuracy": 0.857421875,
+      "selected_population_accuracy": 0.847900390625,
+      "selected_test_bce": 0.3583581745624542,
+      "mean_start_test_accuracy": 0.747406005859375,
+      "perfect_starts": 0,
+      "perfect_tasks": 0,
+      "per_task_population_accuracy": [
+        0.84521484375,
+        0.89599609375,
+        0.83544921875,
+        0.81494140625
+      ],
+      "selected_exact_indexators": 0
+    },
+    {
+      "method": "frequency_calibrated",
+      "name": "Частоты: выбранная температура",
+      "selected_test_accuracy": 1.0,
+      "selected_population_accuracy": 1.0,
+      "selected_test_bce": 1.7171256331494078e-05,
+      "mean_start_test_accuracy": 0.8408203125,
+      "perfect_starts": 9,
+      "perfect_tasks": 4,
+      "per_task_population_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "selected_exact_indexators": 4
+    },
+    {
+      "method": "frequency_greedy",
+      "name": "Частоты: жадный выбор",
+      "selected_test_accuracy": 1.0,
+      "selected_population_accuracy": 1.0,
+      "selected_test_bce": 1.584345409355592e-05,
+      "mean_start_test_accuracy": 0.8699798583984375,
+      "perfect_starts": 62,
+      "perfect_tasks": 4,
+      "per_task_population_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "selected_exact_indexators": 4
+    },
+    {
+      "method": "inferred",
+      "name": "Извлечённый общий индексатор",
+      "selected_test_accuracy": 1.0,
+      "selected_population_accuracy": 1.0,
+      "selected_test_bce": 1.5842748325667344e-05,
+      "mean_start_test_accuracy": 0.870452880859375,
+      "perfect_starts": 62,
+      "perfect_tasks": 4,
+      "per_task_population_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "selected_exact_indexators": 4
+    },
+    {
+      "method": "dense_adam",
+      "name": "Плотный Adam",
+      "selected_test_accuracy": 0.9697265625,
+      "selected_population_accuracy": 0.9815673828125,
+      "selected_test_bce": 0.07359600067138672,
+      "mean_start_test_accuracy": 0.88885498046875,
+      "perfect_starts": 0,
+      "perfect_tasks": 0,
+      "per_task_population_accuracy": [
+        0.98974609375,
+        0.9892578125,
+        0.99072265625,
+        0.95654296875
+      ],
+      "selected_exact_indexators": null
+    },
+    {
+      "method": "dense_sgd",
+      "name": "Плотный SGD",
+      "selected_test_accuracy": 0.9609375,
+      "selected_population_accuracy": 0.9742431640625,
+      "selected_test_bce": 0.1037716343998909,
+      "mean_start_test_accuracy": 0.8712005615234375,
+      "perfect_starts": 0,
+      "perfect_tasks": 0,
+      "per_task_population_accuracy": [
+        0.9814453125,
+        0.98291015625,
+        0.9443359375,
+        0.98828125
+      ],
+      "selected_exact_indexators": null
+    }
+  ],
+  "calibration": [
+    {
+      "family": "ar",
+      "temperature": 1.0,
+      "query_bce": 0.3155735731124878,
+      "selected_query_accuracy": 0.8515625
+    },
+    {
+      "family": "ar",
+      "temperature": 0.75,
+      "query_bce": 0.2265184223651886,
+      "selected_query_accuracy": 0.90625
+    },
+    {
+      "family": "ar",
+      "temperature": 0.5,
+      "query_bce": 0.04579929634928703,
+      "selected_query_accuracy": 0.974609375
+    },
+    {
+      "family": "ar",
+      "temperature": 0.25,
+      "query_bce": 0.016991736367344856,
+      "selected_query_accuracy": 0.98828125
+    },
+    {
+      "family": "ar",
+      "temperature": 0.1,
+      "query_bce": 7.913966692285612e-05,
+      "selected_query_accuracy": 1.0
+    },
+    {
+      "family": "ar",
+      "temperature": 0.0,
+      "query_bce": 7.911593274911866e-05,
+      "selected_query_accuracy": 1.0
+    },
+    {
+      "family": "frequency",
+      "temperature": 1.0,
+      "query_bce": 0.3663913309574127,
+      "selected_query_accuracy": 0.84765625
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.75,
+      "query_bce": 0.2429056465625763,
+      "selected_query_accuracy": 0.8935546875
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.5,
+      "query_bce": 0.09250855445861816,
+      "selected_query_accuracy": 0.9521484375
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.25,
+      "query_bce": 0.0001034627784974873,
+      "selected_query_accuracy": 1.0
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.1,
+      "query_bce": 8.102119318209589e-05,
+      "selected_query_accuracy": 1.0
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.0,
+      "query_bce": 7.913967419881374e-05,
+      "selected_query_accuracy": 1.0
+    }
+  ],
+  "choices": {
+    "ar": {
+      "family": "ar",
+      "temperature": 0.1,
+      "query_bce": 7.913966692285612e-05,
+      "selected_query_accuracy": 1.0
+    },
+    "frequency": {
+      "family": "frequency",
+      "temperature": 0.25,
+      "query_bce": 0.0001034627784974873,
+      "selected_query_accuracy": 1.0
+    }
+  },
+  "mechanism": [
+    {
+      "family": "ar",
+      "temperature": 1.0,
+      "canonical_consensus_probability": 8.698438048777207e-05,
+      "exact_of_8192": 4,
+      "mean_support_f1": 0.818328348633345,
+      "mean_sharing_f1": 0.5360905881699273,
+      "unique_samples": 8181
+    },
+    {
+      "family": "ar",
+      "temperature": 0.75,
+      "canonical_consensus_probability": 0.003603456898271425,
+      "exact_of_8192": 43,
+      "mean_support_f1": 0.8855132928188167,
+      "mean_sharing_f1": 0.703616242881449,
+      "unique_samples": 7850
+    },
+    {
+      "family": "ar",
+      "temperature": 0.5,
+      "canonical_consensus_probability": 0.09219803319057016,
+      "exact_of_8192": 769,
+      "mean_support_f1": 0.9526596365893694,
+      "mean_sharing_f1": 0.8724131163325451,
+      "unique_samples": 4402
+    },
+    {
+      "family": "ar",
+      "temperature": 0.25,
+      "canonical_consensus_probability": 0.6457936453405936,
+      "exact_of_8192": 5350,
+      "mean_support_f1": 0.9918981448189463,
+      "mean_sharing_f1": 0.9787566143392249,
+      "unique_samples": 278
+    },
+    {
+      "family": "ar",
+      "temperature": 0.1,
+      "canonical_consensus_probability": 0.9583105976262546,
+      "exact_of_8192": 7873,
+      "mean_support_f1": 0.9992747660850294,
+      "mean_sharing_f1": 0.9984881657426076,
+      "unique_samples": 11
+    },
+    {
+      "family": "ar",
+      "temperature": 0.0,
+      "canonical_consensus_probability": 1.0,
+      "exact_of_8192": 8192,
+      "mean_support_f1": 1.0,
+      "mean_sharing_f1": 1.0,
+      "unique_samples": 1
+    },
+    {
+      "family": "frequency",
+      "temperature": 1.0,
+      "canonical_consensus_probability": 1.2074488546481118e-06,
+      "exact_of_8192": 0,
+      "mean_support_f1": 0.8224376350194933,
+      "mean_sharing_f1": 0.553654122895894,
+      "unique_samples": 8192
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.75,
+      "canonical_consensus_probability": 0.0001006457936864887,
+      "exact_of_8192": 0,
+      "mean_support_f1": 0.874979901374114,
+      "mean_sharing_f1": 0.6923134833549953,
+      "unique_samples": 8180
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.5,
+      "canonical_consensus_probability": 0.007663219305330152,
+      "exact_of_8192": 74,
+      "mean_support_f1": 0.9322857061361068,
+      "mean_sharing_f1": 0.8401460865947128,
+      "unique_samples": 6529
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.25,
+      "canonical_consensus_probability": 0.1870301994362609,
+      "exact_of_8192": 1469,
+      "mean_support_f1": 0.9770264361709702,
+      "mean_sharing_f1": 0.9517214117791266,
+      "unique_samples": 619
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.1,
+      "canonical_consensus_probability": 0.5171412011946043,
+      "exact_of_8192": 4212,
+      "mean_support_f1": 0.9914803185920608,
+      "mean_sharing_f1": 0.9826271328781528,
+      "unique_samples": 25
+    },
+    {
+      "family": "frequency",
+      "temperature": 0.0,
+      "canonical_consensus_probability": 1.0,
+      "exact_of_8192": 8192,
+      "mean_support_f1": 1.0,
+      "mean_sharing_f1": 1.0,
+      "unique_samples": 1
+    }
+  ]
+}

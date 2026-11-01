@@ -33,10 +33,16 @@ class IndexMADE(nn.Module):
         return self.layers(values).reshape(-1, self.positions, self.classes)
 
     @torch.no_grad()
-    def sample(self, count):
+    def sample(self, count, temperature=1.0):
+        if temperature < 0:
+            raise ValueError("temperature must be nonnegative")
         device = next(self.parameters()).device
         indices = torch.zeros(count, self.positions, dtype=torch.long, device=device)
         for position in range(self.positions):
-            probabilities = self(indices)[:, position].softmax(-1)
-            indices[:, position] = torch.multinomial(probabilities, 1).squeeze(1)
+            logits = self(indices)[:, position]
+            if temperature == 0:
+                indices[:, position] = logits.argmax(-1)
+            else:
+                probabilities = (logits / temperature).softmax(-1)
+                indices[:, position] = torch.multinomial(probabilities, 1).squeeze(1)
         return indices
