@@ -1,0 +1,991 @@
+{
+  "primary": {
+    "dataset": "FashionMNIST",
+    "support_per_class": 16,
+    "method": "ar",
+    "competitors": [
+      "adam",
+      "sgd",
+      "transfer",
+      "frozen_transfer",
+      "linear",
+      "adam_long",
+      "sgd_long"
+    ],
+    "competitor": "adam_long"
+  },
+  "difference_pp": -0.10986328125,
+  "difference_by_pair_pp": [
+    0.2197265625,
+    -0.390625,
+    -0.03662109375,
+    -0.15869140625,
+    -0.47607421875,
+    0.18310546875
+  ],
+  "descriptive_cluster_bootstrap_95_pp": [
+    -0.57373046875,
+    0.2930196128785566
+  ],
+  "statistical_limit": "Six pairs share four classes and finite official test pools; this interval is descriptive, not evidence from independent dataset families or independent source banks.",
+  "source": {
+    "MNIST": {
+      "bank": {
+        "original_rows": 832,
+        "kept_rows": 624,
+        "role_counts": [
+          312,
+          156,
+          156
+        ],
+        "fresh_query_accuracy_before": 0.9745342548076923,
+        "fresh_query_accuracy_after": 0.9756923577724359,
+        "quality_rule": "Best 75 percent within each source task and lineage role; finite 4-start numeric audit, not a representability certificate."
+      },
+      "prior": {
+        "chosen": {
+          "width": 128,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.0001,
+          "step": 50
+        },
+        "candidates": [
+          {
+            "width": 64,
+            "lr": 0.001,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 64,
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 64,
+            "lr": 0.0003,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 64,
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "best_step": 50,
+            "validation_nll": 0.6476551294326782
+          },
+          {
+            "width": 128,
+            "lr": 0.001,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 128,
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 128,
+            "lr": 0.0003,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 128,
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "best_step": 50,
+            "validation_nll": 0.6475843191146851
+          },
+          {
+            "width": 256,
+            "lr": 0.001,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 256,
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 256,
+            "lr": 0.0003,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          },
+          {
+            "width": 256,
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6477188467979431
+          }
+        ],
+        "held_source_audit": {
+          "nll_per_position": 0.6446362137794495,
+          "teacher_forced_support_recall": 0.09104567021131516
+        },
+        "frequency_held_source_audit": {
+          "nll_per_position": 0.6446500420570374,
+          "teacher_forced_support_recall": 0.09104567021131516
+        },
+        "role_counts": [
+          312,
+          156,
+          156
+        ],
+        "budget": 64,
+        "order_seed": 21122326
+      }
+    },
+    "FashionMNIST": {
+      "bank": {
+        "original_rows": 832,
+        "kept_rows": 624,
+        "role_counts": [
+          312,
+          156,
+          156
+        ],
+        "fresh_query_accuracy_before": 0.95428466796875,
+        "fresh_query_accuracy_after": 0.9553973858173077,
+        "quality_rule": "Best 75 percent within each source task and lineage role; finite 4-start numeric audit, not a representability certificate."
+      },
+      "prior": {
+        "chosen": {
+          "width": 128,
+          "learning_rate": 0.0003,
+          "weight_decay": 0.0001,
+          "step": 50
+        },
+        "candidates": [
+          {
+            "width": 64,
+            "lr": 0.001,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 64,
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 64,
+            "lr": 0.0003,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 64,
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "best_step": 50,
+            "validation_nll": 0.656236469745636
+          },
+          {
+            "width": 128,
+            "lr": 0.001,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 128,
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 128,
+            "lr": 0.0003,
+            "weight_decay": 0.0,
+            "best_step": 50,
+            "validation_nll": 0.6561113595962524
+          },
+          {
+            "width": 128,
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "best_step": 50,
+            "validation_nll": 0.6558616757392883
+          },
+          {
+            "width": 256,
+            "lr": 0.001,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 256,
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 256,
+            "lr": 0.0003,
+            "weight_decay": 0.0,
+            "best_step": 0,
+            "validation_nll": 0.6565345525741577
+          },
+          {
+            "width": 256,
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "best_step": 50,
+            "validation_nll": 0.656166136264801
+          }
+        ],
+        "held_source_audit": {
+          "nll_per_position": 0.6495029926300049,
+          "teacher_forced_support_recall": 0.08874198794364929
+        },
+        "frequency_held_source_audit": {
+          "nll_per_position": 0.6500096321105957,
+          "teacher_forced_support_recall": 0.08233173191547394
+        },
+        "role_counts": [
+          312,
+          156,
+          156
+        ],
+        "budget": 64,
+        "order_seed": 21122326
+      }
+    }
+  },
+  "freeze_audits": {
+    "MNIST": {
+      "checked": 58,
+      "mismatches": []
+    },
+    "FashionMNIST": {
+      "checked": 58,
+      "mismatches": []
+    }
+  },
+  "results": [
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "ar",
+      "accuracy": 0.942138671875,
+      "bce": 0.15746332705020905,
+      "recall_positive": 0.94775390625,
+      "recall_negative": 0.9365234375,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "frequency",
+      "accuracy": 0.9427286982536316,
+      "bce": 0.1566198319196701,
+      "recall_positive": 0.9484049677848816,
+      "recall_negative": 0.9370524287223816,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "consensus",
+      "accuracy": 0.9283650517463684,
+      "bce": 0.18909664452075958,
+      "recall_positive": 0.9346923828125,
+      "recall_negative": 0.9220377802848816,
+      "selected_unique_masks": 1
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "bank",
+      "accuracy": 0.9442545771598816,
+      "bce": 0.15705758333206177,
+      "recall_positive": 0.9482421875,
+      "recall_negative": 0.9402669072151184,
+      "selected_unique_masks": 42
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "random",
+      "accuracy": 0.9391072392463684,
+      "bce": 0.16553016006946564,
+      "recall_positive": 0.9407551884651184,
+      "recall_negative": 0.9374592900276184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "untrained_ar",
+      "accuracy": 0.9377644658088684,
+      "bce": 0.1674087792634964,
+      "recall_positive": 0.9419352412223816,
+      "recall_negative": 0.93359375,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "adam",
+      "accuracy": 0.95941162109375,
+      "bce": 0.1150105819106102,
+      "recall_positive": 0.9612223505973816,
+      "recall_negative": 0.9576008915901184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "sgd",
+      "accuracy": 0.95770263671875,
+      "bce": 0.12131690979003906,
+      "recall_positive": 0.9604085087776184,
+      "recall_negative": 0.9549967646598816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "transfer",
+      "accuracy": 0.9589436650276184,
+      "bce": 0.11546499282121658,
+      "recall_positive": 0.9579264521598816,
+      "recall_negative": 0.9599609375,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "frozen_transfer",
+      "accuracy": 0.9024658203125,
+      "bce": 0.2591613829135895,
+      "recall_positive": 0.8998209834098816,
+      "recall_negative": 0.9051106572151184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "linear",
+      "accuracy": 0.9581705927848816,
+      "bce": 0.1172214150428772,
+      "recall_positive": 0.9611409306526184,
+      "recall_negative": 0.9552001953125,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "adam_long",
+      "accuracy": 0.958740234375,
+      "bce": 0.12418008595705032,
+      "recall_positive": 0.9647216796875,
+      "recall_negative": 0.9527587890625,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 16,
+      "method": "sgd_long",
+      "accuracy": 0.9606119990348816,
+      "bce": 0.11417365819215775,
+      "recall_positive": 0.9637858271598816,
+      "recall_negative": 0.9574381709098816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "ar",
+      "accuracy": 0.9585774540901184,
+      "bce": 0.1198720932006836,
+      "recall_positive": 0.9623209834098816,
+      "recall_negative": 0.954833984375,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "frequency",
+      "accuracy": 0.95745849609375,
+      "bce": 0.1271418035030365,
+      "recall_positive": 0.9611002802848816,
+      "recall_negative": 0.9538167119026184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "consensus",
+      "accuracy": 0.9545695185661316,
+      "bce": 0.13324332237243652,
+      "recall_positive": 0.9594319462776184,
+      "recall_negative": 0.94970703125,
+      "selected_unique_masks": 1
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "bank",
+      "accuracy": 0.9572957158088684,
+      "bce": 0.13404424488544464,
+      "recall_positive": 0.9622395634651184,
+      "recall_negative": 0.9523518681526184,
+      "selected_unique_masks": 40
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "random",
+      "accuracy": 0.9556477665901184,
+      "bce": 0.13703835010528564,
+      "recall_positive": 0.9588215947151184,
+      "recall_negative": 0.9524739384651184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "untrained_ar",
+      "accuracy": 0.9534708857536316,
+      "bce": 0.138565331697464,
+      "recall_positive": 0.95654296875,
+      "recall_negative": 0.9503987431526184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "adam",
+      "accuracy": 0.9715779423713684,
+      "bce": 0.0876045897603035,
+      "recall_positive": 0.9745280146598816,
+      "recall_negative": 0.9686279296875,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "sgd",
+      "accuracy": 0.9724324345588684,
+      "bce": 0.08358422666788101,
+      "recall_positive": 0.974609375,
+      "recall_negative": 0.9702555537223816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "transfer",
+      "accuracy": 0.9742228388786316,
+      "bce": 0.08005809038877487,
+      "recall_positive": 0.9759521484375,
+      "recall_negative": 0.9724934697151184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "frozen_transfer",
+      "accuracy": 0.9393107295036316,
+      "bce": 0.17614002525806427,
+      "recall_positive": 0.9370524287223816,
+      "recall_negative": 0.9415690302848816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 64,
+      "method": "linear",
+      "accuracy": 0.971435546875,
+      "bce": 0.08230169862508774,
+      "recall_positive": 0.9750569462776184,
+      "recall_negative": 0.9678141474723816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "ar",
+      "accuracy": 0.9714558720588684,
+      "bce": 0.08578634262084961,
+      "recall_positive": 0.9713134765625,
+      "recall_negative": 0.9715983271598816,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "frequency",
+      "accuracy": 0.9719035029411316,
+      "bce": 0.08355578035116196,
+      "recall_positive": 0.9721272587776184,
+      "recall_negative": 0.9716796875,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "consensus",
+      "accuracy": 0.9670613408088684,
+      "bce": 0.09672307968139648,
+      "recall_positive": 0.9712321162223816,
+      "recall_negative": 0.962890625,
+      "selected_unique_masks": 1
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "bank",
+      "accuracy": 0.9725545048713684,
+      "bce": 0.08080802857875824,
+      "recall_positive": 0.973876953125,
+      "recall_negative": 0.9712321162223816,
+      "selected_unique_masks": 40
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "random",
+      "accuracy": 0.9698893427848816,
+      "bce": 0.08949657529592514,
+      "recall_positive": 0.9717610478401184,
+      "recall_negative": 0.968017578125,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "untrained_ar",
+      "accuracy": 0.96929931640625,
+      "bce": 0.08644377440214157,
+      "recall_positive": 0.971923828125,
+      "recall_negative": 0.9666748046875,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "adam",
+      "accuracy": 0.9829508662223816,
+      "bce": 0.055615853518247604,
+      "recall_positive": 0.9822590947151184,
+      "recall_negative": 0.983642578125,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "sgd",
+      "accuracy": 0.9823811650276184,
+      "bce": 0.06239587068557739,
+      "recall_positive": 0.9833170771598816,
+      "recall_negative": 0.9814453125,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "transfer",
+      "accuracy": 0.9831135869026184,
+      "bce": 0.05259043350815773,
+      "recall_positive": 0.98388671875,
+      "recall_negative": 0.9823405146598816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "frozen_transfer",
+      "accuracy": 0.9497273564338684,
+      "bce": 0.15118755400180817,
+      "recall_positive": 0.9482828974723816,
+      "recall_negative": 0.951171875,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "MNIST",
+      "support_per_class": 256,
+      "method": "linear",
+      "accuracy": 0.9806721806526184,
+      "bce": 0.06110789254307747,
+      "recall_positive": 0.9815266728401184,
+      "recall_negative": 0.9798176884651184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "ar",
+      "accuracy": 0.9710693359375,
+      "bce": 0.09696972370147705,
+      "recall_positive": 0.9734700322151184,
+      "recall_negative": 0.9686686396598816,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "frequency",
+      "accuracy": 0.9709879755973816,
+      "bce": 0.09839903563261032,
+      "recall_positive": 0.9719645380973816,
+      "recall_negative": 0.9700114130973816,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "consensus",
+      "accuracy": 0.97119140625,
+      "bce": 0.09990119189023972,
+      "recall_positive": 0.9733479619026184,
+      "recall_negative": 0.9690348505973816,
+      "selected_unique_masks": 1
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "bank",
+      "accuracy": 0.9715576171875,
+      "bce": 0.0981951430439949,
+      "recall_positive": 0.9715983271598816,
+      "recall_negative": 0.9715169072151184,
+      "selected_unique_masks": 40
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "random",
+      "accuracy": 0.970703125,
+      "bce": 0.10759327560663223,
+      "recall_positive": 0.9701334834098816,
+      "recall_negative": 0.9712727665901184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "untrained_ar",
+      "accuracy": 0.9682210087776184,
+      "bce": 0.10487956553697586,
+      "recall_positive": 0.9657796025276184,
+      "recall_negative": 0.9706624150276184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "adam",
+      "accuracy": 0.9704182744026184,
+      "bce": 0.10124143213033676,
+      "recall_positive": 0.9654541015625,
+      "recall_negative": 0.9753825068473816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "sgd",
+      "accuracy": 0.9729817509651184,
+      "bce": 0.099075548350811,
+      "recall_positive": 0.9747721552848816,
+      "recall_negative": 0.97119140625,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "transfer",
+      "accuracy": 0.9730631709098816,
+      "bce": 0.10048899799585342,
+      "recall_positive": 0.9737955927848816,
+      "recall_negative": 0.9723307490348816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "frozen_transfer",
+      "accuracy": 0.9588623046875,
+      "bce": 0.1263524442911148,
+      "recall_positive": 0.961669921875,
+      "recall_negative": 0.9560546875,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "linear",
+      "accuracy": 0.9733683466911316,
+      "bce": 0.08066392689943314,
+      "recall_positive": 0.9745686650276184,
+      "recall_negative": 0.97216796875,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "adam_long",
+      "accuracy": 0.97216796875,
+      "bce": 0.24989749491214752,
+      "recall_positive": 0.9781087040901184,
+      "recall_negative": 0.9662272334098816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 16,
+      "method": "sgd_long",
+      "accuracy": 0.9725748896598816,
+      "bce": 0.09903299808502197,
+      "recall_positive": 0.9738362431526184,
+      "recall_negative": 0.9713134765625,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "ar",
+      "accuracy": 0.976806640625,
+      "bce": 0.08087880164384842,
+      "recall_positive": 0.9772135615348816,
+      "recall_negative": 0.9763997197151184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "frequency",
+      "accuracy": 0.97735595703125,
+      "bce": 0.08369757980108261,
+      "recall_positive": 0.9779459834098816,
+      "recall_negative": 0.9767659306526184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "consensus",
+      "accuracy": 0.97711181640625,
+      "bce": 0.07580938190221786,
+      "recall_positive": 0.977294921875,
+      "recall_negative": 0.9769287109375,
+      "selected_unique_masks": 1
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "bank",
+      "accuracy": 0.9776204228401184,
+      "bce": 0.07328188419342041,
+      "recall_positive": 0.9769694209098816,
+      "recall_negative": 0.978271484375,
+      "selected_unique_masks": 43
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "random",
+      "accuracy": 0.97650146484375,
+      "bce": 0.08459465950727463,
+      "recall_positive": 0.9790852665901184,
+      "recall_negative": 0.9739176630973816,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "untrained_ar",
+      "accuracy": 0.9745076298713684,
+      "bce": 0.08780211210250854,
+      "recall_positive": 0.9756266474723816,
+      "recall_negative": 0.973388671875,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "adam",
+      "accuracy": 0.9788615107536316,
+      "bce": 0.08379844576120377,
+      "recall_positive": 0.9793701171875,
+      "recall_negative": 0.9783528447151184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "sgd",
+      "accuracy": 0.9789021611213684,
+      "bce": 0.0696963369846344,
+      "recall_positive": 0.9800618290901184,
+      "recall_negative": 0.9777424931526184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "transfer",
+      "accuracy": 0.9793497920036316,
+      "bce": 0.07591595500707626,
+      "recall_positive": 0.9812418818473816,
+      "recall_negative": 0.9774577021598816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "frozen_transfer",
+      "accuracy": 0.9675496220588684,
+      "bce": 0.09882056713104248,
+      "recall_positive": 0.9668375849723816,
+      "recall_negative": 0.96826171875,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 64,
+      "method": "linear",
+      "accuracy": 0.98016357421875,
+      "bce": 0.06252229958772659,
+      "recall_positive": 0.9812825322151184,
+      "recall_negative": 0.9790446162223816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "ar",
+      "accuracy": 0.9798176884651184,
+      "bce": 0.0795692652463913,
+      "recall_positive": 0.9766032099723816,
+      "recall_negative": 0.9830322265625,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "frequency",
+      "accuracy": 0.9806721806526184,
+      "bce": 0.08063668012619019,
+      "recall_positive": 0.9774169921875,
+      "recall_negative": 0.9839274287223816,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "consensus",
+      "accuracy": 0.98175048828125,
+      "bce": 0.06590202450752258,
+      "recall_positive": 0.9803873896598816,
+      "recall_negative": 0.9831135869026184,
+      "selected_unique_masks": 1
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "bank",
+      "accuracy": 0.9805908203125,
+      "bce": 0.084872305393219,
+      "recall_positive": 0.9801838994026184,
+      "recall_negative": 0.9809977412223816,
+      "selected_unique_masks": 40
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "random",
+      "accuracy": 0.979248046875,
+      "bce": 0.08466901630163193,
+      "recall_positive": 0.9795328974723816,
+      "recall_negative": 0.9789631962776184,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "untrained_ar",
+      "accuracy": 0.97979736328125,
+      "bce": 0.08979830890893936,
+      "recall_positive": 0.9796142578125,
+      "recall_negative": 0.97998046875,
+      "selected_unique_masks": 48
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "adam",
+      "accuracy": 0.98297119140625,
+      "bce": 0.0665380209684372,
+      "recall_positive": 0.9834391474723816,
+      "recall_negative": 0.9825032353401184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "sgd",
+      "accuracy": 0.98345947265625,
+      "bce": 0.06839669495820999,
+      "recall_positive": 0.9831135869026184,
+      "recall_negative": 0.9838053584098816,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "transfer",
+      "accuracy": 0.9830322265625,
+      "bce": 0.0615319162607193,
+      "recall_positive": 0.9833170771598816,
+      "recall_negative": 0.9827473759651184,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "frozen_transfer",
+      "accuracy": 0.9726155400276184,
+      "bce": 0.08335500210523605,
+      "recall_positive": 0.9725748896598816,
+      "recall_negative": 0.97265625,
+      "selected_unique_masks": null
+    },
+    {
+      "dataset": "FashionMNIST",
+      "support_per_class": 256,
+      "method": "linear",
+      "accuracy": 0.9832966923713684,
+      "bce": 0.0572778694331646,
+      "recall_positive": 0.9835612177848816,
+      "recall_negative": 0.9830322265625,
+      "selected_unique_masks": null
+    }
+  ]
+}

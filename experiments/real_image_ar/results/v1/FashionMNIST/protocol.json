@@ -1,0 +1,131 @@
+{
+  "seed": 21122026,
+  "run": "experiments/real_image_ar/runs/v1",
+  "datasets": [
+    "MNIST",
+    "FashionMNIST"
+  ],
+  "source_root": "experiments/structure_search_v2/runs",
+  "image_root": "experiments/structure_search_v2/datasets",
+  "inputs": 196,
+  "active_features": 64,
+  "hidden": 16,
+  "support_per_class": [
+    16,
+    64,
+    256
+  ],
+  "query_per_class": 64,
+  "test_per_class": 512,
+  "calibration_draws": 4,
+  "target_draws": 8,
+  "calibration_restarts": 4,
+  "target_restarts": 8,
+  "steps": 4096,
+  "checkpoint_every": 64,
+  "log_every": 128,
+  "batch_size": 128,
+  "bank_audit": {
+    "steps": 2048,
+    "restarts": 4,
+    "chunk_size": 104,
+    "learning_rates": [
+      0.003,
+      0.01
+    ],
+    "keep_fraction": 0.75
+  },
+  "prior": {
+    "widths": [
+      64,
+      128,
+      256
+    ],
+    "learning_rates": [
+      0.001,
+      0.0003
+    ],
+    "weight_decays": [
+      0.0,
+      0.0001
+    ],
+    "steps": 2000,
+    "batch_size": 128,
+    "checkpoint_every": 50
+  },
+  "temperatures": [
+    0.0,
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "adam_lr": [
+    0.001,
+    0.003,
+    0.01,
+    0.03
+  ],
+  "sgd_lr": [
+    0.01,
+    0.03,
+    0.1,
+    0.3,
+    1.0
+  ],
+  "weight_decay": [
+    0.0,
+    0.001,
+    0.01
+  ],
+  "initial_scale": [
+    0.5,
+    1.0
+  ],
+  "momentum": [
+    0.0,
+    0.9
+  ],
+  "methods": [
+    "ar",
+    "frequency",
+    "consensus",
+    "bank",
+    "random",
+    "untrained_ar",
+    "adam",
+    "sgd",
+    "transfer",
+    "frozen_transfer",
+    "linear"
+  ],
+  "primary": {
+    "dataset": "FashionMNIST",
+    "support_per_class": 16,
+    "method": "ar",
+    "competitors": [
+      "adam",
+      "sgd",
+      "transfer",
+      "frozen_transfer",
+      "linear",
+      "adam_long",
+      "sgd_long"
+    ]
+  },
+  "rules": [
+    "Real single images and original labels; average 2x2 pixels to 14x14, no distractors or hidden permutation.",
+    "Source classes 0..5; reserved calibration pairs [0,5],[2,3]; target classes 6..9. Dataset was explored previously, this is a new generator evaluation on an established benchmark.",
+    "The prior sees source masks only, after fresh-numeric quality audit. No images, pixel coordinates, correlations, functional ablations, or target labels enter prior training.",
+    "Each mask selects exactly 64 of 196 inputs; all retained feature-hidden weights are independent. This tests mask transfer, not nonzero weight tying.",
+    "MADE and the frequency control share a seed-fixed random position order and the same generic cardinality rule: force zeros when 64 ones have been selected, force ones when all remaining positions are needed. No image geometry enters this rule.",
+    "Remove forced positions from the masked autoregressive NLL (zero contribution); choose generator solely by held-lineage source NLL.",
+    "Keep best 75 percent per source task/lineage role after 4-start fresh refits; no near-perfect accuracy cutoff.",
+    "Tune every target method, numerical settings, and AR/frequency temperatures on reserved source pairs at exact support budgets. Freeze before generating target cases or evaluating official test.",
+    "Eight starts per target case, checkpoint/start chosen by query BCE; official test never selects settings.",
+    "Long Adam/SGD: four times the updates at support16/class, source-calibrated neighboring rates and constant/cosine schedules.",
+    "Forty-eight target draws are six class pairs, not forty-eight independent task families; report each pair and resample pairs before draws.",
+    "Same target update/example budgets; source acquisition and pretraining costs, active parameter counts and FLOPs differ. Query labels count as additional labeled data.",
+    "Do not retune after target results. Preserve weak outcomes and simple controls; no universal autoregressive superiority claim."
+  ]
+}
