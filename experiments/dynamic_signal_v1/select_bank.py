@@ -1,5 +1,6 @@
 """Select the source bank on held-out source tasks across noise levels."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -11,7 +12,12 @@ from experiments.dynamic_signal_v1.run import configurations
 
 
 def main():
-    plan = json.loads(Path("experiments/dynamic_signal_v1/protocol.json").read_text())
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--protocol", default="experiments/dynamic_signal_v1/protocol.json"
+    )
+    args = parser.parse_args()
+    plan = json.loads(Path(args.protocol).read_text())
     root = Path(plan["run"])
     output = root / "bank_selection"
     output.mkdir(exist_ok=False)

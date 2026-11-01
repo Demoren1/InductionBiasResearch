@@ -1,0 +1,168 @@
+{
+  "protocol": {
+    "seed": 6111481,
+    "run": "experiments/dynamic_signal_v1/runs/bank_repeat_5",
+    "blocks": 16,
+    "block_size": 8,
+    "hidden": 32,
+    "noise": [
+      0.15,
+      0.25,
+      0.4
+    ],
+    "calibration_tasks": 4,
+    "source_tasks": 12,
+    "target_tasks": 16,
+    "calibration_sizes": [
+      128,
+      512,
+      2048,
+      8192
+    ],
+    "target_sizes": [
+      128,
+      512,
+      2048,
+      8192
+    ],
+    "query_size": 1024,
+    "test_size": 16384,
+    "steps": 4096,
+    "batch_size": 128,
+    "checkpoint_every": 128,
+    "log_every": 256,
+    "calibration_restarts": 4,
+    "target_restarts": 8,
+    "gate_accuracy_gain": 0.03,
+    "grids": {
+      "adam_lr": [
+        0.0003,
+        0.001,
+        0.003,
+        0.01,
+        0.03,
+        0.1
+      ],
+      "sgd_lr": [
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0
+      ],
+      "weight_decay": [
+        0.0,
+        0.001,
+        0.01
+      ],
+      "initial_scale": [
+        0.3,
+        1.0
+      ],
+      "momentum": [
+        0.0,
+        0.9
+      ],
+      "codebook_lr": [
+        0.003,
+        0.01,
+        0.03,
+        0.1
+      ],
+      "codebook_scale": [
+        0.5,
+        1.0,
+        2.0
+      ],
+      "codebook_decay": [
+        0,
+        0.001,
+        0.01
+      ]
+    },
+    "rules": [
+      "This is a proposed DSD-inspired shuffled-block Gaussian-mixture benchmark, not a reproduction of the published theorem's full protocol.",
+      "Each task has a new unit-norm eight-dimensional signal. One common unknown input permutation is used across source, calibration and target tasks.",
+      "Source, calibration and target directions and observations are independent. Support, query and test are disjoint generated observations.",
+      "Oracle indexing applies only to first-layer weights: 16 trainable code values plus 32 hidden biases, 32 readout weights and one offset, 81 numerical parameters. Dense MLP has 4161 parameters.",
+      "Calibration uses four tasks, two restarts, identical batch streams and query selection. Each first-layer initialization scale is searched for dense Adam/SGD.",
+      "Compare independently tuned oracle, dense Adam/SGD with momentum, and a linear model. All noise conditions and label budgets must be reported.",
+      "Analytic Bayes logits are evaluated only as an accuracy reference, not provided to any solver. Gaussian overlap gives irreducible classification error.",
+      "Continue to structure collection if the oracle gains at least three accuracy points over both dense optimizers in any calibration noise/budget. Do not choose a target condition after reading target labels.",
+      "A successful oracle is not a successful learned generator. Report source-bank recovery separately and never substitute the oracle for extracted I.",
+      "Save training/query loss and recalls against steps. Do not create or run tests. Preserve other users' GPU processes.",
+      "Supplemental HPO at n=8192 was added because source collection uses16384 examples; low-data regularization should not be assumed appropriate. Preserve original HPO/banks, and use n8192 configurations for n8192 target and large-source bank. This refinement is justified by support-size mismatch, not target-test outcomes.",
+      "Final calibration budgets256/1024/8192. Target128/512 uses256; target2048 uses1024; target8192 uses8192. Preserve initial results that used1024 for8192.",
+      "Confirmation phase after development target results were inspected. Keep v1 exploratory results; final target uses16 fresh independent signal directions and observations with seed offset700. Hyperparameters and source bank must be frozen before opening confirmation results.",
+      "Calibrate each exact target support size128/512/2048/8192. Include codebook L2 0/.001/.01, expand dense learning-rate boundaries, four calibration restarts.",
+      "Choose one source bank by held-out source tasks8/9 evaluated across three source noise levels; reuse frozen source structure generator for every confirmation noise level. Transfer baseline may use dense source models from all three noise levels."
+    ],
+    "target_seed_offset": 700,
+    "pool_source_noise": true,
+    "primary_endpoint": {
+      "noise_id": 1,
+      "support_size": 2048,
+      "structural_candidates": [
+        "ar",
+        "frequency",
+        "consensus"
+      ],
+      "competitors": [
+        "adam",
+        "sgd",
+        "linear",
+        "transfer",
+        "mask_unshared",
+        "wsr",
+        "adam_long",
+        "sgd_long"
+      ],
+      "selection": "Choose one structural and one competing method by calibration query BCE only, before generating confirmation target. Compare their paired test accuracies across16 new tasks. Other noise/budget results are secondary.",
+      "motivation": "Middle noise and intermediate data budget, fixed during development before confirmation. Test transfer of common structure, not autoregressive superiority."
+    }
+  },
+  "hashes": {
+    "target/noise_0.npz": "eaf045e133d6017442e73203b7a4af25fe0e8471401738352bbd99128d540c16",
+    "target/noise_2.npz": "35914002419325475e88c1c34668ff2a9c5f8aaedfcac8f82b173ace22e1f64b",
+    "target/noise_1.npz": "8c4e463461d32731606c2a62566f953446fb7296b0cad454db1926f30c776690",
+    "target/teacher_audit.npz": "98d15d1d709232a76d4a266291d0e50bccd73f909240c7f253af301e3f5b0bcd",
+    "bank_selection/candidate_1.npz": "345aabaa5e5a8f2224548c7a3604a23b9bf74c5221a2c7160c8b5e33b825af60",
+    "bank_selection/candidate_0.npz": "0ada7f356e70deca022f93341f9f6df592ea92af97016272338716cae994a457",
+    "bank_selection/candidate_2.npz": "ca99392f2bfd7806332edc2f412db580a34239986277133ce8c3a8ee1e6666aa",
+    "source/noise_0.npz": "2a6cf46aabadf8afa9c49d9fd04bf689c03293567d4bc195cf9b5434afea7792",
+    "source/noise_2.npz": "347cb3c6d44f99e44a57cf2beccfb1f030169652fa7cb238151c379b6c7fb01a",
+    "source/noise_1.npz": "d5d3a74ae32345dad5cbd6dd60283f767212669db0ea7b297fef0136eeae3968",
+    "source/teacher_audit.npz": "d2003efb166e049a71652710e6f5b181a3bf92c4c020536dc11fa335f8ec056e",
+    "banks/noise_2/round_4096.npz": "9eac667fbefa06f5313062cbf9e7e9ee0cc1623ec439ec7acf2797cff1d5e7b5",
+    "banks/noise_2/round_2048.npz": "e7d4e099c5c8259d9219d9845e66d235c3ab4c3f4cb3d777aadb00010ed9df94",
+    "banks/noise_2/round_256.npz": "b26c777bd86d8f4b10b8a57b23f129b345a3f3b738331fb31797bbda4e917706",
+    "banks/noise_2/round_512.npz": "55ee1024eb563bc548d39714d59bdb9434b7ba22038ec4f56af0ba912eb67cdd",
+    "banks/noise_2/round_1024.npz": "a17aef8ae7341e1adb67509e43fee7b0a835c55aed556c546e42cb9ae76d3ef8",
+    "banks_large_tuned/noise_1/round_4096.npz": "d6b2805bbcf9e638f536a18e600dcdc471b24b4b28c7e40236a5e4cf62c23eea",
+    "banks_large_tuned/noise_1/round_2048.npz": "58abbff6044578cad05a8649ee9e811a10096f18227f3c556898318d5e8a93cd",
+    "banks_large_tuned/noise_1/round_256.npz": "86d3735dc6b0bb141cdc965f37e50e6a39d07f0bff9dfb34d94bc3280c5ca125",
+    "banks_large_tuned/noise_1/round_512.npz": "d484a0a13c854de533853757f6684f80803995458076f0ffff2c3aea36247e16",
+    "banks_large_tuned/noise_1/round_1024.npz": "13349c38f84c12725b72b2ddcab793a6c302dbb7ca391b41383fc3158850c713",
+    "banks_large_tuned/noise_0/round_4096.npz": "cc9905c7704126fa53165cb9ce0ec0b218daa247c8196571f57bfd077481233a",
+    "banks_large_tuned/noise_0/round_2048.npz": "3f57b1ed55a170c71cc55dbf187f6acb1ec78d74e1483b6a07692f3f8f746271",
+    "banks_large_tuned/noise_0/round_256.npz": "b63ea1900e4f8ed6c6f482faf550c6e39b0386a1e10706388a335d14bb53e85d",
+    "banks_large_tuned/noise_0/round_512.npz": "60cc4a10f99b15a3dbaeb99531f2abfba5509eb5ed666132ff14579fcb9d9e65",
+    "banks_large_tuned/noise_0/round_1024.npz": "0fa6a1b1eda8e32d2eaed89656b38ef89176ec4d04af21ca8bdd55f28e0c7a8c",
+    "priors/relations/noise_2/frequencies.npz": "82631a68fcde7a04aa45a20e993f844f4c72f84648fb858c9a6339ed5d647bbb",
+    "priors/relations/noise_1/frequencies.npz": "82631a68fcde7a04aa45a20e993f844f4c72f84648fb858c9a6339ed5d647bbb",
+    "priors/relations/noise_0/frequencies.npz": "82631a68fcde7a04aa45a20e993f844f4c72f84648fb858c9a6339ed5d647bbb",
+    "candidate_banks/noise_2/proposals.npz": "d18d3afaea3a196a2195d9c6675e13ac96d8fd0de800046b30f6160ce4c4a71c",
+    "candidate_banks/noise_2/codebook_refit.npz": "a50623aa98686e1fa34f3ea5ec5433c59f75b4e1e8eeb03c1109f5e759e9f898",
+    "candidate_banks/noise_2/bank.npz": "9bb6a8223fdea8025eca89e15c6db374713a680edfa5d3c68e3f72f0298ae7cc",
+    "candidate_banks/noise_2/extracted.npz": "25729fd034372e1483ab71e5a4a25d233d9b0ac2581a35a322649b9555d94598",
+    "candidate_banks/noise_1/proposals.npz": "0052baeb6d9a8690e8ab06db9b2d42cdef153331e08ebfc65141088583c953a3",
+    "candidate_banks/noise_1/codebook_refit.npz": "35039840091e67f9171f3859ad37030fbf1c234e552f24d4c8fa99839c439b59",
+    "candidate_banks/noise_1/bank.npz": "355709d667c6e20a14f212bb75dbb14eb3fa365f037564e0d22ce38389551aaa",
+    "candidate_banks/noise_1/extracted.npz": "a8dd8f619bcf332de5080ec6771c2191d6f3089b506be1baee0e437cf8967621",
+    "candidate_banks/noise_0/proposals.npz": "193fc7b307e9e47df1e9e10da0f3955554411ebaae70242f11c879ea98cdabe4",
+    "candidate_banks/noise_0/codebook_refit.npz": "1a0d20c8bad93b0a0cfe03b21a0315f9ffc22e424dcdf0a5ef3b19e999f82ba3",
+    "candidate_banks/noise_0/bank.npz": "768007346c64d5ce7e129a9d046c51a72d00158e51259cff787f5fc533a8ead0",
+    "candidate_banks/noise_0/extracted.npz": "31d19a270ebd10a9496d7512213e8d4d164faac84399e01c462c0ce90508b797"
+  }
+}

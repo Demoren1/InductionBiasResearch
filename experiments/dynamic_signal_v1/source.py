@@ -99,8 +99,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--noise-id", type=int, required=True)
     parser.add_argument("--calibration-size", type=int, default=1024)
+    parser.add_argument(
+        "--protocol", default="experiments/dynamic_signal_v1/protocol.json"
+    )
+    parser.add_argument("--collection-only", action="store_true")
     args = parser.parse_args()
-    plan = json.loads(Path("experiments/dynamic_signal_v1/protocol.json").read_text())
+    plan = json.loads(Path(args.protocol).read_text())
     root = Path(plan["run"])
     bank_name = "banks" if args.calibration_size == 1024 else "banks_large_tuned"
     output = root / bank_name / f"noise_{args.noise_id}"
@@ -145,6 +149,10 @@ def main():
             initial=initial,
             steps=2048,
         )
+    if args.collection_only:
+        # The relational extractor consumes round_256 directly; the older
+        # column-wise extractor and its refit do not affect that pipeline.
+        return
     indices, initial = extract(plan, raw, output)
     coded_configs = [
         {

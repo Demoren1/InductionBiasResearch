@@ -1,0 +1,95 @@
+{
+  "protocol": {
+    "seed": 5111481,
+    "run": "experiments/dynamic_signal_v1/runs/bank_repeat_4",
+    "blocks": 16,
+    "block_size": 8,
+    "hidden": 32,
+    "noise": [
+      0.15,
+      0.25,
+      0.4
+    ],
+    "calibration_tasks": 4,
+    "source_tasks": 12,
+    "target_tasks": 8,
+    "calibration_sizes": [
+      256,
+      1024,
+      8192
+    ],
+    "target_sizes": [
+      128,
+      512,
+      2048,
+      8192
+    ],
+    "query_size": 1024,
+    "test_size": 16384,
+    "steps": 4096,
+    "batch_size": 128,
+    "checkpoint_every": 128,
+    "log_every": 256,
+    "calibration_restarts": 2,
+    "target_restarts": 8,
+    "gate_accuracy_gain": 0.03,
+    "grids": {
+      "adam_lr": [
+        0.001,
+        0.003,
+        0.01,
+        0.03
+      ],
+      "sgd_lr": [
+        0.03,
+        0.1,
+        0.3,
+        1.0
+      ],
+      "weight_decay": [
+        0.0,
+        0.001,
+        0.01
+      ],
+      "initial_scale": [
+        0.3,
+        1.0
+      ],
+      "momentum": [
+        0.0,
+        0.9
+      ],
+      "codebook_lr": [
+        0.003,
+        0.01,
+        0.03,
+        0.1
+      ],
+      "codebook_scale": [
+        0.5,
+        1.0,
+        2.0
+      ]
+    },
+    "rules": [
+      "This is a proposed DSD-inspired shuffled-block Gaussian-mixture benchmark, not a reproduction of the published theorem's full protocol.",
+      "Each task has a new unit-norm eight-dimensional signal. One common unknown input permutation is used across source, calibration and target tasks.",
+      "Source, calibration and target directions and observations are independent. Support, query and test are disjoint generated observations.",
+      "Oracle indexing applies only to first-layer weights: 16 trainable code values plus 32 hidden biases, 32 readout weights and one offset, 81 numerical parameters. Dense MLP has 4161 parameters.",
+      "Calibration uses four tasks, two restarts, identical batch streams and query selection. Each first-layer initialization scale is searched for dense Adam/SGD.",
+      "Compare independently tuned oracle, dense Adam/SGD with momentum, and a linear model. All noise conditions and label budgets must be reported.",
+      "Analytic Bayes logits are evaluated only as an accuracy reference, not provided to any solver. Gaussian overlap gives irreducible classification error.",
+      "Continue to structure collection if the oracle gains at least three accuracy points over both dense optimizers in any calibration noise/budget. Do not choose a target condition after reading target labels.",
+      "A successful oracle is not a successful learned generator. Report source-bank recovery separately and never substitute the oracle for extracted I.",
+      "Save training/query loss and recalls against steps. Do not create or run tests. Preserve other users' GPU processes.",
+      "Supplemental HPO at n=8192 was added because source collection uses16384 examples; low-data regularization should not be assumed appropriate. Preserve original HPO/banks, and use n8192 configurations for n8192 target and large-source bank. This refinement is justified by support-size mismatch, not target-test outcomes.",
+      "Final calibration budgets256/1024/8192. Target128/512 uses256; target2048 uses1024; target8192 uses8192. Preserve initial results that used1024 for8192."
+    ]
+  },
+  "hashes": {
+    "source/noise_0.npz": "6cc4b85fd5b52f907ca97028136cd3077d0ffdcb827430d9d0f52a6b9087a983",
+    "source/noise_2.npz": "4804bd41d9ad410e487c3aebd4bda917cbd4b9afd2e5d7102c7096bdc7c99f69",
+    "source/noise_1.npz": "1356ad9a47b8e7cc689cf57455b4d937a12147ec1c168d9799cbbbacbb0f59c4",
+    "source/teacher_audit.npz": "af75c538d3be56d36e23daac61295e29a735022bfe427d67de6e0ab6ac15b4b7"
+  }
+}

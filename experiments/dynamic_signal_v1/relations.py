@@ -97,8 +97,11 @@ def propose(raw, seed, count=16):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--noise-id", type=int, required=True)
+    parser.add_argument(
+        "--protocol", default="experiments/dynamic_signal_v1/protocol.json"
+    )
     args = parser.parse_args()
-    plan = json.loads(Path("experiments/dynamic_signal_v1/protocol.json").read_text())
+    plan = json.loads(Path(args.protocol).read_text())
     root = Path(plan["run"])
     source = (
         root

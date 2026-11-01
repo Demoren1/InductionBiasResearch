@@ -1,0 +1,170 @@
+{
+  "condition": {
+    "sigma": 0.25,
+    "support": 2048,
+    "query": 1024,
+    "test_per_task": 16384
+  },
+  "independent_banks": 5,
+  "tasks_per_bank": 16,
+  "difference_pp": 4.6083831787109375,
+  "difference_by_bank_pp": [
+    4.6688079833984375,
+    4.3827056884765625,
+    4.79278564453125,
+    4.48455810546875,
+    4.7130584716796875
+  ],
+  "between_bank_sd_pp": 0.1694663017988205,
+  "hierarchical_bootstrap_95_pp": [
+    4.4005584716796875,
+    4.81468391418457
+  ],
+  "caution": "Only five independent banks; interval is descriptive and does not establish robustness over arbitrary structure families.",
+  "positive_task_differences": 80,
+  "methods": {
+    "ar": {
+      "mean_accuracy_percent": 96.52664947509766,
+      "between_bank_sd_pp": 0.2534264922142029,
+      "per_bank_accuracy_percent": [
+        96.5118408203125,
+        96.67892456054688,
+        96.10366821289062,
+        96.58622741699219,
+        96.75254821777344
+      ]
+    },
+    "frequency": {
+      "mean_accuracy_percent": 96.53755187988281,
+      "between_bank_sd_pp": 0.26500198245048523,
+      "per_bank_accuracy_percent": [
+        96.47445678710938,
+        96.67243957519531,
+        96.10366821289062,
+        96.66900634765625,
+        96.7681884765625
+      ]
+    },
+    "consensus": {
+      "mean_accuracy_percent": 96.48979187011719,
+      "between_bank_sd_pp": 0.324762225151062,
+      "per_bank_accuracy_percent": [
+        96.49620056152344,
+        96.67892456054688,
+        95.93505859375,
+        96.58622741699219,
+        96.75254821777344
+      ]
+    },
+    "adam": {
+      "mean_accuracy_percent": 82.62680053710938,
+      "between_bank_sd_pp": 0.08168904483318329,
+      "per_bank_accuracy_percent": [
+        82.68394470214844,
+        82.64884948730469,
+        82.71827697753906,
+        82.54356384277344,
+        82.53936767578125
+      ]
+    },
+    "sgd": {
+      "mean_accuracy_percent": 82.94540405273438,
+      "between_bank_sd_pp": 0.11268560588359833,
+      "per_bank_accuracy_percent": [
+        82.99903869628906,
+        83.02497863769531,
+        83.05511474609375,
+        82.82852172851562,
+        82.81936645507812
+      ]
+    },
+    "linear": {
+      "mean_accuracy_percent": 82.64129638671875,
+      "between_bank_sd_pp": 0.12259620428085327,
+      "per_bank_accuracy_percent": [
+        82.72552490234375,
+        82.75871276855469,
+        82.70454406738281,
+        82.50007629394531,
+        82.51762390136719
+      ]
+    },
+    "transfer": {
+      "mean_accuracy_percent": 83.03558349609375,
+      "between_bank_sd_pp": 0.2194640338420868,
+      "per_bank_accuracy_percent": [
+        83.2611083984375,
+        83.22830200195312,
+        83.05282592773438,
+        82.74879455566406,
+        82.88688659667969
+      ]
+    },
+    "mask_unshared": {
+      "mean_accuracy_percent": 91.91825866699219,
+      "between_bank_sd_pp": 0.3760834336280823,
+      "per_bank_accuracy_percent": [
+        91.84303283691406,
+        92.29621887207031,
+        91.31088256835938,
+        92.10166931152344,
+        92.03948974609375
+      ]
+    },
+    "random_topology": {
+      "mean_accuracy_percent": 75.32424926757812,
+      "between_bank_sd_pp": 0.270714670419693,
+      "per_bank_accuracy_percent": [
+        75.21629333496094,
+        75.4913330078125,
+        74.96261596679688,
+        75.67176818847656,
+        75.27923583984375
+      ]
+    },
+    "wsr": {
+      "mean_accuracy_percent": 82.73056030273438,
+      "between_bank_sd_pp": 0.07953227311372757,
+      "per_bank_accuracy_percent": [
+        82.75146484375,
+        82.76634216308594,
+        82.83119201660156,
+        82.6751708984375,
+        82.62863159179688
+      ]
+    },
+    "oracle": {
+      "mean_accuracy_percent": 96.8109130859375,
+      "between_bank_sd_pp": 0.08465147763490677,
+      "per_bank_accuracy_percent": [
+        96.69189453125,
+        96.89826965332031,
+        96.8719482421875,
+        96.83303833007812,
+        96.75941467285156
+      ]
+    },
+    "adam_long": {
+      "mean_accuracy_percent": 82.62680053710938,
+      "between_bank_sd_pp": 0.08168904483318329,
+      "per_bank_accuracy_percent": [
+        82.68394470214844,
+        82.64884948730469,
+        82.71827697753906,
+        82.54356384277344,
+        82.53936767578125
+      ]
+    },
+    "sgd_long": {
+      "mean_accuracy_percent": 82.91831970214844,
+      "between_bank_sd_pp": 0.11457676440477371,
+      "per_bank_accuracy_percent": [
+        82.97958374023438,
+        83.02001953125,
+        83.00437927246094,
+        82.79266357421875,
+        82.79495239257812
+      ]
+    }
+  }
+}

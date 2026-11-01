@@ -1,0 +1,25 @@
+{
+  "replica": 3,
+  "seed": 4111481,
+  "all_seeds_fixed_in_advance": [
+    2111481,
+    3111481,
+    4111481,
+    5111481,
+    6111481
+  ],
+  "endpoint": {
+    "noise_id": 1,
+    "support_size": 2048
+  },
+  "target_tasks": 16,
+  "target_restarts": 8,
+  "primary_methods": [
+    "ar",
+    "mask_unshared"
+  ],
+  "source_bank_selection": "Three newly collected source noise banks; select on source tasks 8/9 across all noise levels, as in select_bank.py.",
+  "frozen_settings": "results/v2 selections, including refined WSR and 4x-step dense controls; no new target HPO or method selection.",
+  "source_recipe": "Same dense+IMP and relational pipeline; skip only unused legacy column-extractor refit.",
+  "scope": "Five independent repetitions of the prespecified primary noise/support condition, with all thirteen controls; the other eleven conditions are not repeated."
+}
