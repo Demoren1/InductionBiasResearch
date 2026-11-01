@@ -1,0 +1,106 @@
+{
+  "protocol": {
+    "seed": 1101481,
+    "run": "experiments/dynamic_signal_v1/runs/v1",
+    "blocks": 16,
+    "block_size": 8,
+    "hidden": 32,
+    "noise": [
+      0.15,
+      0.25,
+      0.4
+    ],
+    "calibration_tasks": 4,
+    "source_tasks": 12,
+    "target_tasks": 8,
+    "calibration_sizes": [
+      256,
+      1024
+    ],
+    "target_sizes": [
+      128,
+      512,
+      2048,
+      8192
+    ],
+    "query_size": 1024,
+    "test_size": 16384,
+    "steps": 4096,
+    "batch_size": 128,
+    "checkpoint_every": 128,
+    "log_every": 256,
+    "calibration_restarts": 2,
+    "target_restarts": 8,
+    "gate_accuracy_gain": 0.03,
+    "grids": {
+      "adam_lr": [
+        0.001,
+        0.003,
+        0.01,
+        0.03
+      ],
+      "sgd_lr": [
+        0.03,
+        0.1,
+        0.3,
+        1.0
+      ],
+      "weight_decay": [
+        0.0,
+        0.001,
+        0.01
+      ],
+      "initial_scale": [
+        0.3,
+        1.0
+      ],
+      "momentum": [
+        0.0,
+        0.9
+      ],
+      "codebook_lr": [
+        0.003,
+        0.01,
+        0.03,
+        0.1
+      ],
+      "codebook_scale": [
+        0.5,
+        1.0,
+        2.0
+      ]
+    },
+    "rules": [
+      "This is a proposed DSD-inspired shuffled-block Gaussian-mixture benchmark, not a reproduction of the published theorem's full protocol.",
+      "Each task has a new unit-norm eight-dimensional signal. One common unknown input permutation is used across source, calibration and target tasks.",
+      "Source, calibration and target directions and observations are independent. Support, query and test are disjoint generated observations.",
+      "Oracle indexing applies only to first-layer weights: 16 trainable code values plus 32 hidden biases, 32 readout weights and one offset, 81 numerical parameters. Dense MLP has 4161 parameters.",
+      "Calibration uses four tasks, two restarts, identical batch streams and query selection. Each first-layer initialization scale is searched for dense Adam/SGD.",
+      "Calibrate at n=256 and1024; target n=128/512 uses the n=256 choice, n=2048/8192 uses n=1024. Select hyperparameters only on calibration query BCE.",
+      "Compare independently tuned oracle, dense Adam/SGD with momentum, and a linear model. All noise conditions and label budgets must be reported.",
+      "Analytic Bayes logits are evaluated only as an accuracy reference, not provided to any solver. Gaussian overlap gives irreducible classification error.",
+      "Continue to structure collection if the oracle gains at least three accuracy points over both dense optimizers in any calibration noise/budget. Do not choose a target condition after reading target labels.",
+      "A successful oracle is not a successful learned generator. Report source-bank recovery separately and never substitute the oracle for extracted I.",
+      "Save training/query loss and recalls against steps. Do not create or run tests. Preserve other users' GPU processes."
+    ]
+  },
+  "hashes": {
+    "calibration/noise_0.npz": "6aac9a1732a6cd05c3919e4cad747e6c6aaf0d418786617e19dbc7b124e62bb7",
+    "calibration/noise_2.npz": "d3a3cd06b0211afaa1af0e095b92a6b7ad6c213ceb31d3315de5a036d56274f9",
+    "calibration/noise_1.npz": "e324bfe855a3bf9a7208f50771d9cdc2e142b4c17e2dadb221ba2df57fe1ad6e",
+    "calibration/teacher_audit.npz": "6555e9b4d8a6979e0ef4db7e24381d86ce74c0f640e4598699f44f269703b49f",
+    "target/noise_0.npz": "32bf83430585d2f9f9b6e647bb6f847d05cc6ae2e832836c92ceb19151e213c8",
+    "target/noise_2.npz": "c140ad195bc73046b927c0111fdad926193d606f1c683123a28930f85dc633f1",
+    "target/noise_1.npz": "82ffa003c06fc72e82930edb570400be9b43c4e017c83b8d6f6db007bdff3a99",
+    "target/teacher_audit.npz": "5987de397e23111f173cbb846c95ace0ba070b830f890db67cecd981aa4c0aff",
+    "source/noise_0.npz": "22aef235d96727d0cfda37bc55226e3faa7264ad10c86a8f448c42f577b1a855",
+    "source/noise_2.npz": "c400bd24db799bf4be6c85d7480dcc1c7fc66e7a400d9a090162c051ff81e35a",
+    "source/noise_1.npz": "4f1c537eaacb6be624aa71f71fdbdbacf0ea18e54a726dc80d9875771ddc3e22",
+    "source/teacher_audit.npz": "ae7dd164e34a741c00f2637950739431cf586c5099f5e93519eb6b585f6e7215",
+    "calibration_fit/noise_0_n256/oracle.npz": "4b337fd9033bb82ed485596746ea029c5169ebf8e653b57f92b4ad8ea1803124",
+    "calibration_fit/noise_2_n256/oracle.npz": "271dcb0648e4c4e89ef21f0d91d1126820b5d81828862c1b56f14068f0959c64",
+    "calibration_fit/noise_1_n1024/oracle.npz": "e80025649b6f83ef73c6d7a621c02ad68743fa825bb9840d6c0f4deadfb45af3",
+    "calibration_fit/noise_0_n1024/oracle.npz": "6a9ed8f1d2f8812d48bf2d6248468615680e74e5f7c4cd67ef3cf45115a9becb",
+    "calibration_fit/noise_1_n256/oracle.npz": "9232dd8b3f82a808d863cde13cc3ccb69e001e258445adb230bd5146c0b8c1c7"
+  }
+}

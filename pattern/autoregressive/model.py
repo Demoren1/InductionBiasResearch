@@ -18,8 +18,11 @@ class IndexMADE(nn.Module):
         self.positions = positions
         self.classes = classes
         inputs = torch.arange(1, positions + 1).repeat_interleave(classes)
-        first = torch.arange(width) % (positions - 1) + 1
-        second = torch.randperm(width) % (positions - 1) + 1
+        if width >= positions - 1:
+            first = torch.arange(width) % (positions - 1) + 1
+        else:
+            first = torch.arange(width) * (positions - 1) // width + 1
+        second = first[torch.randperm(width)]
         self.layers = nn.Sequential(
             MaskedLinear(positions * classes, width, first[:, None] >= inputs),
             nn.GELU(),
@@ -45,4 +48,34 @@ class IndexMADE(nn.Module):
             else:
                 probabilities = (logits / temperature).softmax(-1)
                 indices[:, position] = torch.multinomial(probabilities, 1).squeeze(1)
+        return indices
+
+    @torch.no_grad()
+    def sample_cached(self, count, temperature=1.0):
+        if temperature < 0:
+            raise ValueError("temperature must be nonnegative")
+        first, second, final = self.layers[0], self.layers[2], self.layers[4]
+        first_weight = first.weight * first.mask
+        second_weight = second.weight * second.mask
+        final_weight = final.weight * final.mask
+        initial = first_weight[:, :: self.classes].sum(-1) + first.bias
+        activation = initial[None].expand(count, -1).clone()
+        indices = torch.zeros(
+            count, self.positions, dtype=torch.long, device=initial.device
+        )
+        for position in range(self.positions):
+            hidden = F.gelu(F.linear(F.gelu(activation), second_weight, second.bias))
+            start = position * self.classes
+            stop = start + self.classes
+            logits = F.linear(hidden, final_weight[start:stop], final.bias[start:stop])
+            if temperature == 0:
+                chosen = logits.argmax(-1)
+            else:
+                chosen = torch.multinomial(
+                    (logits / temperature).softmax(-1), 1
+                ).squeeze(-1)
+            indices[:, position] = chosen
+            activation += (
+                first_weight[:, start + chosen].T - first_weight[:, start][None]
+            )
         return indices

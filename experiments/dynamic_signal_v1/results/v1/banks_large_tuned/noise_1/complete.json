@@ -1,0 +1,112 @@
+{
+  "source_tasks": 12,
+  "networks_per_task": 4,
+  "ordinary_source_adam": {
+    "optimizer": "adam",
+    "lr": 0.03,
+    "weight_decay": 0.001,
+    "momentum": 0.0,
+    "initial_scale": 1.0
+  },
+  "codebook_configs": [
+    {
+      "optimizer": "adam",
+      "lr": 0.003,
+      "weight_decay": 0.0,
+      "momentum": 0.0,
+      "initial_scale": 1.0
+    },
+    {
+      "optimizer": "adam",
+      "lr": 0.01,
+      "weight_decay": 0.0,
+      "momentum": 0.0,
+      "initial_scale": 1.0
+    },
+    {
+      "optimizer": "adam",
+      "lr": 0.03,
+      "weight_decay": 0.0,
+      "momentum": 0.0,
+      "initial_scale": 1.0
+    },
+    {
+      "optimizer": "adam",
+      "lr": 0.1,
+      "weight_decay": 0.0,
+      "momentum": 0.0,
+      "initial_scale": 1.0
+    }
+  ],
+  "selected_source_codebook_config_ids": [
+    0,
+    0,
+    0,
+    2,
+    2,
+    0,
+    3,
+    2,
+    1,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    0,
+    0,
+    2,
+    0,
+    2,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "source_steps": [
+    4096,
+    2048,
+    2048,
+    2048,
+    2048
+  ],
+  "post_codebook_steps": 4096,
+  "nonzero_budget": 256,
+  "codes": 16,
+  "original_dense_query_accuracy": 0.8725178837776184,
+  "sparse_query_accuracy": 0.8901570439338684,
+  "codebook_query_accuracy": 0.78778076171875,
+  "kept": 24,
+  "role_counts": [
+    16,
+    4,
+    4
+  ],
+  "retained_query_accuracy": 0.8090413212776184,
+  "extraction": "Source-training weights/masks and readout signs only; no X covariance, no teacher I or permutation. Known budgets are 256 active first-layer weights and 16 scalar codes. Column alignment uses support Jaccard with readout-sign penalty; tying uses source-training weight profiles."
+}

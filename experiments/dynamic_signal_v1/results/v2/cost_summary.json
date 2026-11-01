@@ -1,0 +1,112 @@
+{
+  "description": "Independent numerical network fits and SGD/Adam updates counted from saved fit metadata. Example presentations count repeated minibatch draws, not unique data or unique indexators. Source-prior MLE updates and sampling overhead are excluded. v1 is development; v2 confirmation includes separate HPO and target rows.",
+  "by_phase": {
+    "v1": {
+      "bank_selection": {
+        "fits": 432,
+        "model_updates": 1769472,
+        "example_presentations": 226492416
+      },
+      "banks": {
+        "fits": 1296,
+        "model_updates": 4128768,
+        "example_presentations": 528482304
+      },
+      "target_fit": {
+        "fits": 3072,
+        "model_updates": 12582912,
+        "example_presentations": 1610612736
+      },
+      "banks_large_tuned": {
+        "fits": 864,
+        "model_updates": 2752512,
+        "example_presentations": 352321536
+      },
+      "competitors:calibration": {
+        "fits": 3456,
+        "model_updates": 14155776,
+        "example_presentations": 1811939328
+      },
+      "banks_relations": {
+        "fits": 2304,
+        "model_updates": 9437184,
+        "example_presentations": 1207959552
+      },
+      "priors:calibration": {
+        "fits": 11520,
+        "model_updates": 47185920,
+        "example_presentations": 6039797760
+      },
+      "priors:target": {
+        "fits": 3840,
+        "model_updates": 15728640,
+        "example_presentations": 2013265920
+      },
+      "calibration_fit": {
+        "fits": 6912,
+        "model_updates": 28311552,
+        "example_presentations": 3623878656
+      },
+      "target_fit_large_tuned": {
+        "fits": 768,
+        "model_updates": 3145728,
+        "example_presentations": 402653184
+      }
+    },
+    "v2": {
+      "target_fit": {
+        "fits": 6144,
+        "model_updates": 25165824,
+        "example_presentations": 3221225472
+      },
+      "competitors:calibration": {
+        "fits": 17280,
+        "model_updates": 70778880,
+        "example_presentations": 9059696640
+      },
+      "competitors:target": {
+        "fits": 4608,
+        "model_updates": 18874368,
+        "example_presentations": 2415919104
+      },
+      "priors:calibration": {
+        "fits": 69120,
+        "model_updates": 283115520,
+        "example_presentations": 36238786560
+      },
+      "priors:target": {
+        "fits": 6144,
+        "model_updates": 25165824,
+        "example_presentations": 3221225472
+      },
+      "long_control:target": {
+        "fits": 1536,
+        "model_updates": 25165824,
+        "example_presentations": 3221225472
+      },
+      "long_control:calibration": {
+        "fits": 1728,
+        "model_updates": 28311552,
+        "example_presentations": 3623878656
+      },
+      "calibration_fit": {
+        "fits": 31104,
+        "model_updates": 127401984,
+        "example_presentations": 16307453952
+      },
+      "weight_sharing:calibration": {
+        "fits": 13008,
+        "model_updates": 53280768,
+        "example_presentations": 6819938304
+      },
+      "weight_sharing:target": {
+        "fits": 1536,
+        "model_updates": 6291456,
+        "example_presentations": 805306368
+      }
+    }
+  },
+  "source_unique_training_examples": 589824,
+  "source_query_examples": 36864,
+  "target_query_examples_per_task": 1024
+}
