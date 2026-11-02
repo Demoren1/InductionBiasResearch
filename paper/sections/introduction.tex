@@ -7,30 +7,34 @@ Suitable parameter-sharing patterns also enforce equivariance to task-relevant t
 
 Selecting suitable structural biases by hand requires domain expertise, particularly when the relevant properties of a new task are not known in advance \cite{yeh2022equivariance}.
 This motivates learning such biases from data.
-For example, \citet{zhou2021meta} meta-learn layer reparameterizations to discover shared parameter structures, including symmetry-inducing patterns.
+\citet{yeh2022equivariance} optimize parameter-sharing schemes to discover equivariances, while \citet{zhou2021meta} meta-learn sharing patterns across related tasks.
+Learning groups of similar weights has also been studied through soft weight tying \cite{nowlan1991adaptive} and weight-sharing regularization \cite{shakerinava2024weight}.
 \citet{atanov2019deep} learn generative priors from convolutional filters of previously trained networks and use them to guide learning on new datasets.
+\citet{schurholt2022hyper} learn generative representations of trained networks to sample new numerical weights.
 \citet{sun2020sparse} extract task-specific subnetworks by iterative pruning and share parameters where these subnetworks overlap.
 \citet{ando2005framework} learn a shared predictive structure across tasks while allowing task-specific predictors.
 
 More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
 \citet{baxter2000model} provides a theoretical framework for learning a shared hypothesis space across tasks, with generalization bounds for new tasks from the same environment under suitable capacity and sampling assumptions.
-Our focus is on extracting one transferable connectivity pattern from diverse trained solutions: a mask that remains useful when fresh weights are learned for a new task.
+Our focus is on transferring connectivity and weight-sharing constraints extracted from trained solutions, with numerical values learned from scratch for each new task.
 
-In this paper, we present a generative approach to learning a shared connectivity mask for related tasks.
-Building on generative modeling of trained networks \cite{atanov2019deep,schurholt2022hyper}, we construct a bank of independently initialized networks for each task, pruned to a fixed connection budget using iterative magnitude pruning (IMP) \cite{frankle2019lottery}.
-Each network is represented by its masked weights, loss gradients, and connection sensitivities measured on fixed probe inputs.
+In this paper, we present a generative multi-task learning framework that learns a distribution over network structures from solutions to related tasks.
+We represent a structure by an indexator that specifies which connections are present and which weights share a numerical value.
+The corresponding codebook contains the trainable values.
+We retain candidate structures according to their validation performance after training a fresh codebook on source tasks.
 
-Hidden-neuron permutations preserve the network function when applied consistently to adjacent layers.
-Within each task-specific encoder, Neural Functional (NF) layers \cite{zhou2023permutation} extract permutation-equivariant features, which are pooled over hidden neurons to obtain an invariant representation.
-Variational encoders map individual banked solutions into a common latent space, and a shared decoder reconstructs their IMP masks.
+Our central hypothesis is that structural regularities shared across source solutions provide an inductive bias that transfers to new tasks.
+We model these regularities with an autoregressive distribution over indexators, using MADE \cite{germain2015made}.
+On a new task, the frozen generator proposes structures, whose numerical parameters are trained from scratch and whose performance is assessed on query data.
 
-Our central hypothesis is that this shared latent representation promotes overlap between regions corresponding to structures useful for different tasks.
-After training, we freeze the decoder and optimize only the latent code to search for a common mask.
-The search is guided by the mean query loss across source tasks, measured after training fresh predictors on their support samples under each candidate mask.
+On a synthetic benchmark adapted from Dynamic Signal Distribution \cite{lahoti2024locality}, the extracted structures improve generalization over tuned fully connected models and the same connectivity mask without weight sharing.
+Simple frequency-based proposals achieve similar accuracy to the autoregressive model.
+A real-image control using input-selection masks shows no advantage over tuned dense baselines.
 
 Our main contributions are as follows:
 \begin{itemize}
-    \item We propose a generative framework for learning a shared connectivity mask as a structural inductive bias, with a fixed connection budget and independently trained task-specific weights.
-    \item We develop a method for searching for an optimal shared connectivity structure through optimization in a learned latent space.
-    \item We demonstrate the effectiveness of the proposed approach on synthetic tasks, showing that it can recover shared connectivity structures and transfer them to previously unseen tasks.
+    \item We establish sufficient conditions under which structural search finds low-error solutions that dense gradient-based optimization is unlikely to reach within a fixed number of steps.
+    \item A multi-task framework for transferring connectivity and weight-sharing constraints while learning new numerical parameters.
+    \item A procedure for extracting, validating, and autoregressively generating indexators from source solutions.
+    \item An empirical evaluation of structural recovery and transfer, including simple structural baselines and a real-image control.
 \end{itemize}

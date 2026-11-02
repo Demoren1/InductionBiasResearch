@@ -1,117 +1,107 @@
 \section{Preliminary}
 \label{sec:preliminary}
 
+A trained network contains information about both the numerical values of
+its parameters and the relations between them. For example, a predictor
+may use only a subset of the available connections and share a coefficient
+across several of them. These relations may remain useful on another task
+even when the required coefficients change. Learning such constraints
+from related tasks could therefore help a new predictor generalize from
+limited data. We evaluate their usefulness through the quality of the
+solutions obtained after learning new numerical parameters.
+
 \subsection{Multi-task learning}
 \label{sec:tasks}
 
-Let $\mathcal{T}$ be a family of tasks with common input and target spaces
-$\mathcal{X}$ and $\mathcal{Y}$. Each task $\tau\in\mathcal{T}$ is associated
-with a distribution $P_\tau$ on $\mathcal{X}\times\mathcal{Y}$, while
-a distribution $p(\tau)$ over $\mathcal{T}$ describes the task environment
-\cite{baxter2000model}.
-Learning across this environment allows information from observed tasks
-to inform learning on new ones.
+Multi-task learning uses information shared by related prediction tasks
+to improve learning. In our setting, each task $\tau$ is a supervised
+learning problem with its own distribution $P_\tau$ over input--target
+pairs $(x,y)$. Tasks share input and target spaces $\mathcal{X}$ and
+$\mathcal{Y}$, but may require different predictors. We model their
+relationship through a task family $\mathcal{T}$ and a distribution
+$p(\tau)$ describing which tasks occur \cite{baxter2000model}.
 
-We distinguish disjoint, nonempty finite collections of training and test tasks,
-$\mathcal{T}_{\mathrm{tr}}$ and $\mathcal{T}_{\mathrm{te}}$.
-For each task, a support sample $S_\tau^{\mathrm{s}}$ is used to learn
-its predictor, and an independent query sample $S_\tau^{\mathrm{q}}$
-is used to assess its performance; both consist of independent
-observations from $P_\tau$ \cite{finn2017model,zhou2021meta}.
-For a predictor $f$, a nonempty sample $S$, and a prediction loss $\ell$,
-the empirical loss is
+We use source tasks $\mathcal{T}_{\mathrm{tr}}$ to learn shared structural
+information and a disjoint collection of target tasks
+$\mathcal{T}_{\mathrm{te}}$ to assess its transfer. Both collections are
+drawn from the same task environment. For each task, a support sample
+$S_\tau^{\mathrm{s}}$ provides examples for fitting the numerical
+parameters. An independent query sample $S_\tau^{\mathrm{q}}$ provides
+examples for comparing the resulting predictors
+\cite{finn2017model,zhou2021meta}. Both samples contain observations
+drawn independently from $P_\tau$. For a predictor $f$ and a sample $S$,
+we measure performance by the average prediction loss
 \begin{equation}
     \mathcal{L}_S(f)
     :=\frac{1}{|S|}\sum_{(x,y)\in S}\ell(f(x),y).
     \label{eq:task-loss}
 \end{equation}
+Here, $\ell$ is the loss for a single example, such as cross-entropy
+for classification or squared error for regression.
 
-\subsection{Masked predictors and network representations}
-\label{sec:masked-predictors}
+\subsection{Network structure}
+\label{sec:network-structure}
 
-Let $f_{\theta,M}$ be a neural network with numerical parameters $\theta$
-and a binary mask $M\in\{0,1\}^{d\times h}$ applied to the incoming weight
-matrix $W\in\mathbb{R}^{d\times h}$ of a hidden layer with $d$ inputs
-and $h$ neurons. The effective weights are
-$\widetilde W=W\odot M$, where $\odot$ denotes elementwise multiplication.
-For an integer connection budget $1\le K\le dh$, the admissible masks are
-$\mathcal{M}_K:=\{M\in\{0,1\}^{d\times h}:\|M\|_0=K\}$.
-
-The mask specifies the available connections, while their values are
-learned separately for each task. We write $\widehat\theta_\tau(M)$ for
-the parameters obtained by fitting a task-specific predictor on
-$S_\tau^{\mathrm{s}}$ under a common learning rule, with $M$ held fixed.
-The effective weights and their loss gradients provide weight-space
-features of the resulting predictor. For a sample $S$, define
+We fix a common network architecture and collect the weights to be
+structured into a vector $w\in\mathbb{R}^{P}$, where $P$ is the number
+of selected weight positions. An integer array
+$I\in\{0,\ldots,K\}^{P}$, called an \emph{indexator}, assigns each
+position to an entry of a \emph{codebook}
+$C_\tau=(C_{\tau,0},\ldots,C_{\tau,K})$. The codebook contains $K$
+trainable values and a fixed zero entry. The effective weights are
 \begin{equation}
-    \Gamma_S(\theta,M):=\nabla_W\mathcal{L}_S(f_{\theta,M}),
-    \label{eq:weight-gradient}
+    w_p=C_{\tau,I_p},\qquad p=1,\ldots,P,\qquad C_{\tau,0}=0.
+    \label{eq:indexator-weights}
 \end{equation}
-where differentiation is with respect to $W$ at a fixed mask $M$.
+Connections with the same positive index must share a numerical value;
+index zero disables a connection. Thus, $I$ specifies both connectivity
+and weight sharing, while $C_\tau$ supplies the values for a particular
+task. A connectivity mask is a special case in which each active
+connection has its own trainable codebook entry.
 
-Such features depend on the numbering of hidden neurons, although
-this ordering has no effect on the network function.
-Let $b\in\mathbb{R}^h$ be the hidden biases and
-$W_2\in\mathbb{R}^{h\times r}$ the weights connecting the hidden layer
-to the next layer of width $r$.
-For a layer input $u\in\mathbb{R}^d$, an elementwise activation $\sigma$,
-and any permutation matrix $\Pi\in\mathbb{R}^{h\times h}$,
-\begin{equation}
-    \begin{aligned}
-        &(\Pi^{\mathsf T}W_2)^{\mathsf T}
-        \sigma\!\left(
-            (\widetilde W\Pi)^{\mathsf T}u+\Pi^{\mathsf T}b
-        \right) \\
-        &\qquad= W_2^{\mathsf T}\sigma(\widetilde W^{\mathsf T}u+b).
-    \end{aligned}
-    \label{eq:hidden-permutation}
-\end{equation}
-Thus, a consistent permutation of incoming weights, biases, and outgoing
-weights leaves the predictor unchanged. The same column permutation
-applies to $W$, $M$, and the loss gradients.
+For example,
+$$
+    I=(1,2,1,0),\qquad C_\tau=(0,0.7,-1.2)
+    \quad\Longrightarrow\quad w=(0.7,-1.2,0.7,0).
+$$
+The first and third weights are tied, and the fourth is fixed at zero.
+On another task, the same indexator can use different codebook values
+while preserving these relations. We write $f_{I,C_\tau,\theta_\tau}$
+for the resulting predictor, where $\theta_\tau$ contains any remaining
+trainable parameters, such as biases. Both $C_\tau$ and $\theta_\tau$
+are learned afresh for each task, with $I$ held fixed.
 
-Neural Functional (NF) layers account for this symmetry by producing
-weight-space features that transform equivariantly under hidden-neuron
-permutations \cite{zhou2023permutation}.
-Averaging these features over hidden neurons yields a representation
-independent of their ordering, making NF layers suitable for encoding
-solutions learned by different predictors.
-
-\subsection{Problem formulation}
+\subsection{Good solutions and structural transfer}
 \label{sec:problem-formulation}
 
-Our aim is to learn a shared connectivity pattern that serves as a
-structural inductive bias for new tasks. The available training data are
-$\mathcal{D}_{\mathrm{tr}}:=\{(S_\tau^{\mathrm{s}},S_\tau^{\mathrm{q}}):
-\tau\in\mathcal{T}_{\mathrm{tr}}\}$.
-We consider a generative model $G_\phi:\mathcal{Z}\to\mathcal{M}_K$
-with latent space $\mathcal{Z}$, a fixed architecture, and trainable weights $\phi$.
-Let $\widehat\phi$ denote its weights learned from $\mathcal{D}_{\mathrm{tr}}$,
-and write $M(z):=G_{\widehat\phi}(z)$ for the mask associated with a
-latent code $z\in\mathcal{Z}$.
-Within the masks represented by this learned generator, we seek one
-that supports accurate task-specific predictors across the training
-tasks. This gives the ideal latent solution and shared mask
+To judge a structure, we fit its numerical parameters on the support
+sample using a specified optimizer, initialization rule, and budget
+of $T$ updates. Let $\widehat f_{\tau,I}$ denote the resulting predictor.
+For an error tolerance $\varepsilon$, we call it a \emph{good solution}
+if its expected loss on new examples from the task is at most
+$\varepsilon$:
 \begin{equation}
-    \begin{aligned}
-        z^\star &\in \operatorname*{arg\,min}_{z\in\mathcal{Z}}
-        \frac{1}{|\mathcal{T}_{\mathrm{tr}}|}
-        \sum_{\tau\in\mathcal{T}_{\mathrm{tr}}}
-        \mathcal{L}_{S_\tau^{\mathrm{q}}}
-        \!\left(f_{\widehat\theta_\tau(M(z)),M(z)}\right), \\
-        M^\star &:=G_{\widehat\phi}(z^\star).
-    \end{aligned}
-    \label{eq:generative-transfer-objective}
+    \mathcal{R}_\tau(\widehat f_{\tau,I})
+    :=\mathbb{E}_{(x,y)\sim P_\tau}
+    \left[\ell(\widehat f_{\tau,I}(x),y)\right]
+    \leq\varepsilon.
+    \label{eq:good-solution}
 \end{equation}
-The value of this structure lies in its ability to transfer beyond
-the tasks used to identify it. We therefore assess $M^\star$ through
-the expected loss on a new task drawn independently from the same
-environment:
-\begin{equation}
-    \mathbb{E}_{\tau,\,S_\tau^{\mathrm{s}},\,S_\tau^{\mathrm{q}}}
-    \left[
-        \mathcal{L}_{S_\tau^{\mathrm{q}}}
-        \!\left(f_{\widehat\theta_\tau(M^\star),M^\star}\right)
-    \right].
-    \label{eq:transfer-query-loss}
-\end{equation}
+The data available for fitting and the training budget are part of this
+criterion: a structure is useful when its parameters can be learned
+well under those conditions.
+
+In practice, the expected loss is usually unknown, so we compare fitted
+predictors using their query loss. When query data are used to select
+a candidate, final performance is measured on additional test examples
+unused in selection. We assess structural transfer across new tasks
+and fresh initializations to determine how reliably the proposed
+constraints lead to good solutions.
+
+Several structures may support good solutions, and their usefulness
+may vary across tasks. Our shared model is therefore a distribution
+$Q_\phi(I)$ over indexators, with parameters $\phi$ learned from source
+tasks. On a target task, this distribution is kept fixed and supplies
+candidate structures. Each candidate receives newly trained numerical
+parameters, and the query sample is used to select the resulting
+predictor.

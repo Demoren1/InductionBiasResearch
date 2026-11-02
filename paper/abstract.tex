@@ -1,4 +1,5 @@
-Inductive biases shape how neural networks generalize from limited data, yet encoding them in network connectivity often relies on domain expertise.
-We propose a generative approach that represents solutions to related tasks in a shared latent space.
-Our central hypothesis is that this shared representation encourages overlap between regions corresponding to structures useful for different tasks, implicitly revealing their common structural constraints.
-We optimize the latent code to identify a shared connectivity mask that can serve as a transferable inductive bias for learning new tasks.
+The connectivity structure of a neural network influences how well it generalizes from limited data, yet designing this structure often requires domain expertise.
+We propose a generative multi-task learning framework that learns a distribution over network structures from solutions to related tasks.
+Our central hypothesis is that structural regularities shared across these solutions provide an inductive bias that transfers to new tasks.
+We generate structures autoregressively, specifying both connectivity and weight sharing, and train their numerical parameters from scratch on each new task.
+Experiments on a synthetic signal-detection benchmark show that transferring these structures improves generalization over tuned fully connected baselines.
