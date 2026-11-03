@@ -210,7 +210,7 @@ def fit(plan, specs, masks, configs, seed, device, reuse=0, phase=0):
 
 
 def save_fit(path, result, history):
-    np.savez_compressed(path.with_suffix(".npz"), **result)
+    np.savez_compressed(path.with_name(path.name + ".npz"), **result)
     with gzip.open(
         path.with_name(path.name + "_history.json.gz"), "wt"
     ) as stream:

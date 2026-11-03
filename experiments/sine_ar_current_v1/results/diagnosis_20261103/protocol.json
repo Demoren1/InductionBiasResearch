@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-03",
+  "source_run": "results/run_20261103",
+  "output": "results/diagnosis_20261103",
+  "threshold_audit": [0.1, 0.15, 0.2, 0.25, 0.275, 0.3, 0.325, 0.35, 0.4, 0.5, 0.6],
+  "trained_thresholds": [0.1, 0.25, 0.3, 0.325, 0.35, 0.6],
+  "temperatures": [0.3, 0.6, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0],
+  "diagnostic_temperatures": [0.3, 0.6, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0, 16.0],
+  "prior_seeds": [113, 227, 349],
+  "prior_width": 128,
+  "prior_steps": 3000,
+  "prior_learning_rate": 0.001,
+  "new_function_seeds": [12031, 12032],
+  "evaluation_seed": 261103990,
+  "rules": [
+    "Developmental diagnosis of the published experiment, not a new confirmatory benchmark.",
+    "Reuse all 262144 original uniformly random two-edge source attempts and their empirical query errors. No IMP, teacher support, or target observations enter source-bank selection.",
+    "Keep the original heldout card assignment. Change only the source query threshold. Final target success remains population MSE below 0.1.",
+    "The 0.1 prior is the frozen published checkpoint. Other priors use the same MADE, optimizer, seeds, steps, and source validation NLL selection.",
+    "Aggregate duplicate masks with their original frequencies: the weighted full-batch likelihood is the same as on all accepted cards. This is not uniform reweighting of unique masks.",
+    "Enumerate all 65536 binary masks to diagnose probability mass; teacher masks are used only for labeled diagnostics.",
+    "Choose threshold and temperature by empirical query on the original calibration functions and pairs. Retain all three prior seeds.",
+    "Evaluate new numerical functions only after the calibration choice is saved. The structural split is already known from the previous experiment, so this remains development evidence.",
+    "Keep the original 64-fit budget, optimizer settings, query selection, and fresh numerical initialization for every method.",
+    "Report when formerly unseen masks enter a relaxed bank. Distinguish learning from partial source solutions from generation of masks absent from the new bank.",
+    "Preserve the published run and its original source snapshots. New diagnostics use a separate directory. No test suite."
+  ]
+}
