@@ -1,0 +1,81 @@
+{
+  "selection_score": "mean empirical query MSE, equal weight for familiar and calibration-only pairs",
+  "confirmation_candidates_per_family": 2,
+  "target_prior_only_controls": "Every selected family is evaluated both with the baseline 32+32 policy and its calibrated numerical/allocation policy, on the same target functions and random streams. This separates prior changes from solver changes.",
+  "numerical_grid": [
+    {
+      "steps": 1024,
+      "lr": 0.05,
+      "scale": 2.0
+    },
+    {
+      "steps": 1024,
+      "lr": 0.025,
+      "scale": 2.0
+    },
+    {
+      "steps": 1024,
+      "lr": 0.1,
+      "scale": 2.0
+    },
+    {
+      "steps": 1024,
+      "lr": 0.05,
+      "scale": 1.25
+    },
+    {
+      "steps": 1024,
+      "lr": 0.05,
+      "scale": 3.0
+    },
+    {
+      "steps": 512,
+      "lr": 0.05,
+      "scale": 2.0
+    },
+    {
+      "steps": 2048,
+      "lr": 0.05,
+      "scale": 2.0
+    }
+  ],
+  "allocation_grid": [
+    {
+      "repeats": 1,
+      "top": 1,
+      "reuse": 4
+    },
+    {
+      "repeats": 1,
+      "top": 4,
+      "reuse": 4
+    },
+    {
+      "repeats": 2,
+      "top": 1,
+      "reuse": 0
+    },
+    {
+      "repeats": 2,
+      "top": 4,
+      "reuse": 0
+    },
+    {
+      "repeats": 1,
+      "top": 1,
+      "reuse": 0
+    },
+    {
+      "repeats": 1,
+      "top": 4,
+      "reuse": 0
+    }
+  ],
+  "mixture_block_probabilities": [
+    0.25,
+    0.5,
+    0.75
+  ],
+  "dense_calibration_repetitions_per_setting": 4,
+  "note": "Every search uses 65536 optimizer updates on individual models, batch64. Refit slots rotate over the best distinct masks, never consulting population risk or true support. Model/prior confirmation, numerical tuning and allocation use only confirmation functions; resulting optimism is assessed on fresh target functions."
+}

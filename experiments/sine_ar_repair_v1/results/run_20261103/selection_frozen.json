@@ -1,0 +1,637 @@
+{
+  "methods": [
+    {
+      "name": "block",
+      "setting": {
+        "model": "model_15",
+        "family": "block",
+        "step": 300,
+        "scale": 0.6,
+        "sampling_noise": false,
+        "mean_query": 0.13376782834529877,
+        "familiar_query": 0.15437793731689453,
+        "novel_query": 0.113157719373703,
+        "seed_query": [
+          0.14415279030799866,
+          0.12116682529449463,
+          0.13598385453224182
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "block_prior_only",
+      "setting": {
+        "model": "model_15",
+        "family": "block",
+        "step": 300,
+        "scale": 0.6,
+        "sampling_noise": false,
+        "mean_query": 0.13376782834529877,
+        "familiar_query": 0.15437793731689453,
+        "novel_query": 0.113157719373703,
+        "seed_query": [
+          0.14415279030799866,
+          0.12116682529449463,
+          0.13598385453224182
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "cross_noise",
+      "setting": {
+        "model": "model_25",
+        "family": "cross_noise",
+        "step": 1000,
+        "scale": 1.0,
+        "sampling_noise": false,
+        "mean_query": 0.12335526943206787,
+        "familiar_query": 0.13307975232601166,
+        "novel_query": 0.11363080143928528,
+        "seed_query": [
+          0.13635949790477753,
+          0.12845315039157867,
+          0.10525316745042801
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 0,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "cross_noise_prior_only",
+      "setting": {
+        "model": "model_25",
+        "family": "cross_noise",
+        "step": 1000,
+        "scale": 1.0,
+        "sampling_noise": false,
+        "mean_query": 0.12335526943206787,
+        "familiar_query": 0.13307975232601166,
+        "novel_query": 0.11363080143928528,
+        "seed_query": [
+          0.13635949790477753,
+          0.12845315039157867,
+          0.10525316745042801
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "joint",
+      "setting": {
+        "model": "model_06",
+        "family": "joint",
+        "step": 300,
+        "scale": 6.0,
+        "sampling_noise": false,
+        "mean_query": 0.16492187976837158,
+        "familiar_query": 0.1369798332452774,
+        "novel_query": 0.19286394119262695,
+        "seed_query": [
+          0.1819988489151001,
+          0.15973129868507385,
+          0.15303552150726318
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 2,
+        "top": 1,
+        "reuse": 0,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "joint_prior_only",
+      "setting": {
+        "model": "model_06",
+        "family": "joint",
+        "step": 300,
+        "scale": 6.0,
+        "sampling_noise": false,
+        "mean_query": 0.16492187976837158,
+        "familiar_query": 0.1369798332452774,
+        "novel_query": 0.19286394119262695,
+        "seed_query": [
+          0.1819988489151001,
+          0.15973129868507385,
+          0.15303552150726318
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "mask_vae",
+      "setting": {
+        "model": "model_22",
+        "family": "mask_vae",
+        "step": 1000,
+        "scale": 1.0,
+        "sampling_noise": false,
+        "mean_query": 0.1778641939163208,
+        "familiar_query": 0.08061081916093826,
+        "novel_query": 0.27511754631996155,
+        "seed_query": [
+          0.19042415916919708,
+          0.1677205115556717,
+          0.17544788122177124
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 2,
+        "top": 1,
+        "reuse": 0,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "mask_vae_prior_only",
+      "setting": {
+        "model": "model_22",
+        "family": "mask_vae",
+        "step": 1000,
+        "scale": 1.0,
+        "sampling_noise": false,
+        "mean_query": 0.1778641939163208,
+        "familiar_query": 0.08061081916093826,
+        "novel_query": 0.27511754631996155,
+        "seed_query": [
+          0.19042415916919708,
+          0.1677205115556717,
+          0.17544788122177124
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "partwise_mask_vae",
+      "setting": {
+        "model": "model_23",
+        "family": "partwise_mask_vae",
+        "step": 3000,
+        "scale": 2.0,
+        "sampling_noise": false,
+        "mean_query": 0.12891468405723572,
+        "familiar_query": 0.15419913828372955,
+        "novel_query": 0.10363022238016129,
+        "seed_query": [
+          0.11308329552412033,
+          0.13684792816638947,
+          0.13681283593177795
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 0,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "partwise_mask_vae_prior_only",
+      "setting": {
+        "model": "model_23",
+        "family": "partwise_mask_vae",
+        "step": 3000,
+        "scale": 2.0,
+        "sampling_noise": false,
+        "mean_query": 0.12891468405723572,
+        "familiar_query": 0.15419913828372955,
+        "novel_query": 0.10363022238016129,
+        "seed_query": [
+          0.11308329552412033,
+          0.13684792816638947,
+          0.13681283593177795
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "partwise_vae",
+      "setting": {
+        "model": "model_19",
+        "family": "partwise_vae",
+        "step": 6000,
+        "scale": 2.0,
+        "sampling_noise": false,
+        "mean_query": 0.11874488741159439,
+        "familiar_query": 0.1232941746711731,
+        "novel_query": 0.11419559270143509,
+        "seed_query": [
+          0.10597092658281326,
+          0.1446898728609085,
+          0.1055738627910614
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 0,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "partwise_vae_prior_only",
+      "setting": {
+        "model": "model_19",
+        "family": "partwise_vae",
+        "step": 6000,
+        "scale": 2.0,
+        "sampling_noise": false,
+        "mean_query": 0.11874488741159439,
+        "familiar_query": 0.1232941746711731,
+        "novel_query": 0.11419559270143509,
+        "seed_query": [
+          0.10597092658281326,
+          0.1446898728609085,
+          0.1055738627910614
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "token_noise",
+      "setting": {
+        "model": "model_09",
+        "family": "token_noise",
+        "step": 6000,
+        "scale": 2.0,
+        "sampling_noise": false,
+        "mean_query": 0.1365702897310257,
+        "familiar_query": 0.13017801940441132,
+        "novel_query": 0.14296257495880127,
+        "seed_query": [
+          0.12572512030601501,
+          0.14099711179733276,
+          0.1429886817932129
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "token_noise_prior_only",
+      "setting": {
+        "model": "model_09",
+        "family": "token_noise",
+        "step": 6000,
+        "scale": 2.0,
+        "sampling_noise": false,
+        "mean_query": 0.1365702897310257,
+        "familiar_query": 0.13017801940441132,
+        "novel_query": 0.14296257495880127,
+        "seed_query": [
+          0.12572512030601501,
+          0.14099711179733276,
+          0.1429886817932129
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "vae",
+      "setting": {
+        "model": "model_16",
+        "family": "vae",
+        "step": 300,
+        "scale": 1.0,
+        "sampling_noise": false,
+        "mean_query": 0.17245621979236603,
+        "familiar_query": 0.07545829564332962,
+        "novel_query": 0.2694541811943054,
+        "seed_query": [
+          0.1749415546655655,
+          0.15162673592567444,
+          0.19080041348934174
+        ]
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "vae_prior_only",
+      "setting": {
+        "model": "model_16",
+        "family": "vae",
+        "step": 300,
+        "scale": 1.0,
+        "sampling_noise": false,
+        "mean_query": 0.17245621979236603,
+        "familiar_query": 0.07545829564332962,
+        "novel_query": 0.2694541811943054,
+        "seed_query": [
+          0.1749415546655655,
+          0.15162673592567444,
+          0.19080041348934174
+        ]
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "joint_block_mixture",
+      "setting": {
+        "mixture": [
+          {
+            "model": "model_06",
+            "family": "joint",
+            "step": 300,
+            "scale": 6.0,
+            "sampling_noise": false,
+            "mean_query": 0.16492187976837158,
+            "familiar_query": 0.1369798332452774,
+            "novel_query": 0.19286394119262695,
+            "seed_query": [
+              0.1819988489151001,
+              0.15973129868507385,
+              0.15303552150726318
+            ]
+          },
+          {
+            "model": "model_15",
+            "family": "block",
+            "step": 300,
+            "scale": 0.6,
+            "sampling_noise": false,
+            "mean_query": 0.13376782834529877,
+            "familiar_query": 0.15437793731689453,
+            "novel_query": 0.113157719373703,
+            "seed_query": [
+              0.14415279030799866,
+              0.12116682529449463,
+              0.13598385453224182
+            ]
+          }
+        ],
+        "block_probability": 0.75,
+        "scale": 1.0
+      },
+      "policy": {
+        "steps": 512,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 64
+      }
+    },
+    {
+      "name": "relaxed_selection_tuned",
+      "setting": {
+        "frozen": "relaxed",
+        "scale": 1.0
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 0,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "strict_t2",
+      "setting": {
+        "frozen": "strict",
+        "scale": 2
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "strict_t6",
+      "setting": {
+        "frozen": "strict",
+        "scale": 6
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "relaxed_t1",
+      "setting": {
+        "frozen": "relaxed",
+        "scale": 1
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "frequency",
+      "setting": {
+        "empirical": "frequency",
+        "scale": 1.0
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "product",
+      "setting": {
+        "empirical": "product",
+        "scale": 1.0
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "replay",
+      "setting": {
+        "empirical": "replay",
+        "scale": 1.0
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "uniform",
+      "setting": {
+        "empirical": "uniform",
+        "scale": 1.0
+      },
+      "policy": {
+        "steps": 1024,
+        "lr": 0.05,
+        "scale": 2.0,
+        "repeats": 1,
+        "top": 1,
+        "reuse": 4,
+        "proposals": 32
+      }
+    },
+    {
+      "name": "dense_sgd",
+      "dense": {
+        "optimizer": "sgd",
+        "lr": 0.2,
+        "scale": 1.25
+      }
+    },
+    {
+      "name": "dense_adam",
+      "dense": {
+        "optimizer": "adam",
+        "lr": 0.1,
+        "scale": 0.7
+      }
+    },
+    {
+      "name": "oracle",
+      "dense": {
+        "optimizer": "sgd",
+        "lr": 0.05,
+        "scale": 2.0
+      }
+    }
+  ],
+  "target_functions_not_generated_yet": true
+}

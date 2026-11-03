@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-03",
+  "source_run": "experiments/sine_ar_current_v1/results/run_20261103",
+  "output": "experiments/sine_ar_repair_v1/results/run_20261103",
+  "prior_seeds": [
+    113,
+    227,
+    349
+  ],
+  "checkpoints": [
+    100,
+    300,
+    1000,
+    3000,
+    6000
+  ],
+  "ar_temperatures": [
+    0.6,
+    1.0,
+    2.0,
+    4.0,
+    6.0
+  ],
+  "vae_latent_scales": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "screen_functions": [
+    13021,
+    13022
+  ],
+  "confirmation_functions": [
+    13023,
+    13024
+  ],
+  "target_functions": [
+    14031,
+    14032
+  ],
+  "screen_searches_per_seed": 2,
+  "confirmation_searches_per_seed": 8,
+  "screen_seed": 261103810,
+  "confirmation_seed": 261103820,
+  "evaluation_seed": 261103830,
+  "fit_steps": 1024,
+  "fit_batch": 64,
+  "fit_query": 4096,
+  "success_mse": 0.1,
+  "rules": [
+    "Development experiment on a previously explored structural split; no global-minimum claim.",
+    "All newly trained priors use the same frozen 244 strict-bank cards and original train/validation flags. Random masks, no IMP. The relaxed bank is only a frozen reference.",
+    "Train 3 prior seeds and retain all checkpoints. Screen width, learning rate, weight decay, training duration, corruption, KL strength and task weighting.",
+    "Joint AR fits the entire mask. Token corruption replaces input bits independently with draws from their empirical marginals; cross-output corruption replaces the foreign output column with that from an independent source card. Targets remain genuine source masks.",
+    "Cross-output corruption, independent output AR, and partwise VAE explicitly use the known two-output architecture. They do not receive teacher coordinate roles or target masks. These are composition inductive biases, not discovery of arbitrary modules.",
+    "Token/cross corruption is tested during training only and also during generation. Plain temperature divides AR logits; VAE sampling scale multiplies its standard-normal latent and is not a logit temperature.",
+    "NF means Neural Functional. Reuse the archived NF/VAE architecture; reconstruct normalized source weights/query gradients from the frozen cards. Mask-only VAE controls use masks and zero gradients in the same encoder. Every target numerical weight is fresh.",
+    "Use original card-frequency weighting by default for all models, with explicit task-balanced controls. No invented whole-mask labels from target data.",
+    "Screen on fresh numerical calibration functions of familiar pairs and remainder-2 calibration pairs, weighting both conditions equally by empirical query MSE. All candidate epochs participate; source-card NLL is diagnostic, not the final model-selection criterion.",
+    "Confirm the two best settings per family on separate calibration functions and more searches. Tune numerical SGD and allocation within a fixed 4194304-example target budget. Keep baseline protocols as separate controls.",
+    "Write the final selection before generating target functions. Target remainder-3 pairs and familiar pairs use new functions; no target-based retuning.",
+    "Preserve all existing runs. Keep raw selected-candidate data, fitting trajectories, model checkpoints, calibration scores, and source hashes. Do not create or run test suites."
+  ]
+}
