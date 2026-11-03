@@ -599,9 +599,9 @@ Adam решил все 96 случаев, VAE — 72, восстановленн
 [отчёте от 20 октября](FINAL_REPORT_2026-10-20.md).
 
 Исходные результаты:
-[маски](../paper_vae_solver/results/RESULTS.md),
-[общие значения весов](../paper_vae_solver/results/CODEBOOK_RESULTS.md),
-[скрытые группы](../paper_vae_solver/results/HIDDEN_STRUCTURE_RESULTS.md),
-[неточные равенства и tanh](../paper_vae_solver/results/ROBUSTNESS_TWOLAYER_RESULTS.md).
+[маски](../archive/history/paper_vae_solver/results/RESULTS.md),
+[общие значения весов](../archive/history/paper_vae_solver/results/CODEBOOK_RESULTS.md),
+[скрытые группы](../archive/history/paper_vae_solver/results/HIDDEN_STRUCTURE_RESULTS.md),
+[неточные равенства и tanh](../archive/history/paper_vae_solver/results/ROBUSTNESS_TWOLAYER_RESULTS.md).
 Все таблицы и графики построены по сохранённым данным; новых обучений
 для этого отчёта не проводилось.

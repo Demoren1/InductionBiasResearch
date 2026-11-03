@@ -1,0 +1,36 @@
+\section{Introduction}
+
+Choosing an appropriate inductive bias is crucial for generalization \cite{baxter2000model}.
+By constraining the hypothesis space to reflect task structure, it can enable effective learning from limited data.
+Examples include local connectivity and spatial weight sharing in convolutional networks \cite{lecun1998gradient}, and recurrent state updates with parameters shared across time \cite{elman1990finding}.
+Suitable parameter-sharing patterns also enforce equivariance to task-relevant transformations \cite{ravanbakhsh2017equivariance}.
+
+Selecting suitable structural biases by hand requires domain expertise, particularly when the relevant properties of a new task are not known in advance \cite{yeh2022equivariance}.
+This motivates learning such biases from data.
+For example, \citet{zhou2021meta} meta-learn layer reparameterizations to discover shared parameter structures, including symmetry-inducing patterns.
+\citet{atanov2019deep} learn generative priors from convolutional filters of previously trained networks and use them to guide learning on new datasets.
+\citet{sun2020sparse} extract task-specific subnetworks by iterative pruning and share parameters where these subnetworks overlap.
+\citet{ando2005framework} learn a shared predictive structure across tasks while allowing task-specific predictors.
+
+More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
+\citet{baxter2000model} provides a theoretical framework for learning a shared hypothesis space across tasks, with generalization bounds for new tasks from the same environment under suitable capacity and sampling assumptions.
+Our focus is on extracting one transferable connectivity pattern from diverse trained solutions: a mask that remains useful when fresh weights are learned for a new task.
+
+In this paper, we present a generative approach to learning a shared connectivity mask for related tasks.
+Building on generative modeling of trained networks \cite{atanov2019deep,schurholt2022hyper}, we construct a bank of independently initialized networks for each task, pruned to a fixed connection budget using iterative magnitude pruning (IMP) \cite{frankle2019lottery}.
+Each network is represented by its masked weights, loss gradients, and connection sensitivities measured on fixed probe inputs.
+
+Hidden-neuron permutations preserve the network function when applied consistently to adjacent layers.
+Within each task-specific encoder, Neural Functional (NF) layers \cite{zhou2023permutation} extract permutation-equivariant features, which are pooled over hidden neurons to obtain an invariant representation.
+Variational encoders map individual banked solutions into a common latent space, and a shared decoder reconstructs their IMP masks.
+
+Our central hypothesis is that this shared latent representation promotes overlap between regions corresponding to structures useful for different tasks.
+After training, we freeze the decoder and optimize only the latent code to search for a common mask.
+The search is guided by the mean query loss across source tasks, measured after training fresh predictors on their support samples under each candidate mask.
+
+Our main contributions are as follows:
+\begin{itemize}
+    \item We propose a generative framework for learning a shared connectivity mask as a structural inductive bias, with a fixed connection budget and independently trained task-specific weights.
+    \item We develop a method for searching for an optimal shared connectivity structure through optimization in a learned latent space.
+    \item We demonstrate the effectiveness of the proposed approach on synthetic tasks, showing that it can recover shared connectivity structures and transfer them to previously unseen tasks.
+\end{itemize}

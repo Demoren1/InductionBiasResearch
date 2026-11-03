@@ -1,0 +1,71 @@
+% Encoding and typography.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\emergencystretch=1em
+
+% Use the bundled publisher style. The fallback keeps the draft buildable if
+% the De Gruyter template is intentionally omitted from a shared source copy.
+% The 2017 style queries `ngerman` unconditionally. Registering the language
+% identifier is sufficient for that false branch and avoids requiring German
+% hyphenation data for this US-English article.
+\makeatletter
+\@ifundefined{l@ngerman}{\newlanguage\l@ngerman}{}
+\def\input@path{{style/}}
+\makeatother
+\newif\ifdgruyterstyle
+\IfFileExists{style/dgruyter.sty}{%
+  \dgruyterstyletrue
+  \usepackage[big,online]{dgruyter}%
+}{%
+  \dgruyterstylefalse
+}
+
+% Mathematics.
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{nicefrac}
+
+% Tables and figures.
+\usepackage{booktabs}
+\usepackage{graphicx}
+\graphicspath{{plots/}{pictures/}{images/}{../paper_plots/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+
+% Colour and algorithms.
+\usepackage[dvipsnames]{xcolor}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+
+% References and bibliography.
+\usepackage[numbers,square,sort&compress]{natbib}
+\usepackage{doi}
+\hypersetup{hidelinks}
+
+% Theorem-like environments.
+\ifdgruyterstyle
+  \theoremstyle{dgthm}
+\else
+  \theoremstyle{plain}
+\fi
+\newtheorem{theorem}{Theorem}
+\newtheorem{assumption}{Assumption}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assertion}{Assertion}
+\newtheorem{result}{Result}
+\newtheorem{conclusion}{Conclusion}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+% Visible marker for unfinished parts of the draft.
+\newcommand{\drafttodo}[1]{%
+  \par\noindent\textcolor{BrickRed}{\textbf{TODO:} #1}\par
+}

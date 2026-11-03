@@ -1,0 +1,30 @@
+{
+  "source_run": "experiments/basin_structure_transfer_v1/results/pilot_v1",
+  "calibration_run": "experiments/basin_release_v1/results/heldout_v1",
+  "output": "experiments/basin_release_v1/results/sgd_control_v1",
+  "frequencies": [
+    6,
+    8
+  ],
+  "prior_seeds": [
+    0,
+    1,
+    2
+  ],
+  "known_tasks_per_family": 32,
+  "foreign_tasks": 32,
+  "target_seed": 261106410,
+  "proposal_seed": 261106420,
+  "fit_seed": 261106430,
+  "query_seed": 261106460,
+  "starts": 32,
+  "steps": 2048,
+  "batch": 128,
+  "query": 4096,
+  "log_every": 256,
+  "success_mse": 0.1,
+  "initial_weight_atol": 2e-06,
+  "setting_choice": "Use one common SGD configuration minimizing the average of tied and released mean calibration query over the already completed SGD calibration grids. No target outcomes enter selection.",
+  "reason": "Declared after the main experiment: its calibration revealed similar plain-SGD performance despite a large advantage of tuned codebook Adam. Isolate retaining equality under exactly the same plain SGD and step size on another independent numerical cohort.",
+  "scope": "One fixed source library, three frozen priors, fresh C and amplitude. New cohort; no additional calibration training. Same proposals, norms, minibatches and query in each pair; float32 initial-weight differences audited. This is a follow-up, not part of the original predeclared experiment."
+}

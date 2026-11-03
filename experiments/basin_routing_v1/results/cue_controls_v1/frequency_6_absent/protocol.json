@@ -1,0 +1,29 @@
+{
+  "parent_protocol": "experiments/basin_routing_v1/cue_protocol.json",
+  "input": "experiments/basin_routing_v1/results/cue_holdout_v1",
+  "output": "experiments/basin_routing_v1/results/cue_controls_v1",
+  "methods": [
+    "moment_kmeans",
+    "moment_balanced_groups",
+    "moment_dense_adam",
+    "moment_dense_sgdm"
+  ],
+  "radii": [
+    0.5,
+    1,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12
+  ],
+  "dense_starts_per_radius": 4,
+  "numeric_steps": 2048,
+  "cluster_seed": 261104480,
+  "moment_kmeans": "Scalar kmeans with K=3, 8 initializations and 100 iterations on the same empirical g. Transfer only the resulting I; all C and amplitude are fresh.",
+  "moment_balanced_groups": "Sort the 24 empirical moment coordinates and divide into 3 groups of 8, using the known balanced-group grammar but no learned library. Fit all C fresh.",
+  "moment_dense": "Dense input direction initializes from the same empirical g, normalized to each of eight declared radii; amplitude is fresh. Four starts per radius and 2048 steps, total 65536 updates. Use the previous frozen dense Adam/SGDM learning rates. Query chooses among all radii and starts.",
+  "scope": "Supplementary strong controls declared after observing moment routing success in cue-present and failure in frequency-6 cue-absent runs. Evaluate all four existing conditions, without selecting hyperparameters on them. These are post-hoc controls on the same cohort, not a new confirmatory holdout.",
+  "invariant": "Task-derived numerical initialization is an explicitly separate competitor. The primary method still transfers only I and initializes all numerical values independently."
+}

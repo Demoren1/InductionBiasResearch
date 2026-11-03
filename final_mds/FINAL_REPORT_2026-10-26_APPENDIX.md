@@ -428,13 +428,13 @@ $$ Даже идеальное
 
 ## 7. Данные и воспроизводимость
 
-Полные доказательства приведены в [статье](../paper_vae_solver/main.pdf)
-и её [математическом разделе](../paper_vae_solver/latex/method_theory.tex).
+Полные доказательства приведены в математическом разделе
+[архивной статьи](../archive/history/paper_vae_solver/main.pdf).
 Подробные протоколы и результаты:
-[маски](../paper_vae_solver/results/RESULTS.md),
-[общие значения весов](../paper_vae_solver/results/CODEBOOK_RESULTS.md),
-[скрытые группы](../paper_vae_solver/results/HIDDEN_STRUCTURE_RESULTS.md),
-[неточность структуры и tanh](../paper_vae_solver/results/ROBUSTNESS_TWOLAYER_RESULTS.md),
+[маски](../archive/history/paper_vae_solver/results/RESULTS.md),
+[общие значения весов](../archive/history/paper_vae_solver/results/CODEBOOK_RESULTS.md),
+[скрытые группы](../archive/history/paper_vae_solver/results/HIDDEN_STRUCTURE_RESULTS.md),
+[неточность структуры и tanh](../archive/history/paper_vae_solver/results/ROBUSTNESS_TWOLAYER_RESULTS.md),
 [ReLU](FINAL_REPORT_2026-10-20.md),
 [первая синусоидальная серия](../archive/history/experiments/sine_mask_vae/results/v1/REPORT.md).
 
@@ -450,8 +450,10 @@ $$ Даже идеальное
     python mds/assets/2026-10-26/build_tables.py
     python mds/assets/2026-10-26/build_figures.py
 
-Нужны Python, NumPy и Matplotlib. Полные результаты запусков и реализации
-сохранены в [архиве](../paper_vae_solver/reproducibility/README.md).
+Нужны Python, NumPy и Matplotlib. PDF, опубликованные сводки и описание
+сохранившихся материалов находятся в
+[архиве](../archive/history/paper_vae_solver/README.md). Прежний полный
+пакет `reproducibility/` не входил в Git и в рабочем дереве отсутствует.
 Новые обучения для редактирования отчёта не проводились.
 
 Отдельные графики сравнений для основного текста:

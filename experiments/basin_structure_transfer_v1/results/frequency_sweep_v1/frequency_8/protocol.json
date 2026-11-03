@@ -1,0 +1,75 @@
+{
+  "seed": 261102820,
+  "inputs": 24,
+  "groups": 3,
+  "families": 4,
+  "source_tasks_per_family": 6,
+  "source_train_per_family": 4,
+  "source_starts": 4,
+  "source_steps": 2048,
+  "source_batch": 256,
+  "source_lr": 0.01,
+  "source_radius": 0.5,
+  "source_frequency": [
+    0.65,
+    0.85
+  ],
+  "low_frequency": [
+    0.65,
+    0.75
+  ],
+  "high_frequency": [
+    3.8,
+    4.2
+  ],
+  "low_amplitude": [
+    0.35,
+    0.45
+  ],
+  "prior_width": 128,
+  "prior_steps": 3000,
+  "prior_lr": 0.001,
+  "prior_seeds": [
+    113,
+    227,
+    349
+  ],
+  "calibration_tasks_per_family": 2,
+  "evaluation_tasks_per_family": 8,
+  "foreign_tasks": 8,
+  "starts": 32,
+  "calibration_starts": 16,
+  "steps": 2048,
+  "long_multiplier": 4,
+  "batch": 128,
+  "query": 4096,
+  "log_every": 256,
+  "momentum": 0.9,
+  "rates": [
+    0.003,
+    0.01,
+    0.03,
+    0.1,
+    0.3
+  ],
+  "radii": [
+    0.5,
+    1.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0
+  ],
+  "optimizers": [
+    "sgd",
+    "sgdm",
+    "adam"
+  ],
+  "temperatures": [
+    0.3,
+    0.6,
+    1.0
+  ],
+  "success_mse": 0.1,
+  "output": "experiments/basin_structure_transfer_v1/results/pilot_v1"
+}

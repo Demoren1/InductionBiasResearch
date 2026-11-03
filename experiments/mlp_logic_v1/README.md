@@ -53,7 +53,7 @@ CUDA_VISIBLE_DEVICES=5 /home/udeneev-av/myvenv/bin/python \
 `run.py`, `search_snapshot.py` — как `search.py`).
 
 Графики loss, recall обоих классов, сравнения и таблицы публикуются в
-`mds/MLP_STRUCTURE_SEARCH_PILOT_2026-10-28.md`. Сохраняются все предложенные
+`archive/2026-11-03/mds/MLP_STRUCTURE_SEARCH_PILOT_2026-10-28.md`. Сохраняются все предложенные
 структуры и качества, модели победителей и дискретные индексы. Лучшие
 неуспешные кандидаты не обозначаются как успешные точные решения.
 

@@ -345,7 +345,7 @@ $$
 
 ![Примеры найденных масок в композиционном пилоте](../mds/assets/2026-10-20/composition_pilot/composition_methods.png)
 
-Пилот подтверждает возможность точного восстановления новых сочетаний известных частей. Устойчивость неполная: половина отдельных поисков evolution неточна, два семейства по средней ошибке уступают IMP. Подробности и результаты по каждому семейству — в [отдельном отчёте пилота](../mds/COMPOSITION_PILOT_2026-10-20.md). Для следующего этапа собран новый расширенный набор; шесть резервных сочетаний старого пилота не использовались.
+Пилот подтверждает возможность точного восстановления новых сочетаний известных частей. Устойчивость неполная: половина отдельных поисков evolution неточна, два семейства по средней ошибке уступают IMP. Подробности и результаты по каждому семейству — в [отдельном отчёте пилота](../archive/history/reports/COMPOSITION_PILOT_2026-10-20.md). Для следующего этапа собран новый расширенный набор; шесть резервных сочетаний старого пилота не использовались.
 
 ### Полный эксперимент: 144 сочетания и отдельный test
 
@@ -433,6 +433,6 @@ $$
 
 Полный опыт от 21 октября: [краткая численная сводка и время этапов](../mds/assets/2026-10-21/composition_full/full_summary.json), [validation: 6336 строк](../mds/assets/2026-10-21/composition_full/validation_results.csv), [test: 6336 строк](../mds/assets/2026-10-21/composition_full/test_results.csv), [средние и SEM test](../mds/assets/2026-10-21/composition_full/test_summary.json), [отсутствие всех 48 новых масок в банке](../mds/assets/2026-10-21/composition_full/bank_novelty.json), [разделение и аналитические родители](../mds/assets/2026-10-21/composition_full/design.json), [фиксация декодеров и настроек](../mds/assets/2026-10-21/composition_full/evaluation_seal.json).
 
-Исторические протоколы: [общий энкодер](../tmp/research_20261017/reports/01_shared_encoder_many_decoders.md), [теория](../tmp/research_20261017/reports/02_theory.md), [Pattern](../tmp/research_20261017/reports/03_pattern_initial_z.md), [cVAE](../tmp/research_20261017/reports/04_multimask_cvae.md), [AGOP](../tmp/research_20261017/reports/05_agop.md). Их рисунки и [численные источники](../mds/assets/2026-10-20/chart_data.json) сохранены рядом с отчётом.
+Исторические протоколы: [общий энкодер](../archive/history/experiments/multitask_2026-10-17/reports/01_shared_encoder_many_decoders.md), [теория](../archive/history/experiments/multitask_2026-10-17/reports/02_theory.md), [Pattern](../archive/history/experiments/multitask_2026-10-17/reports/03_pattern_initial_z.md), [cVAE](../archive/history/experiments/multitask_2026-10-17/reports/04_multimask_cvae.md), [AGOP](../archive/history/experiments/multitask_2026-10-17/reports/05_agop.md). Их рисунки и [численные источники](../mds/assets/2026-10-20/chart_data.json) сохранены рядом с отчётом.
 
 Продолжение исследования: [синусоидальные маски, codebook, скрытые группы и робастность](FINAL_REPORT_2026-10-26.md).

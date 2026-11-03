@@ -15,7 +15,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 OUTPUT = Path(__file__).resolve().parent
-RESULTS = ROOT / "paper_vae_solver" / "results"
+RESULTS = ROOT / "archive/history/paper_vae_solver" / "results"
 COLORS = {
     "vae": "#6654b8",
     "simple": "#008578",

@@ -9,7 +9,7 @@ import numpy as np
 
 ASSETS = Path(__file__).resolve().parent
 ROOT = ASSETS.parents[2]
-RESULTS = ROOT / "paper_vae_solver/results"
+RESULTS = ROOT / "archive/history/paper_vae_solver/results"
 REPORTS = [
     ROOT / "final_mds/FINAL_REPORT_2026-10-26.md",
     ROOT / "final_mds/FINAL_REPORT_2026-10-26_APPENDIX.md",

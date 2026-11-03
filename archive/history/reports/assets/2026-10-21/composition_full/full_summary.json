@@ -1,0 +1,409 @@
+{
+  "elapsed_seconds": 3185.4619450438768,
+  "stages": [
+    {
+      "stage": "bank",
+      "status": "complete",
+      "elapsed_seconds": 535.7482499331236
+    },
+    {
+      "stage": "vae",
+      "status": "complete",
+      "elapsed_seconds": 1845.0513789933175
+    },
+    {
+      "stage": "validation",
+      "status": "complete",
+      "elapsed_seconds": 399.02543597482145
+    },
+    {
+      "stage": "test",
+      "status": "complete",
+      "elapsed_seconds": 397.7859546840191
+    }
+  ],
+  "examples": [
+    {
+      "family": 120,
+      "decoder_seed": 4213,
+      "iou": {
+        "Аналитическая маска": 1.0,
+        "Evolution": 0.8285714285714286,
+        "Gumbel": 0.6842105263157895,
+        "Случайные z": 0.7297297297297297,
+        "Сборка двух IMP": 0.8823529411764706,
+        "Средний IMP (6 сетей)": 0.7818361347773113
+      }
+    },
+    {
+      "family": 122,
+      "decoder_seed": 4213,
+      "iou": {
+        "Аналитическая маска": 1.0,
+        "Evolution": 1.0,
+        "Gumbel": 0.6410256410256411,
+        "Случайные z": 0.9393939393939394,
+        "Сборка двух IMP": 0.6842105263157895,
+        "Средний IMP (6 сетей)": 0.7985404486952473
+      }
+    }
+  ],
+  "splits": {
+    "validation": {
+      "correct_mask": {
+        "test_excess_bce": {
+          "mean": 3.311369154188368e-08,
+          "family_sem": 5.33718965740595e-09
+        },
+        "iou": {
+          "mean": 1.0,
+          "family_sem": 0.0
+        },
+        "exact_mask": {
+          "mean": 1.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 0
+      },
+      "dense": {
+        "test_excess_bce": {
+          "mean": 0.002727650519874361,
+          "family_sem": 0.000154543615530561
+        },
+        "iou": {
+          "mean": 0.08333333333333333,
+          "family_sem": 0.0
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 0
+      },
+      "imp": {
+        "test_excess_bce": {
+          "mean": 0.001422407312525643,
+          "family_sem": 0.00010156267767005374
+        },
+        "iou": {
+          "mean": 0.8501436800972405,
+          "family_sem": 0.010811249889554375
+        },
+        "exact_mask": {
+          "mean": 0.21527777777777776,
+          "family_sem": 0.04194252483050196
+        },
+        "exact_count": 31,
+        "trials": 144
+      },
+      "training_bank": {
+        "test_excess_bce": {
+          "mean": 0.003355716665585836,
+          "family_sem": 0.00010447934996548172
+        },
+        "iou": {
+          "mean": 0.7537537537537539,
+          "family_sem": 0.00500935529266246
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "recombined_bank": {
+        "test_excess_bce": {
+          "mean": 0.004249552368289894,
+          "family_sem": 0.00015163896507644007
+        },
+        "iou": {
+          "mean": 0.7542324524494349,
+          "family_sem": 0.009258620884169073
+        },
+        "exact_mask": {
+          "mean": 0.010416666666666666,
+          "family_sem": 0.01041666666666667
+        },
+        "exact_count": 1,
+        "trials": 96
+      },
+      "gumbel": {
+        "test_excess_bce": {
+          "mean": 0.005736732027596898,
+          "family_sem": 0.0002352448089951097
+        },
+        "iou": {
+          "mean": 0.6619136817102965,
+          "family_sem": 0.012731796740193374
+        },
+        "exact_mask": {
+          "mean": 0.010416666666666666,
+          "family_sem": 0.010416666666666668
+        },
+        "exact_count": 1,
+        "trials": 96
+      },
+      "evolution": {
+        "test_excess_bce": {
+          "mean": 0.001630940888490942,
+          "family_sem": 0.00020687796442142331
+        },
+        "iou": {
+          "mean": 0.8876691143719008,
+          "family_sem": 0.015957302285879278
+        },
+        "exact_mask": {
+          "mean": 0.3958333333333333,
+          "family_sem": 0.06369628076720711
+        },
+        "exact_count": 38,
+        "trials": 96
+      },
+      "best_initial": {
+        "test_excess_bce": {
+          "mean": 0.006770588354104094,
+          "family_sem": 0.00015873180162588048
+        },
+        "iou": {
+          "mean": 0.6033997356963084,
+          "family_sem": 0.009992791400849122
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "random_budget": {
+        "test_excess_bce": {
+          "mean": 0.002626799357434114,
+          "family_sem": 0.0001506576910368244
+        },
+        "iou": {
+          "mean": 0.8478329164474676,
+          "family_sem": 0.011082618024780196
+        },
+        "exact_mask": {
+          "mean": 0.07291666666666667,
+          "family_sem": 0.035224328542302105
+        },
+        "exact_count": 7,
+        "trials": 96
+      },
+      "zero_z": {
+        "test_excess_bce": {
+          "mean": 0.008995078297124969,
+          "family_sem": 0.0002388341171392679
+        },
+        "iou": {
+          "mean": 0.5199388697509879,
+          "family_sem": 0.011491098329252446
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "source_frequency": {
+        "test_excess_bce": {
+          "mean": 0.009316263927353753,
+          "family_sem": 0.000284962355854912
+        },
+        "iou": {
+          "mean": 0.5407866476499489,
+          "family_sem": 0.010727197111292362
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      }
+    },
+    "test": {
+      "correct_mask": {
+        "test_excess_bce": {
+          "mean": 2.9802322387695312e-08,
+          "family_sem": 5.447702201239885e-09
+        },
+        "iou": {
+          "mean": 1.0,
+          "family_sem": 0.0
+        },
+        "exact_mask": {
+          "mean": 1.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 0
+      },
+      "dense": {
+        "test_excess_bce": {
+          "mean": 0.0028189358611901603,
+          "family_sem": 0.0001479026794310921
+        },
+        "iou": {
+          "mean": 0.08333333333333333,
+          "family_sem": 0.0
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 0
+      },
+      "imp": {
+        "test_excess_bce": {
+          "mean": 0.0015796240833070541,
+          "family_sem": 0.00010039492714522153
+        },
+        "iou": {
+          "mean": 0.8246907009926466,
+          "family_sem": 0.011226059258652664
+        },
+        "exact_mask": {
+          "mean": 0.13888888888888887,
+          "family_sem": 0.025902911340008716
+        },
+        "exact_count": 20,
+        "trials": 144
+      },
+      "training_bank": {
+        "test_excess_bce": {
+          "mean": 0.003273792564868927,
+          "family_sem": 0.00010986579015680532
+        },
+        "iou": {
+          "mean": 0.7385816122658229,
+          "family_sem": 0.008776044869862533
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "recombined_bank": {
+        "test_excess_bce": {
+          "mean": 0.003968970746629768,
+          "family_sem": 0.00014932322750688937
+        },
+        "iou": {
+          "mean": 0.756314405230814,
+          "family_sem": 0.010905718792492722
+        },
+        "exact_mask": {
+          "mean": 0.041666666666666664,
+          "family_sem": 0.024573659359149524
+        },
+        "exact_count": 4,
+        "trials": 96
+      },
+      "gumbel": {
+        "test_excess_bce": {
+          "mean": 0.005535620057748425,
+          "family_sem": 0.00023227638499670608
+        },
+        "iou": {
+          "mean": 0.6564505447717114,
+          "family_sem": 0.01103860507109971
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "evolution": {
+        "test_excess_bce": {
+          "mean": 0.0016676859102315372,
+          "family_sem": 0.00018432462342675968
+        },
+        "iou": {
+          "mean": 0.8842688256387947,
+          "family_sem": 0.012209951307208372
+        },
+        "exact_mask": {
+          "mean": 0.3229166666666667,
+          "family_sem": 0.05726077889373239
+        },
+        "exact_count": 31,
+        "trials": 96
+      },
+      "best_initial": {
+        "test_excess_bce": {
+          "mean": 0.006542202602658006,
+          "family_sem": 0.000223733970809919
+        },
+        "iou": {
+          "mean": 0.6100352531529863,
+          "family_sem": 0.011860055365673751
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "random_budget": {
+        "test_excess_bce": {
+          "mean": 0.002445402658647961,
+          "family_sem": 0.00012457925547816032
+        },
+        "iou": {
+          "mean": 0.850134461744369,
+          "family_sem": 0.010050412407030715
+        },
+        "exact_mask": {
+          "mean": 0.041666666666666664,
+          "family_sem": 0.024573659359149524
+        },
+        "exact_count": 4,
+        "trials": 96
+      },
+      "zero_z": {
+        "test_excess_bce": {
+          "mean": 0.008590970602300432,
+          "family_sem": 0.00022942661874859882
+        },
+        "iou": {
+          "mean": 0.5203287394811111,
+          "family_sem": 0.013479210570273861
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      },
+      "source_frequency": {
+        "test_excess_bce": {
+          "mean": 0.009130720876985125,
+          "family_sem": 0.00027304053503909756
+        },
+        "iou": {
+          "mean": 0.5412540039461854,
+          "family_sem": 0.012166343059074559
+        },
+        "exact_mask": {
+          "mean": 0.0,
+          "family_sem": 0.0
+        },
+        "exact_count": 0,
+        "trials": 96
+      }
+    }
+  }
+}

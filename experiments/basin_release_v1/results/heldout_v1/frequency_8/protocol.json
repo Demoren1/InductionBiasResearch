@@ -1,0 +1,64 @@
+{
+  "source_run": "experiments/basin_structure_transfer_v1/results/pilot_v1",
+  "output": "experiments/basin_release_v1/results/heldout_v1",
+  "frequencies": [
+    6,
+    8
+  ],
+  "prior_seeds": [
+    0,
+    1,
+    2
+  ],
+  "calibration_tasks_per_family": 8,
+  "known_tasks_per_family": 32,
+  "foreign_tasks": 32,
+  "calibration_task_seed": 261105110,
+  "calibration_proposal_seed": 261105120,
+  "calibration_fit_seed": 261105130,
+  "calibration_query_seed": 261105160,
+  "target_seed": 261105410,
+  "proposal_seed": 261105420,
+  "fit_seed": 261105430,
+  "query_seed": 261105460,
+  "calibration_starts": 16,
+  "starts": 32,
+  "steps": 2048,
+  "batch": 128,
+  "query": 4096,
+  "log_every": 256,
+  "rates": [
+    0.003,
+    0.01,
+    0.03,
+    0.1,
+    0.3
+  ],
+  "radii": [
+    0.5,
+    1.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0
+  ],
+  "optimizers": [
+    "sgd",
+    "sgdm",
+    "adam"
+  ],
+  "success_mse": 0.1,
+  "bootstrap_seed": 261105470,
+  "bootstrap_draws": 5000,
+  "initial_weight_atol": 2e-06,
+  "calibration": "Fresh tasks; balanced empirical source structures. Each representation and optimizer receives the same radius/rate grid and 16 independent starts. Select using only mean task query after best-start/checkpoint selection. Population values are diagnostic only.",
+  "primary_control": "Released-matched uses exactly the tied method's proposals, initial random numbers, radius, amplitude, minibatches, query and update budget. Its optimizer and learning rate are separately calibrated at that fixed radius.",
+  "secondary_control": "Released-tuned independently selects optimizer, rate and radius on the same calibration set. Initial random directions and proposals match tied, but the chosen radius may differ. It must not be described as an exact-start comparison.",
+  "dense_controls": "Three isotropic dense controls, independently calibrated within each optimizer. Also record which optimizer calibration selected; do not pick the best optimizer using target outcomes.",
+  "oracle": "Diagnostic exact-I pairs reuse the tied and released-matched settings without additional oracle tuning. All numerical values are fresh.",
+  "matching": "Canonical AR first-token conditioning, shared proposals within each pair. Verify expanded initial weights and initial amplitudes from saved arrays. Float32 reconstruction tolerance is 2e-6 absolute.",
+  "budget": "Each target method uses 32 starts x 2048 updates x 128 examples. Query/proposal/calibration costs and elapsed numeric time are recorded separately. This is not equality of FLOPs.",
+  "independence": "New calibration and target numerical functions; frozen existing library and three priors. Frequencies share numerical directions, low components, RNG and frequency offsets. Prior seeds and frequency pairs are not independent libraries.",
+  "analysis": "Report every method and both regimes, known and foreign separately; paired stratified task bootstrap with prior seeds averaged within task, mean population MSE, conditional proposal success, departure from the initial sharing subspace, matching audits and actual budgets. No retuning after target results.",
+  "reason": "User-authorized control distinguishing learned structural initialization from retaining hard weight equality during numerical optimization. Protocol fixed before new calibration and target generation."
+}

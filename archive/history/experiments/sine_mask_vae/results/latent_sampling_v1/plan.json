@@ -1,0 +1,78 @@
+{
+  "baseline_plan": {
+    "config": {
+      "reference_variant": "partwise_training",
+      "model_seeds": [
+        4213,
+        4214,
+        4215
+      ],
+      "validation_function": 100,
+      "validation_trials": 4,
+      "evaluation_functions": [
+        301,
+        302
+      ],
+      "evaluation_trials": 16,
+      "search": {
+        "restarts": 4,
+        "rounds": 8,
+        "final_restarts": 32,
+        "inner_steps": 1024,
+        "batch": 64,
+        "query_examples": 4096,
+        "weight_lr": 0.05,
+        "initial_scale": 2.0,
+        "latent_lr": 0.1,
+        "temperature": 1.0,
+        "gradient_clip": 10.0
+      }
+    },
+    "reference": "/home/udeneev-av/InductionBiasResearch/sine_mask_vae/runs/v1",
+    "checkpoint_sha256": {
+      "4213": "dc124214ccd8fea750291919b0a954b4660f36308755eb89975ba92e86d77da2",
+      "4214": "e9f4b5e453184293a6b2fc7e33937b350ea5180249a78dab17b1be6ac7499e0a",
+      "4215": "7574c0154ad52f260a189ac7572ae3af65ab7348b5968d76f166edaaac5c080f"
+    },
+    "implementation_sha256": {
+      "latent_search.py": "85fb5ae42db3cd8d52069589d3c90acf29d39438a31e848f7b48ca45ec80236b",
+      "latent_report.py": "1641ccbc9f7db90c25885fc8df8a84f261d85f49db37d03949732e8bb8074d1e",
+      "core.py": "2b7eb3d160d3cc09a203fce526dce4206cdb24e50cba0c861976f35bf1578f4f",
+      "models.py": "373b99d669f9806754b9d205e7525a97ce0b2070f9374ebb6d364b311e4615e7"
+    },
+    "device": "cuda:1",
+    "torch_version": "2.6.0+cu118",
+    "methods": [
+      "gradient_z",
+      "random_z",
+      "prior_sampling"
+    ],
+    "fits_per_search": 64,
+    "protocol": {
+      "gradient": "Full unrolled SGD; hard top-2 forward, RelaxedTopK backward",
+      "latent_optimizer": "Adam; VAE frozen; no target-support gradient",
+      "two_stage": "32 exploration fits, then 32 fresh fits of selected mask",
+      "paired_control": "random_z uses identical initial weights and batches",
+      "sampling_control": "64 independent latent codes and weight initializations",
+      "data": "Common IID training batches reused across rounds and methods",
+      "selection": "Independent 4096-example sample; population MSE only reported",
+      "cost": "Equal forward SGD samples; hypergradient backward cost is additional",
+      "holdout": "Fresh functions 301/302; structural families previously studied",
+      "recall": "True support used only for diagnostic Recall@2",
+      "hyperparameters": "Fixed before evaluation; validation is diagnostic"
+    }
+  },
+  "sampling": {
+    "initial_radius": 1.0,
+    "final_radius": 0.25,
+    "prior_probability": 0.25,
+    "accept_equal": true
+  },
+  "implementation_sha256": {
+    "latent_sampling.py": "37cc084d063a68dc6791ed6c747608df4df8149a94ab10dddf226d5b7b97e538",
+    "latent_search.py": "85fb5ae42db3cd8d52069589d3c90acf29d39438a31e848f7b48ca45ec80236b",
+    "core.py": "2b7eb3d160d3cc09a203fce526dce4206cdb24e50cba0c861976f35bf1578f4f",
+    "models.py": "373b99d669f9806754b9d205e7525a97ce0b2070f9374ebb6d364b311e4615e7"
+  },
+  "device": "cuda:0"
+}

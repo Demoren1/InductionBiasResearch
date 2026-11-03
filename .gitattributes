@@ -1,0 +1,16 @@
+# Preserve scientific evidence without flooding source-code reviews.
+experiments/**/results/** -diff linguist-generated=true
+experiments/**/results/**/summary.json diff
+experiments/**/results/**/comparison.csv diff
+experiments/**/results/**/protocol.json diff
+experiments/**/results/**/complete.json diff
+experiments/**/results/**/COMPLETE.json diff
+experiments/**/results/**/environment.json diff
+archive/2026-10-26/legacy_research.manifest.json -diff linguist-generated=true
+archive/history/earlier_manuscript/style/** -diff linguist-vendored=true
+*.npz -diff
+*.pt -diff
+*.json.gz -diff
+*.svg -diff linguist-generated=true
+# csv.writer emits RFC 4180 CRLF; preserve recorded artifact bytes.
+*.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

@@ -1,8 +1,8 @@
 # Three structure-transfer checks, 2026-10-28
 
 Readable report with mathematics, figures and conclusions:
-[STRUCTURE_TRANSFER_2026-10-28.md](../../mds/STRUCTURE_TRANSFER_2026-10-28.md).
-The original Pattern result is [reported separately](../../mds/PATTERN_CODEBOOK_2026-10-28.md).
+[STRUCTURE_TRANSFER_2026-10-28.md](../../archive/2026-11-03/mds/STRUCTURE_TRANSFER_2026-10-28.md).
+The original Pattern result is [reported separately](../../archive/2026-11-03/mds/PATTERN_CODEBOOK_2026-10-28.md).
 
 The study contains one synthetic regression family and **modified** MNIST and
 Fashion-MNIST binary tasks. The image experiments add seven distractor images
@@ -169,7 +169,7 @@ Teacher layouts only restore coordinates and rename equivalent groups for
 diagnostic display; they do not change saved fits. Dense methods are displayed
 as actual numeric weights, without inventing a sparse discrete indexator.
 The complete gallery and per-example table are in
-[the indexator appendix](../../mds/STRUCTURE_TRANSFER_INDEXATORS_2026-10-28.md).
+[the indexator appendix](../../archive/2026-11-03/mds/STRUCTURE_TRANSFER_INDEXATORS_2026-10-28.md).
 
 The numerical states for all final target starts are saved in each method NPZ,
 including selected indices, numeric parameters, best z and checkpoint step.
