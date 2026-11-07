@@ -1,0 +1,109 @@
+{
+  "stage": "audit",
+  "kind": "mask",
+  "tasks": 2,
+  "methods": {
+    "best": {
+      "query_bce": 0.3950423449277878,
+      "query_accuracy": 0.8232421875,
+      "test_bce": 0.4020105451345444,
+      "test_accuracy": 0.81982421875,
+      "nonzeros": 475.0,
+      "numerical_parameters": 604.0
+    },
+    "bank_sample": {
+      "query_bce": 0.39869406819343567,
+      "query_accuracy": 0.82666015625,
+      "test_bce": 0.41099539399147034,
+      "test_accuracy": 0.81719970703125,
+      "nonzeros": 476.5,
+      "numerical_parameters": 605.5
+    },
+    "ar": {
+      "query_bce": 0.39742808043956757,
+      "query_accuracy": 0.82470703125,
+      "test_bce": 0.4122556149959564,
+      "test_accuracy": 0.814117431640625,
+      "nonzeros": 474.0,
+      "numerical_parameters": 603.0
+    },
+    "frequency": {
+      "query_bce": 0.39639468491077423,
+      "query_accuracy": 0.8193359375,
+      "test_bce": 0.40353359282016754,
+      "test_accuracy": 0.81988525390625,
+      "nonzeros": 477.5,
+      "numerical_parameters": 606.5
+    },
+    "random": {
+      "query_bce": 0.3980365991592407,
+      "query_accuracy": 0.8330078125,
+      "test_bce": 0.3970088064670563,
+      "test_accuracy": 0.8232421875,
+      "nonzeros": 475.0,
+      "numerical_parameters": 604.0
+    },
+    "shuffled": {
+      "query_bce": 0.40023697912693024,
+      "query_accuracy": 0.81640625,
+      "test_bce": 0.40737226605415344,
+      "test_accuracy": 0.818206787109375,
+      "nonzeros": 475.0,
+      "numerical_parameters": 604.0
+    },
+    "mask_only": {
+      "query_bce": 0.3950423449277878,
+      "query_accuracy": 0.8232421875,
+      "test_bce": 0.4020105451345444,
+      "test_accuracy": 0.81982421875,
+      "nonzeros": 475.0,
+      "numerical_parameters": 604.0
+    },
+    "dense": {
+      "query_bce": 0.39873073995113373,
+      "query_accuracy": 0.82470703125,
+      "test_bce": 0.390733003616333,
+      "test_accuracy": 0.824951171875,
+      "nonzeros": 8192.0,
+      "numerical_parameters": 8321.0
+    }
+  },
+  "ar_paired": {
+    "best": {
+      "mean_accuracy_difference": -0.005706787109375,
+      "positive_tasks": 0,
+      "tasks": 2
+    },
+    "bank_sample": {
+      "mean_accuracy_difference": -0.003082275390625,
+      "positive_tasks": 0,
+      "tasks": 2
+    },
+    "frequency": {
+      "mean_accuracy_difference": -0.005767822265625,
+      "positive_tasks": 0,
+      "tasks": 2
+    },
+    "random": {
+      "mean_accuracy_difference": -0.009124755859375,
+      "positive_tasks": 0,
+      "tasks": 2
+    },
+    "shuffled": {
+      "mean_accuracy_difference": -0.00408935546875,
+      "positive_tasks": 0,
+      "tasks": 2
+    },
+    "mask_only": {
+      "mean_accuracy_difference": -0.005706787109375,
+      "positive_tasks": 0,
+      "tasks": 2
+    },
+    "dense": {
+      "mean_accuracy_difference": -0.010833740234375,
+      "positive_tasks": 0,
+      "tasks": 2
+    }
+  },
+  "independence": "One source bank; target tasks are independent conditional on the frozen bank."
+}

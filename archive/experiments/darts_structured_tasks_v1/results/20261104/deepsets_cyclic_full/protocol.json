@@ -1,0 +1,128 @@
+{
+  "seed": 261104731,
+  "output": "experiments/darts_structured_tasks_v1/results/20261104",
+  "deepsets": {
+    "points": 8,
+    "features": 2,
+    "point_hidden": 2,
+    "codes": 4,
+    "support": 1024,
+    "query": 512,
+    "selection": 2048,
+    "test": 8192,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      1.5
+    ],
+    "sparsity": [
+      0.0,
+      0.003
+    ]
+  },
+  "sine": {
+    "inputs": 24,
+    "hidden": 1,
+    "codes": 3,
+    "frequencies": [
+      4.0,
+      6.0,
+      8.0
+    ],
+    "low_frequency": 0.7,
+    "low_amplitude": 0.4,
+    "support": 16384,
+    "query": 4096,
+    "selection": 8192,
+    "test": 16384,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      2.0,
+      6.0,
+      8.0
+    ],
+    "sparsity": [
+      0.0
+    ]
+  },
+  "search": {
+    "pilot_seeds": [
+      241,
+      242
+    ],
+    "confirmation_seeds": [
+      243,
+      244,
+      245
+    ],
+    "pilot_steps": 200,
+    "confirmation_steps": 200,
+    "snapshots": [
+      0,
+      0.3333333333,
+      0.6666666667,
+      1.0
+    ],
+    "restarts": 4,
+    "batch": 128,
+    "numeric_warmup": 0,
+    "initial_logit_std": 1.0,
+    "zero_probability": 0.5,
+    "minimum_temperature": 0.03,
+    "late_entropy": 0.02,
+    "gradient_clip": 10.0,
+    "alpha_clip": 5.0,
+    "numeric_l2": 1e-05,
+    "checkpoint_every": 250,
+    "top_configurations": 3
+  },
+  "fit": {
+    "steps": 3000,
+    "batch": 128,
+    "checkpoint_every": 125,
+    "restarts": 4,
+    "fresh_restarts": 32,
+    "gradient_clip": 10.0,
+    "numeric_l2": 1e-05
+  },
+  "rules": [
+    "Full256-position search only; no supplied mask, teacher connections, groups or edge count.",
+    "A repeated cycle first freezes C/head and trains P for4 support minibatches, then freezes P and trains C/head for64 support minibatches. No parameter is frozen permanently.",
+    "Keep soft logits P between all cycles; recompute argmax after each P phase. On the hard-C branch this MAP I stays fixed only for that numerical block.",
+    "Three families: soft P/soft C control, user-proposed soft P/hard C, hard P/hard C. Hard P uses deterministic MAP forward and softmax STE backward.",
+    "Four independent numerical starts share P. Average their losses for P; compute independent numerical gradients without averaging across starts.",
+    "All families have200 cycles:800 P updates and12800 C updates per root, four numerical replicas; matched initial logits/C and phase minibatches.",
+    "P=softmax(alpha), no temperature cooling or sampling. Late entropy0.02 and sparsity0.03 are common. Hard forward uses one code, no cancellation-mass projection alters MAP.",
+    "Source selection only: pilot241/242 chooses one configuration per family among six learning-rate pairs; confirmation243/244/245 uses these fixed settings.",
+    "Snapshots after0/67/133/200 complete cycles freeze raw MAP, then four inherited numerical starts get3000 C-fit updates with reset optimizer moments. Query selects numerical checkpoints and mean selection chooses snapshots/configurations.",
+    "Both phases use support to isolate hard numerical adaptation; independent query/selection monitor generalization. This is block-coordinate training, not an unrolled bilevel gradient.",
+    "Codebook optimizer moments persist across cycles and are reset only in final fixed-I fits. Numerical initialization is normalized against the same hard MAP matrix in all families.",
+    "After source freeze, fresh-C calibration and32 new numerical initializations, then a new heldout draw. One previously inspected teacher; no transfer claim.",
+    "No software tests are added or run."
+  ],
+  "sharing_heldout_offset": 7800000,
+  "cyclic": {
+    "cycles": 200,
+    "P_steps": 4,
+    "C_steps": 64
+  }
+}

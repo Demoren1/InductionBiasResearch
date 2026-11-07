@@ -1,0 +1,159 @@
+{
+  "inputs": {
+    "method": "joint_8",
+    "seed": 32,
+    "rows": [
+      {
+        "configuration": 0,
+        "rho_final": 10.0,
+        "charge": 0.0,
+        "dual_step": 0.25
+      }
+    ],
+    "observation_sha256": "70d10fe1206a53980db321a16663ca05d73a52172e98c81e6717054bc33ed370"
+  },
+  "completed_utc": "2026-11-04T23:45:37.717507+00:00",
+  "result_sha256": "156a8593bbe899f18f97b5f968d51d915f627760758b842acad322907127c3de",
+  "code_sha256": {
+    "algorithms.py": "f87d9e8040d8850fd6f3992b20fd34cfdfaa34a7315ec964e2e1b62b1fda1586",
+    "run.py": "aa1145e5be1e96ffabca20879bc9c5387c6c5110b1cfd60e87f909d09e5d2f7d",
+    "__init__.py": "7bcf6e6e1f4f20626bbc038dd3187f93ab37a11442ed0f599074bc6eb96db9f8"
+  },
+  "history": [
+    {
+      "step": 0,
+      "train_mse": [
+        0.6649494767189026
+      ],
+      "source_query_mse": [
+        1.3165552055214023
+      ],
+      "selection_mse": [
+        1.4183469669402327
+      ],
+      "best_selection_mse": [
+        1.4183469669402327
+      ],
+      "seconds": 0.02187350019812584
+    },
+    {
+      "step": 20,
+      "train_mse": [
+        0.13309890031814575
+      ],
+      "source_query_mse": [
+        1.0794941833315346
+      ],
+      "selection_mse": [
+        1.0000113270111017
+      ],
+      "best_selection_mse": [
+        1.0000113270111017
+      ],
+      "seconds": 0.13360190019011497
+    },
+    {
+      "step": 40,
+      "train_mse": [
+        0.125183567404747
+      ],
+      "source_query_mse": [
+        1.0735241304503715
+      ],
+      "selection_mse": [
+        1.004889248699489
+      ],
+      "best_selection_mse": [
+        1.0000113270111017
+      ],
+      "seconds": 0.2133095394819975
+    },
+    {
+      "step": 60,
+      "train_mse": [
+        0.12166792154312134
+      ],
+      "source_query_mse": [
+        1.0638603644988023
+      ],
+      "selection_mse": [
+        0.999934905100992
+      ],
+      "best_selection_mse": [
+        0.999934905100992
+      ],
+      "seconds": 0.2902014311403036
+    },
+    {
+      "step": 80,
+      "train_mse": [
+        0.11622816324234009
+      ],
+      "source_query_mse": [
+        1.063823617314636
+      ],
+      "selection_mse": [
+        1.0040061522155925
+      ],
+      "best_selection_mse": [
+        0.999934905100992
+      ],
+      "seconds": 0.3642970249056816
+    }
+  ],
+  "algorithm_history": [
+    {
+      "step": 0,
+      "consensus_mse": 0.03191853314638138,
+      "active": [
+        136,
+        131,
+        117,
+        124
+      ]
+    },
+    {
+      "step": 20,
+      "consensus_mse": 0.005018127150833607,
+      "active": [
+        147,
+        132,
+        138,
+        147
+      ]
+    },
+    {
+      "step": 40,
+      "consensus_mse": 0.0045182849280536175,
+      "active": [
+        132,
+        133,
+        146,
+        155
+      ]
+    },
+    {
+      "step": 60,
+      "consensus_mse": 0.003216489916667342,
+      "active": [
+        135,
+        132,
+        141,
+        157
+      ]
+    },
+    {
+      "step": 80,
+      "consensus_mse": 0.0011074714129790664,
+      "active": [
+        140,
+        137,
+        147,
+        158
+      ]
+    }
+  ],
+  "seconds": 0.3691807948052883,
+  "trainable_numbers_per_task": 3,
+  "projector": "Local vector assignment/center steps inside every consensus round; one common I and task-specific centers. No prelearned U, no fixed mask, no post-hoc clustering of another method."
+}

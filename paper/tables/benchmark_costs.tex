@@ -1,0 +1,71 @@
+\begin{table}[htbp]
+\centering\small\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Search s$^*$ & Search TFLOPs$^*$ & Target GFLOPs$^\dagger$ & ms/task & Target MiB & Search MiB\\
+\midrule
+Dense Adam & 0 & 0 & -- & 788 & -- & 0\\
+Dense Adam + GN & 0 & 0 & 28.2 & 996 & 650 & 0\\
+Random I & -- & -- & 4.5 & 969 & 44.5 & --\\
+LUT-Q I & 198 & 2.86 & 4.52 & 948 & 44.5 & 926\\
+Yeh MAP I & 443 & 3.43 & 4.52 & 955 & 44.5 & 926\\
+Yeh soft & 364 & 1.43 & 4.49 & 955 & 44.5 & 833\\
+MSR-FC U & 183 & 0.956 & 4.51 & 901 & 44.5 & 833\\
+Ours & 119 & 1.97 & 4.52 & 963 & 44.5 & 926\\
+\bottomrule\end{tabular}
+\caption{Pattern 0110: measured computation. Target timing excludes the FLOP profiler and uses one process per GPU. $^*$Search seconds include profiling overhead and shared scheduling. $^\dagger$Target GFLOPs are per task: the complete 64/256/1024 sweep on synthetic data, one prescribed support budget on real data; synthetic time covers only 1024. These are incomplete Torch operation counts, not FLOP/s. A dash indicates unavailable measurement.}
+\end{table}
+\begin{table}[htbp]
+\centering\small\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Search s$^*$ & Search TFLOPs$^*$ & Target GFLOPs$^\dagger$ & ms/task & Target MiB & Search MiB\\
+\midrule
+Dense Adam & 0 & 0 & -- & 775 & -- & 0\\
+Dense Adam + GN & 0 & 0 & 189 & 1212 & 3668 & 0\\
+Random I & -- & -- & 19.8 & 948 & 136 & --\\
+LUT-Q I & 293 & 20.5 & 20.1 & 943 & 136 & 3877\\
+Yeh MAP I & 556 & 21.9 & 19.8 & 959 & 136 & 3877\\
+Yeh soft & 400 & 6.09 & 19.9 & 966 & 136 & 3611\\
+MSR-FC U & 191 & 4.5 & 19.9 & 962 & 136 & 3611\\
+Ours & 533 & 20.4 & 20.2 & 993 & 136 & 3877\\
+\bottomrule\end{tabular}
+\caption{Synthetic DeepSets: measured computation. Target timing excludes the FLOP profiler and uses one process per GPU. $^*$Search seconds include profiling overhead and shared scheduling. $^\dagger$Target GFLOPs are per task: the complete 64/256/1024 sweep on synthetic data, one prescribed support budget on real data; synthetic time covers only 1024. These are incomplete Torch operation counts, not FLOP/s. A dash indicates unavailable measurement.}
+\end{table}
+\begin{table}[htbp]
+\centering\small\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Search s$^*$ & Search TFLOPs$^*$ & Target GFLOPs$^\dagger$ & ms/task & Target MiB & Search MiB\\
+\midrule
+Dense Adam & 31.9 & 6.31 & 0.0354 & 1.58 & 70.5 & 1067\\
+Random I & -- & -- & 0.164 & 1.66 & 59.1 & --\\
+LUT-Q I & 1704 & 20.9 & 0.0214 & 2.56 & 56.8 & 2426\\
+Yeh MAP I & 3025 & 103 & 0.167 & 2.78 & 59.1 & 1176\\
+Yeh soft & 3084 & 104 & 0.164 & 1.52 & 59.1 & 1176\\
+MSR-FC U & 2080 & 55.6 & 0.167 & 2.59 & 59.1 & 705\\
+Ours & 1313 & 15.9 & 0.167 & 2.75 & 59.1 & 705\\
+MSR + learned init & 554 & 40.4 & 7.10e-03 & 0.476 & 57.5 & 705\\
+\bottomrule\end{tabular}
+\caption{Aug-Omniglot: measured computation. Target timing excludes the FLOP profiler and uses one process per GPU. $^*$Search seconds include profiling overhead and shared scheduling. $^\dagger$Target GFLOPs are per task: the complete 64/256/1024 sweep on synthetic data, one prescribed support budget on real data; synthetic time covers only 1024. These are incomplete Torch operation counts, not FLOP/s. A dash indicates unavailable measurement.}
+\end{table}
+\begin{table}[htbp]
+\centering\small\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Search s$^*$ & Search TFLOPs$^*$ & Target GFLOPs$^\dagger$ & ms/task & Target MiB & Search MiB\\
+\midrule
+Dense Adam & 27.8 & 7.74 & 1.52 & 30.9 & 71.3 & 213\\
+Random I & -- & -- & 6.84 & 55.8 & 1096 & --\\
+LUT-Q I & 1408 & 125 & 3.81 & 26.5 & 1096 & 1911\\
+Yeh MAP I & 3057 & 263 & 5.33 & 40.9 & 1096 & 1911\\
+Yeh soft & 3054 & 263 & 4.03 & 28.3 & 1096 & 1911\\
+MSR-FC U & 2068 & 197 & 6.41 & 50.8 & 1096 & 1911\\
+Ours & 1188 & 112 & 4.24 & 29.7 & 1096 & 1911\\
+Ours + functional & 1605 & 175 & 5.98 & 46.3 & 1096 & 1911\\
+Our mask, free weights & 1216 & 119 & 3.01 & 46.2 & 71.7 & 1911\\
+Random mask, free weights & -- & -- & 2.85 & 44.8 & 71.7 & --\\
+MSR + learned init & 534 & 45 & 0.0339 & 5.48 & 63.7 & 439\\
+\bottomrule\end{tabular}
+\caption{Paired MNIST sums: measured computation. Target timing excludes the FLOP profiler and uses one process per GPU. $^*$Search seconds include profiling overhead and shared scheduling. $^\dagger$Target GFLOPs are per task: the complete 64/256/1024 sweep on synthetic data, one prescribed support budget on real data; synthetic time covers only 1024. These are incomplete Torch operation counts, not FLOP/s. A dash indicates unavailable measurement.}
+\end{table}

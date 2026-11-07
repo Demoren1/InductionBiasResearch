@@ -1,0 +1,108 @@
+{
+  "stage": "G29 unknown-readout hard weighted-prefix extraction",
+  "registered_utc": "2026-11-05T23:59:26.836250+00:00",
+  "seed": 26110629017,
+  "cases": [
+    {
+      "name": "pattern_0",
+      "kind": "pattern",
+      "family": 0,
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1,
+      "bias": -3.0
+    },
+    {
+      "name": "pattern_1",
+      "kind": "pattern",
+      "family": 1,
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1,
+      "bias": -3.0
+    },
+    {
+      "name": "sets_0",
+      "kind": "sets",
+      "family": 0,
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2,
+      "bias": 0.15
+    },
+    {
+      "name": "sets_1",
+      "kind": "sets",
+      "family": 1,
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2,
+      "bias": 0.15
+    },
+    {
+      "name": "sets_2",
+      "kind": "sets",
+      "family": 2,
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2,
+      "bias": 0.15
+    },
+    {
+      "name": "sets_3",
+      "kind": "sets",
+      "family": 3,
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2,
+      "bias": 0.15
+    }
+  ],
+  "sources": 4,
+  "noise": [
+    0.0,
+    0.2
+  ],
+  "axis_points": 257,
+  "axis_min": 0.001,
+  "axis_max": 128.0,
+  "axis_repeats": 4194304,
+  "slice_repeats": 4096,
+  "slice_points": 2048,
+  "prefix_validation": 512,
+  "slice_scales": [
+    0.05,
+    0.2,
+    0.8,
+    3.2,
+    12.8,
+    51.2
+  ],
+  "fit_points": 4096,
+  "fit_validation": 1024,
+  "meta_points": 2048,
+  "fit_repeats": 64,
+  "numeric_starts": 64,
+  "numeric_steps": 64,
+  "target_functions": 8,
+  "target_test": 8192,
+  "primary": "calibrated_weighted_prefix",
+  "software_tests": false,
+  "known": "D,H,K,output dimension, ReLU, common nonzero hidden bias, active output queries. No I/C/W2/point roles/edge count supplied to learner. Zero-output anchor observed.",
+  "axis": "Separate signed coordinate curves, variable-projection LS of signed amplitudes and bounded nonlinear LS of shared positive code magnitudes. Seven starts, independent interleaved-axis validation; no counts/positive-amplitude assumption.",
+  "prefix": "All discrete child-prefixes plus persistent all-zero parent. Fit arbitrary signed vector readout. Backward deletion uses exact functional LS loss increase, not coefficient norm. At most H nonzero atoms, smallest support within validation noise/numerical tolerance. No weight clustering or softmax argmax. Generic noncancelled prefix responses and sufficient query rank required.",
+  "calibration": "Bootstrap per-source candidates; canonicalize/deduplicate; fresh joint C/W2 fits for every task; select preliminary I on H0. Rerun prefixes from empty with calibrated C, readout profiled freely at each step. Final fresh joint fits use H1; meta-labels opened only after predictor freeze.",
+  "source_teacher": "Pattern0110: eight sliding four-bit detectors, shuffled hidden columns, free signed per-neuron readout. Two numerical/source-query cases of one geometry. DeepSets: four new hidden input/column permutations, eight 2D points/two shared ReLU channels; unknown signed2x2 output matrix after pooling. Learner uses unconstrained2x16 W2. Source code magnitudes separated by >=.08 for Pattern/.10 for DeepSets, min .15 for DeepSets; a disclosed identifiable pilot.",
+  "synthetic_followup": "After Pattern/DeepSets, repeat on the exact six G23 comparator geometries (local/quartet_mix/random), with unknown readout. Separate results; no equal-budget old-table claim.",
+  "resource_policy": "CPU2threads for axis/prefix; batch GPU0-3 only for numerical C/W2 fits. Never GPU6/7; no foreign process termination.",
+  "code_sha256": {
+    "unknown_readout.py": "481a7a53bfc1f31e4142d43d187b83fe497018e4fc82db26db6f0592a7643d84",
+    "weighted_prefix_search.py": "21ecacf6daf2bd73a8cbc012e572d39691552d6942d47a4068ac0fc6f8af091e"
+  }
+}

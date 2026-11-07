@@ -1,0 +1,158 @@
+{
+  "families": {
+    "gumbel_4": {
+      "configuration": 11,
+      "commitment": 0.0,
+      "settings": {
+        "row": 6,
+        "selection_mse": 0.0618617981672287,
+        "configuration": 11,
+        "numeric_lr": 0.01,
+        "architecture_lr": 0.1,
+        "radius": 0.5,
+        "sparsity": 0.03,
+        "mode": "joint",
+        "family": "gumbel_4",
+        "commitment": 0.0,
+        "samples": 4,
+        "seed": 43,
+        "search_step": 8000,
+        "root": 0,
+        "snapshot": 2
+      },
+      "selection_nmse_mean": 0.09248878951308126,
+      "per_seed": [
+        {
+          "seed": 43,
+          "row": 6,
+          "search_step": 8000,
+          "selection_nmse": 0.09869870037884933,
+          "test_nmse": 0.0922289788722992,
+          "test_mean_over_four": 0.09222986549139023,
+          "query_selected_restart": 3,
+          "recovery": {
+            "categorical_errors": 156,
+            "categorical_positions": 256,
+            "active_edges": 174,
+            "true_active_edges": 32,
+            "mask_precision": 0.1781609195402299,
+            "mask_recall": 0.96875,
+            "mask_f1": 0.3009708737864078,
+            "groups_used": 4
+          }
+        },
+        {
+          "seed": 44,
+          "row": 10,
+          "search_step": 12000,
+          "selection_nmse": 0.09142382653991821,
+          "test_nmse": 0.0892162173986435,
+          "test_mean_over_four": 0.08924910426139832,
+          "query_selected_restart": 3,
+          "recovery": {
+            "categorical_errors": 161,
+            "categorical_positions": 256,
+            "active_edges": 182,
+            "true_active_edges": 32,
+            "mask_precision": 0.17032967032967034,
+            "mask_recall": 0.96875,
+            "mask_f1": 0.2897196261682243,
+            "groups_used": 4
+          }
+        },
+        {
+          "seed": 45,
+          "row": 11,
+          "search_step": 12000,
+          "selection_nmse": 0.08734384162047623,
+          "test_nmse": 0.08715557307004929,
+          "test_mean_over_four": 0.0871448814868927,
+          "query_selected_restart": 2,
+          "recovery": {
+            "categorical_errors": 155,
+            "categorical_positions": 256,
+            "active_edges": 173,
+            "true_active_edges": 32,
+            "mask_precision": 0.18497109826589594,
+            "mask_recall": 1.0,
+            "mask_f1": 0.3121951219512195,
+            "groups_used": 4
+          }
+        }
+      ],
+      "exact_indexators": 0,
+      "exact_masks": 0,
+      "primary": {
+        "seed": 45,
+        "row": 11,
+        "search_step": 12000,
+        "selection_nmse": 0.08734384162047623,
+        "test_nmse": 0.08715557307004929,
+        "test_mean_over_four": 0.0871448814868927,
+        "query_selected_restart": 2,
+        "recovery": {
+          "categorical_errors": 155,
+          "categorical_positions": 256,
+          "active_edges": 173,
+          "true_active_edges": 32,
+          "mask_precision": 0.18497109826589594,
+          "mask_recall": 1.0,
+          "mask_f1": 0.3121951219512195,
+          "groups_used": 4
+        }
+      },
+      "fresh": {
+        "source_row": 11,
+        "settings": {
+          "family": "gumbel_4",
+          "source_row": 11,
+          "radius": 1.5,
+          "numeric_lr": 0.01,
+          "seed": 122,
+          "aligned_initial_codes": false
+        },
+        "query_selected_test_nmse": 0.0871184766292572,
+        "mean_test_nmse": 0.08717137575149536,
+        "all_test_nmse": [
+          0.08713775128126144,
+          0.08714721351861954,
+          0.08708226680755615,
+          0.08707526326179504,
+          0.08708841353654861,
+          0.0871184766292572,
+          0.08709587901830673,
+          0.0871557965874672,
+          0.08722563087940216,
+          0.08727439492940903,
+          0.08708655089139938,
+          0.08706856518983841,
+          0.08726434409618378,
+          0.08780574053525925,
+          0.0870245099067688,
+          0.08713527768850327,
+          0.08713849633932114,
+          0.08705943822860718,
+          0.08710023015737534,
+          0.08733096718788147,
+          0.08730541914701462,
+          0.08720770478248596,
+          0.0871184915304184,
+          0.0870320126414299,
+          0.08729016780853271,
+          0.08719822019338608,
+          0.08714546263217926,
+          0.08711876720190048,
+          0.08709467947483063,
+          0.08712438493967056,
+          0.08735346049070358,
+          0.08707979321479797
+        ],
+        "successes_below_0_01": 0,
+        "restarts": 32
+      }
+    }
+  },
+  "teacher_used_only_after_source_freeze": true,
+  "exploratory": true,
+  "observations": "New test inputs for one previously studied teacher; new search seeds are not independent functions."
+}

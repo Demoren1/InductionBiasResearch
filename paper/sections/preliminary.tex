@@ -23,14 +23,17 @@ $\mathcal{X}$ and $\mathcal{Y}$, and occur according to a distribution
 $p(\tau)$ \cite{baxter2000model}. We consider task families in which
 structural patterns useful for solving one task may also help solve others.
 
-We learn these patterns from source tasks $\mathcal{T}_{\mathrm{tr}}$
-and assess their transfer on a disjoint collection of target tasks
-$\mathcal{T}_{\mathrm{val}}$ drawn from the same task environment.
+All tasks in the source collection $\mathcal{T}_{\mathrm{tr}}$ and
+the target collection $\mathcal{T}_{\mathrm{val}}$ are sampled
+independently from $p(\tau)$.
+We learn shared patterns from the source tasks and assess their transfer
+on the target tasks.
 For each task, a \emph{support sample} $S_\tau^{\mathrm{s}}$ is used to
 fit numerical parameters, and an independent \emph{query sample}
 $S_\tau^{\mathrm{q}}$ is used to compare the fitted predictors
-\cite{finn2017model,zhou2021meta}. Both consist of independent draws
-from $P_\tau$. For a predictor $f$ and a sample $S$, the empirical loss is
+\cite{finn2017model,zhou2021meta}. Conditional on $\tau$, both samples
+consist of independent draws from $P_\tau$.
+For a predictor $f$ and a sample $S$, the empirical loss is
 \begin{equation}
     \mathcal{L}_S(f)
     :=\frac{1}{|S|}\sum_{(\mathbf{x},y)\in S}\ell(f(\mathbf{x}),y).
@@ -39,94 +42,137 @@ from $P_\tau$. For a predictor $f$ and a sample $S$, the empirical loss is
 Here, $\ell$ measures prediction error on one example, such as squared
 error for regression or cross-entropy for classification.
 
-\subsection{Parameter sharing}
+\subsection{Network structure}
 \label{sec:network-structure}
 
-Parameter sharing assigns a single trainable value to a group of network
-weights. Deep Compression represents such weights using a \emph{codebook}
-of shared values and an index for each connection \cite{han2016deep}.
-We use this representation to separate the pattern of shared parameters
-from the numerical values learned for a particular task.
+We distinguish structural constraints shared across tasks from
+task-specific numerical values.
+A network structure specifies which connections are permitted and which
+weights share a trainable parameter. Let $P$ denote the number of weights
+subject to these constraints, and let $\mathbf{w}_\tau\in\mathbb{R}^{P}$
+collect them in a fixed order on task $\tau$, across any number of layers.
 
-We fix a common network architecture and collect the weights subject to
-these constraints into a vector $\mathbf{w}\in\mathbb{R}^{P}$. An integer array
-$\mathbf{I}\in\{0,\ldots,K\}^{P}$ assigns each weight to an entry in the codebook
-$\mathbf{C}_\tau=(C_{\tau,0},\ldots,C_{\tau,K})$. We call this array an
-\emph{indexator}. The weights are given by
+We encode the constraints using an \emph{indexator}, an integer vector
+$\mathbf{I}\in\{0,\ldots,K\}^{P}$, where $K$ is a prescribed upper bound
+on the number of groups with independently trainable values.
+Their task-specific values
+form a
+\emph{codebook}
+$\mathbf{C}_\tau=(C_{\tau,0},\ldots,C_{\tau,K})\in\mathbb{R}^{K+1}$
+\cite{han2016deep,yeh2022equivariance}.
+The weights are obtained by the lookup rule
 \begin{equation}
-    w_p=C_{\tau,I_p},\qquad p=1,\ldots,P,\qquad C_{\tau,0}=0.
+    w_{\tau,p}=C_{\tau,I_p},\qquad p=1,\ldots,P,
+    \qquad C_{\tau,0}=0.
     \label{eq:indexator-weights}
 \end{equation}
-Connections with the same positive index therefore share one trainable
-parameter. We reserve index $0$ for a fixed zero value, so that the same
-representation also specifies which connections are absent. A binary
-connectivity mask is the special case in which each active connection
-has its own trainable codebook entry.
+Under this rule, $I_p=0$ removes a connection, while $I_p=I_q>0$
+requires the corresponding weights to remain equal throughout training.
+The indexator therefore determines both connectivity and the partition
+of permitted connections into parameter-sharing groups. Allowing the
+codebook values to vary defines the associated space of admissible
+weights,
+\begin{equation}
+    \mathcal{W}_{\mathbf{I}}
+    :=\left\{
+        (C_{I_1},\ldots,C_{I_P})^{\mathsf T}
+        :\mathbf{C}\in\mathbb{R}^{K+1},\ C_0=0
+    \right\}.
+    \label{eq:structural-weight-space}
+\end{equation}
+Positive labels merely name the groups, so consistently renaming them
+leaves this space unchanged. Distinct groups have independent
+parameters even if their learned values happen to coincide on a task.
 
-For the trainable weights, this is equivalent to the discrete assignment
-representation of \citet{yeh2022equivariance}: each row of a binary
-assignment matrix selects one shared numerical parameter. The indexator
-records the selected column for each weight. Its positive labels simply
-name groups; consistently renaming these labels and the corresponding
-codebook entries preserves the sharing pattern.
+We collect all remaining unconstrained trainable parameters in
+$\boldsymbol{\theta}_\tau$ and write
+$f_{\mathbf{I},\mathbf{C}_\tau,\boldsymbol{\theta}_\tau}$ for the resulting
+predictor. Reusing $\mathbf{I}$ across tasks preserves the constraints
+defining $\mathcal{W}_{\mathbf{I}}$, while each task learns its own
+codebook and remaining numerical parameters. In every fitting attempt,
+the indexator is held fixed, and all trainable entries of
+$\mathbf{C}_\tau$ and $\boldsymbol{\theta}_\tau$ are initialized afresh
+and optimized on the task's support sample.
 
-For example,
-$$
-    \mathbf{I}=(1,2,1,0)
-    \quad\Longrightarrow\quad
-    \mathbf{w}=(C_{\tau,1},C_{\tau,2},C_{\tau,1},0).
-$$
-The first and third weights are tied, and the fourth is fixed at zero.
-One task may learn $\mathbf{w}=(0.7,-1.2,0.7,0)$ and another
-$\mathbf{w}=(-0.4,0.9,-0.4,0)$ under the same constraints. The transferable
-structure is the assignment of connections to shared parameters;
-the codebook supplies their values on each task.
-
-We write $f_{\mathbf{I},\mathbf{C}_\tau,\boldsymbol{\theta}_\tau}$ for the resulting
-predictor, where $\boldsymbol{\theta}_\tau$ contains any remaining trainable
-parameters, such as biases. On a new task, we reuse only the proposed
-indexator $\mathbf{I}$. In every fitting attempt, $\mathbf{I}$ is held fixed,
-while all trainable entries of $\mathbf{C}_\tau$ and all of
-$\boldsymbol{\theta}_\tau$ are initialized afresh and optimized
-on the task's support sample. This also applies to repeated attempts
-with the same indexator.
-
-\subsection{Good solutions and structural transfer}
+\subsection{Problem formulation}
 \label{sec:problem-formulation}
 
-Let $\widehat f_{\tau,\mathbf{I}}$ be a predictor obtained by fitting numerical
-parameters under structure $\mathbf{I}$. For a chosen error tolerance
-$\varepsilon$, we call it a \emph{good solution} to task $\tau$ when
-its expected loss on new examples satisfies
+Let $\mathcal{I}_K:=\{0,\ldots,K\}^{P}$ denote the set of admissible
+indexators. For each $\mathbf{I}\in\mathcal{I}_K$, let
+$\mathcal{F}_{\mathbf{I}}$ denote the set of predictors
+$f_{\mathbf{I},\mathbf{C},\boldsymbol{\theta}}$ obtained as the admissible
+numerical parameters $\mathbf{C}$ and $\boldsymbol{\theta}$ vary.
+
+\begin{definition}[Functional equivalence of indexators]
+    Two indexators $\mathbf{I},\mathbf{J}\in\mathcal{I}_K$ are
+    functionally equivalent, written $\mathbf{I}\sim\mathbf{J}$, if
+    $\mathcal{F}_{\mathbf{I}}=\mathcal{F}_{\mathbf{J}}$.
+    We write $[\mathbf{I}]$ for the equivalence class of $\mathbf{I}$
+    and $\mathcal{I}_K/{\sim}$ for the set of these classes.
+\end{definition}
+
+For a task $\tau$ and a fixed indexator
+$\mathbf{I}\in\mathcal{I}_K$, define the optimal task risk as
 \begin{equation}
-    \mathcal{R}_\tau(\widehat f_{\tau,\mathbf{I}})
-    :=\mathbb{E}_{(\mathbf{x},y)\sim P_\tau}
-    \left[\ell(\widehat f_{\tau,\mathbf{I}}(\mathbf{x}),y)\right]
-    \leq\varepsilon.
-    \label{eq:good-solution}
+    \mathcal{R}_\tau^\star(\mathbf{I})
+    :=\inf_{\substack{
+        \mathbf{C}_\tau,\boldsymbol{\theta}_\tau
+    }}
+    \mathbb{E}_{(\mathbf{x},y)\sim P_\tau}
+    \left[
+        \ell\bigl(f_{\mathbf{I},\mathbf{C}_\tau,
+        \boldsymbol{\theta}_\tau}(\mathbf{x}),y\bigr)
+    \right].
+    \label{eq:optimal-task-risk}
 \end{equation}
-The tolerance specifies the desired prediction quality. Whether training
-reaches it also depends on the support data, optimizer, initialization
-rule, and training budget. A structure may admit a good solution while
-the numerical optimizer rarely finds it. We therefore assess structures
-through the outcomes of actual fitting attempts under specified
-conditions, including fresh initializations.
+The infimum optimizes task-specific numerical parameters with respect
+to the true task distribution, giving an ideal measure of the
+predictive capacity of $\mathbf{I}$. Generalization from finite support
+samples and numerical convergence also depend on the fitting procedure.
+Equivalent indexators have the same optimal task risk, so this
+criterion is independent of the representative within each class.
+The population problem can therefore be written as a search over
+equivalence classes:
+\begin{equation}
+    [\mathbf{I}^\star]
+    \in\operatorname*{arg\,min}_{[\mathbf{I}]\in\mathcal{I}_K/{\sim}}
+    \mathbb{E}_{\tau\sim p(\tau)}
+    \left[\mathcal{R}_\tau^\star(\mathbf{I})\right].
+    \label{eq:optimal-structure}
+\end{equation}
+The expectation concerns a new task drawn from the same task
+environment, and any representative of $[\mathbf{I}]$ can be used
+to evaluate the objective. Structure learning is thus defined up to
+functional equivalence. Distinct equivalence classes may still attain
+the same optimum; identifying a unique optimal class requires suitable
+assumptions on the task family and network parameterization.
 
-Several structures may support good solutions to a task, and useful
-patterns may recur across tasks. Our shared learned object is a
-distribution $Q_{\boldsymbol{\phi}}(\mathbf{I})$ over indexators. Source tasks
-are used to learn its parameters $\boldsymbol{\phi}$. On a target task,
-$\boldsymbol{\phi}$ is frozen and the model proposes candidate structures,
-each of which receives fresh numerical
-training. Successful transfer requires both proposing a suitable
-structure and fitting its parameters well.
+For the empirical problem, the indexator is selected on source tasks
+and then held fixed when fitting numerical parameters on held-out
+tasks. The resulting numerical adaptation problem is
+\begin{equation}
+    \begin{aligned}
+        &\inf_{\{\mathbf{C}_\tau,\boldsymbol{\theta}_\tau\}
+            _{\tau\in\mathcal{T}_{\mathrm{val}}}}
+        \frac{1}{|\mathcal{T}_{\mathrm{val}}|}
+        \sum_{\tau\in\mathcal{T}_{\mathrm{val}}}
+        \mathcal{L}_{S_\tau^{\mathrm{s}}}
+        \bigl(f_{\widehat{\mathbf{I}},\mathbf{C}_\tau,
+            \boldsymbol{\theta}_\tau}\bigr)
+        \\
+        &\text{subject to}\quad
+        \widehat{\mathbf{I}}
+        \in\operatorname*{arg\,min}_{\mathbf{I}\in\mathcal{I}_K}
+        \frac{1}{|\mathcal{T}_{\mathrm{tr}}|}
+        \sum_{\tau\in\mathcal{T}_{\mathrm{tr}}}
+        \inf_{\mathbf{C}_\tau,\boldsymbol{\theta}_\tau}
+        \mathcal{L}_{S_\tau^{\mathrm{s}}}
+        \bigl(f_{\mathbf{I},\mathbf{C}_\tau,
+            \boldsymbol{\theta}_\tau}\bigr).
+    \end{aligned}
+    \label{eq:structure-learning}
+\end{equation}
 
-Since expected loss is usually unknown, we select among the fitted
-predictors by their query loss and measure final performance on further
-test examples unused in fitting or selection. We evaluate the resulting
-procedure across new tasks and independent runs, accounting for all
-candidate fits and restarts in the target-task training budget and
-reporting source-task learning costs separately. The aim is to make good
-solutions more reliably attainable with the available data and
-computation; comparisons with dense optimization establish whether the
-learned constraints provide that benefit.
+Transfer performance is measured by the mean query loss across held-out
+tasks after their numerical parameters have been fitted on the support
+samples.

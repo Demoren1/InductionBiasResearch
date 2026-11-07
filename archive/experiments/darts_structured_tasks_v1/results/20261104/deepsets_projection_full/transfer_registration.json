@@ -1,0 +1,31 @@
+{
+  "registered_utc": "2026-11-04T18:25:23.485271+00:00",
+  "tasks": 6,
+  "seed_offset": 8100000,
+  "support": 1024,
+  "query": 512,
+  "selection": 2048,
+  "test": 8192,
+  "numeric_restarts": 8,
+  "numeric_steps": 3000,
+  "radii": [
+    0.5,
+    1.5
+  ],
+  "numeric_rates": [
+    0.003,
+    0.01,
+    0.03
+  ],
+  "rules": [
+    "Freeze all source-family primary indexators before generating any new target function.",
+    "New functions keep the teacher connectivity/grouping, but draw four new signed coefficients independently: magnitudes Uniform[0.4,1.6], equiprobable signs. Bias0.15 and sum readout1 unchanged.",
+    "Target generation alone reads the teacher; learner files contain only observations and dimensions. The oracle I is an explicitly isolated numerical control, never used to alter a learned I.",
+    "Each family transfers its source-selection primary I, fixed throughout all target fits. All numerical parameters, including bias/readout/offset, initialize freshly.",
+    "Controls per family: shuffle group assignments on the same active support, and shuffle all positions while preserving code/sign counts. These are frozen before target fitting.",
+    "Also evaluate a true-I diagnostic and full dense Adam. All get the same support/query/selection sizes,3000 updates,8 starts and six rate/radius settings; parameter counts and FLOPs differ.",
+    "Query chooses numerical checkpoints and one of eight starts. Mean selection loss chooses hyperparameters within each fixed I/method. Heldout target samples are generated only after those choices freeze.",
+    "Report both query-selected and mean-over-eight heldout NMSE for each new target. Never select structures or revise source settings from target results.",
+    "New-coefficient target evaluation is structural transfer; fresh initializations on the old function are a separate optimizer diagnostic."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "stage": "G33 exploratory fixed-data numerical repair",
+  "registered_utc": "2026-11-06T20:19:56.100323+00:00",
+  "seed": 26110633041,
+  "sources": 4,
+  "cases": [
+    {
+      "name": "pattern_0110",
+      "kind": "pattern",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "deepsets",
+      "kind": "sets",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "general_random",
+      "kind": "synthetic",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 1
+    }
+  ],
+  "private_noise_conditions": [
+    0.0,
+    0.2
+  ],
+  "learner_allowlist": [
+    "inputs",
+    "hidden",
+    "codes",
+    "outputs"
+  ],
+  "learner_interface": "Only sizes and independent repeated output observations. No b, sigma, teacher I/C/W2, roles, edges, coefficient range or generation seed.",
+  "bias_model": "Separate learned bias per hidden neuron and output offsets. No common-b constraint in learner.",
+  "observation_precision": "Gaussian observation means are simulated exactly in distribution; every constituent repeat is counted. Noise estimate uses32 independent raw repeats at32 random inputs.",
+  "selection": "Exploratory pilot; truth is used only after saved learner output, never by blind_relu. Freeze a new independent cohort after modifying the method.",
+  "resource_policy": "CPU for small linear algebra and output queries; GPU2 only if packed nonlinear fits are justified. Never GPU6/7; do not touch foreign jobs.",
+  "code_sha256": {
+    "blind_relu.py": "a08708e20db2d76bb0fa77f4a97a909c8ddbc2705fa120efc4e887178d00cc49",
+    "blind_study.py": "181fccd075e2766997316ba075e7c285906c4cc0eef9e0a6ac82884e69f5221a"
+  },
+  "parent_root": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261106/blind_g33_pilot05_fixed",
+  "parent_protocol_sha256": "ad0501ab8cfc44a42c0dd1396c4cc4575b1b619e1fb86afa11382f3254dcc6dd",
+  "additional_observations": 0
+}

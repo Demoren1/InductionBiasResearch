@@ -1,0 +1,111 @@
+{
+  "trace": [
+    {
+      "prefix_length": 1,
+      "parameters": 8,
+      "rank": 8,
+      "condition": 728187029.370751,
+      "codebook_before": [
+        0.30752302540386023,
+        0.5086641787577004,
+        0.6130136034594528,
+        0.679044163636626
+      ],
+      "slice_mse_unconstrained": 0.0009475941509187484,
+      "qp": {
+        "solver": "feasible_primal_active_set",
+        "success_flag": true,
+        "message": "fw_gap_satisfied",
+        "iterations": 7,
+        "releases": 2,
+        "blockers": 1,
+        "fw_fallbacks": 0,
+        "stationary_faces": 2,
+        "face_stationarity_error": 5.66510689026245e-07,
+        "fw_gap": 2.731789179110429e-14,
+        "primal_violation": 0.0,
+        "converged": true,
+        "seconds": 0.001701943576335907
+      },
+      "integer": {
+        "moves": 0,
+        "half_mse_change": 0.0,
+        "minimum_next_change": 0.03700188844000607,
+        "local_stationary": true
+      },
+      "slice_mse_integer_before_refit": 0.0012535457552061084,
+      "code_refit": {
+        "records": [
+          {
+            "step": 0,
+            "train_mse": 0.0012535457552061051,
+            "validation_mse": 0.0013658372191551352,
+            "fraction": 1.0
+          },
+          {
+            "step": 1,
+            "train_mse": 0.0009528467495799676,
+            "validation_mse": 0.0010117056198728652,
+            "fraction": 1.0
+          },
+          {
+            "step": 2,
+            "train_mse": 0.0009514522833717704,
+            "validation_mse": 0.0010100123181829748,
+            "fraction": 1.0
+          },
+          {
+            "step": 3,
+            "train_mse": 0.0009514522824902495,
+            "validation_mse": 0.001010009857865817
+          }
+        ],
+        "selected": 3,
+        "seconds": 0.015027128159999847
+      },
+      "accepted": true,
+      "reason": "integer_prefix",
+      "distinct_prefixes": 3,
+      "codebook_after": [
+        0.30752302540386023,
+        0.5591868093549557,
+        0.557997143511035,
+        0.679044163636626
+      ],
+      "slice_mse_integer": 0.0009514522824902495,
+      "prefix_validation_mse": 0.001010009857865817
+    },
+    {
+      "prefix_length": 2,
+      "parameters": 24,
+      "rank": 22,
+      "condition": 3066754419788.6953,
+      "codebook_before": [
+        0.30752302540386023,
+        0.5591868093549557,
+        0.557997143511035,
+        0.679044163636626
+      ],
+      "accepted": false,
+      "reason": "rank_deficient_dictionary"
+    }
+  ],
+  "complete": false,
+  "seconds": 0.025023572146892548,
+  "job": {
+    "family_id": 0,
+    "noise": 2.0,
+    "method": "axis_single_refit",
+    "tasks": [
+      0
+    ],
+    "refit": true,
+    "solver": "unit"
+  },
+  "job_id": 26,
+  "search_started_from_empty": true,
+  "frozen_bootstrap_control": false,
+  "protocol_sha256": "a4f43d1debe938a4cb28e8e69259be57782d272dc6d60014a82a085e41424f5a",
+  "arrays_sha256": "9bb22c366c2af9f7a3ea17a258aa4e46c191b3617986cc5febbdb8656cec947e",
+  "teacher_or_meta_opened": false
+}

@@ -1,0 +1,130 @@
+{
+  "frozen_utc": "2026-11-04T20:34:02.227272+00:00",
+  "rules": [
+    "Compare both source block lengths before generating any new transfer target.",
+    "Choose proposed reset by mean source-selection MSE, never teacher recovery or heldout/target losses.",
+    "Paired keep control uses the same block-length experiment; its own split/tau was selected by source pilot.",
+    "Short and long share source data and seeds; they are paired ablations, not independent task replications."
+  ],
+  "choices": {
+    "baseline": {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "consensus_baseline",
+      "selection_mse": 1.725246649246041e-09,
+      "configuration": 0,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    "proposed_reset": {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "plain_adapt_reset",
+      "selection_mse": 0.0350468911098174,
+      "configuration": 15,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    },
+    "paired_keep": {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "plain_adapt_keep",
+      "selection_mse": 0.0506674957772096,
+      "configuration": 13,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    }
+  },
+  "candidates": [
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "consensus_baseline",
+      "selection_mse": 1.725246649246041e-09,
+      "configuration": 0,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "plain_adapt_keep",
+      "selection_mse": 0.03242907620943251,
+      "configuration": 15,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "plain_adapt_reset",
+      "selection_mse": 0.04713838919997215,
+      "configuration": 17,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "consensus_adapt_keep",
+      "selection_mse": 0.06536214798688889,
+      "configuration": 3,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "consensus_reset",
+      "selection_mse": 0.17564895749092102,
+      "configuration": 2,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_cycles",
+      "family": "consensus_adapt_reset",
+      "selection_mse": 0.17900706827640533,
+      "configuration": 8,
+      "source_frozen_sha256": "7f8052dbbbf80cd53e89f1578b8d6fe57eb7b951234cb8e50b240e1e852f75c1",
+      "selection_sha256": "30d07050b272f88c81322e0cbd7819fdc925ec5e6a148a33a66d4aafd680a5f9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "consensus_baseline",
+      "selection_mse": 1.9184982491537994e-09,
+      "configuration": 0,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "plain_adapt_reset",
+      "selection_mse": 0.0350468911098174,
+      "configuration": 15,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "plain_adapt_keep",
+      "selection_mse": 0.0506674957772096,
+      "configuration": 13,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "consensus_adapt_keep",
+      "selection_mse": 0.11280334244171779,
+      "configuration": 4,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    },
+    {
+      "root": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261104/deepsets_reset_long_cycles",
+      "family": "consensus_adapt_reset",
+      "selection_mse": 0.1531574676434199,
+      "configuration": 3,
+      "source_frozen_sha256": "441996eebc4e4dc3666fe4ce32491196e30f0c8a2aae5658fc82ba7197a065d7",
+      "selection_sha256": "a48440ab32f262c8f203fddf53fba86f49c74a348c8c19ea5eb9cbe126dec6a9"
+    }
+  ],
+  "frozen_method": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/frozen_methods/deepsets_consensus_exact_v1",
+  "baseline_integrity": {
+    "checked_utc": "2026-11-04T20:34:02.232826+00:00",
+    "all_hashes_match": true
+  }
+}

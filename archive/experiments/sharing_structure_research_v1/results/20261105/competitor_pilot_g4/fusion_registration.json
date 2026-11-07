@@ -1,0 +1,112 @@
+{
+  "registered_utc": "2026-11-05T03:09:20.642889+00:00",
+  "methods": [
+    "wsr_prox",
+    "oscar_prox"
+  ],
+  "rows": [
+    {
+      "fusion": 1e-05,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 1e-05,
+      "lasso": 1.0000000000000002e-06
+    },
+    {
+      "fusion": 1e-05,
+      "lasso": 1e-05
+    },
+    {
+      "fusion": 0.0001,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 0.0001,
+      "lasso": 1e-05
+    },
+    {
+      "fusion": 0.0001,
+      "lasso": 0.0001
+    },
+    {
+      "fusion": 0.001,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 0.001,
+      "lasso": 0.0001
+    },
+    {
+      "fusion": 0.001,
+      "lasso": 0.001
+    },
+    {
+      "fusion": 0.01,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 0.01,
+      "lasso": 0.001
+    },
+    {
+      "fusion": 0.01,
+      "lasso": 0.01
+    },
+    {
+      "fusion": 0.1,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 0.1,
+      "lasso": 0.010000000000000002
+    },
+    {
+      "fusion": 0.1,
+      "lasso": 0.1
+    },
+    {
+      "fusion": 1.0,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 1.0,
+      "lasso": 0.1
+    },
+    {
+      "fusion": 1.0,
+      "lasso": 1.0
+    },
+    {
+      "fusion": 10.0,
+      "lasso": 0.0
+    },
+    {
+      "fusion": 10.0,
+      "lasso": 1.0
+    },
+    {
+      "fusion": 10.0,
+      "lasso": 10.0
+    }
+  ],
+  "steps": 600,
+  "checkpoint_every": 20,
+  "pilot_source_jobs": [
+    3,
+    9,
+    15,
+    21
+  ],
+  "n": 131072,
+  "smooth_objective": "Per-task half-SSE/n. Independent source functions, full sample curvature, FISTA with step 1/max_t lambda_max(G_t/n), initialized at dense OLS.",
+  "penalties": {
+    "wsr_prox": "lambdaR sum_{e<f}|w_e-w_f|/(E-1) + lambda1 sum_e|w_e|",
+    "oscar_prox": "lambdaR sum_{e<f}max(|w_e|,|w_f|)/(E-1) + lambda1 sum_e|w_e|"
+  },
+  "native_readout": "Exact equality (WSR) or equality up to global sign of whole source weight profiles (OSCAR), fixed zero only if all source entries exactly zero. No tolerance, k-means, true mask or group sizes. Candidates with more than known K common groups are not eligible under this benchmark's codebook budget; all-zero I is eligible.",
+  "capacity": "Unsigned WSR is compared on positive-index convolution geometries only. OSCAR supports the full signed dictionary. Same source-validation functions and HPO criterion; no teacher or target selection.",
+  "selection": "One global setting by mean best observed source-validation MSE on pilot geometries; WSR conv-only, OSCAR all4. Confirmation checkpoint uses same source-validation criterion, settings frozen before new teacher audit.",
+  "scope": "Transparent objective-level implementations with an explicit multi-task native-equality intersection, not unchanged WSR author scripts. OSCAR is a known signed fusion control; no novelty claimed.",
+  "code_sha256": "4450fc620b5b1ab39b70f6ac986d6ad45cfe7eb5feee0a16efb17d710aaebef3"
+}

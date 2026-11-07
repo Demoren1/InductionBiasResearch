@@ -12,5 +12,11 @@ archive/history/earlier_manuscript/style/** -diff linguist-vendored=true
 *.pt -diff
 *.json.gz -diff
 *.svg -diff linguist-generated=true
+artifacts/benchmark_2026-11-07/**/*.json -diff linguist-generated=true
+artifacts/benchmark_2026-11-07/**/*.csv linguist-generated=true
+archive/experiments/**/results/** -diff linguist-generated=true
+archive/experiments/**/*.summary.npz -diff linguist-generated=true
+archive/2026-11-07/*.tar.gz -diff linguist-generated=true
+archive/2026-11-07/*manifest*.json -diff linguist-generated=true
 # csv.writer emits RFC 4180 CRLF; preserve recorded artifact bytes.
 *.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

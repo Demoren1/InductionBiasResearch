@@ -1,0 +1,123 @@
+{
+  "seed": 2611056817,
+  "families": [
+    8401,
+    8402,
+    8403,
+    8404
+  ],
+  "function": "fresh_gaussian_codes",
+  "points": 8,
+  "features": 2,
+  "point_hidden": 2,
+  "codes": 4,
+  "inputs": 16,
+  "hidden": 16,
+  "bias": 0.15,
+  "amplitude": 1.0,
+  "initializations": [
+    "cold",
+    "moment_pairs8388608",
+    "moment_pairs67108864",
+    "moment_pairs536870912"
+  ],
+  "stage": "G16 independent-score diagnosis on opened G9 geometries; known one-step control, not competitive confirmation",
+  "registered_utc": "2026-11-05T07:55:40.926599+00:00",
+  "parent": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/curvature_sharing_g9",
+  "parent_protocol_sha256": "032eae68386e075313c1f5e99d93a56b790b78f9e3522f793bfd4d4ba8d8f05d",
+  "previous_goal_turn": "Progress: G14/G15 changed authoritative evidence and determined the next diagnosis",
+  "noise": 0.2,
+  "observations": [
+    262144,
+    1048576,
+    4194304
+  ],
+  "labels_per_input": 2,
+  "chunk": 32768,
+  "validation": 16384,
+  "alpha_per_family": 0.05,
+  "methods": [
+    "scalar_dp",
+    "zero_student_dp",
+    "signed_student_graph",
+    "global_interval"
+  ],
+  "jobs": [
+    {
+      "family": 8401,
+      "initialization": "cold"
+    },
+    {
+      "family": 8401,
+      "initialization": "moment_pairs8388608"
+    },
+    {
+      "family": 8401,
+      "initialization": "moment_pairs67108864"
+    },
+    {
+      "family": 8401,
+      "initialization": "moment_pairs536870912"
+    },
+    {
+      "family": 8402,
+      "initialization": "cold"
+    },
+    {
+      "family": 8402,
+      "initialization": "moment_pairs8388608"
+    },
+    {
+      "family": 8402,
+      "initialization": "moment_pairs67108864"
+    },
+    {
+      "family": 8402,
+      "initialization": "moment_pairs536870912"
+    },
+    {
+      "family": 8403,
+      "initialization": "cold"
+    },
+    {
+      "family": 8403,
+      "initialization": "moment_pairs8388608"
+    },
+    {
+      "family": 8403,
+      "initialization": "moment_pairs67108864"
+    },
+    {
+      "family": 8403,
+      "initialization": "moment_pairs536870912"
+    },
+    {
+      "family": 8404,
+      "initialization": "cold"
+    },
+    {
+      "family": 8404,
+      "initialization": "moment_pairs8388608"
+    },
+    {
+      "family": 8404,
+      "initialization": "moment_pairs67108864"
+    },
+    {
+      "family": 8404,
+      "initialization": "moment_pairs536870912"
+    }
+  ],
+  "selection": "No teacher/validation selection of reference, n or method. All16 fixed G9 references and all3 nested independent-B budgets retained. Explicit point/readout algorithms; no native DARTS claim.",
+  "confidence_scope": "Exact Student statements conditional on A,x refer to pseudo-target theta_B^circ, not true nonlinear W. Unknown true bias audited only after whole-cohort freeze. Alpha divided by4 references and3 looks, separately per algorithm/family. No cross-method/family guarantee.",
+  "data": "New float64 Gaussian IID inputs and two independent noise0.2 labels at each x. Same nested B per family across references, B seed=seed+16000000+family. Independent validation seed=seed+17000000+family. Budget counts2n B labels plus previous reference-learning cost; expensive moment warm cost is not omitted or called matched baseline training.",
+  "theory_sha256": "f3c03770833c1f71378f10e8fc1f97463c94b5cd093ed4b19e3706f94e527226",
+  "code_sha256": {
+    "independent_score.py": "114e36dfa2655355d4b2ab29dad2cc3e836e042dc8a88fa8c7449ac1135cb045",
+    "curvature_sharing.py": "151a7aa66099a2d60a157950098487c03d0319a5ec5294b0ce8b104ed8f998ed",
+    "nonlinear_moments.py": "151a0cbb45f6cd5b7f3e2898030dab46007d799d32dda952e437e45f3d94122f",
+    "interval_indexator.py": "a5078c0ff372d7211af2bfe92ba73aee872c1fa7d725a7d208f5ca6f81d49c6c",
+    "contrasts.py": "63fb8ceecc89f1dbddedf264f264bc399044b086810229a1b0b2c9e110e3236c"
+  },
+  "checks": "No software tests. Scientific covariance/noise-decomposition/provenance guards, minimum lint and figures only."
+}

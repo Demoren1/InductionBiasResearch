@@ -1,0 +1,38 @@
+{
+  "registered_utc": "2026-11-04T16:47:00.842368+00:00",
+  "method": "hard_argmax",
+  "configuration": {
+    "configuration": 11,
+    "numeric_lr": 0.01,
+    "architecture_lr": 0.1,
+    "radius": 0.5,
+    "sparsity": 0.03,
+    "mode": "joint",
+    "family": "hard_argmax",
+    "commitment": 0.0,
+    "samples": 1
+  },
+  "rules": [
+    "Reproduction on original seeds43/44/45, not new confirmation tasks or seeds.",
+    "Preserve original numeric_lr.01, architecture_lr.1, four simultaneous codebooks,512 numeric soft warmup steps, temperature1 to.03, sparsity.03, late entropy.02.",
+    "Soft control calls the original unmodified train.search. All methods use the original soft-matrix normalization of the same codebook initialization.",
+    "Hard variants retain the original probabilities softmax(alpha / temperature) as the sampling law; unlike the previous sampling experiment, policy temperature also cools.",
+    "Hard Gumbel uses one/four independent complete indexators, each shared across the minibatch and all four numerical replicas. No soft mixture is used after warmup.",
+    "Hard argmax uses the original soft probabilities as STE surrogate. Gumbel uses softmax(log(P)+Gumbel) as surrogate, with no extra temperature parameter.",
+    "All hard variants store raw MAP one-hot for refit; no mass transfer changes the sampling law. The soft control keeps its original extraction implementation.",
+    "Support optimization only. Query selects numeric checkpoints; selection chooses snapshots after3000 C-fit steps. No settings are retuned.",
+    "Final fresh-C controls and the same new heldout input draw follow source freeze. One previously inspected teacher.",
+    "No software tests."
+  ],
+  "source_sha256": "205c827d2282d40dc4cdc75515312fac602685868425b372f8de631fc50bdbc5",
+  "snapshot_sha256": {
+    "sharing_report.py": "ae84aff28ab18e8ed5607f08613d1595d5c5b6ac756708135444aef620ff3bc5",
+    "model.py": "5f41e1148f47319aaa80d0e4af0f0020b3720f50378904b2bb36c2331858b1d7",
+    "run.py": "b442e331c683597ebbf716b8667e09c2105ed103f8431e314098852df3b42844",
+    "evaluate.py": "751bc600964193224eef04759440dee3fe615044c422f9a72bdc478d090aee7d",
+    "sharing_ablation.py": "da020ccd520c2e302ade7ff3bac0166881572e2ff0176663f7fff2e6b0ea1011",
+    "sampling_reproduction.py": "40c092b37b1ef2ece94ccbbf0551cc3a567eb9f3c031a21f35743ead8bc267e9",
+    "data.py": "4066efd516f165efdfcddb1e5bca7a0c1eb98caac48acc10e68b84cd7a5644c5",
+    "train.py": "f4db01e2a40fdfec79e0411ece62e87539d69710e3eb3fdb3565b41277d5231a"
+  }
+}

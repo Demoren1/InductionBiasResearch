@@ -1,0 +1,24 @@
+{
+  "registered_utc": "2026-11-04T03:32:56.042874+00:00",
+  "variants": {
+    "control": 5,
+    "pair_product": 5,
+    "value_variance": 5
+  },
+  "penalty_coefficients": [
+    0.01,
+    0.1,
+    1.0
+  ],
+  "rules": [
+    "Exactly [0,C1,C2,-C1,-C2], two unconstrained trainable code values plus shared b/a/d. No single-base-code experiment.",
+    "All models use identical initial P/C per search seed, same minibatches, numeric LR.03, alpha LR.01, sparsity0, annealed temperature1->.05 and late entropy.02. Only the new penalty differs.",
+    "Pair product is mean over88 positions of sum_k P(+Ck)P(-Ck). It suppresses a code and its own twin; mixtures across different base codes can still cancel.",
+    "Value variance is mean E[(v-E[v])^2] divided by mean(C1^2,C2^2), including v=0 and all signed values. Codebook values are detached in this penalty; only P gets its gradient. Normalization prevents an incentive to shrink all code values.",
+    "Both penalties have constant coefficients from the first architecture update. Numerical C updates still optimize support BCE and the unchanged L2 only.",
+    "Pilot seeds17/18/19, three penalty coefficients each; control has one zero-penalty setting. Mean hard selection BCE chooses one coefficient for each method, then confirm on20/21/22 with the same coefficient.",
+    "Four numerical replicas,512 numeric warmup,6000 joint steps, snapshots0/1500/3000/4500/6000; argmax I followed by4096 inherited-C steps. Query chooses numeric checkpoints; independent selection chooses architecture checkpoints/configuration/seed. No truth or test ranking.",
+    "Freeze the configuration winner and best individual source candidate before test. Fresh C controls use the same32 Gaussian starts and previous lr.03/norm.5; compare old fitting and64-step C/-C warmup with both branches charged to4096.",
+    "All previous task tests are known. This is an exploratory follow-up with new search seeds, not a new benchmark. No software tests, commits or publication."
+  ]
+}

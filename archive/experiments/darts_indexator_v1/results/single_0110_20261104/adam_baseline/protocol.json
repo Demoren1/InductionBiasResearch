@@ -1,0 +1,73 @@
+{
+  "registered_utc": "2026-11-04T01:46:05.560184+00:00",
+  "requested_by_user": "Compare SGD or Adam heatmaps; Adam chosen",
+  "posthoc_extension_after_main_test": true,
+  "main_architecture_sha256": "18b2d3d768ff0ae104c456cc419123cef148c98863177b843e5801911dcf7051",
+  "source_sha256": "cfbc9cb214c6fc5b7d44d155968ed2746099a62fa2e916f1dfa39b2b2266c21d",
+  "methods": [
+    "dense_shared",
+    "dense_full"
+  ],
+  "settings": [
+    {
+      "lr": 0.001,
+      "norm": 0.1
+    },
+    {
+      "lr": 0.001,
+      "norm": 0.3
+    },
+    {
+      "lr": 0.003,
+      "norm": 0.1
+    },
+    {
+      "lr": 0.003,
+      "norm": 0.3
+    },
+    {
+      "lr": 0.01,
+      "norm": 0.1
+    },
+    {
+      "lr": 0.01,
+      "norm": 0.3
+    },
+    {
+      "lr": 0.03,
+      "norm": 0.1
+    },
+    {
+      "lr": 0.03,
+      "norm": 0.3
+    }
+  ],
+  "calibration_restarts": 8,
+  "evaluation_restarts": 32,
+  "fit": {
+    "steps": 4096,
+    "batch": 128,
+    "checkpoint_every": 64,
+    "numeric_l2": 0.0001,
+    "gradient_clip": 10.0,
+    "fresh_learning_rates": [
+      0.01,
+      0.03,
+      0.1
+    ],
+    "fresh_initial_norms": [
+      0.5,
+      2.0
+    ],
+    "calibration_restarts": 8,
+    "evaluation_restarts": 32
+  },
+  "rules": [
+    "Only fixed Pattern 0110, original 768/256/512/512 observation partitions.",
+    "Dense shared-head control has 88 independent weights and the same shared bias/readout/output offset as DARTS: 91 functional parameters. Full MLP has per-hidden biases/readouts: 105 parameters.",
+    "Ordinary simultaneous Adam numeric updates, no architecture variables; same 4096 support updates, balanced BCE, L2 and clipping as fixed-I codebook fits.",
+    "Query chooses each checkpoint; average selection BCE over eight starts chooses rate/scale separately per method. Then 32 fresh starts, query chooses a single start. Test does not rank baseline settings or starts.",
+    "This comparison was requested after main-test inspection. Main DARTS indexator and settings remain frozen. No claim that the extension preceded the main results.",
+    "Hidden-column matching to true signed filters uses cosine similarity only for display after baseline selection; no thresholding, quantization, sign flipping or teacher-based model selection."
+  ]
+}

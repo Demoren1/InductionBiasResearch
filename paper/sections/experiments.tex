@@ -1,2 +1,161 @@
 \section{Experiments}
-TODO
+\label{sec:experiments}
+
+We evaluate transfer of structural constraints. A target task receives
+the selected indexator, or a competitor's native continuous basis;
+its codebook, hidden biases, output matrix and output offset are learned
+from fresh initialization. Source numerical values are never transferred
+in the primary comparison. All methods use the same fully connected
+ReLU architecture, with structure restricted to the first weight matrix.
+
+\subsection{Data and selection}
+
+Table~\ref{tab:benchmark-settings} lists the four benchmarks.
+The paired dictionary has $m$ independent values and $2m+1$ lookup
+symbols, including zero. The prescribed $m$ is available on synthetic
+data; no true weights, biases, mask, sharing groups, coordinate roles or
+noise levels enter learning. Real data have no reference neural-network
+indexator. Source structure-selection loss chooses a candidate within
+each fixed budget; separate development tasks select $m$ from the same
+registered grid for every method.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{lrrrrr}
+        \toprule
+        Benchmark & $D$ & $H$ & $m$ & Source tasks & Target tasks\\
+        \midrule
+        Pattern 0110 & 11 & 8 & 2 & $3\times16$ & $3\times8$\\
+        Synthetic DeepSets & 16 & 16 & 4 & $3\times16$ & $3\times8$\\
+        Aug-Omniglot & 784 & 16 & $8,16,32,64$ & 128 & 1000\\
+        Paired MNIST sums & 98 & 32 & $16,32,64,128$ & 16 & 32\\
+        \bottomrule
+    \end{tabular}
+    \caption{Network dimensions, independent code budgets and task counts.
+        Synthetic counts cover three independent data/numerical draws;
+        the same target tasks evaluate structures learned with clean and
+        noisy source observations.}
+    \label{tab:benchmark-settings}
+\end{table}
+
+\paragraph{Synthetic tasks.}
+Pattern tasks use a sliding 0110 detector and independent numerical
+values. Synthetic DeepSets tasks sum repeated local two-feature ReLU
+maps, with an unknown permutation of input coordinates. Hidden-unit
+orders are randomized. Each source supplies 4096 fitting examples,
+512 numerical-selection examples and 1024 separate structure-selection
+examples. Input scales $0.5,1,2,4$ are mixed during source fitting;
+evaluation inputs are standard Gaussian. Source noise standard
+deviations are $0$ and $0.1$. Target functions have independently drawn
+numerical values and clean observations. Their support sample is split
+into $N\in\{64,256,1024\}$ fitting and $N/4$ numerical-selection
+examples; 2048 further examples measure prediction error. A separate
+source pilot precedes the reported confirmation series.
+
+\paragraph{Aug-Omniglot.}
+We use inverted $28\times28$ Omniglot images~\cite{lake2015human},
+the standard 1028/172/423 base-character split and four virtual
+right-angle rotations. Episodes are 5-way 5-shot with 15 queries per
+class. Query-only random crops, horizontal/vertical flips and rotations
+follow the augmentation setting of MSR~\cite{zhou2021meta}.
+The fixed source cohort contains 128 episodes; source queries are
+divided into five numerical-selection and ten structure-selection
+examples per class. Another 128 episodes from development classes
+choose the code budget and a global numerical learning rate,
+initialization rule and update count, averaging two fresh restarts.
+Each test episode then fits only its 25 support observations.
+
+\paragraph{Paired MNIST sums.}
+This reduced multitask extension of the image-sum problem in
+Deep Sets~\cite{zaheer2017deep} uses two MNIST images per example,
+average-pooled to $7\times7$, flattened and subjected to one hidden
+coordinate permutation. A task assigns a fresh scalar value to each
+digit and predicts the sum of the two values. Source, development and
+target-support image pools partition the official training set into
+40k/10k/10k images; target queries use the official test set.
+Source fitting/numerical-selection/structure-selection sizes are
+4096/512/1024. Thirty-two development tasks choose the code budget and
+global numerical rule for a 512-example target support sample. This is a reduced,
+fixed-set-size extension, rather than the published variable-size
+InfiMNIST experiment; published scores are not matched comparisons.
+
+\subsection{Competitors and numerical controls}
+
+The categorical $A\varphi$ baseline follows Yeh
+et al.~\cite{yeh2022equivariance}: a shared row-softmax assignment matrix
+and task-specific numerical parameters are optimized through a
+support/numerical-selection implicit hypergradient. We report the
+native continuous basis and its MAP indexator separately.
+MSR-FC~\cite{zhou2021meta} uses an unrestricted shared $U\varphi$
+parameterization and full higher-order MAML, with learned numerical
+initialization and inner step sizes. Its primary transfer result keeps
+only $U$. LUT-Q~\cite{cardinaux2018iteratively} uses nearest-code forward
+weights, straight-through latent updates and one Lloyd update per
+minibatch. Its source indexators are retained directly. Competitors
+receive no additional clustering step. The signed dictionary and
+common fully connected task family are explicit adaptations of the
+original methods.
+An auxiliary native MSR control also transfers its learned numerical
+initialization and SGD rates and takes three inner steps. It is reported
+separately because it uses more source knowledge than structure alone.
+
+Every discrete bank and continuous basis receives a common numerical
+refitting budget before independent source structure selection.
+Fully connected Adam is included throughout. Synthetic evaluation also
+includes fully connected Adam followed by the same Gauss--Newton
+refinement used for structured models. Random-indexator controls
+shuffle the selected indexator's entries, retaining its observed
+connection and group counts without using the true mask.
+Learning rates, restarts and numerical checkpoints are selected using
+the designated development data; target query responses remain closed
+until predictors and predictions are frozen.
+
+The synthetic extractor is the unchanged G34 implementation.
+For images, code elimination reduces its weighted calibration system
+to a column-scale Schur system, preserving the projection objective.
+The finite real-data bank uses two dense anchors, direction dispersion
+among four fitted starts, four support proposals and 40 assignment
+iterations; only exact duplicate arrays are removed at large $m$.
+Real numerical fitting uses Adam. These implementation choices and
+their full search costs are recorded with the results.
+
+\subsection{Measurements}
+
+Parameter counts include every numerical coordinate fitted on one target
+task. For a structured first layer this is $m+H+HO+O$, and for Dense it
+is $DH+H+HO+O$, including hidden biases, the free output matrix and output
+offset. The fixed transferred indexator or basis contributes no target
+trainable parameters. These are model coordinates, not source-search
+parameters or the total across restarts. Mask controls count active
+weights; their optimizer's larger allocated tensor is recorded separately.
+
+Prediction error is measured on new tasks. Synthetic recovery is
+audited only after freezing predictions and is reported modulo code-pair
+renaming/sign changes and hidden-unit permutations. This is a specified
+symmetry test, not a decision procedure for all functional equivalences.
+Continuous competitors are not assigned a discrete recovery score.
+Uncertainty across synthetic cases is computed at the family level;
+tasks sharing an extracted structure are not treated as independent
+structure discoveries.
+
+Offline extraction/search and fresh target adaptation are measured
+separately on V100 32GB GPUs. We report synchronized stage wall time,
+per-process peak CUDA allocation and registered PyTorch-operator
+FLOPs. The operation count excludes NumPy/SciPy work and unsupported
+operators and therefore is incomplete. Target seconds per task are
+amortized throughput under packed execution, rather than single-task
+latency. Search includes all tried configurations and required dense
+preparation; unstructured target fitting requires no source extractor.
+Target measurements include adaptation and prediction on query inputs;
+peak allocation covers the whole packed process. They are not model
+storage sizes. The synthetic Adam-only clock stops before Gauss--Newton.
+
+\subsection{Results}
+
+\InputIfFileExists{tables/benchmark_transfer.tex}{}{%
+    \drafttodo{Held-out transfer measurements are running. Source-selection
+        losses must not be substituted for target results.}}
+\InputIfFileExists{tables/benchmark_parameters.tex}{}{}
+\InputIfFileExists{tables/benchmark_recovery.tex}{}{}
+\InputIfFileExists{sections/benchmark_findings.tex}{}{}

@@ -1,0 +1,28 @@
+{
+  "registered_utc": "2026-11-04T23:17:12.059616+00:00",
+  "specification": {
+    "inputs": 4,
+    "outputs": 2,
+    "codes": 2,
+    "train_tasks": 16,
+    "train_support": 4,
+    "train_query": 4,
+    "selection_tasks": 16,
+    "selection_support": 4,
+    "selection_query": 32,
+    "noise": 0.0,
+    "gradient_steps": 2400,
+    "checkpoint_every": 200,
+    "consensus_rounds": 80,
+    "test_tasks": 32,
+    "test_support": [
+      1,
+      4,
+      16
+    ],
+    "test_query": 128,
+    "independent_coefficient_tasks": true,
+    "hidden_permutations": true
+  },
+  "criterion": "Enumerate all canonical signed assignments with fixed zero and at most two groups. Fit numbers on selection-support and minimize mean selection-query. Tiny-model choices freeze before enumeration and teacher audit."
+}

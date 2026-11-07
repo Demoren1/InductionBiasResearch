@@ -1,0 +1,91 @@
+{
+  "inputs": {
+    "method": "query_edits",
+    "seed": 21,
+    "tasks": 4,
+    "rows": [
+      {}
+    ],
+    "observation_sha256": "3cdc135f7f4d66dcae2afd7737ada1e05037c8b89667a5d747fa485d9db25edb",
+    "meta_calibration_sha256": "4e33f960832dfef33ffbc64aa073e55e9c272eb1c2d1ec84b1128ec881c29a8a",
+    "warm_sha256": "a65351d2ae0a4132ed5e367a1760b9ae4cce0e9042539f5ce4a23e488719037b"
+  },
+  "completed_utc": "2026-11-05T00:51:28.382861+00:00",
+  "result_sha256": "b200dcbc1667bfe6ab29fe56a88206d637eacdf0c29c55c076457bf74ec028a5",
+  "code_sha256": {
+    "algorithms.py": "fc45491203ef3cd41992800e724e1004072ace35ceebf6b6a09caf7de559c0d4",
+    "diagnostics.py": "486f012e78647c4a8962a8b35b83463c84584d1355bd241482af72f57768c623",
+    "run.py": "ff1104bdb4fdfe9e5d00ce675413e69c75deed49a9d5f0f8b409e37adbd0b59e",
+    "__init__.py": "3a89bf284dbfed1d158e33d80a76b8426b1a89126dfcaf254ccb1bb02b64de1a",
+    "report.py": "ca6d5d00d39ab8e4cc9a55ae0117d6debf1095afd65a5bb8bee06a292ed9ad62"
+  },
+  "history": [
+    {
+      "step": 0,
+      "source_query_mse": [
+        0.2065210838307482
+      ],
+      "selection_mse": [
+        0.4065565300034887
+      ],
+      "best_selection_mse": [
+        0.4065565300034887
+      ],
+      "seconds": 0.004283888265490532
+    },
+    {
+      "step": 1,
+      "source_query_mse": [
+        0.1332964218969882
+      ],
+      "selection_mse": [
+        0.2891585160692076
+      ],
+      "best_selection_mse": [
+        0.2891585160692076
+      ],
+      "seconds": 0.020238714292645454
+    },
+    {
+      "step": 2,
+      "source_query_mse": [
+        0.09225184882473868
+      ],
+      "selection_mse": [
+        0.19751427732757812
+      ],
+      "best_selection_mse": [
+        0.19751427732757812
+      ],
+      "seconds": 0.030793970450758934
+    },
+    {
+      "step": 3,
+      "source_query_mse": [
+        0.05411496402852867
+      ],
+      "selection_mse": [
+        0.0760492466126316
+      ],
+      "best_selection_mse": [
+        0.0760492466126316
+      ],
+      "seconds": 0.04110860824584961
+    },
+    {
+      "step": 4,
+      "source_query_mse": [
+        0.010306829770333727
+      ],
+      "selection_mse": [
+        0.010551956862893308
+      ],
+      "best_selection_mse": [
+        0.010551956862893308
+      ],
+      "seconds": 0.05177078768610954
+    }
+  ],
+  "seconds": 0.05718164145946503,
+  "algorithm": "At each round enumerate all one-entry signed/zero edits anywhere in I, exactly fit independent source C_t on support and choose the lowest mean source-query loss. Validation selects the checkpoint, never the edit. Every edge and sharing group remains editable."
+}

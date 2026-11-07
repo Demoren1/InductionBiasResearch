@@ -1,0 +1,242 @@
+{
+  "seed": 2611055917,
+  "inputs": 16,
+  "outputs": 14,
+  "tasks": 128,
+  "codes": 3,
+  "source_root": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/contrast_pilot_g3",
+  "g4_root": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/competitor_pilot_g4",
+  "observations": [
+    8192,
+    131072
+  ],
+  "pilot_source_jobs": [
+    3,
+    9,
+    15,
+    21
+  ],
+  "lambdas": [
+    1e-05,
+    0.0001,
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0
+  ],
+  "solver": {
+    "maximum_steps": 4000,
+    "checkpoint_every": 100,
+    "tolerance": 1e-06,
+    "rho_shift": 1.0,
+    "adaptive_rho": true,
+    "over_relaxation": 1.5
+  },
+  "stage": "G13 additional paired evaluation on already-opened G4; not independent confirmation",
+  "registered_utc": "2026-11-05T06:27:43.952772+00:00",
+  "raw_control": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/joint_fusion_g12",
+  "raw_diagnosis_sha256": "48aa220584fb1d92402eff29f736b812aacfa97713775d6abd358499b1f97fac",
+  "weight_metrics": [
+    "raw_shrinking_floor",
+    "debiased",
+    "heat"
+  ],
+  "rows": {
+    "raw_shrinking_floor": [
+      {
+        "gamma": 1,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 2,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 4,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 8,
+        "zero_ratio": 0.1
+      }
+    ],
+    "debiased": [
+      {
+        "gamma": 1,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 2,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 4,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 8,
+        "zero_ratio": 0.1
+      }
+    ],
+    "heat": [
+      {
+        "gamma": 0,
+        "bandwidth": 0.1,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 0,
+        "bandwidth": 0.3,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 0,
+        "bandwidth": 1.0,
+        "zero_ratio": 0.1
+      },
+      {
+        "gamma": 0,
+        "bandwidth": 3.0,
+        "zero_ratio": 0.1
+      }
+    ]
+  },
+  "selection": "Separate source-only global row for each weighting method; each dataset chooses lambda/converged checkpoint from same seven-point path. Same observed source functions/validation as G12. Ratio fixed from earlier raw-CV winner. No true-I audit until all24 outputs frozen.",
+  "controls": "Raw old-floor power weights reuse complete frozen G12 results, no retraining. Raw shrinking floor isolates floor decay. Heat uses known Gaussian kernels, shared observed noise-scale bandwidth and finite log-weight cap[-30,30]. No priority claim for noise correction/convex clustering.",
+  "known": "Shape, exactlyK3 signed groups with fixedzero; no teacher mask/positions/group sizes/coefficients",
+  "theory_sha256": "be8f4cf3541829908a491bd81e12bfcf642ab7987bd8e692c5fefe00c096f1fb",
+  "code_sha256": {
+    "calibrated_fusion_pilot.py": "8022d76c0873fc8efd301c9a9d960c51de30d55cdfeb92f91880378d19538801",
+    "joint_fusion.py": "446678b1f953c80b808e0657ae53f04def3cac5dea4c606051f876d8f524d4a0",
+    "fusion_weights.py": "b84a6d18fdbe6ceff0298e352bdd425ad80a86840ebc6d15e158007718f7ac0b",
+    "competitor_models.py": "8e329200828790b7f41b7eb915ec91222b05168cf5a8cafc19374ba7944b9843",
+    "competitor_pilot.py": "c4775aa545824cdebfc7ccac3fbc4319bb32d94ee5a5240a39a6d97ced41b23d",
+    "gaussian_stats.py": "f43007df37813a29ac4e22e3ed6a1ab73ada00f3c8ff4efdc4fffb4e57a10bc3"
+  },
+  "checks": "No software tests; necessary scientific solver diagnostics/provenance and lint only.",
+  "jobs": [
+    {
+      "source_job": 3,
+      "n": 8192,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 3,
+      "n": 131072,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 9,
+      "n": 8192,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 9,
+      "n": 131072,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 15,
+      "n": 8192,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 15,
+      "n": 131072,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 21,
+      "n": 8192,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 21,
+      "n": 131072,
+      "weight_metric": "raw_shrinking_floor"
+    },
+    {
+      "source_job": 3,
+      "n": 8192,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 3,
+      "n": 131072,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 9,
+      "n": 8192,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 9,
+      "n": 131072,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 15,
+      "n": 8192,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 15,
+      "n": 131072,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 21,
+      "n": 8192,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 21,
+      "n": 131072,
+      "weight_metric": "debiased"
+    },
+    {
+      "source_job": 3,
+      "n": 8192,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 3,
+      "n": 131072,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 9,
+      "n": 8192,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 9,
+      "n": 131072,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 15,
+      "n": 8192,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 15,
+      "n": 131072,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 21,
+      "n": 8192,
+      "weight_metric": "heat"
+    },
+    {
+      "source_job": 21,
+      "n": 131072,
+      "weight_metric": "heat"
+    }
+  ],
+  "weight_metric": "raw_shrinking_floor",
+  "parent_pilot_frozen_sha256": "e5a9da7f7eaffef57ab1040f234a846ff4db167b8d383e4afd35e223f71f02db"
+}

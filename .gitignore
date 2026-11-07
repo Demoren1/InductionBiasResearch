@@ -3,6 +3,25 @@ __pycache__/
 .ruff_cache/
 .vscode/
 .ipynb_checkpoints/
+.agents/
+.codex/
+.aws/
+
+# Local observations, checkpoints and full execution records are not source.
+/experiments/**/results/
+/experiments/**/runs/
+/artifacts/local/
+*.npz
+*.npy
+*.pt
+*.pth
+*.pkl
+*.pickle
+
+# Explicitly curated, compact scientific evidence.
+!artifacts/benchmark_2026-11-07/**/*.npz
+!archive/experiments/**/*.summary.npz
+!archive/reports/**/*.npz
 
 # Regenerable LaTeX build artifacts; manuscript PDFs remain versioned.
 *.aux

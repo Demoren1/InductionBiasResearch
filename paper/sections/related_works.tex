@@ -1,2 +1,31 @@
 \section{Related Works}
-TODO
+
+Learning a shared hypothesis space from related tasks is a classical
+formulation of inductive-bias learning~\cite{baxter2000model}.
+For neural networks, structural constraints can express locality,
+equivariance and parameter sharing~\cite{ravanbakhsh2017equivariance}.
+Deep Sets~\cite{zaheer2017deep} provides a useful example of explicitly
+encoded invariance, whereas here the relevant connections and equality
+groups are not supplied to the learner.
+
+The closest structural competitors parameterize weights as a shared
+linear map applied to task-specific coefficients. Yeh
+et al.~\cite{yeh2022equivariance} learn an assignment matrix using a
+differentiable relaxation and an implicit hypergradient. MSR
+\cite{zhou2021meta} meta-learns a continuous reparameterization,
+together with numerical initialization and adaptation rates.
+We compare native continuous representations separately from hard
+indexators, and distinguish transfer of a structural constraint from
+transfer of learned numerical initial values.
+
+Weight tying and quantization also learn equality groups.
+Soft weight tying~\cite{nowlan1991adaptive}, trained quantization
+\cite{han2016deep}, LUT-Q~\cite{cardinaux2018iteratively} and
+weight-sharing regularization~\cite{shakerinava2024weight} establish
+that learning a dictionary and assignments is not itself new.
+Our experimental question is whether a common assignment extracted
+from several source solutions remains useful after replacing every
+task-specific numerical value. The proposed component is joint
+calibrated projection of aligned solutions, followed by functional
+comparison of a finite bank; the dictionary representation and the
+general principle of learning structure across tasks are prior art.

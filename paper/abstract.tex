@@ -1,5 +1,5 @@
-The connectivity structure of a neural network influences how well it generalizes from limited data, yet designing this structure often requires domain expertise.
-We propose a generative multi-task learning framework that learns a distribution over network structures from solutions to related tasks.
-Our central hypothesis is that structural regularities shared across these solutions provide an inductive bias that transfers to new tasks.
-We generate structures autoregressively, specifying both connectivity and weight sharing, and train their numerical parameters from scratch on each new task.
-Experiments on a synthetic signal-detection benchmark show that transferring these structures improves generalization over tuned fully connected baselines.
+The connectivity and parameter-sharing structure of a neural network influences how well it generalizes from limited data and how quickly its numerical parameters can be optimized.
+We study how related tasks can reveal structural constraints that remain useful when numerical parameters are learned afresh.
+We represent these constraints by an indexator specifying permitted connections and groups of shared weights, with task-specific values supplied by a trainable codebook.
+Our central hypothesis is that structures extracted from source tasks can improve prediction on new tasks and help numerical optimization reach low-error solutions with less training.
+We investigate when such constraints are identifiable, how they can be extracted jointly from task solutions, and how their transfer affects prediction and convergence under matched training budgets.

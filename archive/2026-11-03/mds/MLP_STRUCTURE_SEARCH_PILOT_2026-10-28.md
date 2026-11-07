@@ -1,7 +1,7 @@
 # Поиск структур MLP: случайный выбор и эволюция
 
 > Архивировано 3 ноября 2026. Предыдущий экспериментальный этап; его результаты и ограничения сохранены для справки.
-> [Рабочие материалы статьи](../../../mds/README.md) · [Навигация по архиву](../README.md).
+> [Рабочие материалы статьи](../../reports/worknotes/README.md) · [Навигация по архиву](../README.md).
 
 28 октября 2026. Сбор полных и частичных решений, извлечение структуры и проверка переноса.
 
@@ -114,7 +114,7 @@ Accuracy — доля правильных ответов. Средний recall
 (balanced accuracy) не позволяет выдать постоянное предсказание частого
 класса за решение: у такого предсказания показатель равен 50%.
 
-![Сравнение вариантов](../../../mds/assets/2026-10-28/mlp_structure_search/comparison.png)
+![Сравнение вариантов](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/comparison.png)
 
 Детали после длинного обучения выбранных структур:
 
@@ -129,12 +129,12 @@ Accuracy — доля правильных ответов. Средний recall
 Столбец «Частый класс» — доля более частого класса в той же итоговой выборке;
 это ориентир для оценки accuracy, а не отдельный алгоритм поиска.
 
-![Ход поиска](../../../mds/assets/2026-10-28/mlp_structure_search/search_progress.png)
+![Ход поиска](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/search_progress.png)
 
 На графике поиска показано среднее по четырём задачам для текущего кандидата,
 выбранного по минимальной проверочной BCE. Это проверочные, а не итоговые метрики.
 
-![Loss и recall при длинном внутреннем обучении](../../../mds/assets/2026-10-28/mlp_structure_search/inner_training.png)
+![Loss и recall при длинном внутреннем обучении](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/inner_training.png)
 
 Кривые усреднены по всем шести стартам каждой задачи, а не только по лучшим.
 Пунктир показывает среднюю обучающую BCE между отметками; сплошные линии —
@@ -164,9 +164,9 @@ Accuracy — доля правильных ответов. Средний recall
 групп не восстановлена полностью. Это частичная информация о структуре,
 а не готовое точное решение.
 
-![Частичная информация и перенос](../../../mds/assets/2026-10-28/mlp_structure_search/weak_information_transfer.png)
+![Частичная информация и перенос](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/weak_information_transfer.png)
 
-![Пересечение найденных и истинных групп](../../../mds/assets/2026-10-28/mlp_structure_search/weak_group_overlap.png)
+![Пересечение найденных и истинных групп](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/weak_group_overlap.png)
 
 Группировка заморожена до генерации новых задач. Проверили две отдельные
 задачи для выбора шага обучения и **восемь новых полных задач той же семьи**.
@@ -190,7 +190,7 @@ Accuracy — доля правильных ответов. Средний recall
 преимущество извлечённой структуры. Разности ошибок и предварительные
 парные bootstrap-интервалы сохранены рядом с таблицей.
 
-![Обучение на новых задачах](../../../mds/assets/2026-10-28/mlp_structure_search/weak_transfer_training.png)
+![Обучение на новых задачах](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/weak_transfer_training.png)
 
 **Итог: точность исходных решений не является обязательным условием
 извлечения структуры.** Здесь информация нашлась, но её пока недостаточно
@@ -215,12 +215,12 @@ Accuracy — доля правильных ответов. Средний recall
 ## Воспроизведение
 
 Код и протоколы: [experiments/mlp_logic_v1](../../../experiments/mlp_logic_v1).
-Исходные результаты поиска: [search_v1](../../../experiments/mlp_logic_v1/results/search_v1/summary.json),
-длинного обучения: [refit_v1](../../../experiments/mlp_logic_v1/results/refit_v1/summary.json).
+Исходные результаты поиска: [search_v1](../../experiments/mlp_logic_v1/results/search_v1/summary.json),
+длинного обучения: [refit_v1](../../experiments/mlp_logic_v1/results/refit_v1/summary.json).
 Сохранены все структуры, качества кандидатов, loss/recall, выбранные модели,
 дискретные индексы лучших вариантов и SHA256 замороженных исходников.
 Лучшие неуспешные кандидаты не называются успешным банком.
 Уточнение с частичными решениями и переносом:
-[weak_bank_v1](../../../experiments/mlp_logic_v1/results/weak_bank_v1/summary.json).
+[weak_bank_v1](../../experiments/mlp_logic_v1/results/weak_bank_v1/summary.json).
 Кривые предыдущего этапа:
-[калибровка плотных методов](../../../mds/assets/2026-10-28/mlp_structure_search/calibration_training.png).
+[калибровка плотных методов](../../reports/worknotes/assets/2026-10-28/mlp_structure_search/calibration_training.png).

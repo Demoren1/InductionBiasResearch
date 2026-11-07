@@ -1,0 +1,20 @@
+{
+  "registered_utc": "2026-11-04T03:12:14.996050+00:00",
+  "variants": {
+    "baseline": 3,
+    "paired": 5
+  },
+  "source_sha256": "cfbc9cb214c6fc5b7d44d155968ed2746099a62fa2e916f1dfa39b2b2266c21d",
+  "rules": [
+    "Only fixed Pattern0110, same 768/256/512/512 support/query/selection/test inputs as previous experiments. No single-base-code variant.",
+    "Both variants have two unconstrained trainable code values C1/C2 and shared b/a/d: five numerical parameters. Paired classes are exactly 0,C1,C2,-C1,-C2, not four independent numerical values.",
+    "Use identical initial C1<0<C2 across numerical replicas in both models, same numeric seeds, support minibatch streams, and generic zero prior .5. Alpha shapes differ, so initial effective weight matrices need not coincide. No sign constraints during optimization.",
+    "Joint support P/C learning, four numeric replicas,512 numeric warmup,6000 joint updates, snapshots0/1500/3000/4500/6000. Annealed softmax and entropy penalty as the previous tuned joint control.",
+    "Compare alpha LR .003/.01/.03 crossed with sparsity0/.01 at numeric LR.03. Pilot search seeds11/12/13, top2 configurations by mean hard selection BCE confirmed on14/15/16.",
+    "At each snapshot freeze raw argmax I; negative classes become signed integer labels. Continue all four inherited C for4096 steps with reset Adam moments. Query chooses numeric checkpoint, mean selection BCE chooses architecture checkpoint/configuration, then primary seed.",
+    "Also freeze the best individual source candidate across all pilot/confirmation checkpoints before test; do not substitute it for the main configuration winner.",
+    "Freeze both primary architectures and source selections before test. Compare inherited C,32 common unconstrained Gaussian fresh starts at previously selected lr.03/norm.5, and the previously source-selected64-step C/-C initialization. The4096 budget charges both warmup branches.",
+    "Truth is inaccessible to search/selection. Post-freeze I diagnostics allow column permutations and global group/sign symmetries; paired truth may use one opposite-sign pair or two independent groups. Record mask recovery separately.",
+    "This is exploratory research on a previously inspected task, not a new benchmark. No software tests, commits, publication, or deleted experiments restored."
+  ]
+}

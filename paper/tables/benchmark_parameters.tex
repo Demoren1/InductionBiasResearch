@@ -1,0 +1,17 @@
+\begin{table}[htbp]\centering\small
+\begin{tabular}{lrrrr}\toprule
+Method & Pattern & DeepSets & Omniglot & MNIST\\\midrule
+Dense & 105 & 306 & 12645 & 3201\\
+Random I & 19 & 54 & 165 & 193\\
+LUT-Q I & 19 & 54 & 109 & 193\\
+Yeh MAP I & 19 & 54 & 165 & 193\\
+Yeh soft & 19 & 54 & 165 & 193\\
+MSR-FC U & 19 & 54 & 165 & 193\\
+Ours & 19 & 54 & 165 & 193\\
+Ours + functional & -- & -- & -- & 193\\
+Our mask, free weights & -- & -- & -- & 692\\
+Random mask, free weights & -- & -- & -- & 692\\
+MSR + learned init & -- & -- & 109 & 97\\
+\bottomrule\end{tabular}
+\caption{Total numerical parameters fitted per target task, including hidden biases, the free output matrix and output offset. Dense Adam and Dense Adam plus GN have identical parameter counts. The fixed transferred structure is excluded. Mask controls count active weights; their current optimizer still allocates the full masked first-layer tensor (3201 coordinates on MNIST), distinguished in CSV. The native MSR row transfers learned initialization.}
+\label{tab:benchmark-parameters}\end{table}

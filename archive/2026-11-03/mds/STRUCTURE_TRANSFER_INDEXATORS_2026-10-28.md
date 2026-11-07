@@ -1,7 +1,7 @@
 # Индексаторы всех методов: примеры к отчёту от 28 октября 2026
 
 > Архивировано 3 ноября 2026. Предыдущий экспериментальный этап; его результаты и ограничения сохранены для справки.
-> [Рабочие материалы статьи](../../../mds/README.md) · [Навигация по архиву](../README.md).
+> [Рабочие материалы статьи](../../reports/worknotes/README.md) · [Навигация по архиву](../README.md).
 
 [Основной отчёт](STRUCTURE_TRANSFER_2026-10-28.md). Здесь собраны реальные структуры всех методов на одной заранее фиксированной новой задаче каждой серии. Нового обучения для этих рисунков не проводили.
 
@@ -9,7 +9,7 @@
 
 ## Синтетическая MLP: аналитический индексатор и все восемь методов
 
-![Индексаторы синтетической задачи](../../../mds/assets/2026-10-28/structure_transfer/synthetic_indexators.png)
+![Индексаторы синтетической задачи](../../reports/worknotes/assets/2026-10-28/structure_transfer/synthetic_indexators.png)
 
 Матрица индексатора имеет 64 строки и 32 столбца. Белый цвет — индекс 0; одинаковые цвет и оттенок — одно общее число кодбука. Эталон задаёт восемь повторяющихся блоков 8×4. Чтобы сравнить структуры, найденные группы сопоставлены истинным по наибольшему пересечению, затем одним общим переименованием согласованы восемь позиций внутри групп. Истинная структура используется только для этой диагностики после завершения обучения.
 
@@ -27,7 +27,7 @@
 | Плотный SGD с моментом | Плотные численные веса | — | 0.04238 |
 | Градиентный перенос | Плотные численные веса | — | 0.1264 |
 
-Номера входов здесь начинаются с 1. Порядок восьми входов существенен для общей нумерации кодбука; порядок самих групп не меняет функцию. Полные восемь групп каждого метода, исходные перестановки и выбранные старты сохранены в [structure_examples.json](../../../experiments/structure_search_v2/runs/structure_examples.json).
+Номера входов здесь начинаются с 1. Порядок восьми входов существенен для общей нумерации кодбука; порядок самих групп не меняет функцию. Полные восемь групп каждого метода, исходные перестановки и выбранные старты сохранены в [structure_examples.json](../../experiments/structure_search_v2/runs/structure_examples.json).
 
 ## Изображения: как читать рисунки
 
@@ -39,15 +39,15 @@
 
 ## MNIST: все 20 методов
 
-![Основные методы MNIST](../../../mds/assets/2026-10-28/structure_transfer/mnist_indexators_main.png)
+![Основные методы MNIST](../../reports/worknotes/assets/2026-10-28/structure_transfer/mnist_indexators_main.png)
 
-![Остальные методы MNIST](../../../mds/assets/2026-10-28/structure_transfer/mnist_indexators_controls.png)
+![Остальные методы MNIST](../../reports/worknotes/assets/2026-10-28/structure_transfer/mnist_indexators_controls.png)
 
 ## Fashion-MNIST: все 20 методов
 
-![Основные методы Fashion-MNIST](../../../mds/assets/2026-10-28/structure_transfer/fashionmnist_indexators_main.png)
+![Основные методы Fashion-MNIST](../../reports/worknotes/assets/2026-10-28/structure_transfer/fashionmnist_indexators_main.png)
 
-![Остальные методы Fashion-MNIST](../../../mds/assets/2026-10-28/structure_transfer/fashionmnist_indexators_controls.png)
+![Остальные методы Fashion-MNIST](../../reports/worknotes/assets/2026-10-28/structure_transfer/fashionmnist_indexators_controls.png)
 
 ## Численные результаты показанного примера
 
@@ -76,7 +76,7 @@
 | Вся найденная группа | 158/165 входов | 98.34% | 195/195 входов | 99.80% |
 | Правильные входы заданы | 196/196 входов | 98.34% | 196/196 входов | 100.00% |
 
-Полные списки входов и выбранные состояния всех методов: [structure_examples.json](../../../experiments/structure_search_v2/runs/structure_examples.json). Аналитические маски, матрицы индексаторов, исходные перестановки и карты весов: [structure_examples.npz](../../../experiments/structure_search_v2/runs/structure_examples.npz). Исходные численные веса каждого показанного состояния находятся в соответствующем NPZ метода в каталогах итоговых запусков.
+Полные списки входов и выбранные состояния всех методов: [structure_examples.json](../../experiments/structure_search_v2/runs/structure_examples.json). Аналитические маски, матрицы индексаторов, исходные перестановки и карты весов: [structure_examples.npz](../../experiments/structure_search_v2/runs/structure_examples.summary.npz). Исходные численные веса каждого показанного состояния находятся в соответствующем NPZ метода в каталогах итоговых запусков.
 
 Рисунки воспроизводятся командой:
 

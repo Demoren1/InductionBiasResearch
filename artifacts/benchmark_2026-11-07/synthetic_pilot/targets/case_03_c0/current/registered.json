@@ -1,0 +1,23 @@
+{
+  "code_sha256": "f5041bcc24bb721e0dea00872f69931975dd52787482f57cb262ac0629c8eb1b",
+  "adapter_sha256": "624dea1fb2e47d0c23d312402a1c733c6fa9ea2503420e495bab7a638046f86c",
+  "numeric_sha256": "0e9256c93db0b18f84168a743769a13c99f88695ddd6b1160b5751ed570e34b6",
+  "input_sha256": {
+    "structures.npz": "25ce6765d1f37c37b36c1519d79813d76b274203917ab1572397542b74c55456",
+    "support.npz": "0b1321cdafebcaa0e1980796e0f11307c302047de394e73536ddcd049385f5cc",
+    "selection.npz": "cc42389dd3a5d27661cf7a8e80ff9f84bdb26cc08b86b51ec67e48788dcd73f0",
+    "query_x.npz": "189b41442816bd92398340954c2e30b69a015852b0f5c852483d9e8ee9144032"
+  },
+  "budgets": [
+    64,
+    256,
+    1024
+  ],
+  "adam_steps": 2000,
+  "restarts": 18,
+  "gauss_newton_starts": 4,
+  "gauss_newton_steps": 48,
+  "initialization": "Fresh random codebook/bias/readout/offset; bias activity quantiles from target support inputs only",
+  "numerical_selection": "Target support/4 additional observations select numeric checkpoints; query responses never opened",
+  "dense_controls": "Dense Adam checkpoint and Adam+same GN refinement both saved"
+}

@@ -1,0 +1,42 @@
+{
+  "registered_utc": "2026-11-04T22:03:45.555341+00:00",
+  "parent": "/home/udeneev-av/InductionBiasResearch/experiments/darts_structured_tasks_v1/results/20261105/sine_consensus",
+  "source_frequency": 6,
+  "source_choice": {
+    "row": 19,
+    "selection_mse": 0.49327710270881653,
+    "configuration": 4,
+    "family": "sine_consensus",
+    "radius": 0.5,
+    "rho_final": 100.0,
+    "nonzero_penalty": 0.0,
+    "dual_step": 0.25,
+    "numeric_lr": 0.01,
+    "latent_lr": 0.01,
+    "mode": "joint",
+    "seed": 404,
+    "search_step": 12000,
+    "root": 1,
+    "snapshot": 3
+  },
+  "source_frozen_sha256": "0a00cde52f9f3b888174d2a32eb08f8ff86b17e2e08c8e1da8b14eaf5154f619",
+  "fixed_structure_sha256": "ef4b22d5a4b3d93eacdb59a7454d60e9430f8db23efa5ff209f5318874bb1097",
+  "frequencies": [
+    4,
+    6,
+    8
+  ],
+  "calibration_seed": 701,
+  "fresh_seed": 702,
+  "calibration_restarts": 32,
+  "fresh_restarts": 32,
+  "heldout_seed_offset": 21100000,
+  "rules": [
+    "Transfer exactly one raw I chosen by the previous f=6 source-validation search. Do not search, relabel, recluster, shuffle or edit I for any target.",
+    "Keep the original direction and both amplitudes; change only the high teacher frequency. f=6 is a fresh-numerics source control, f=4/8 are frequency transfer. Reuse original support/query/selection observations. New test observations are generated after all numerical choices freeze.",
+    "Transfer no C, amplitude or optimizer states. Use the existing fit function: fresh Gaussian three-code starts normalized to each radius, amplitude initially1, then train C and amplitude. The student remains one sine, no phase/offset; dictionary is [0,C1,C2,C3,-C1,-C2,-C3].",
+    "Calibrate12settings (radius .5/2/6/8, Adam rate .003/.01/.03) with32starts each and3000updates. Query selects a checkpoint per start and a start per setting; independent selection loss selects the setting. This best-of-starts deployment rule is registered before target fitting, and differs from the previous mean8 calibration rule.",
+    "At the selected setting train32new starts with independent seed702. Query chooses the reported checkpoint/start; also report all-start means and near-floor counts. Freeze every frequency's choices before opening teacher directions or computing population/test/capacity metrics.",
+    "Reused dense/oracle32start source controls, if shown, are contextual: identical observations/functions and step budget, but their original calibration used mean8 and seed502. Do not claim equal total search budgets or paired fresh seeds."
+  ]
+}

@@ -16,25 +16,21 @@ Learning groups of similar weights has also been studied through soft weight tyi
 
 More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
 \citet{baxter2000model} provides a theoretical framework for learning a shared hypothesis space across tasks, with generalization bounds for new tasks from the same environment under suitable capacity and sampling assumptions.
-Our focus is on transferring connectivity and weight-sharing constraints extracted from trained solutions, with numerical values learned from scratch for each new task.
+Our focus is on discovering connectivity and weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
 
-In this paper, we present a generative multi-task learning framework that learns a distribution over network structures from solutions to related tasks.
+In this paper, we study multi-task structure learning through the extraction of shared constraints from solutions to related tasks.
 We represent a structure by an indexator that specifies which connections are present and which weights share a numerical value.
-The corresponding codebook contains the trainable values.
-We retain candidate structures according to their validation performance after training a fresh codebook on source tasks.
+The corresponding codebook contains the task-specific trainable values, while all remaining numerical parameters can adapt freely to each task.
+We assess candidate structures by their validation performance after fresh numerical training on source tasks, and examine whether the selected constraints remain useful on held-out tasks.
 
-Our central hypothesis is that structural regularities shared across source solutions provide an inductive bias that transfers to new tasks.
-We model these regularities with an autoregressive distribution over indexators, using MADE \cite{germain2015made}.
-On a new task, the frozen generator proposes structures, whose numerical parameters are trained from scratch and whose performance is assessed on query data.
+Our central hypothesis is that structural regularities shared across source solutions can improve both generalization and the progress of numerical optimization on related tasks.
+Once a structure has been selected, its connectivity and sharing constraints are held fixed while its codebook and remaining numerical parameters are initialized and learned anew on each target task.
+This allows us to assess prediction quality at a fixed training budget and the amount of training needed to reach a prescribed error level.
+The cost of extracting a structure from source tasks is reported separately from the cost of learning numerical parameters on target tasks.
 
-On a synthetic benchmark adapted from Dynamic Signal Distribution \cite{lahoti2024locality}, the extracted structures improve generalization over tuned fully connected models and the same connectivity mask without weight sharing.
-Simple frequency-based proposals achieve similar accuracy to the autoregressive model.
-A real-image control using input-selection masks shows no advantage over tuned dense baselines.
-
-Our main contributions are as follows:
+Our contributions are as follows:
 \begin{itemize}
-    \item We establish sufficient conditions under which structural search finds low-error solutions that dense gradient-based optimization is unlikely to reach within a fixed number of steps.
-    \item A multi-task framework for transferring connectivity and weight-sharing constraints while learning new numerical parameters.
-    \item A procedure for extracting, validating, and autoregressively generating indexators from source solutions.
-    \item An empirical evaluation of structural recovery and transfer, including simple structural baselines and a real-image control.
+    \item We investigate the identifiability of common connectivity and parameter-sharing constraints across related tasks, accounting for task-specific numerical parameters and functional equivalences. (in progress)
+    \item We study methods for extracting transferable indexators by combining structural information from source-task solutions. (in progress)
+    \item We evaluate the effect of extracted structures on prediction quality and numerical convergence on new tasks after fresh parameter initialization, comparing with baselines under common data and numerical adaptation protocols. (in progress)
 \end{itemize}

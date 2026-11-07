@@ -1,0 +1,33 @@
+{
+  "created_utc": "2026-11-07T04:02:36.795258+00:00",
+  "dataset": "Aug-Omniglot, fixed-cohort fully connected comparison",
+  "literature": "https://arxiv.org/pdf/2007.02933",
+  "class_split": "Standard Vinyals 1028/172/423 base classes; four 90-degree virtual classes per base character",
+  "inputs": 784,
+  "hidden": 16,
+  "outputs": 5,
+  "independent_code_grid": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "loss": "cross_entropy",
+  "source_tasks": 128,
+  "validation_tasks": 128,
+  "target_tasks": 1000,
+  "ways": 5,
+  "shots": 5,
+  "queries_per_class": 15,
+  "source_query_partition": {
+    "numerical_per_class": 5,
+    "structure_per_class": 10
+  },
+  "query_only_augmentation": "Resize28, RandomResizedCrop28(scale .8..1), VFlip .5, HFlip .5, Rotation±30 bilinear",
+  "pixel_encoding": "Inverted grayscale uint8; learners divide by255, no pretrained encoder",
+  "comparison_scope": "Same fixed source episode cohort for all rerun methods. Published MSR CNN/init-transfer results are separate context, not matched FC/structure-only numbers.",
+  "target_policy": "Fresh numerical parameters; support only. Target queries stay private until all selected models/predictions are frozen.",
+  "unique_information": "Source cohort size and class coverage differ from the author's 60000-episode-update experiment and must be disclosed.",
+  "code_sha256": "b72820dafb584c7862b94df5d0a2b7ea8c82a34a8c510f4890c9bef43646b382",
+  "public_sha256": "fe24c8d8c2f280902b38d2cb2f43ec70db66f45c6fe85168f78107ba9868550c"
+}

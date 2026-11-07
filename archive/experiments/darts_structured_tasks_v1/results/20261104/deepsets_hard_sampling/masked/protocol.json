@@ -1,0 +1,122 @@
+{
+  "seed": 261104731,
+  "output": "experiments/darts_structured_tasks_v1/results/20261104",
+  "deepsets": {
+    "points": 8,
+    "features": 2,
+    "point_hidden": 2,
+    "codes": 4,
+    "support": 1024,
+    "query": 512,
+    "selection": 2048,
+    "test": 8192,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      1.5
+    ],
+    "sparsity": [
+      0.0,
+      0.003
+    ]
+  },
+  "sine": {
+    "inputs": 24,
+    "hidden": 1,
+    "codes": 3,
+    "frequencies": [
+      4.0,
+      6.0,
+      8.0
+    ],
+    "low_frequency": 0.7,
+    "low_amplitude": 0.4,
+    "support": 16384,
+    "query": 4096,
+    "selection": 8192,
+    "test": 16384,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      2.0,
+      6.0,
+      8.0
+    ],
+    "sparsity": [
+      0.0
+    ]
+  },
+  "search": {
+    "pilot_seeds": [
+      201,
+      202
+    ],
+    "confirmation_seeds": [
+      203,
+      204,
+      205
+    ],
+    "pilot_steps": 12000,
+    "confirmation_steps": 12000,
+    "snapshots": [
+      0,
+      0.3333333333,
+      0.6666666667,
+      1.0
+    ],
+    "restarts": 1,
+    "batch": 128,
+    "numeric_warmup": 0,
+    "initial_logit_std": 1.0,
+    "zero_probability": 0.1111111111111111,
+    "minimum_temperature": 0.03,
+    "late_entropy": 0.02,
+    "gradient_clip": 10.0,
+    "alpha_clip": 5.0,
+    "numeric_l2": 1e-05,
+    "checkpoint_every": 250,
+    "top_configurations": 6
+  },
+  "fit": {
+    "steps": 3000,
+    "batch": 128,
+    "checkpoint_every": 125,
+    "restarts": 4,
+    "fresh_restarts": 32,
+    "gradient_clip": 10.0,
+    "numeric_l2": 1e-05
+  },
+  "rules": [
+    "Doubled dictionary means exactly [0,C1,...,Cm,-C1,...,-Cm], with m independent numerical codes. Signs are not constrained during learning.",
+    "Search receives only flattened support/query observations, generic layer dimensions and code counts. No true grouping, coordinate roles, teacher parameters, edge counts or analytic assignments enter initialization, search or candidate selection.",
+    "Synthetic DeepSets is a diagnostic of actual sharing discovery, separate from the historical MNIST/FashionMNIST point-cloud pilot with a prescribed architecture. Its input coordinates are secretly permuted once, hiding point boundaries.",
+    "The DeepSets student is an unrestricted dense one-hidden-layer ReLU network with a shared scalar hidden bias, scalar sum readout and output offset. Its true pointwise connections are not supplied. The sum is divided by sqrt(hidden width) for all methods.",
+    "The sine target is 0.4*sin(0.7*v.x)+sin(f*v.x), with the same unknown three-group direction for f=4,6,8. Student has one sine unit with trainable amplitude, no phase or offset. Its nonzero approximation floor is reported explicitly.",
+    "Primary search jointly learns P and four numerical replicas on support minibatches. A first-order alternating support-C/query-P control is included. Query used for architecture updates is not called independent validation.",
+    "At registered snapshots move cancelling mass of each C/-C pair into zero, then argmax and freeze I. This preserves the soft matrix before discretization and introduces no teacher information.",
+    "Refit inherited numerical values with reset optimizer moments; query alone chooses numerical checkpoints. Mean independent selection loss over all four replicas chooses architecture snapshot and configuration. Confirm the top two configurations on three new seeds, then select by mean confirmation selection loss.",
+    "Calibrate dense Adam, momentum SGD, ordinary SGD, and exact-I numerical controls independently on the same support/query/selection splits. Record parameters, seeds, full source selection costs and update counts; do not claim equal FLOPs or equal total search costs.",
+    "Freeze all selected structures, numerical states and settings before creating test observations or consulting teacher agreement. Fresh-codebook evaluations and invariance diagnostics are separate from inherited-codebook results.",
+    "Use native Adam equations for batched independent optimizers, eps outside sqrt. Never aggregate gradients across independent replicas. Keep source snapshots, metrics and heatmaps; avoid large raw checkpoint dumps.",
+    "No software tests, commits, pushes, publication or restoration of previously deleted experiments."
+  ],
+  "sharing_heldout_offset": 7400000
+}

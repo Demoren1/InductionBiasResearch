@@ -1,0 +1,102 @@
+{
+  "seed": 261104011,
+  "output": "/home/udeneev-av/InductionBiasResearch/experiments/darts_indexator_v1/results/single_0110_20261104/signed_codebook_20261104/regularization/value_variance",
+  "pattern": "0110",
+  "source_patterns": [
+    "0110"
+  ],
+  "codes": 2,
+  "classes": 5,
+  "support": 768,
+  "query": 256,
+  "selection": 512,
+  "search": {
+    "numeric_learning_rates": [
+      0.03
+    ],
+    "architecture_learning_rates": [
+      0.01
+    ],
+    "schedules": [
+      "annealed"
+    ],
+    "sparsity_penalties": [
+      0.0
+    ],
+    "pilot_seeds": [
+      17,
+      18,
+      19
+    ],
+    "pilot_steps": 6000,
+    "pilot_snapshots": [
+      0,
+      1500,
+      3000,
+      4500,
+      6000
+    ],
+    "confirmation_seeds": [
+      20,
+      21,
+      22
+    ],
+    "confirmation_top_configs": 1,
+    "confirmation_orders": [
+      "first"
+    ],
+    "confirmation_steps": 6000,
+    "confirmation_snapshots": [
+      0,
+      1500,
+      3000,
+      4500,
+      6000
+    ],
+    "numeric_restarts": 4,
+    "numeric_warmup": 512,
+    "numeric_steps_per_outer": 1,
+    "batch": 128,
+    "initial_codebook_norm": 2.0,
+    "ordered_signed_initialization": true,
+    "initial_logit_std": 0.5,
+    "initial_zero_probability": 0.5,
+    "minimum_temperature": 0.05,
+    "late_entropy_penalty": 0.02,
+    "numeric_l2": 0.0001,
+    "numeric_gradient_clip": 10.0,
+    "architecture_gradient_clip": 5.0,
+    "checkpoint_every": 100,
+    "update_mode": "joint_support",
+    "paired_batch_streams": true,
+    "pair_penalties": [
+      0.0
+    ],
+    "variance_penalties": [
+      0.01,
+      0.1,
+      1.0
+    ]
+  },
+  "fit": {
+    "steps": 4096,
+    "batch": 128,
+    "checkpoint_every": 64,
+    "numeric_l2": 0.0001,
+    "gradient_clip": 10.0,
+    "fresh_learning_rates": [
+      0.01,
+      0.03,
+      0.1
+    ],
+    "fresh_initial_norms": [
+      0.5,
+      2.0
+    ],
+    "calibration_restarts": 8,
+    "evaluation_restarts": 32
+  },
+  "rules": [
+    "See ../registration.json for this paired regularizer ablation."
+  ]
+}

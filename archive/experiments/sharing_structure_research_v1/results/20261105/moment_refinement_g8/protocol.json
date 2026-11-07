@@ -1,0 +1,61 @@
+{
+  "stage": "G8 numerical diagnosis on opened G6/G7 fresh-C geometries; not matched-total-data competitive confirmation",
+  "registered_utc": "2026-11-05T04:33:40.257450+00:00",
+  "parent": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/parity_moments_g7",
+  "parent_protocol_sha256": "c040cfb3b0b976870bfe7ea454f2a77f89902b95399ca948622540c2fa08b42b",
+  "seed": 2611056817,
+  "data_seed_offset": 4000000,
+  "families": [
+    8401,
+    8402,
+    8403,
+    8404
+  ],
+  "function": "fresh_gaussian_codes",
+  "points": 8,
+  "features": 2,
+  "point_hidden": 2,
+  "codes": 4,
+  "inputs": 16,
+  "hidden": 16,
+  "bias": 0.15,
+  "amplitude": 1.0,
+  "noise": [
+    0.0,
+    0.2
+  ],
+  "initializations": [
+    "cold",
+    "moment_pairs8388608",
+    "moment_pairs67108864",
+    "moment_pairs536870912"
+  ],
+  "source": 262144,
+  "readout_support": 8192,
+  "validation": 8192,
+  "steps": 6000,
+  "batch": 1024,
+  "checkpoint_every": 200,
+  "rates": [
+    0.0003,
+    0.001,
+    0.003
+  ],
+  "seeds": [
+    31,
+    32,
+    33
+  ],
+  "warm_relative_jitter": [
+    0.0,
+    0.01,
+    0.05
+  ],
+  "rate_rule": "Same initial RMS(weight) scaling per row, cosine cooldown to0.01 of initial rate. Three relative rates x three restarts per initialization/noise.",
+  "gauge": "Bias fixed to1 by positive homogeneity; all256 weights free. Amplitude>=0 and offset solved by observed linear least squares each minibatch, with envelope gradient. Numeric teacher bias/amplitude not supplied to optimizer.",
+  "selection": "Same independent noisy validation MSE selects numeric checkpoint and restart. At validation, amplitude/offset fitted on separate observed readout-support split. No true I and no hard-I validation used. Scalar DP applied afterwards, explicitly a postprocessing control.",
+  "data": "New fixed IID Gaussian source/refinement inputs independent of moment stage. Cold and warm receive identical refinement observations and optimizer. Warm additionally consumed stated G7 label budget; this diagnosis is not an equal-total-label benchmark. No teacher autograd, no mask fixed.",
+  "theory_sha256": "89da68312500d4a2032ad9c4b2c488b412088d1718baa1cf1a0bf921cd344731",
+  "code_sha256": "165275fd8aa84af9232a427d259dbada9ebb89cc534dc0eee6d0888260f516e1",
+  "checks": "No software tests; scientific objective guards, necessary lint and numerical diagnostics only."
+}

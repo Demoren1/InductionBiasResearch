@@ -1,0 +1,51 @@
+{
+  "stage": "G33 exploratory removal of teacher priors",
+  "registered_utc": "2026-11-06T19:59:31.593590+00:00",
+  "seed": 26110633041,
+  "sources": 4,
+  "cases": [
+    {
+      "name": "pattern_0110",
+      "kind": "pattern",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "deepsets",
+      "kind": "sets",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "general_random",
+      "kind": "synthetic",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 1
+    }
+  ],
+  "private_noise_conditions": [
+    0.0,
+    0.2
+  ],
+  "learner_allowlist": [
+    "inputs",
+    "hidden",
+    "codes",
+    "outputs"
+  ],
+  "learner_interface": "Only sizes and independent repeated output observations. No b, sigma, teacher I/C/W2, roles, edges, coefficient range or generation seed.",
+  "bias_model": "Separate learned bias per hidden neuron and output offsets. No common-b constraint in learner.",
+  "observation_precision": "Gaussian observation means are simulated exactly in distribution; every constituent repeat is counted. Noise estimate uses32 independent raw repeats at32 random inputs.",
+  "selection": "Exploratory pilot; truth is used only after saved learner output, never by blind_relu. Freeze a new independent cohort after modifying the method.",
+  "resource_policy": "CPU for small linear algebra and output queries; GPU2 only if packed nonlinear fits are justified. Never GPU6/7; do not touch foreign jobs.",
+  "code_sha256": {
+    "blind_relu.py": "bd9482458b2da9a5b74507e0c1c3f57ab16a6d43684229c15fbd14698708f245",
+    "blind_study.py": "c71a9d3658b731ca4b3b3d2c98522bf7edc3bfa10acda34ff44087b370f641db"
+  }
+}

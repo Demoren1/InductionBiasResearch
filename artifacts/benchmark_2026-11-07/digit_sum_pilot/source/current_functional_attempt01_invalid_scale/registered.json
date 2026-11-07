@@ -1,0 +1,18 @@
+{
+  "code_sha256": "b026c3cfa731d0f710c621465e90e3bda9b9abbc02b179072fde2ac837af86da",
+  "base_model_sha256": "ac106c9fb6d89739ff865a26294a2e50e1d106118000b08a63364215f2f3f9f3",
+  "trigger": "Paired development MNIST error is11.1% above Dense, worse29/32tasks. No target query responses opened.",
+  "codes": 128,
+  "numeric_rates": [
+    0.0003,
+    0.001,
+    0.003,
+    0.01
+  ],
+  "outer_steps": 400,
+  "numeric_steps_per_outer": 20,
+  "structure_score": "Sum over source tasks of g*delta+.5*diag(GGN)*delta^2; all labels including zero permitted",
+  "acceptance": "True source H0 functional loss decreases at fixed numbers; try at most64/32/16/8/4/2/1 entries then16 exact single-edge alternatives",
+  "selection": "H0-diverse trajectory proposals plus unchanged baseline; identical common source numerical refitting and source M selection follow in separate jobs",
+  "ground_truth": "No true parameters, masks, groups or coordinate roles; only learned source models and observations"
+}

@@ -1,0 +1,3427 @@
+{
+  "stage": "G24 opened diagnosis: bootstrap gauge, fresh independent noisy prefix panels, common counts",
+  "registered_utc": "2026-11-05T16:55:40.305209+00:00",
+  "seed": 26110523017,
+  "diagnostic_parent": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/count_exchanges_g22",
+  "parent_summary_sha256": "62c8aa72cc95146f8f53eaa5d289c12090f997c68ece81b522df7a21bbda6dff",
+  "families": [
+    {
+      "family": 9901,
+      "variant": "local"
+    },
+    {
+      "family": 9902,
+      "variant": "local"
+    },
+    {
+      "family": 9911,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 9912,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 9921,
+      "variant": "random"
+    },
+    {
+      "family": 9922,
+      "variant": "random"
+    }
+  ],
+  "inputs": 16,
+  "hidden": 16,
+  "codes": 4,
+  "sources": 4,
+  "targets": 8,
+  "bias": 0.15,
+  "noise": [
+    0.2,
+    2.0
+  ],
+  "axis_points": 1025,
+  "axis_min": 0.001,
+  "axis_max": 1024.0,
+  "axis_repeats": 4194304,
+  "slice_repeats": 4096,
+  "axis_code_min": 0.0001,
+  "axis_code_max": 16.0,
+  "axis_starts": 7,
+  "axis_solver_evaluations": 400,
+  "dp_chunk": 16,
+  "slice_points": 2048,
+  "prefix_validation": 512,
+  "slice_scales": [
+    0.05,
+    0.2,
+    0.8,
+    3.2,
+    12.8,
+    51.2
+  ],
+  "fit_validation": 2048,
+  "meta_points": 2048,
+  "rank_relative": 1e-12,
+  "qp_gap_absolute": 1e-08,
+  "qp_primal_tolerance": 1e-07,
+  "active_iterations": 1000,
+  "active_zero_tolerance": 1e-12,
+  "active_direction_tolerance": 1e-12,
+  "integer_moves": 4096,
+  "integer_decrease": 1e-12,
+  "exchange_iterations": 512,
+  "composition_chunk": 16384,
+  "code_refit_steps": 12,
+  "code_ridge_relative": 1e-10,
+  "code_line_search": 16,
+  "prefix_settings": [
+    "unit",
+    "unit_refit",
+    "parent_pair",
+    "parent_pair_refit"
+  ],
+  "methods": [
+    "bootstrap",
+    "axis_single_refit",
+    "bootstrap_single_fixed",
+    "bootstrap_single_refit",
+    "bootstrap_joint_fixed",
+    "bootstrap_joint_refit"
+  ],
+  "native_settings": {
+    "lc": [
+      {
+        "mu_initial": 1e-06,
+        "loss_weights": "physical"
+      },
+      {
+        "mu_initial": 1e-06,
+        "loss_weights": "uniform"
+      },
+      {
+        "mu_initial": 0.0001,
+        "loss_weights": "physical"
+      },
+      {
+        "mu_initial": 0.0001,
+        "loss_weights": "uniform"
+      }
+    ],
+    "dense_dp": [
+      {
+        "ridge": 1e-10,
+        "loss_weights": "physical"
+      },
+      {
+        "ridge": 1e-10,
+        "loss_weights": "uniform"
+      },
+      {
+        "ridge": 0.0001,
+        "loss_weights": "physical"
+      },
+      {
+        "ridge": 0.0001,
+        "loss_weights": "uniform"
+      }
+    ],
+    "lutq": [
+      {
+        "lr": 0.003,
+        "loss_weights": "physical"
+      },
+      {
+        "lr": 0.003,
+        "loss_weights": "uniform"
+      },
+      {
+        "lr": 0.01,
+        "loss_weights": "physical"
+      },
+      {
+        "lr": 0.01,
+        "loss_weights": "uniform"
+      }
+    ],
+    "yeh": [
+      {
+        "lr": 0.01,
+        "loss_weights": "physical",
+        "nuclear": 0.0
+      },
+      {
+        "lr": 0.01,
+        "loss_weights": "physical",
+        "nuclear": 0.001
+      },
+      {
+        "lr": 0.01,
+        "loss_weights": "uniform",
+        "nuclear": 0.0
+      },
+      {
+        "lr": 0.01,
+        "loss_weights": "uniform",
+        "nuclear": 0.001
+      },
+      {
+        "lr": 0.03,
+        "loss_weights": "physical",
+        "nuclear": 0.0
+      },
+      {
+        "lr": 0.03,
+        "loss_weights": "physical",
+        "nuclear": 0.001
+      },
+      {
+        "lr": 0.03,
+        "loss_weights": "uniform",
+        "nuclear": 0.0
+      },
+      {
+        "lr": 0.03,
+        "loss_weights": "uniform",
+        "nuclear": 0.001
+      }
+    ]
+  },
+  "native_restarts": 3,
+  "native_stages": 24,
+  "native_l_steps": 6,
+  "native_warmup_stages": 4,
+  "gradient_warmup_solves": 24,
+  "gradient_steps": 5000,
+  "gradient_checkpoint": 250,
+  "gradient_batch": 1024,
+  "minimum_temperature": 0.05,
+  "categorical_entropy": 0.001,
+  "numeric_chunk": 4096,
+  "numeric_code_steps": 24,
+  "source_polish_steps": 12,
+  "numeric_ridge": 1e-10,
+  "numeric_line_search": 16,
+  "bank_per_source": 4,
+  "meta_alpha": 0.05,
+  "target_support": 4096,
+  "target_validation": 1024,
+  "target_test": 8192,
+  "target_repeats": 64,
+  "known": "Only D/H/K, commonb.15,readout1/sqrt(H),offset0 and observed panels. No teacherI/C/roles/activecount/groupmatching to extractors or selection. I common to4independentGaussianC. Fresh target C signed, no numeric transfer.",
+  "observations": "Frozen observedmeans only; source and metaY in separate NPZ. IdenticalX across4tasks, independenttasknoise; pairedunitnoises across2sigma. Allsource/query panels cost rphysical labels. No teacherautograd queries. Allmethods receive samepanels; extra competitorHPO compute disclosed.",
+  "selection": "Native/checkpoint numericalC-polish selects on fit-validation; top4uniquecanonicalI/source/method. Pool4source banks; reset everyC and fit32freshsignedstarts/source/I using train and fit-validation only. Freeze allcandidatepredictors before openingmetaY; selectonecommonI/method on newmeta. Wholecohortfreeze beforeteacherI. Common outerprotocol for allmethods; source1ablation separate.",
+  "adaptation": "LC properdual and exactscalarDP, 24of144data-onlywarmup; denseGN explicitextraDP readout; LUTQ nativeLloyd/nearest+STE; Yeh-style categoricalMAP entropy/nuclear. Objective-level signed/known-bias adaptations, not unchangedauthorscripts. SamefixedI numericalpolish never changesnativeI.",
+  "transfer": "AfterselectedIfreeze,8newtargetC/I, fixedI and32freshsignedstarts, support4096/r64 and independentnumericvalidation1024/r64. Test8192cleanfunctionMSE auditaftertargetfitfreeze. TrueI adaptation oracle separate. No previousC orW; exactcanonicalI reusedfits onlywithmatchingdatahash.",
+  "limits": "Sixnewgeometries pilot,2perclass; not sufficientfinalconfirmation. Knowncommonbias/readout, Gaussiannoise, costlyactivequeries. Hypothesis selection/blockoptimization notnew. Independentconfirmation/freebias/readout/misspecifiednoise/priority and competitor superiority still required.",
+  "theory_sha256": "99dfc51b56a32532b4356768fbbeb168b923712bdd12659df715c7a1ed631dd0",
+  "code_sha256": {
+    "joint_prefix_search.py": "0c537eda6965dce69d223872dea75ba65002be54a420659fa3616d3a0c1815ef",
+    "joint_prefix_benchmark.py": "9169eb224d51226da87457275fc83ed1b6ee7e0e2232f8b48c42633095456b5a",
+    "joint_prefix_pipeline.py": "42a67a63fadca4d28bfc806b46ad4307526b4c936641f2bdb432aeffc3b2d166",
+    "joint_prefix_performance.py": "4a6aaa2d6ad957aa2031cd96668fdc48c902bd75c2c9c051d8189351d7645017",
+    "joint_prefix_report.py": "7e354c9766dc5910c57690c4a487c2ddda43b47a6da99a30509ebd2d601ecd71",
+    "count_projection.py": "346a8db2604f4e4e1e49610578b57d0e4e7e8dc3f5c2ca534651f40df7b8e5c9",
+    "count_qp_active.py": "f785fe3b92898cc5b787d80a3a66f66abf26348205732d9b379fe348d92eace3",
+    "count_exchanges.py": "28e62eb3635295a5e534c5dc2c15dd7fe4b2880f4a157848acbedeb8db5c2172",
+    "prefix_census.py": "3cbff158458e1b33aef8bc61a612bbf24706e138693b9b4e6719313743fb4a30",
+    "shared_structure_numeric.py": "850579fe4176e443da87b0e7d8d40c1f5420fa73dcfa8af7b6185fdde77598d0",
+    "shared_structure_numeric_batch.py": "fa58317e25086c9cf23f3e171dd1a4c71053615e8bdfcec2aafe299caad11546",
+    "shared_structure_data.py": "5b498459b4d59d57f610a537990ffadd47676e199b41f8cd2b8c040a7fdd2ca2",
+    "shared_structure_common.py": "e287255bcdeb11b2d3980f045dab2a914d5505682900f85039779af66d062d74",
+    "shared_structure_pipeline.py": "6464d98594f81dfeadc61b1267f9cd2cb1e0dbadc75814abd710e902ee17037a",
+    "functional_observability.py": "507c33282c97739f9fd1999b908e28540e49215f61e14254c4b3df9afff5c673"
+  },
+  "projection_sha256": "645044bb76d99b323c56849a3167f890acdb04e57b3c582f5c68ac3019ac681c",
+  "extract_jobs": [
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 0,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 1,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 2,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 3,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 4,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 0.2,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "none"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "axis_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        0
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        1
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        2
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_fixed",
+      "tasks": [
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        0
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        1
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        2
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_single_refit",
+      "tasks": [
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_joint_fixed",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": false,
+      "solver": "parent_pair"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "unit"
+    },
+    {
+      "family_id": 5,
+      "noise": 2.0,
+      "method": "bootstrap_joint_refit",
+      "tasks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "refit": true,
+      "solver": "parent_pair"
+    }
+  ],
+  "parent": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/shared_structure_g23",
+  "query_seed": 26110524017,
+  "minimum_gpu_search_speedup": 2.0,
+  "opened_geometries": true,
+  "parent_protocol_sha256": "f1c7f00403471b64fe3932a714134cf98cab16afd03dd1cce63087cf86dd5c59",
+  "parent_fit_freeze_sha256": "c744143b43e78a12e28c19cc62f86ed65a569fdfee98dca0a59287a3df92422b",
+  "bootstrap_policy": "Lowest mean old H among prefix-bank candidates; no old meta selection or teacher I/C. Freeze I/C before fresh query noise. New prefix search starts from empty and permits every0/±K connection/group.",
+  "numeric_policy": "Original source train objective; final4C reset32signedstarts/GN24 with new GaussianH. Wholepredictorfreeze before freshmeta; wholeIselectionfreeze before lateaudit. Joint/frozen bootstrap have no source1 assessment.",
+  "performance_policy": "Paired whole-census CPU/GPU timings per tasks/refit/solver and legacy-axis control on case9, prewarmed composition cache/context. GPU only with at least2x whole-census speedup and discrete/numeric parity; otherwise CPU reference. Only free GPU0--3; never6/7. Diagnostic results are not bank candidates."
+}

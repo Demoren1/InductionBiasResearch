@@ -1,0 +1,39 @@
+{
+  "inputs": {
+    "method": "query_edits",
+    "seed": 43,
+    "tasks": 4,
+    "rows": [
+      {}
+    ],
+    "observation_sha256": "74f45aa27a8b65dc520f1f36ffa68ccbd8c5e749db9f2ef5f8386a7c0eba722f",
+    "warm_sha256": "6508d01cc2be5fe3dc447a6b0441d99e0e260a2f8c580af4416ad5a5c912326e"
+  },
+  "completed_utc": "2026-11-05T00:58:38.957265+00:00",
+  "result_sha256": "7be0b749f2721da846a7e1bf7f3314d00e8715d64c97d07de742d5014b00e292",
+  "code_sha256": {
+    "algorithms.py": "e1f09c6b53b75c8bd293f96b060fda21d1f390a04d887e580ee7171e032564ca",
+    "diagnostics.py": "aa8feafbf0bee1215cb33c9969372352ad5af7f42f494f761da05211edd9301c",
+    "run.py": "7860bfb95a08e9f099362a425dbe47e10c8defff54e74a6b9b6027774b715207",
+    "illustrate.py": "94d4ee13a5dedb39b254ae741937ed8014eb59595e81eac59992090aa784b530",
+    "__init__.py": "3a89bf284dbfed1d158e33d80a76b8426b1a89126dfcaf254ccb1bb02b64de1a",
+    "report.py": "ca1fae355bcc032a1d4652b530cada6a96fffbe1209bbe7fe3b1da3a096630d5"
+  },
+  "history": [
+    {
+      "step": 0,
+      "source_query_mse": [
+        0.010765605101622321
+      ],
+      "selection_mse": [
+        0.010516386283163887
+      ],
+      "best_selection_mse": [
+        0.010516386283163887
+      ],
+      "seconds": 0.003396265208721161
+    }
+  ],
+  "seconds": 0.008801620453596115,
+  "algorithm": "At each round enumerate all one-entry signed/zero edits anywhere in I, exactly fit independent source C_t on support and choose the lowest mean source-query loss. Validation selects the checkpoint, never the edit. Every edge and sharing group remains editable."
+}

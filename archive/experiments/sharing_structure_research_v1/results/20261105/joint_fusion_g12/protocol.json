@@ -1,0 +1,126 @@
+{
+  "seed": 2611055917,
+  "inputs": 16,
+  "outputs": 14,
+  "tasks": 128,
+  "codes": 3,
+  "stage": "G12 strong known joint/adaptive fusion control; pilot only",
+  "registered_utc": "2026-11-05T06:04:34.817097+00:00",
+  "g4_root": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/competitor_pilot_g4",
+  "source_root": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/contrast_pilot_g3",
+  "pilot_source_jobs": [
+    3,
+    9,
+    15,
+    21
+  ],
+  "observations": [
+    8192,
+    131072
+  ],
+  "lambdas": [
+    1e-05,
+    0.0001,
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0
+  ],
+  "rows": [
+    {
+      "gamma": 0,
+      "zero_ratio": 0.1
+    },
+    {
+      "gamma": 0,
+      "zero_ratio": 1.0
+    },
+    {
+      "gamma": 1,
+      "zero_ratio": 0.1
+    },
+    {
+      "gamma": 1,
+      "zero_ratio": 1.0
+    },
+    {
+      "gamma": 2,
+      "zero_ratio": 0.1
+    },
+    {
+      "gamma": 2,
+      "zero_ratio": 1.0
+    },
+    {
+      "gamma": 4,
+      "zero_ratio": 0.1
+    },
+    {
+      "gamma": 4,
+      "zero_ratio": 1.0
+    },
+    {
+      "gamma": 8,
+      "zero_ratio": 0.1
+    },
+    {
+      "gamma": 8,
+      "zero_ratio": 1.0
+    }
+  ],
+  "solver": {
+    "maximum_steps": 4000,
+    "checkpoint_every": 100,
+    "tolerance": 1e-06,
+    "rho_shift": 1.0,
+    "adaptive_rho": true,
+    "over_relaxation": 1.5
+  },
+  "objective": "Joint vector PACS adaptation with full per-function sample curvature; exact norm proximal steps on zero/sum/difference profile constraints. Fixed observed OLS adaptive weights, no teacher I/mask/group sizes.",
+  "selection": "Choose one global gamma/zero-ratio by mean pilot validation MSE; each pilot/source dataset chooses its own lambda and converged checkpoint using the same32 independent full-C support4/query128 functions as G4. No teacher score. This is standard dataset-wise regularization selection, not one potentially inappropriate lambda across data budgets.",
+  "readout": "Native exact-zero proximal constraints; signed zero-anchor graph, sign cycles force zero. Eligible only if normalized primal/dual residual and feasible relative primal-dual objective gap<=1e-6, native nonzero groups<=knownK. No k-means, tolerance-clustering or teacher mask. Refitting C under the active equality constraints is explicit solver polishing and uses new support in validation.",
+  "scope": "Known PACS/convex-clustering objective-level multi-task adaptation; no novelty claimed, no automatic scalar-PACS oracle theorem. Further evaluation on already-opened G4 cases is an extra control, not new independent confirmation.",
+  "theory_sha256": "abf0a26da1dc020cbb354c4502e4134c989b00770f1d188f0aff5ebd3c0b5368",
+  "code_sha256": {
+    "joint_fusion.py": "52c1fbfeb0433b72fb730bd26ad9c50f14b5a841118ae5f29eec7db9f2f691f8",
+    "joint_fusion_pilot.py": "0aa66ff0ba44fb49b8eb74df7f1d4d6689275e3ed22c9ed7323244b438b1f2a4",
+    "competitor_models.py": "8e329200828790b7f41b7eb915ec91222b05168cf5a8cafc19374ba7944b9843",
+    "competitor_pilot.py": "c4775aa545824cdebfc7ccac3fbc4319bb32d94ee5a5240a39a6d97ced41b23d"
+  },
+  "checks": "No software tests. Scientific solver/provenance diagnostics and minimum lint only.",
+  "jobs": [
+    {
+      "source_job": 3,
+      "n": 8192
+    },
+    {
+      "source_job": 3,
+      "n": 131072
+    },
+    {
+      "source_job": 9,
+      "n": 8192
+    },
+    {
+      "source_job": 9,
+      "n": 131072
+    },
+    {
+      "source_job": 15,
+      "n": 8192
+    },
+    {
+      "source_job": 15,
+      "n": 131072
+    },
+    {
+      "source_job": 21,
+      "n": 8192
+    },
+    {
+      "source_job": 21,
+      "n": 131072
+    }
+  ]
+}

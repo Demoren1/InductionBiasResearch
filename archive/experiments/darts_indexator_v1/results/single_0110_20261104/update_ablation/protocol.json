@@ -1,0 +1,48 @@
+{
+  "registered_utc": "2026-11-04T01:53:05.824317+00:00",
+  "user_request": "Ablate alternating versus joint codebook and indexator training",
+  "posthoc_after_main_test": true,
+  "modes": {
+    "alternate3": {
+      "update_mode": "alternating",
+      "numeric_steps_per_outer": 3,
+      "label": "Alternate 3:1"
+    },
+    "alternate1": {
+      "update_mode": "alternating",
+      "numeric_steps_per_outer": 1,
+      "label": "Alternate 1:1"
+    },
+    "synchronous_split": {
+      "update_mode": "synchronous_split",
+      "numeric_steps_per_outer": 1,
+      "label": "Synchronous: two losses"
+    },
+    "joint_support": {
+      "update_mode": "joint_support",
+      "numeric_steps_per_outer": 1,
+      "label": "Joint: support loss"
+    }
+  },
+  "search_seeds": [
+    5,
+    6,
+    7
+  ],
+  "fixed_configuration_ids": [
+    10,
+    11
+  ],
+  "source_sha256": "cfbc9cb214c6fc5b7d44d155968ed2746099a62fa2e916f1dfa39b2b2266c21d",
+  "main_frozen_sha256": "18b2d3d768ff0ae104c456cc419123cef148c98863177b843e5801911dcf7051",
+  "rules": [
+    "Original fixed Pattern 0110, three indices C0=0/C1/C2, same 11x8 ReLU model and five numerical parameters, four ongoing numerical replicas.",
+    "Use the two main-search selected rate/annealing/sparsity configurations: numeric_lr=.03, alpha_lr=.03, annealed, sparsity=0/.01. No further tuning based on ablation test or true structure.",
+    "Three new paired search seeds. Identical alpha/C initialization and 512 numeric warmup. Every outer step draws the same three support batches and independent query batch in every mode. Modes with one numeric update use the first support batch and discard the other two.",
+    "Alternate3 applies three support C steps then a query P step; alternate1 one support C step then a query P step. Synchronous split calculates both partial gradients at the same old state (C on support, P on query), then applies both Adam updates.",
+    "Joint support calculates C and P gradients of the same support loss at the same old state and applies both updates. Query supplies no architecture gradient in this mode. Same P entropy/sparsity and C L2 penalties; no sign/order constraints after initialization.",
+    "All modes have 6000 P updates; alternate3 has 18000 C updates plus warmup, other modes 6000 plus warmup. This explicitly ablates the ratio, not an equal numeric-update budget. Runtime and update counts are saved.",
+    "At the same five saved checkpoints take argmax and continue inherited C for 4096 steps. Query chooses numeric checkpoints; average selection BCE over four C picks per-seed checkpoints. Average over three search seeds chooses configuration separately per mode; primary seed by selection BCE.",
+    "Freeze all mode winners before ablation test evaluation. Report all three search seeds per mode, with 32 fresh C starts and the already-frozen main numeric setting. Test and true structural agreement do not rank candidates."
+  ]
+}

@@ -1,0 +1,745 @@
+{
+  "stage": "G11 prospective independent-core codebooks; exact linear Gaussian, not final nonlinear competition",
+  "registered_utc": "2026-11-05T05:41:57.150200+00:00",
+  "seed": 26110511019,
+  "families": [
+    8701,
+    8702,
+    8703,
+    8704,
+    8705,
+    8706
+  ],
+  "coefficient_seeds": [
+    21,
+    22,
+    23
+  ],
+  "inputs": 16,
+  "outputs": 16,
+  "codes": 4,
+  "tasks": 1,
+  "observations": [
+    512,
+    2048,
+    8192,
+    32768,
+    131072,
+    524288,
+    2097152,
+    8388608
+  ],
+  "regimes": [
+    "isotropic",
+    "axis_condition400",
+    "rotated_condition400"
+  ],
+  "noise": [
+    0.2,
+    1.0
+  ],
+  "alpha": 0.05,
+  "methods": [
+    "scalar_dp",
+    "marginal_information_dp",
+    "diagonal_hessian_dp",
+    "zero_t_then_information_dp",
+    "point_single_linkage",
+    "same_interval_graph",
+    "full_pair_f_graph",
+    "global_interval_certificate",
+    "witness_codebook",
+    "mean_core_codebook",
+    "nonzero_gls_codebook",
+    "full_gls_core_codebook"
+  ],
+  "teacher_only": {
+    "nonzero_group_sizes": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "codes": "Sorted Uniform(.4,1.8), hidden from all methods; no known mask/group sizes"
+  },
+  "known": "Matrix shape, exactly K=4 nonempty signed groups, fixed zero; no teacher numeric state or assignments",
+  "data": "Two independent nested halves with exact sampled Gaussian sufficient statistics. Each comparison uses the same total n. All-data controls pool both halves. Core methods learn S from A only, codebooks/contrasts from independent B only.",
+  "alpha_scope": "Per method/run across8 looks. Core methods allocate alpha/(2*looks) to simultaneous A intervals and alpha/(2*looks) to B contrasts; all-data controls alpha/looks. No simultaneous benchmark-wide or inter-method guarantee.",
+  "selection": "No HPO; all budgets prespecified. No teacher audit or target observations before whole cohort freeze. Abstentions count as failures.",
+  "transfer": {
+    "tasks": 100,
+    "support": [
+      1,
+      4,
+      16,
+      64
+    ],
+    "noise": 0.1,
+    "evaluate_at": [
+      8192,
+      32768,
+      131072
+    ],
+    "policy": "Fresh independent Gaussian C; fix I, fit all C from new support, discard source numeric values. Clean population MSE=sumWeightSquaredError/outputs."
+  },
+  "theory_sha256": "ff169a49d7fdc4080de9a08132d9e98f462b916954db2eb013d9a9baa9958a9d",
+  "code_sha256": {
+    "core_pilot.py": "5aa7d499c1dccccbdbfa3de2a4b601e926b868ed775f0c27c04b55a859921979",
+    "core_codebook.py": "f521e9b66e3a8c1e98a92945fc38964fdc4e02e4ba6457bfb59392b98b6e53d4",
+    "interval_indexator.py": "a5078c0ff372d7211af2bfe92ba73aee872c1fa7d725a7d208f5ca6f81d49c6c",
+    "interval_pilot.py": "4efde6acf7f1fa9c410af871933430713056d3fb76cded1c0dda531268ae1d07",
+    "gaussian_stats.py": "f43007df37813a29ac4e22e3ed6a1ab73ada00f3c8ff4efdc4fffb4e57a10bc3",
+    "contrasts.py": "63fb8ceecc89f1dbddedf264f264bc399044b086810229a1b0b2c9e110e3236c"
+  },
+  "checks": "No software tests; scientific invariants, provenance checks and necessary lint only",
+  "jobs": [
+    {
+      "family": 8701,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8701,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8702,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8703,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8704,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8705,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 21,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 21,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 21,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 22,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 22,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 22,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 23,
+      "regime": "isotropic",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 23,
+      "regime": "axis_condition400",
+      "noise": 1.0
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 0.2
+    },
+    {
+      "family": 8706,
+      "coefficient_seed": 23,
+      "regime": "rotated_condition400",
+      "noise": 1.0
+    }
+  ]
+}

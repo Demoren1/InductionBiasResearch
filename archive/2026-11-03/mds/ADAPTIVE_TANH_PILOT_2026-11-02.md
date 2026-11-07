@@ -1,7 +1,7 @@
 # Адаптивные индексаторы: GPU-пилот на tanh
 
 > Архивировано 3 ноября 2026. Ветка выбора и изменения групп; в текущей постановке paper индексатор фиксирован в каждой численной попытке.
-> [Рабочие материалы статьи](../../../mds/README.md) · [Навигация по архиву](../README.md).
+> [Рабочие материалы статьи](../../reports/worknotes/README.md) · [Навигация по архиву](../README.md).
 
 2 ноября 2026. **Выбор разбиений по градиенту полезен при неточных равенствах весов, но автоматическое усложнение по фиксированному расписанию ухудшает точную структуру.** Проверены два банка для калибровки и три независимых новых банка для оценки.
 
@@ -65,17 +65,17 @@ Tesla V100, CUDA float32. Завершившийся запуск после и�
 
 Выбранные rates: `{"fixed_raw": 0.01, "fixed_normalized": 0.16, "adaptive": 0.16, "random_matched": 0.16, "dense_sgd": 0.003, "dense_adam": 0.003}`.
 
-[Код и протокол](../../../experiments/adaptive_tanh_v1/README.md), [результаты](../../../experiments/adaptive_tanh_v1/results/pilot_v1/summary.csv), [парные разности](../../../experiments/adaptive_tanh_v1/results/pilot_v1/paired_splits.csv). Сохранены модели всех стартов и фаз, решения split, кривые и хеши. Тесты не добавлялись и не запускались.
+[Код и протокол](../../experiments/adaptive_tanh_v1/README.md), [результаты](../../experiments/adaptive_tanh_v1/results/pilot_v1/summary.csv), [парные разности](../../experiments/adaptive_tanh_v1/results/pilot_v1/paired_splits.csv). Сохранены модели всех стартов и фаз, решения split, кривые и хеши. Тесты не добавлялись и не запускались.
 
-![Отложенная ошибка](../../../mds/assets/2026-11-02/adaptive_tanh/comparison.png)
+![Отложенная ошибка](../../reports/worknotes/assets/2026-11-02/adaptive_tanh/comparison.png)
 
-![Train и validation loss](../../../mds/assets/2026-11-02/adaptive_tanh/loss_curves.png)
+![Train и validation loss](../../reports/worknotes/assets/2026-11-02/adaptive_tanh/loss_curves.png)
 
-![Число групп и конфликт градиентов](../../../mds/assets/2026-11-02/adaptive_tanh/mechanism.png)
+![Число групп и конфликт градиентов](../../reports/worknotes/assets/2026-11-02/adaptive_tanh/mechanism.png)
 
-![Вспомогательный positive-sign recall](../../../mds/assets/2026-11-02/adaptive_tanh/recall_curves.png)
+![Вспомогательный positive-sign recall](../../reports/worknotes/assets/2026-11-02/adaptive_tanh/recall_curves.png)
 
-![Обучение исходных сетей](../../../mds/assets/2026-11-02/adaptive_tanh/source_loss.png)
+![Обучение исходных сетей](../../reports/worknotes/assets/2026-11-02/adaptive_tanh/source_loss.png)
 
 Recall здесь — доля правильно предсказанных положительных знаков среди положительных меток; это вспомогательная диагностика регрессии.
 

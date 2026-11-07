@@ -1,0 +1,124 @@
+{
+  "version": "sharing_benchmark_v1",
+  "seed": 2611051907,
+  "codes": 3,
+  "proposal_anchors": 8,
+  "candidates_per_method": 12,
+  "methods": [
+    "bank_dp",
+    "bank_dp_late",
+    "bank_dp_64",
+    "bank_dp_long",
+    "joint_constant",
+    "joint_late",
+    "bank_query_edits"
+  ],
+  "pilot_families": [
+    1001,
+    1002
+  ],
+  "confirmation_families": [
+    1101,
+    1102,
+    1103,
+    1104,
+    1105,
+    1106
+  ],
+  "confirmation_seeds": [
+    31,
+    32,
+    33
+  ],
+  "pilot_seeds": [
+    21,
+    22
+  ],
+  "hidden": {
+    "inputs": 16,
+    "outputs": 14,
+    "codes": 3,
+    "train_tasks": 64,
+    "train_support": 4,
+    "train_query": 4,
+    "selection_tasks": 24,
+    "selection_support": 4,
+    "selection_query": 64,
+    "noise": 0.1,
+    "gradient_steps": 2400,
+    "checkpoint_every": 200,
+    "consensus_rounds": 80,
+    "test_tasks": 100,
+    "test_support": [
+      1,
+      4,
+      16
+    ],
+    "test_query": 256,
+    "independent_coefficient_tasks": true,
+    "hidden_permutations": true
+  },
+  "native": {
+    "inputs": 70,
+    "outputs": 68,
+    "codes": 3,
+    "train_tasks": 400,
+    "train_support": 10,
+    "train_query": 10,
+    "selection_tasks": 64,
+    "selection_support": 1,
+    "selection_query": 19,
+    "noise": 0,
+    "gradient_steps": 1000,
+    "checkpoint_every": 100,
+    "consensus_rounds": 80,
+    "test_tasks": 100,
+    "test_support": [
+      1,
+      4,
+      16
+    ],
+    "test_query": 256,
+    "hidden_permutations": false
+  },
+  "selection": {
+    "primary": "Mean query MSE on independent coefficient-selection tasks after exact minimum-norm least-squares adaptation; no teacher or test access.",
+    "proposal_choice": "Within each configuration choose one common hard-I from source proposal anchors/checkpoints by mean exact-refit source query MSE. The selected common-I receives independent coefficient-selection score.",
+    "hpo": "Select one configuration per method using pilot-family/seed mean best selection MSE. Freeze before new confirmation families. Fixed configuration evaluated for all confirmation family/seed pairs.",
+    "confirmation": "Checkpoint and common-I still selected using local independent coefficient-selection tasks. No search hyperparameters revised using confirmation, teacher or test.",
+    "source_data": "All methods receive identical source tasks/observations. Hard-I algorithms build eight source-function proposals and choose a common I using the whole source cohort; MSR/MTSR learn a common U directly. Both data use and different computation are disclosed.",
+    "numeric_reset": "Primary transfer discards every source numeric code/filter/optimizer state and analytically fits fresh target numbers. Also report native MSR nine-step adaptation from its learned initialization separately.",
+    "truth": "Only shape and three-code budget enter learning. No mask, grouping, kernel positions, active count, permutation or code values.",
+    "constraints": "Hard-I variants use fixed zero and three freely fitted values with tied negatives; LC/LUT-Q/Yeh adaptations to this dictionary and common-I bank are explicit. MSR/MTSR retain their native real-valued U and three latent dimensions, without argmax.",
+    "scope": "Native rank1 reproduces author data-generating distribution and dimensions, not archived data/seeds. Hidden16 is a new matched extension. WS-CNN/images and nonlinear DeepSets belong to later benchmark stages.",
+    "tests": "No software tests or commits. Only required scientific runs, numerical guards and one lint/format pass per code change."
+  },
+  "diagnostic_plan": {
+    "previous": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_benchmark_v1/results/20261105/convolution_competitors",
+    "retrospective_families": [
+      201,
+      202,
+      203,
+      204,
+      205,
+      206
+    ],
+    "diagnostics": [
+      "All per-step original proposals, exact-I discovery versus selection, oracle insertion into selector.",
+      "Initial sparsity, code usage, source rank, Euclidean projection objective against teacher projection.",
+      "Oracle initialization is a retrospective diagnostic only and never enters prospective search."
+    ],
+    "prospective": "New seed, new pilot and six new confirmation geometries. Twelve configurations per searched variant, independent coefficient validation only. Teacher/test closed until all prospective models freeze.",
+    "single_changes": {
+      "bank_dp": "Original scalar DP, 8 proposals, 80 rounds.",
+      "bank_dp_late": "Only delay nonzero charge: zero through 30%, linear ramp to full charge by 70%.",
+      "bank_dp_64": "Only proposal anchors 8→64, using the same source observations.",
+      "bank_dp_long": "Only rounds 80→320.",
+      "joint_constant": "Shared hard I with independent C_t for all 64 functions inside every consensus round; local vector projector, constant charge.",
+      "joint_late": "Joint constant variant with the same delayed-charge policy.",
+      "bank_query_edits": "Refine bank_dp I by up to 64 exact one-entry edits chosen by source-query after fresh exact support-fit C_t. All positions/zero/groups editable. Validation only selects checkpoint. No extra tuned hyperparameters."
+    },
+    "projector_scope": "Multitask vector projection is local, not scalar exact DP. No known mask/count/labels or prelearned MSR/Yeh basis. It runs inside training, not as postprocessing of a competitor.",
+    "checks": "No software tests; scientific diagnostics, numerical guards and minimal lint/figure inspection only."
+  }
+}

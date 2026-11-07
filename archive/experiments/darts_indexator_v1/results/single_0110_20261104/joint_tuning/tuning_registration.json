@@ -1,0 +1,23 @@
+{
+  "registered_utc": "2026-11-04T02:03:30.223210+00:00",
+  "posthoc_after_initial_ablation_test": true,
+  "reason": "Joint support had the lowest mean source hard-validation BCE (.2447); late soft validation loss increased. Compare lower alpha rates and confirm on new search seeds.",
+  "numeric_lr": 0.03,
+  "alpha_rates": [
+    0.003,
+    0.01,
+    0.03
+  ],
+  "sparsity_penalties": [
+    0.0,
+    0.01
+  ],
+  "schedule": "annealed",
+  "selection": "Same query numeric checkpoint and mean hard+fine-tuned-C selection BCE; no test or true-indexator ranking.",
+  "fresh_confirmation_search_seeds": [
+    8,
+    9,
+    10
+  ],
+  "reused_high_rate_search": "/home/udeneev-av/InductionBiasResearch/experiments/darts_indexator_v1/results/single_0110_20261104/update_ablation/joint_support/pilot/search/shard_0"
+}

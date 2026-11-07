@@ -1,0 +1,15 @@
+{
+  "registered_utc": "2026-11-04T03:50:37.072291+00:00",
+  "source": "/home/udeneev-av/InductionBiasResearch/experiments/darts_indexator_v1/results/single_0110_20261104/signed_codebook_20261104/regularization",
+  "variants": [
+    "control",
+    "pair_product",
+    "value_variance"
+  ],
+  "rules": [
+    "Keep the original source-selected configuration, search seeds and snapshots fixed. Change only hardening: move min(P+C,P-C) from each twin to zero, then argmax.",
+    "This algebraically preserves the soft weights for every codebook and prevents both twins having positive mass. It does not prevent cancellation across different base codes.",
+    "Continue the same four inherited pre-argmax codebooks for4096 steps, same rates and batch stream as the raw hardening. Query chooses numerical checkpoints. The primary search seed is unchanged.",
+    "Freeze all projected I and source fits before new heldout evaluation. Existing task test is known; this is a posthoc explanatory ablation, not an independent benchmark."
+  ]
+}

@@ -1,0 +1,627 @@
+{
+  "purpose": "Separate target timing after scientific choices are fixed. No FLOP counter, one process per GPU, unchanged numeric fitting and no query answers. Synthetic representative cases00/03, source noise0, N1024+H0256; real complete target cohorts. Outputs cannot enter model selection.",
+  "jobs": [
+    {
+      "id": "case_00_current",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "current",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/current/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/current/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/current/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_current.log"
+    },
+    {
+      "id": "case_00_lutq",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "lutq",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/lutq/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/lutq/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/lutq/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_lutq.log"
+    },
+    {
+      "id": "case_00_yeh_map",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "yeh_map",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/yeh_map/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/yeh_map/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/yeh_map/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_yeh_map.log"
+    },
+    {
+      "id": "case_00_yeh_soft",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "yeh_soft",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/yeh_soft/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/yeh_soft/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/yeh_soft/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_yeh_soft.log"
+    },
+    {
+      "id": "case_00_msr",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "msr",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/msr/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/msr/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/msr/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_msr.log"
+    },
+    {
+      "id": "case_00_random",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "random",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/random/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/random/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/random/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_random.log"
+    },
+    {
+      "id": "case_00_dense",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_00",
+        "--condition",
+        "0",
+        "--method",
+        "dense",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/dense/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/dense/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_00_c0/dense/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_00_dense.log"
+    },
+    {
+      "id": "case_03_current",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "current",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/current/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/current/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/current/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_current.log"
+    },
+    {
+      "id": "case_03_lutq",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "lutq",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/lutq/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/lutq/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/lutq/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_lutq.log"
+    },
+    {
+      "id": "case_03_yeh_map",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "yeh_map",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/yeh_map/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/yeh_map/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/yeh_map/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_yeh_map.log"
+    },
+    {
+      "id": "case_03_yeh_soft",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "yeh_soft",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/yeh_soft/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/yeh_soft/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/yeh_soft/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_yeh_soft.log"
+    },
+    {
+      "id": "case_03_msr",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "msr",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/msr/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/msr/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/msr/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_msr.log"
+    },
+    {
+      "id": "case_03_random",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "random",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/random/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/random/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/random/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_random.log"
+    },
+    {
+      "id": "case_03_dense",
+      "module": "experiments.paper_structure_benchmark_v1.target_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation",
+        "--case",
+        "case_03",
+        "--condition",
+        "0",
+        "--method",
+        "dense",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/dense/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/dense/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/targets/case_03_c0/dense/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/synthetic_confirmation/logs/timing_case_03_dense.log"
+    },
+    {
+      "id": "omniglot_pilot_current",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "current",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/current/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/current/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/current/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_current.log"
+    },
+    {
+      "id": "omniglot_pilot_lutq",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "lutq",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/lutq/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/lutq/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/lutq/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_lutq.log"
+    },
+    {
+      "id": "omniglot_pilot_yeh_map",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "yeh_map",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/yeh_map/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/yeh_map/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/yeh_map/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_yeh_map.log"
+    },
+    {
+      "id": "omniglot_pilot_yeh_soft",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "yeh_soft",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/yeh_soft/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/yeh_soft/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/yeh_soft/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_yeh_soft.log"
+    },
+    {
+      "id": "omniglot_pilot_msr",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "msr",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/msr/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/msr/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/msr/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_msr.log"
+    },
+    {
+      "id": "omniglot_pilot_random",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "random",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/random/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/random/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/random/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_random.log"
+    },
+    {
+      "id": "omniglot_pilot_dense",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--method",
+        "dense",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/dense/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/dense/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/dense/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_dense.log"
+    },
+    {
+      "id": "omniglot_pilot_msr_native",
+      "module": "experiments.paper_structure_benchmark_v1.native_msr_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/msr_native/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/msr_native/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/targets/msr_native/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/omniglot_pilot/logs/timing_omniglot_pilot_msr_native.log"
+    },
+    {
+      "id": "digit_sum_pilot_current",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "current",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_current.log"
+    },
+    {
+      "id": "digit_sum_pilot_lutq",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "lutq",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/lutq/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/lutq/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/lutq/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_lutq.log"
+    },
+    {
+      "id": "digit_sum_pilot_yeh_map",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "yeh_map",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/yeh_map/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/yeh_map/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/yeh_map/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_yeh_map.log"
+    },
+    {
+      "id": "digit_sum_pilot_yeh_soft",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "yeh_soft",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/yeh_soft/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/yeh_soft/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/yeh_soft/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_yeh_soft.log"
+    },
+    {
+      "id": "digit_sum_pilot_msr",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "msr",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/msr/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/msr/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/msr/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_msr.log"
+    },
+    {
+      "id": "digit_sum_pilot_random",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "random",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/random/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/random/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/random/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_random.log"
+    },
+    {
+      "id": "digit_sum_pilot_dense",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "dense",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/dense/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/dense/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/dense/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_dense.log"
+    },
+    {
+      "id": "digit_sum_pilot_msr_native",
+      "module": "experiments.paper_structure_benchmark_v1.native_msr_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/msr_native/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/msr_native/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/msr_native/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/timing_digit_sum_pilot_msr_native.log"
+    }
+  ]
+}

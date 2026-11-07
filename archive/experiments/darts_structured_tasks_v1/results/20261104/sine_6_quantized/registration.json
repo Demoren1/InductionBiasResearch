@@ -1,0 +1,15 @@
+{
+  "registered_utc": "2026-11-04T04:59:48.781542+00:00",
+  "reason": "Synthetic DeepSets showed correct connectivity but dormant/merged categorical groups. Test whether clustering the canonical soft numerical matrix is a better discretizer than argmax P. No sine test result or teacher direction has been inspected.",
+  "source_states": "For each of the three source-selected seeds of the winning confirmed configuration, use its already selected soft checkpoint and all four numerical replicas.",
+  "zero_thresholds": [
+    0.0,
+    0.05,
+    0.15
+  ],
+  "threshold_scale": "max absolute soft weight, independently per vector",
+  "quantizer": "KMeans of absolute active weights into the same m base groups, n_init32; signs become signed integer labels. No true roles, counts per group or teacher coefficients.",
+  "fit": "Four Gaussian C starts at each radius .5/2/6/8 and each lr .003/.01/.03. Query chooses numerical configuration/start/checkpoint for each I; selection ranks I. Refit32 fresh C at the source-selected settings.",
+  "evaluation": "Freeze before generating an independent16384 Gaussian test draw; also report exact population MSE after freezing. Keep direct DARTS and dense random/moment controls.",
+  "claim": "This is an explicit numerical clustering postprocessor, not pure categorical argmax. It preserves the paired C/-C representation and canonicalizes P before constructing W."
+}

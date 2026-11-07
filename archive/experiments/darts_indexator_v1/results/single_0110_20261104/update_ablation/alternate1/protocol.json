@@ -1,0 +1,116 @@
+{
+  "seed": 261104011,
+  "output": "/home/udeneev-av/InductionBiasResearch/experiments/darts_indexator_v1/results/single_0110_20261104/update_ablation/alternate1",
+  "pattern": "0110",
+  "source_patterns": [
+    "0110"
+  ],
+  "codes": 2,
+  "classes": 3,
+  "support": 768,
+  "query": 256,
+  "selection": 512,
+  "search": {
+    "numeric_learning_rates": [
+      0.03,
+      0.1
+    ],
+    "architecture_learning_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "schedules": [
+      "soft",
+      "annealed"
+    ],
+    "sparsity_penalties": [
+      0.0,
+      0.01
+    ],
+    "pilot_seeds": [
+      5,
+      6,
+      7
+    ],
+    "pilot_steps": 6000,
+    "pilot_snapshots": [
+      0,
+      1500,
+      3000,
+      4500,
+      6000
+    ],
+    "confirmation_seeds": [
+      2,
+      3,
+      4
+    ],
+    "confirmation_top_configs": 2,
+    "confirmation_orders": [
+      "first",
+      "unrolled"
+    ],
+    "confirmation_steps": 6000,
+    "confirmation_snapshots": [
+      0,
+      1500,
+      3000,
+      4500,
+      6000
+    ],
+    "numeric_restarts": 4,
+    "numeric_warmup": 512,
+    "numeric_steps_per_outer": 1,
+    "batch": 128,
+    "initial_codebook_norm": 2.0,
+    "ordered_signed_initialization": true,
+    "initial_logit_std": 0.5,
+    "initial_zero_probability": 0.5,
+    "minimum_temperature": 0.05,
+    "late_entropy_penalty": 0.02,
+    "numeric_l2": 0.0001,
+    "numeric_gradient_clip": 10.0,
+    "architecture_gradient_clip": 5.0,
+    "checkpoint_every": 100,
+    "fixed_configuration_ids": [
+      10,
+      11
+    ],
+    "update_mode": "alternating",
+    "paired_batch_streams": true
+  },
+  "fit": {
+    "steps": 4096,
+    "batch": 128,
+    "checkpoint_every": 64,
+    "numeric_l2": 0.0001,
+    "gradient_clip": 10.0,
+    "fresh_learning_rates": [
+      0.01,
+      0.03,
+      0.1
+    ],
+    "fresh_initial_norms": [
+      0.5,
+      2.0
+    ],
+    "calibration_restarts": 8,
+    "evaluation_restarts": 32
+  },
+  "rules": [
+    "Only the original fixed Pattern 0110 task, 11 inputs and 8 ReLU hidden units; no transfer or other bit patterns.",
+    "Exactly three assignment classes: fixed C0=0 and two unconstrained trainable scalars C1,C2. A shared hidden bias, shared readout and output offset give five numerical parameters.",
+    "Initialize C1 below zero and C2 above zero with independent random magnitudes to align arbitrary code names across numerical replicas; signs, order, values and positions remain unconstrained during learning. No analytic filter values are supplied.",
+    "Search receives support/query observations only. No true windows, active-edge count, group capacities or ground-truth index labels enter initialization, loss or selection.",
+    "Alternate three support numeric Adam updates and one architecture-query update. Compare constant softmax with temperature annealing and late entropy minimization.",
+    "Compare no sparsity penalty with a generic 0.01 mean active-probability penalty; no target number of active connections is supplied.",
+    "At registered checkpoints take argmax, keep inherited codebooks, canonicalize only by global swapping of the two nonzero labels and hidden-column permutation, and fine-tune only the five numerical parameters. Adam moments reset.",
+    "Each numerical replica chooses its checkpoint by query BCE. Mean selection BCE across all four inherited numerical replicas selects search checkpoints/configurations. Ground-truth agreement and test labels never rank candidates.",
+    "Confirm the best two configurations on three new search seeds with first-order and one-step unrolled controls. Choose configuration/order by the average over seeds after per-seed checkpoint selection, then choose a primary seed by selection BCE.",
+    "Keep the source-selected pilot winner as a separate pre-test reference. Calibrate fresh-codebook rate and scale on selection BCE only, freeze, then evaluate on the disjoint 512-input test and all 2048 inputs.",
+    "Fresh-codebook calibration/evaluation uses both global permutations of the two signed initial code values equally often; no sign or order constraint is maintained during optimization.",
+    "Report exact categorical recovery after global code renaming and hidden-column matching, binary precision/recall/F1, classification metrics, actual loss/recall curves, P0/P1/P2 and selected indexator heatmaps.",
+    "Oracle I and its analytic parameters are used only after model selection for diagnostics. No software tests, commits or publication."
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "stage": "G19 direct signed prefix-count candidate, one-source observability pilot; not competitive multi-task confirmation",
+  "registered_utc": "2026-11-05T09:42:01.950197+00:00",
+  "seed": 26110519017,
+  "parent": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/functional_observability_g18",
+  "parent_audit_sha256": "f05a740b77e7a7174df8a433df4b504cd005951436f9bae091d4bcd2639efc2d",
+  "g18_plan": {
+    "stage": "G18 prospective observability diagnosis, known functional ANOVA contrast, not a complete/new I learner",
+    "registered_utc": "2026-11-05T09:09:11.379198+00:00",
+    "seed": 26110518017,
+    "families": [
+      8801,
+      8802,
+      8803,
+      8804,
+      8805,
+      8806
+    ],
+    "tasks": 8,
+    "inputs": 16,
+    "hidden": 16,
+    "codes": 4,
+    "bias": 0.15,
+    "variants": [
+      "local",
+      "quartet_mix"
+    ],
+    "observations": [
+      512,
+      2048,
+      8192,
+      32768,
+      131072
+    ],
+    "noise": [
+      0.2,
+      1.0,
+      2.0
+    ],
+    "chunk": 256,
+    "replicates": 2,
+    "alpha": 0.05,
+    "jobs": [
+      {
+        "family": 8801,
+        "variant": "local"
+      },
+      {
+        "family": 8801,
+        "variant": "quartet_mix"
+      },
+      {
+        "family": 8802,
+        "variant": "local"
+      },
+      {
+        "family": 8802,
+        "variant": "quartet_mix"
+      },
+      {
+        "family": 8803,
+        "variant": "local"
+      },
+      {
+        "family": 8803,
+        "variant": "quartet_mix"
+      },
+      {
+        "family": 8804,
+        "variant": "local"
+      },
+      {
+        "family": 8804,
+        "variant": "quartet_mix"
+      },
+      {
+        "family": 8805,
+        "variant": "local"
+      },
+      {
+        "family": 8805,
+        "variant": "quartet_mix"
+      },
+      {
+        "family": 8806,
+        "variant": "local"
+      },
+      {
+        "family": 8806,
+        "variant": "quartet_mix"
+      }
+    ],
+    "teacher_only": "8 repeated2D modules,2ReLU per module,4freshGaussian codes per source. Orthogonal four-point mixing produces another signed4-code I with C/2. Input and hidden coordinates permuted, unknown to graph learner.32 versus128 active weights.",
+    "query_policy": "At each base X,Z: base, every single replacement and every pair replacement;Q137. All queries marginalGaussian, panel dependent. Two independent Gaussian labels per query. Same X,Z,unit noises and underlying C across variants/noise for paired diagnosis. Count2*T*N*Q labels; raw panels not stored. Such queries require active/simulator access, cannot be reconstructed from arbitrary IID files.",
+    "learner": "For every pair, squared mean-label rectangle contrast divided by2 observed sigmahat^2, estimated independently from all replicate differences. Exact null F(TN,TNQ). No teacher mask/component count/code values or population moments in decision.",
+    "alpha_scope": "Per family/variant/noise run across all5 looks and120 pair nulls. No whole-benchmark/cross-algorithm guarantee. Controls false edges only, not omissions, correct components or full weight-I.",
+    "selection": "No HPO, teacher stopping or look selection. Store every registered graph. Freeze all12 network source outputs before structural/population oracle audit.",
+    "oracle_audit": "Independently evaluate population m0/m1/m2,label-square H2/gradient anisotropic part,m3; different f on same fresh Gaussian X and equal f under known orthogonal input transform. This is oracle construction verification, not learned-I performance. Input interaction graph scored separately from I.",
+    "limits": "Known Sobol/pick-freeze statistic; no novelty or competitor superiority claim. Cheap bilinear Sobol estimators and same-panel native LC/Yeh/LUT-Q still required before full-I comparison. Gaussian iid measurement noise only; heavy-tail/heteroscedastic coverage unproved.",
+    "theory_sha256": "70759b09622ce691587dec667d9fdd2d84a09a3ed4f89da723c0ed7dc37b7e67",
+    "code_sha256": {
+      "functional_observability.py": "507c33282c97739f9fd1999b908e28540e49215f61e14254c4b3df9afff5c673",
+      "functional_moments.py": "f8fb3550dbf4b28e7ddaa8506f88ee31f2586fe02a49330440d4b947441e15f6"
+    },
+    "checks": "No software tests. Necessary mathematical/provenance/finiteness guards, minimal lint and figure inspection only."
+  },
+  "jobs": [
+    {
+      "family": 8801,
+      "variant": "local"
+    },
+    {
+      "family": 8801,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 8802,
+      "variant": "local"
+    },
+    {
+      "family": 8802,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 8803,
+      "variant": "local"
+    },
+    {
+      "family": 8803,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 8804,
+      "variant": "local"
+    },
+    {
+      "family": 8804,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 8805,
+      "variant": "local"
+    },
+    {
+      "family": 8805,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 8806,
+      "variant": "local"
+    },
+    {
+      "family": 8806,
+      "variant": "quartet_mix"
+    },
+    {
+      "family": 8901,
+      "variant": "random"
+    },
+    {
+      "family": 8902,
+      "variant": "random"
+    },
+    {
+      "family": 8903,
+      "variant": "random"
+    },
+    {
+      "family": 8904,
+      "variant": "random"
+    },
+    {
+      "family": 8905,
+      "variant": "random"
+    },
+    {
+      "family": 8906,
+      "variant": "random"
+    }
+  ],
+  "inputs": 16,
+  "hidden": 16,
+  "codes": 4,
+  "bias": 0.15,
+  "conditions": [
+    {
+      "noise": 0.0,
+      "replicates": 1
+    },
+    {
+      "noise": 0.2,
+      "replicates": 1
+    },
+    {
+      "noise": 0.2,
+      "replicates": 64
+    },
+    {
+      "noise": 0.2,
+      "replicates": 4096
+    },
+    {
+      "noise": 2.0,
+      "replicates": 1
+    },
+    {
+      "noise": 2.0,
+      "replicates": 64
+    },
+    {
+      "noise": 2.0,
+      "replicates": 4096
+    }
+  ],
+  "axis_points": 257,
+  "axis_min": 0.001,
+  "axis_max": 1024.0,
+  "axis_code_min": 0.0001,
+  "axis_code_max": 16.0,
+  "axis_starts": 7,
+  "axis_solver_evaluations": 400,
+  "slice_points": 2048,
+  "slice_scales": [
+    0.05,
+    0.2,
+    0.8,
+    3.2,
+    12.8,
+    51.2
+  ],
+  "rank_relative": 1e-12,
+  "validation": 8192,
+  "known": "D,H,K,common bias0.15,readout1/sqrt(H),offset0. Unknown C/mask/counts/input roles. This is a restricted pilot, not free-bias/readout identification.",
+  "teacher": "Opened G18 local/mixed coordinate geometries with new fresh Gaussian numeric C, plus six new unrestricted random signed I (Bernoulli0.55 connections, random groups/signs). No true structure/counts/numbers reach learner. One function per I, not multi-source learning.",
+  "learner": "Estimate positive code magnitudes from summed even axis queries by ordinary segmented-LS initialization and variable projection. Expand learned prefixes by0/+-codes. Global linear LS for extension counts, nearest integer, abstain on negative/conservation/rank failure. No W clustering or true blocks. Every condition retained.",
+  "data": "Fixed random learner coordinate order, fixed Gaussian coordinate-prefix panels with registered scales. Sample mean r independent Gaussian labels simulated exactly as f+sigma/sqrt(r)Z. Count r physical labels/query. Common unit noises make noise/budget comparisons dependent. Queries are not IID Gaussian full-input data. No teacher autograd queries.",
+  "audit": "Freeze all18 primary jobs before true C/I. Then factorial diagnostic of estimated/exact C and observed/clean slice labels. Oracle variants are diagnostic only, never primary results or selection. Prefix-I and full-I separate; validation never selects settings/conditions/teacher stops.",
+  "limits": "No novelty, competitor win, finite estimated-C/noisy recovery guarantee, multi-source benchmark or fresh-C transfer claim. Known bias/positive common readout, active queries and potentially huge repeat count explicit. No software tests.",
+  "theory_sha256": "c7686e387c0ad824cb313119f18a5ae47d32effac71aa893f56dcea352e195aa",
+  "code_sha256": "3cbff158458e1b33aef8bc61a612bbf24706e138693b9b4e6719313743fb4a30"
+}

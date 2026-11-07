@@ -1,0 +1,116 @@
+{
+  "trigger": "Paired development MSE11.1% above Dense, worse29/32 tasks; final query answers still sealed. Original current and all competitors retained. Same code budget128; source-only functional hard-assignment refinement; no true parameters/roles.",
+  "jobs": [
+    {
+      "id": "functional_proposals",
+      "module": "experiments.paper_structure_benchmark_v1.functional_refine",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--codes",
+        "128",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/source/current_functional_proposals/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/source/current_functional_proposals/registered.json",
+      "dependencies": [],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/functional_proposals.log"
+    },
+    {
+      "id": "functional_source_refit",
+      "module": "experiments.paper_structure_benchmark_v1.real_bank_fit",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "current_functional",
+        "--codes",
+        "128",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/fits/current_functional_k128/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/fits/current_functional_k128/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/source/current_functional_proposals/candidates.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/functional_source_refit.log"
+    },
+    {
+      "id": "functional_development",
+      "module": "experiments.paper_structure_benchmark_v1.real_validation",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "current_functional",
+        "--codes",
+        "128",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/validation_fit/current_functional/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/validation_fit/current_functional/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/fits/current_functional_k128/selected.json"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/functional_development.log"
+    },
+    {
+      "id": "functional_export",
+      "module": "experiments.paper_structure_benchmark_v1.variant_export",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "current_functional",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/export.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/export.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/validation_fit/current_functional/selected.json"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/functional_export.log"
+    },
+    {
+      "id": "functional_target",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "current_functional",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/export.json"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/functional_target.log"
+    },
+    {
+      "id": "functional_timing",
+      "module": "experiments.paper_structure_benchmark_v1.real_target",
+      "args": [
+        "--root",
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot",
+        "--method",
+        "current_functional",
+        "--timing-only",
+        "--device",
+        "cuda:0"
+      ],
+      "metric": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/unprofiled_timing/metrics.json",
+      "registration": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/unprofiled_timing/registered.json",
+      "dependencies": [
+        "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/targets/current_functional/frozen_predictions.npz"
+      ],
+      "log": "/home/udeneev-av/InductionBiasResearch/experiments/paper_structure_benchmark_v1/results/20261107/digit_sum_pilot/logs/functional_timing.log"
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "seed": 261104731,
+  "output": "experiments/darts_structured_tasks_v1/results/20261104",
+  "deepsets": {
+    "points": 8,
+    "features": 2,
+    "point_hidden": 2,
+    "codes": 4,
+    "support": 1024,
+    "query": 512,
+    "selection": 2048,
+    "test": 8192,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      1.5
+    ],
+    "sparsity": [
+      0.0,
+      0.003
+    ]
+  },
+  "sine": {
+    "inputs": 24,
+    "hidden": 1,
+    "codes": 3,
+    "frequencies": [
+      4.0,
+      6.0,
+      8.0
+    ],
+    "low_frequency": 0.7,
+    "low_amplitude": 0.4,
+    "support": 16384,
+    "query": 4096,
+    "selection": 8192,
+    "test": 16384,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      2.0,
+      6.0,
+      8.0
+    ],
+    "sparsity": [
+      0.0
+    ]
+  },
+  "search": {
+    "pilot_seeds": [
+      341,
+      342
+    ],
+    "confirmation_seeds": [
+      343,
+      344,
+      345
+    ],
+    "pilot_steps": 12000,
+    "confirmation_steps": 12000,
+    "snapshots": [
+      0,
+      0.3333333333,
+      0.6666666667,
+      1.0
+    ],
+    "restarts": 1,
+    "batch": 128,
+    "numeric_warmup": 2000,
+    "initial_logit_std": 1.0,
+    "zero_probability": 0.5,
+    "minimum_temperature": 0.03,
+    "late_entropy": 0.02,
+    "gradient_clip": 10.0,
+    "alpha_clip": 5.0,
+    "numeric_l2": 1e-05,
+    "checkpoint_every": 250,
+    "top_configurations": 6
+  },
+  "fit": {
+    "steps": 3000,
+    "batch": 128,
+    "checkpoint_every": 125,
+    "restarts": 4,
+    "fresh_restarts": 32,
+    "gradient_clip": 10.0,
+    "numeric_l2": 1e-05
+  },
+  "rules": [
+    "The prior successful method is archived separately with actual executed code, protocol, selected states and origin hashes; this search does not initialize from its learned indexators or weights.",
+    "Search every position of a16x16 matrix from random Z, with four free signed codes and a fixed zero. No teacher mask, groups, code values, point roles or active-edge count enter the learner.",
+    "All methods share2000 dense warmup and10000 further task-gradient updates. The unchanged baseline has200cycles of50Z updates; adapted methods have10cycles of1000updates with800/200,500/500 or200/800Z/C splits. Heads update every step. Total Z/C counts match the corresponding short split; block lengths and projection/reset cadence differ.",
+    "Frozen baseline: retain Z; exact projection every50 Z updates, rho.01 to100, lambda.3, dual.25, with no task-C fit inside the loop. Its hyperparameters are not retuned.",
+    "A long cycle trains Z and heads, projects to I/C, then trains C and heads for200/500/800support updates, and optionally copies fitted C[I] into Z. This checks inner-C training duration at fixed total budget.",
+    "Compare the unchanged baseline and four adapted families: consensus/plain, with/without reset. Projection-only reset was already checked in the short experiment. Plain uses tau.0006/.006/.06.",
+    "Projection globally solves the signed scalar clustering problem with a free zero-prefix. All positions can be reassigned on every cycle; no mask is permanently frozen during search.",
+    "With consensus retain and rescale U as rho changes, then update U using Z minus the adapted C[I] BEFORE any Z copy. The task-C phase itself minimizes task loss, not the ADMM subproblem.",
+    "A copied Z either keeps its Adam state or clears only Z moments/timestep, as registered. Heads keep their Adam state; C moments clear whenever the projection recomputes the codebook.",
+    "At the warmup transition restore the best query warmup state and initialize a projection, but do not reset Z. Subsequent resets occur at completed cycle boundaries, after the C phase when present.",
+    "Actual reset error, reset counts, distinct numerical columns, code usage, I changes, train/query/hard losses and Z/C/head update counts are recorded. Query does not supply training gradients or choose an inner-C checkpoint.",
+    "Each snapshot0/4000/8000/12000 gets3000 hard-C-fit steps from1inherited+3freshGaussian starts. Query selects numerical checkpoints, mean selection chooses the snapshot/config. Pilot341/342 selects one setting per family; confirmation343/344/345 uses frozen settings.",
+    "Teacher audit and a new source heldout follow source/fresh freeze. Fresh32 on the original function is an optimizer diagnostic. Structural transfer uses separately registered new-coefficient functions, fixed source-selected I and all fresh numerical parameters.",
+    "No software tests, no mutation of old result folders or frozen baseline, no commit/push.",
+    "Long-block extension registered after observing the short-block source confirmation, before viewing either experiment's new transfer functions. Same341-345seeds give paired initializations, not an independent new task cohort. Rho advances/rescales U every50globalupdates, including during C blocks; dual increments only at completed per-row cycles."
+  ],
+  "sharing_heldout_offset": 14100000,
+  "consensus": {
+    "block_steps": 50,
+    "lloyd_iterations": 12,
+    "rho_initial": 0.01,
+    "projection": "dynamic"
+  },
+  "reset": {
+    "cycle_updates": 1000,
+    "long_cycles": true,
+    "rho_initial": 0.01,
+    "rho_schedule_interval": 50
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "registered_utc": "2026-11-04T04:37:44.128676+00:00",
+  "official_test_opened": false,
+  "rules": [
+    "Full ten-class MNIST/FashionMNIST from the existing official training split; separate 6000/1000/1000 support/query/selection images, with independent random permutations of points during training. Official test is opened only after freezing.",
+    "Compact reference: 4x4 image points, phi Linear(3,8)+ReLU, mean pooling, rho Linear(8,32)+ReLU+Linear(32,10). This differs in capacity and resolution from the historical 196-point, width64 pilot.",
+    "Student is unrestricted flatten(48)->128 ReLU->8 linear->32 ReLU->10. Learn signed indexators for the first matrix, its biases and the pooling matrix, with 24/8/1 independent base codes. Ground-truth pointwise blocks, bias roles and pooling roles are never supplied to search.",
+    "Every dictionary has fixed zero plus trainable C and exactly tied -C. Apply pair-mass-to-zero canonicalization before every argmax. Keep all learned P and categorical I.",
+    "The final rho MLP is learned numerically, as is the readout in the Pattern experiment. It is not a generator or encoder of the dataset.",
+    "Two numeric replicas jointly share P during search; query chooses numeric refit checkpoints. Mean selection CE chooses hard architecture checkpoints and hyperparameters; top2 configurations confirmed on three new search seeds.",
+    "Compare an independently tuned prescribed DeepSets and an independently tuned unrestricted dense student, Adam and momentum SGD, with four starts. Log all numerical and architecture search costs; no equality of FLOPs or source costs is claimed.",
+    "No test-based selection, software tests, commits, push or publication."
+  ]
+}

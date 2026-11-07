@@ -1,0 +1,114 @@
+{
+  "complete": false,
+  "trace": [
+    {
+      "prefix_length": 1,
+      "codebook_before": [
+        [
+          -1.9507568692738444,
+          0.9981551593486359,
+          1.9599361536017872,
+          -0.7863663398645798
+        ]
+      ],
+      "parameters": 8,
+      "rank": 8,
+      "condition": 673287451507.7625,
+      "minimum_gram_eigenvalue": 2.2550967489739794e-10,
+      "single_task_minimum_gram_eigenvalues": [
+        2.255233335417435e-10
+      ],
+      "accepted": true,
+      "qp": {
+        "solver": "feasible_primal_active_set",
+        "success_flag": true,
+        "message": "fw_gap_satisfied",
+        "iterations": 14,
+        "releases": 5,
+        "blockers": 2,
+        "fw_fallbacks": 0,
+        "stationary_faces": 5,
+        "face_stationarity_error": 1.6596253260559024e-09,
+        "fw_gap": 5.6790956027854156e-14,
+        "primal_violation": 0.0,
+        "converged": true,
+        "seconds": 0.0027463920414447784
+      },
+      "integer": {
+        "neighbourhood": "parent_pair",
+        "moves": 1,
+        "parent_updates": 0,
+        "pair_updates": 1,
+        "candidates_evaluated": 1471590,
+        "half_mse_change": -0.0006764688975948729,
+        "minimum_next_change": 0.0,
+        "local_stationary": true,
+        "history": [
+          {
+            "update": 1,
+            "origin": "pair",
+            "units": 1,
+            "half_mse_change": -0.0006764688975948729,
+            "cumulative_half_mse_change": -0.0006764688975948729
+          }
+        ],
+        "seconds": 0.12011866830289364
+      },
+      "pre_refit_training_mse": 9.102909819753243e-06,
+      "metric_forward_absolute_difference": 7.623296525288703e-20,
+      "reason": "joint_integer_prefix",
+      "distinct_prefixes": 3,
+      "codebook_after": [
+        [
+          -1.9507568692738444,
+          0.9981551593486359,
+          1.9599361536017872,
+          -0.7863663398645798
+        ]
+      ],
+      "training_mse_per_task": [
+        9.102909819753167e-06
+      ],
+      "validation_mse_per_task": [
+        1.0353914851013878e-05
+      ]
+    },
+    {
+      "prefix_length": 2,
+      "codebook_before": [
+        [
+          -1.9507568692738444,
+          0.9981551593486359,
+          1.9599361536017872,
+          -0.7863663398645798
+        ]
+      ],
+      "parameters": 24,
+      "rank": 23,
+      "condition": 1054194359878.428,
+      "minimum_gram_eigenvalue": 2.0374625477176945e-10,
+      "single_task_minimum_gram_eigenvalues": [
+        2.037398079039089e-10
+      ],
+      "accepted": false,
+      "reason": "rank_deficient_dictionary"
+    }
+  ],
+  "seconds": 0.1318053174763918,
+  "job": {
+    "family_id": 1,
+    "noise": 0.2,
+    "method": "bootstrap_single_fixed",
+    "tasks": [
+      2
+    ],
+    "refit": false,
+    "solver": "parent_pair"
+  },
+  "job_id": 29,
+  "search_started_from_empty": true,
+  "frozen_bootstrap_control": false,
+  "protocol_sha256": "5d5763fcbbb99ce5616383d9be7b2698095486e5fe025570f1ae8b3d52a1977f",
+  "arrays_sha256": "ea0ed1fd98e89e06902e0b1355764dd1eb34da60c4c2a62e7cc00a49079afe5e",
+  "teacher_or_meta_opened": false
+}

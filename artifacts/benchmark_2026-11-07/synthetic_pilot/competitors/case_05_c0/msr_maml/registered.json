@@ -1,0 +1,90 @@
+{
+  "method": "MSR-FC, full higher-order MAML",
+  "source": "https://github.com/AllanYangZhou/metalearning-symmetries",
+  "author_components": "ShareLinearFull U*v representation; inner loop excludes U; learned numerical initialization and unconstrained learned per-parameter-group SGD step sizes; outer Adam.",
+  "adaptation": "Shared U only for W1 of the prescribed two-layer ReLU model; hidden biases and free W2/offset adapted per task. No post-hoc clustering.",
+  "transfer_policy": "Primary comparison discards learned numerical initialization and transfers U only. Save the native initialization separately for an explicitly labelled auxiliary control.",
+  "settings": [
+    {
+      "method": "msr",
+      "lr": 0.0003,
+      "initialization": "cold",
+      "inner_lr": 0.01
+    },
+    {
+      "method": "msr",
+      "lr": 0.0003,
+      "initialization": "cold",
+      "inner_lr": 0.1
+    },
+    {
+      "method": "msr",
+      "lr": 0.0003,
+      "initialization": "dense_adam",
+      "inner_lr": 0.01
+    },
+    {
+      "method": "msr",
+      "lr": 0.0003,
+      "initialization": "dense_adam",
+      "inner_lr": 0.1
+    },
+    {
+      "method": "msr",
+      "lr": 0.001,
+      "initialization": "cold",
+      "inner_lr": 0.01
+    },
+    {
+      "method": "msr",
+      "lr": 0.001,
+      "initialization": "cold",
+      "inner_lr": 0.1
+    },
+    {
+      "method": "msr",
+      "lr": 0.001,
+      "initialization": "dense_adam",
+      "inner_lr": 0.01
+    },
+    {
+      "method": "msr",
+      "lr": 0.001,
+      "initialization": "dense_adam",
+      "inner_lr": 0.1
+    },
+    {
+      "method": "msr",
+      "lr": 0.003,
+      "initialization": "cold",
+      "inner_lr": 0.01
+    },
+    {
+      "method": "msr",
+      "lr": 0.003,
+      "initialization": "cold",
+      "inner_lr": 0.1
+    },
+    {
+      "method": "msr",
+      "lr": 0.003,
+      "initialization": "dense_adam",
+      "inner_lr": 0.01
+    },
+    {
+      "method": "msr",
+      "lr": 0.003,
+      "initialization": "dense_adam",
+      "inner_lr": 0.1
+    }
+  ],
+  "outer_steps": 2000,
+  "train_inner_steps": 1,
+  "checkpoint_inner_steps": 3,
+  "train_batch": 512,
+  "query_batch": 256,
+  "checkpoint_every": 50,
+  "code_sha256": "527aeaa6465a4f6e732a0bd652503b64eebf5c61252e623ff92a7229537ca17c",
+  "helper_sha256": "8ca894b3c696f3622bd50bff5eaf79e920bdb12358a03c70bb671390697a7c0c",
+  "registered_utc": "2026-11-07T03:38:15.199440+00:00"
+}

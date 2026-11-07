@@ -1,3 +1,393 @@
 \section{Method}
-TODO
-test
+\label{sec:method}
+
+We extract a shared indexator by jointly projecting numerical solutions
+of source tasks and comparing the resulting structures after numerical
+refitting. Projection proposes groups; prediction error selects the
+structure.
+
+\subsection{Source solutions and their alignment}
+\label{sec:method-source}
+
+Write $T:=|\mathcal T_{\mathrm{tr}}|$ and
+$\boldsymbol\eta_\tau:=(C_{\tau,1},\ldots,C_{\tau,K},
+\boldsymbol\theta_\tau)$ for the trainable numerical parameters.
+For each source task, fitting uses $S_\tau^{\mathrm s}$.
+Its query sample is partitioned into $V_\tau^{\mathrm{num}}$, used
+for numerical checkpoints and proposal construction, and
+$V_\tau^{\mathrm{str}}$, reserved for the final structure comparison.
+Target tasks do not enter this procedure.
+
+First, unconstrained numerical fitting gives
+$\widetilde f_\tau=f_{\widetilde{\mathbf w}_\tau,
+\widetilde{\boldsymbol\theta}_\tau}$, with
+$\widetilde{\mathbf w}_\tau\in\mathbb R^P$.
+Dense starts are fitted on support data and selected on
+$V_\tau^{\mathrm{num}}$. The numerical updates are specified below;
+for dense fitting their variables are the unrestricted network parameters.
+
+\begin{definition}[Source descriptor]
+    For a fixed alignment of a source solution, its descriptor is
+    \begin{equation}
+        \mathbf z_\tau(\mathbf a_\tau)
+        =\mathbf B_\tau\mathbf a_\tau+\mathbf v_\tau,
+        \qquad
+        \mathbf u_\tau(\mathbf a_\tau)\in(0,\infty)^P,
+        \label{eq:method-descriptor}
+    \end{equation}
+    where $\mathbf a_\tau\in\mathbb R^{r_\tau}$ contains continuous
+    calibration variables, $\mathbf B_\tau\in\mathbb R^{P\times r_\tau}$
+    and $\mathbf v_\tau\in\mathbb R^P$ are obtained from the source
+    solution, and $\mathbf u_\tau$ assigns positive discrepancy scales.
+\end{definition}
+
+The identity descriptor has $r_\tau=0$,
+$\mathbf v_\tau=\widetilde{\mathbf w}_\tau$ and
+$\mathbf u_\tau=\mathbf 1$, and is available for any network.
+Architecture-specific descriptors can account for parameter symmetries.
+Discrete alignments, such as hidden-unit permutations, are fixed for
+each projection run; continuous calibration is updated within the run.
+Adjacent parameters must be transformed together when an alignment is
+claimed to preserve the predictor.
+
+\subsection{Joint discrete projection}
+\label{sec:method-projection}
+
+For a binary support $\mathbf M\in\{0,1\}^P$, let
+$\mathcal I_K(\mathbf M):=\{\mathbf I\in\mathcal I_K:
+I_p=0\Leftrightarrow M_p=0\text{ for all }p\}$.
+With $\mathbf c_\tau:=(C_{\tau,1},\ldots,C_{\tau,K})^{\mathsf T}$,
+define the lookup matrix by
+\begin{equation}
+    (\mathbf A_{\mathbf I})_{pj}:=\mathbf 1\{I_p=j\},
+    \qquad
+    \mathbf w_\tau=\mathbf A_{\mathbf I}\mathbf c_\tau.
+    \label{eq:method-lookup-matrix}
+\end{equation}
+We score a joint projection by
+\begin{equation}
+    \begin{aligned}
+        \mathcal Q(\mathbf I,\{\mathbf c_\tau,\mathbf a_\tau\})
+        &:=\frac{1}{TP}\sum_{\tau,p}
+        \rho_\nu\!\left(
+            \frac{(\mathbf A_{\mathbf I}\mathbf c_\tau)_p
+                -z_{\tau,p}(\mathbf a_\tau)}
+                 {u_{\tau,p}(\mathbf a_\tau)}\right),\\
+        \rho_\nu(v)&:=\nu\log(1+v^2/\nu),\qquad \nu>0.
+    \end{aligned}
+    \label{eq:joint-projection}
+\end{equation}
+Assignments are shared across tasks; code values and calibrations are
+task-specific. This tests whether positions admit common values
+\emph{within} each task.
+
+With $\mathbf I$ and the discrepancy scales fixed, calibration is
+a constrained weighted least-squares problem. Set
+\begin{equation}
+    \begin{gathered}
+        \boldsymbol\xi_\tau
+            :=(\mathbf c_\tau^{\mathsf T},\mathbf a_\tau^{\mathsf T})^{\mathsf T},
+        \qquad
+        \mathbf E_{\tau,\mathbf I}:=
+            [\mathbf A_{\mathbf I},-\mathbf B_\tau],\\
+        \boldsymbol\xi_\tau^+
+        \in\operatorname*{arg\,min}_{\mathbf G_{\tau,\mathbf I}
+            \boldsymbol\xi=\mathbf h_{\tau,\mathbf I}}
+        \left\|\mathbf D_\tau^{-1}
+            (\mathbf E_{\tau,\mathbf I}\boldsymbol\xi-\mathbf v_\tau)
+        \right\|_2^2,
+        \qquad
+        \mathbf D_\tau:=\operatorname{diag}
+            \mathbf u_\tau(\mathbf a_\tau).
+    \end{gathered}
+    \label{eq:method-calibration}
+\end{equation}
+The feasible affine constraints $\mathbf G_{\tau,\mathbf I}\boldsymbol\xi
+=\mathbf h_{\tau,\mathbf I}$ fix calibration scale freedoms; they
+are absent for the identity descriptor. A minimum-norm minimizer is
+used when the solution is nonunique. Equivalently, calibration solves
+\begin{equation}
+    \begin{pmatrix}
+        \mathbf E^{\mathsf T}\mathbf D^{-2}\mathbf E & \mathbf G^{\mathsf T}\\
+        \mathbf G & \mathbf 0
+    \end{pmatrix}
+    \begin{pmatrix}\boldsymbol\xi^+\\\boldsymbol\lambda\end{pmatrix}
+    =
+    \begin{pmatrix}
+        \mathbf E^{\mathsf T}\mathbf D^{-2}\mathbf v\\\mathbf h
+    \end{pmatrix},
+    \label{eq:method-calibration-system}
+\end{equation}
+with task and indexator subscripts suppressed. The scales are recomputed
+between solves. This least-squares update is a surrogate for the robust
+score; monotone decrease of $\mathcal Q$ is not assumed.
+
+\begin{algorithm}[htbp]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \KwIn{Aligned descriptors; support $\mathbf M$;
+        $\mathbf I^{(0)}\in\mathcal I_K(\mathbf M)$;
+        initial calibrations; budgets $N_{\mathrm{proj}},N_{\mathrm{cal}}$.}
+    \KwOut{A proposed indexator and its projection score.}
+    $\mathbf I\leftarrow\mathbf I^{(0)}$\;
+    \For{$k=0,\ldots,N_{\mathrm{proj}}$}{
+        \ForEach{$\tau\in\mathcal T_{\mathrm{tr}}$}{
+            \For{$q=1,\ldots,N_{\mathrm{cal}}$}{
+                $\mathbf D_\tau\leftarrow\operatorname{diag}
+                    \mathbf u_\tau(\mathbf a_\tau)$\;
+                $\mathbf E_{\tau,\mathbf I}\leftarrow
+                    [\mathbf A_{\mathbf I},-\mathbf B_\tau]$\;
+                $\boldsymbol\xi_\tau\leftarrow$
+                    solution of \eqref{eq:method-calibration-system}\;
+            }
+        }
+        \If{$k=N_{\mathrm{proj}}$}{\textbf{break}\;}
+        \ForEach{$p$ with $M_p=1$ and $j=1,\ldots,K$}{
+            $d_{pj}\leftarrow\displaystyle\sum_\tau
+                \rho_\nu\!\left(
+                    \frac{C_{\tau,j}-z_{\tau,p}(\mathbf a_\tau)}
+                         {u_{\tau,p}(\mathbf a_\tau)}\right)$\;
+        }
+        \tcp{The same label must fit every source task.}
+        $I_p^+\leftarrow0$ if $M_p=0$; otherwise
+            $I_p^+\in\operatorname*{arg\,min}_{j=1,\ldots,K}d_{pj}$
+            ($p=1,\ldots,P$)\;
+        \If{$\mathbf I^+=\mathbf I$}{\textbf{break}\;}
+        $\mathbf I\leftarrow\mathbf I^+$\;
+    }
+    \KwRet{$(\mathbf I,\mathcal Q(\mathbf I,
+        \{\mathbf c_\tau,\mathbf a_\tau\}))$}\;
+    \caption{Joint calibration and shared assignments}
+    \label{alg:joint-projection}
+\end{algorithm}
+
+Assignment ties use a fixed ordering of labels.
+Single-source runs of Algorithm~\ref{alg:joint-projection} provide
+initial structures. After numerical fitting across tasks, a subset
+is retained as anchors $\mathcal A$. For each anchor alignment,
+alternative supports include its own mask and source-consensus masks
+\begin{equation}
+    M_p^{(\lambda,v)}
+    :=\mathbf 1\!\left\{
+        \sum_\tau\mathbf 1\!\left\{
+            |z_{\tau,p}(\mathbf a_\tau^{(0)})|
+            >\max\{\lambda u_{\tau,p}(\mathbf a_\tau^{(0)}),\varepsilon\}
+        \right\}\ge v\right\},
+    \label{eq:method-support-proposals}
+\end{equation}
+where $\varepsilon>0$ and the finite sets of thresholds $\lambda$
+and vote counts $v\in\{1,\ldots,T\}$ are prescribed.
+Joint runs start from anchors, single-source assignments and random
+active labels.
+
+Let $\mathcal G$ be a finite group of known admissible label and
+parameter permutations. We identify duplicates by the canonical form
+$\kappa(\mathbf I):=\min_{g\in\mathcal G}^{\mathrm{lex}}g\mathbf I$.
+The bank $\mathcal B$ contains the best canonically distinct proposals
+ranked by $\mathcal Q$, together with $\kappa(\mathcal A)$.
+This removes known symmetries without requiring a test for all
+functional equivalences.
+
+\subsection{Numerical refitting and functional selection}
+\label{sec:method-selection}
+
+For a fixed candidate, write
+$F_{\tau,\mathbf I}(\boldsymbol\eta):=
+\mathcal L_{S_\tau^{\mathrm s}}(f_{\mathbf I,\boldsymbol\eta})$.
+One numerical fitting rule uses the damped direction and finite line search
+\begin{equation}
+    \begin{aligned}
+        \mathbf g&:=\nabla F_{\tau,\mathbf I}(\boldsymbol\eta),
+        \qquad
+        \boldsymbol\Delta:=
+            -(\mathbf H+\lambda\mathbf{Id})^{-1}\mathbf g,\\
+        \mathcal S(\boldsymbol\eta,\boldsymbol\Delta)
+        &:=\bigl\{\beta^l:0\le l<N_{\mathrm{ls}},\
+            F_{\tau,\mathbf I}(\boldsymbol\eta+\beta^l\boldsymbol\Delta)
+            <F_{\tau,\mathbf I}(\boldsymbol\eta)\bigr\},\\
+        \alpha&:=\max\bigl(\{0\}\cup
+            \mathcal S(\boldsymbol\eta,\boldsymbol\Delta)\bigr),
+    \end{aligned}
+    \label{eq:method-numerical-update}
+\end{equation}
+where $\mathbf H=\mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)\succeq0$,
+$\lambda>0$, $0<\beta<1$, and $N_{\mathrm{ls}}$ bounds the line search.
+For mean squared error, let $\mathbf r$ stack the $n_\tau$ scalar
+prediction residuals on support data. The Gauss--Newton choice is
+\begin{equation}
+    \mathbf J:=\frac{\partial\mathbf r}{\partial\boldsymbol\eta},
+    \qquad
+    \mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)
+        :=\frac{2}{n_\tau}\mathbf J^{\mathsf T}\mathbf J.
+    \label{eq:method-gn-matrix}
+\end{equation}
+The choice $\mathbf H=\mathbf0$ gives a scaled gradient step.
+Only independent trainable coordinates are included in $\boldsymbol\eta$.
+
+For each candidate and task, several initial states
+$\{\boldsymbol\eta_{\tau,r}^{(0)}\}_{r=1}^{R}$ generate a finite
+set of iterates. They can include that task's source-derived
+initializations. Numerical states and the shared structure are selected by
+\begin{equation}
+    \begin{aligned}
+        (\widehat r_\tau,\widehat k_\tau)(\mathbf I)
+        &\in\operatorname*{arg\,min}_{r,k}
+        \mathcal L_{V_\tau^{\mathrm{num}}}
+            (f_{\mathbf I,\boldsymbol\eta_{\tau,r}^{(k)}}),\\
+        \widehat{\mathbf I}
+        &\in\operatorname*{arg\,min}_{\mathbf I\in\mathcal B}
+        \frac1T\sum_\tau\mathcal L_{V_\tau^{\mathrm{str}}}
+            (f_{\mathbf I,\widehat{\boldsymbol\eta}_\tau(\mathbf I)}).
+    \end{aligned}
+    \label{eq:method-structure-selection}
+\end{equation}
+Here $\widehat{\boldsymbol\eta}_\tau(\mathbf I)$ is the iterate
+selected by the first line. The bank and these iterates are fixed
+before the second line is evaluated.
+
+\begin{algorithm}[htbp]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \KwIn{Bank $\mathcal B$; source samples; numerical starts;
+        fitting budget $N_{\mathrm{fit}}$.}
+    \KwOut{Shared indexator $\widehat{\mathbf I}$.}
+    \ForEach{$\mathbf I\in\mathcal B$ and $\tau\in\mathcal T_{\mathrm{tr}}$}{
+        $b_\tau(\mathbf I)\leftarrow+\infty$\;
+        \For{$r=1,\ldots,R$}{
+            $\boldsymbol\eta\leftarrow\boldsymbol\eta_{\tau,r}^{(0)}$\;
+            \For{$k=0,\ldots,N_{\mathrm{fit}}$}{
+                $v\leftarrow\mathcal L_{V_\tau^{\mathrm{num}}}
+                    (f_{\mathbf I,\boldsymbol\eta})$\;
+                \If{$v<b_\tau(\mathbf I)$}{
+                    $(b_\tau(\mathbf I),\widehat{\boldsymbol\eta}_\tau(\mathbf I))
+                        \leftarrow(v,\boldsymbol\eta)$\;
+                }
+                \If{$k=N_{\mathrm{fit}}$}{\textbf{break}\;}
+                $\mathbf g\leftarrow\nabla F_{\tau,\mathbf I}(\boldsymbol\eta)$\;
+                $\mathbf H\leftarrow\mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)$\;
+                $\boldsymbol\Delta\leftarrow
+                    -(\mathbf H+\lambda\mathbf{Id})^{-1}\mathbf g$\;
+                $\alpha\leftarrow\max(\{0\}\cup
+                    \mathcal S(\boldsymbol\eta,\boldsymbol\Delta))$\;
+                \If{$\alpha=0$}{\textbf{break}\;}
+                $\boldsymbol\eta\leftarrow
+                    \boldsymbol\eta+\alpha\boldsymbol\Delta$\;
+            }
+        }
+    }
+    \tcp{Structure-selection data enter only after all numerical choices.}
+    $s(\mathbf I)\leftarrow\displaystyle\frac1T\sum_\tau
+        \mathcal L_{V_\tau^{\mathrm{str}}}
+            (f_{\mathbf I,\widehat{\boldsymbol\eta}_\tau(\mathbf I)})$
+        for each $\mathbf I\in\mathcal B$\;
+    $\widehat{\mathbf I}\in\operatorname*{arg\,min}_{\mathbf I\in\mathcal B}
+        s(\mathbf I)$\;
+    \KwRet{$\widehat{\mathbf I}$}\;
+    \caption{Numerical adaptation and structure selection}
+    \label{alg:structure-selection}
+\end{algorithm}
+
+On a target task, $\widehat{\mathbf I}$ is fixed and all its numerical
+parameters are initialized afresh and fitted on the target support
+sample. Query loss measures transfer. Recovery depends on whether
+the finite bank contains a useful structure and whether numerical
+fitting can reveal it.
+
+\subsection{ReLU implementation}
+\label{sec:method-relu-instance}
+
+Our experimental network is
+\begin{equation}
+    f_\tau(\mathbf x)
+    =H^{-1/2}\mathbf A_\tau^{\mathsf T}
+        \rho(\mathbf W_\tau^{\mathsf T}\mathbf x+\mathbf b_\tau)
+        +\mathbf d_\tau,
+    \label{eq:method-relu-model}
+\end{equation}
+where $\mathbf W_\tau\in\mathbb R^{D\times H}$,
+$\mathbf A_\tau\in\mathbb R^{H\times O}$,
+$\mathbf b_\tau\in\mathbb R^H$, $\mathbf d_\tau\in\mathbb R^O$, and
+$\rho$ is coordinatewise ReLU. Only $\mathbf W_\tau$ is structured;
+the biases and output layer are free.
+
+For synthetic regression, dense solutions are refined by Gauss--Newton
+steps and residual-based reinitialization of weak neurons. Normalized columns
+$\mathbf r_{\tau,h}:=\widetilde{\mathbf W}_{\tau,:,h}/
+\|\widetilde{\mathbf W}_{\tau,:,h}\|_2$ define
+\begin{equation}
+    z_{\tau,dh}(\mathbf s_\tau)=s_{\tau,h}r_{\tau,dh},
+    \qquad
+    u_{\tau,dh}(\mathbf s_\tau)
+        =\max\{|s_{\tau,h}|,\varepsilon_s\}
+            \max\{\widehat u_{\tau,h},\varepsilon_u\},
+    \label{eq:method-relu-descriptor}
+\end{equation}
+with positive floors $\varepsilon_s,\varepsilon_u$.
+Reliability weights $\widehat u_{\tau,h}$ are estimated from residuals
+and the pseudoinverse of the empirical Jacobian Gram matrix, propagated
+through column normalization.
+
+For anchor directions $\overline{\mathbf r}_{\tau,h}$ and support
+$\mathbf M^{\mathrm a}$, hidden-unit alignment solves
+\begin{equation}
+    \begin{aligned}
+        \pi_\tau&\in\operatorname*{arg\,min}_{\pi\in\mathfrak S_H}
+            \sum_{h=1}^H D_{\tau,h,\pi(h)},\\
+        D_{\tau,hk}&:=\sum_d
+            \mathbf1\{M^{\mathrm a}_{dh}\ne\widetilde M_{\tau,dk}\}
+            +\omega\min_{\sigma\in\{-1,1\}}
+                \|\overline{\mathbf r}_{\tau,h}
+                    -\sigma\mathbf r_{\tau,k}\|_2^2,
+    \end{aligned}
+    \label{eq:method-relu-alignment}
+\end{equation}
+where $\mathfrak S_H$ is the permutation set,
+$\widetilde{\mathbf M}_\tau$ is the thresholded source support,
+and $\omega>0$ weights direction agreement.
+Calibration fixes one column scale per connected component of the
+code--neuron incidence graph, connecting each code to the neurons using it.
+
+The implemented signed codebook has $m$ independent values:
+\begin{equation}
+    \mathbf C_\tau
+        =(0,\mathbf c_\tau^{\mathsf T},-\mathbf c_\tau^{\mathsf T})^{\mathsf T},
+    \qquad K=2m.
+    \label{eq:method-paired-codebook}
+\end{equation}
+For this restricted numerical family, replace $\mathbf A_{\mathbf I}$
+by the signed lookup matrix with row $\sigma\mathbf e_j^{\mathsf T}$
+for code $\sigma c_{\tau,j}$, where $\mathbf e_j$ is the $j$th standard
+basis vector. Writing its signed labels as
+$J_{dh}\in\{0,\pm1,\ldots,\pm m\}$, each reference source $t$ yields
+the oriented proposal $J^{(t)}_{dh}=\sigma_{t,h}J_{dh}$, where
+$\sigma_{t,h}:=2\mathbf1\{s_{t,h}\ge0\}-1$.
+Reversing a ReLU active side is checked by functional fitting.
+Canonicalization permutes and changes signs of code pairs jointly.
+Empty independent groups are reseeded from groups containing several
+positions.
+
+For support inputs $\{\mathbf x_n\}$, define
+$\Phi_{nh}:=H^{-1/2}\rho(\mathbf x_n^{\mathsf T}\mathbf W_{\tau,:,h}+b_{\tau,h})$
+and let $\mathbf Y$ collect their targets. For squared-loss refinement,
+the free output layer is refitted at every iterate and line-search trial by
+\begin{equation}
+    \begin{pmatrix}\mathbf A_\tau\\\mathbf d_\tau^{\mathsf T}\end{pmatrix}
+    \in\operatorname*{arg\,min}_{\mathbf U}
+        \left\{\|[\boldsymbol\Phi,\mathbf1]\mathbf U-\mathbf Y\|_{\mathrm F}^2
+            +\varepsilon_{\mathrm{lin}}\|\mathbf U\|_{\mathrm F}^2\right\},
+    \label{eq:method-free-head}
+\end{equation}
+with a small stabilizer $\varepsilon_{\mathrm{lin}}>0$.
+Hidden biases and codes remain trainable. Gauge normalization uses
+$a=\|\mathbf c_\tau\|_2/\sqrt m$ and
+$(\mathbf c_\tau,\mathbf b_\tau,\mathbf A_\tau)
+\leftarrow(\mathbf c_\tau/a,\mathbf b_\tau/a,a\mathbf A_\tau)$
+for $a>0$.
+These descriptor, alignment and solver choices specify the ReLU
+implementation of the general projection-and-selection procedure.
+For the real-data experiments we use Adam numerical fitting and
+direction dispersion across independently fitted models as discrepancy
+scales. These changes preserve the shared projection and functional
+selection stages; their finite search budgets are reported separately.

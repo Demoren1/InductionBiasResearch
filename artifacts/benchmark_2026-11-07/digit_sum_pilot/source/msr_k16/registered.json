@@ -1,0 +1,100 @@
+{
+  "method": "msr",
+  "codes": 16,
+  "settings": [
+    {
+      "lr": 0.0003,
+      "initialization": "cold",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.1
+    },
+    {
+      "lr": 0.0003,
+      "initialization": "cold",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.4
+    },
+    {
+      "lr": 0.0003,
+      "initialization": "dense_adam",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.1
+    },
+    {
+      "lr": 0.0003,
+      "initialization": "dense_adam",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.4
+    },
+    {
+      "lr": 0.001,
+      "initialization": "cold",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.1
+    },
+    {
+      "lr": 0.001,
+      "initialization": "cold",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.4
+    },
+    {
+      "lr": 0.001,
+      "initialization": "dense_adam",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.1
+    },
+    {
+      "lr": 0.001,
+      "initialization": "dense_adam",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.4
+    },
+    {
+      "lr": 0.003,
+      "initialization": "cold",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.1
+    },
+    {
+      "lr": 0.003,
+      "initialization": "cold",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.4
+    },
+    {
+      "lr": 0.003,
+      "initialization": "dense_adam",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.1
+    },
+    {
+      "lr": 0.003,
+      "initialization": "dense_adam",
+      "entropy": 0.0,
+      "nuclear": 0.0,
+      "inner_lr": 0.4
+    }
+  ],
+  "steps": 2000,
+  "code_sha256": "f62f1861bcdf784b5ee50a37a99fd9613bffc4d27a23bc975e872798a0147ebb",
+  "native_algorithms": {
+    "lutq": "Nearest-code forward, latent STE update, one Lloyd center update per minibatch; task-independent source models",
+    "yeh": "Categorical A*phi, signed/fixed-zero adaptation; true implicit support/query gradient with Neumann20; 250 initial and20 subsequent inner Adam updates",
+    "msr": "Continuous U*phi; full higher-order MAML, inner1/train3/checkpoint; learned initialization and unconstrained per-group SGD rates"
+  },
+  "minibatch": "Up to32 source tasks and up to512 support examples; source H0 only for outer loss/checkpoints",
+  "transferred": "Structure only in primary comparison, no post-clustering of any competitor; native MSR initialization saved for separate auxiliary evaluation",
+  "published_comparison": "Adapted same FC architecture and data/loss as ours; not literal published CNN/init-transfer results"
+}

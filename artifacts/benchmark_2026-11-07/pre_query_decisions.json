@@ -1,0 +1,14 @@
+{
+  "decided_utc": "2026-11-07T05:57:07.148927+00:00",
+  "target_query_answers_opened": false,
+  "primary_matched_budget_method": "Original G34 retained; no changes on synthetic benchmarks or Omniglot because competitive.",
+  "MNIST_development": {
+    "dense": 1.0821223,
+    "original_G34_m128": 1.2026031,
+    "functional_m128": 1.2384665,
+    "learned_mask_m627": 1.0845103,
+    "random_mask_m627": 1.1754066
+  },
+  "conditional_decision": "Functional hard-assignment refinement did not improve development transfer, so not adopted. Learned mask with independent active weights is a separately labelled larger-budget alternative; it matches Dense on development data while using fewer active numerical weights. Original sharing and all controls retained.",
+  "final_reporting": "Report all frozen primary/conditional predictions, signed structural audit on synthetic data, explicit budget differences and conditional source-cohort uncertainty. No scientific model/hyperparameter changes after opening query responses."
+}

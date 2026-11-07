@@ -1,0 +1,95 @@
+{
+  "version": "sharing_benchmark_v1",
+  "seed": 261105913,
+  "codes": 3,
+  "proposal_anchors": 8,
+  "candidates_per_method": 12,
+  "methods": [
+    "consensus_dp",
+    "lc",
+    "lutq",
+    "yeh",
+    "msr",
+    "mtsr"
+  ],
+  "pilot_families": [
+    101,
+    102
+  ],
+  "confirmation_families": [
+    201,
+    202,
+    203,
+    204,
+    205,
+    206
+  ],
+  "confirmation_seeds": [
+    11,
+    12,
+    13
+  ],
+  "pilot_seeds": [
+    1,
+    2
+  ],
+  "hidden": {
+    "inputs": 16,
+    "outputs": 14,
+    "codes": 3,
+    "train_tasks": 64,
+    "train_support": 4,
+    "train_query": 4,
+    "selection_tasks": 24,
+    "selection_support": 4,
+    "selection_query": 64,
+    "noise": 0.1,
+    "gradient_steps": 2400,
+    "checkpoint_every": 200,
+    "consensus_rounds": 80,
+    "test_tasks": 100,
+    "test_support": [
+      1,
+      4,
+      16
+    ],
+    "test_query": 256,
+    "independent_coefficient_tasks": true,
+    "hidden_permutations": true
+  },
+  "native": {
+    "inputs": 70,
+    "outputs": 68,
+    "codes": 3,
+    "train_tasks": 400,
+    "train_support": 10,
+    "train_query": 10,
+    "selection_tasks": 64,
+    "selection_support": 1,
+    "selection_query": 19,
+    "noise": 0,
+    "gradient_steps": 1000,
+    "checkpoint_every": 100,
+    "consensus_rounds": 80,
+    "test_tasks": 100,
+    "test_support": [
+      1,
+      4,
+      16
+    ],
+    "test_query": 256,
+    "hidden_permutations": false
+  },
+  "selection": {
+    "primary": "Mean query MSE on independent coefficient-selection tasks after exact minimum-norm least-squares adaptation; no teacher or test access.",
+    "proposal_choice": "Within each configuration choose one common hard-I from source proposal anchors/checkpoints by mean exact-refit source query MSE. The selected common-I receives independent coefficient-selection score.",
+    "hpo": "Select one configuration per method using pilot-family/seed mean best selection MSE. Freeze before new confirmation families. Fixed configuration evaluated for all confirmation family/seed pairs.",
+    "confirmation": "Checkpoint and common-I still selected using local independent coefficient-selection tasks. No search hyperparameters revised using confirmation, teacher or test.",
+    "source_data": "All methods receive identical source tasks/observations. Hard-I algorithms build eight source-function proposals and choose a common I using the whole source cohort; MSR/MTSR learn a common U directly. Both data use and different computation are disclosed.",
+    "numeric_reset": "Primary transfer discards every source numeric code/filter/optimizer state and analytically fits fresh target numbers. Also report native MSR nine-step adaptation from its learned initialization separately.",
+    "truth": "Only shape and three-code budget enter learning. No mask, grouping, kernel positions, active count, permutation or code values.",
+    "constraints": "Hard-I variants use fixed zero and three freely fitted values with tied negatives; LC/LUT-Q/Yeh adaptations to this dictionary and common-I bank are explicit. MSR/MTSR retain their native real-valued U and three latent dimensions, without argmax.",
+    "scope": "Native rank1 reproduces author data-generating distribution and dimensions, not archived data/seeds. Hidden16 is a new matched extension. WS-CNN/images and nonlinear DeepSets belong to later benchmark stages.",
+    "tests": "No software tests or commits. Only required scientific runs, numerical guards and one lint/format pass per code change."
+  }
+}

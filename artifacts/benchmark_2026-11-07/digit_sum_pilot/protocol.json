@@ -1,0 +1,42 @@
+{
+  "created_utc": "2026-11-07T04:18:43.823646+00:00",
+  "dataset": "Paired MNIST digit-function sums, reduced Deep-Sets-inspired transfer benchmark",
+  "literature": "https://arxiv.org/pdf/1703.06114",
+  "inputs": 98,
+  "hidden": 32,
+  "outputs": 1,
+  "independent_code_grid": [
+    16,
+    32,
+    64,
+    128
+  ],
+  "loss": "mse",
+  "source_tasks": 16,
+  "validation_tasks": 32,
+  "target_tasks": 32,
+  "pixel_encoding": "7x7 average-pool uint8 per digit; two flattened images, shared hidden random coordinate permutation; divide255 only",
+  "task_family": "Each task maps ten digits to independent sampled scalar values and sums the two image contributions; task mappings and coordinate roles are hidden from learners",
+  "comparison_scope": "A reduced multitask extension, not the published variable-size M=5..50 InfiMNIST benchmark. No published scores are directly comparable.",
+  "target_policy": "Only I/U transfers. Numeric parameters fresh; support-only target budget selected on separate validation tasks; official MNIST test responses remain sealed until predictions are frozen.",
+  "partitions": {
+    "source": {
+      "tasks": 16,
+      "image_pool": "MNIST train disjoint 40k/10k/10k; target query uses official test10k"
+    },
+    "validation": {
+      "tasks": 32,
+      "image_pool": "MNIST train disjoint 40k/10k/10k; target query uses official test10k"
+    },
+    "target": {
+      "tasks": 32,
+      "image_pool": "MNIST train disjoint 40k/10k/10k; target query uses official test10k"
+    }
+  },
+  "code_sha256": "86e71091514ed11559e112a44baf8992346f06c49c2648b56c49a1337b212010",
+  "public_sha256": {
+    "numerical.npz": "b1c245f70b417440715b21aef692a8601f8f96b27e1f9e73d700f2abdf59a44d",
+    "structure.npz": "fa7441f237ba3f59ec4281a2c74008b267bab0084fb7a67bfeda1a8e7eb2e9c7",
+    "support.npz": "92628b00f2ee008fd9981a1e0cd814c7f527921cc9c3fe3674edc3a1c9060b3f"
+  }
+}

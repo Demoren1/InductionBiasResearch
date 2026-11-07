@@ -1,0 +1,11 @@
+{
+  "registered_utc": "2026-11-06T01:07:26.301456+00:00",
+  "code_sha256": "8e0c1d69020f333da5fbf3a468f81dc52110729c8449adfb0d15d1826e2926d0",
+  "parent_protocol_sha256": "7f9d2ba484268b7b86eecdf34f513d28fb118d1a51de8f493a2acfd31d19d231",
+  "primary": "keep2_gated",
+  "before_any_new_cohort_bootstrap": true,
+  "gate_points": 4096,
+  "gate_repeats": 64,
+  "standard_errors": 2,
+  "design": "Additional independent Gaussian output queries. Keep synchronized native J2 only when its loss improves over an independently fitted free head at the same I1/C1 by more than two paired standard errors. Otherwise return independent head. Evaluate every candidate I1; only afterwards meta chooses I1. All gate predictors freeze before opening gate labels; all decisions freeze before teacher structure audit. Gate never fits numerical parameters. No teacher groups/counts/roles passed. G31 is exploratory; G32 amendment is registered before any learner run and fixes the final algorithm without HPO on G32."
+}

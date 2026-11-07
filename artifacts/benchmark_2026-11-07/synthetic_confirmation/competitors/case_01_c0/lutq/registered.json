@@ -1,0 +1,71 @@
+{
+  "method": "LUT-Q",
+  "source": "https://arxiv.org/pdf/1811.05355",
+  "adaptation": "Zero is fixed; positive/negative dictionary entries are tied in pairs. Every source is trained independently with the native nearest-code forward, STE latent update and one Lloyd center update after each minibatch. Native indexators are retained without a second clustering.",
+  "settings": [
+    {
+      "lr": 0.003,
+      "initialization": "cold",
+      "restart": 0
+    },
+    {
+      "lr": 0.003,
+      "initialization": "cold",
+      "restart": 1
+    },
+    {
+      "lr": 0.003,
+      "initialization": "dense_adam",
+      "restart": 0
+    },
+    {
+      "lr": 0.003,
+      "initialization": "dense_adam",
+      "restart": 1
+    },
+    {
+      "lr": 0.01,
+      "initialization": "cold",
+      "restart": 0
+    },
+    {
+      "lr": 0.01,
+      "initialization": "cold",
+      "restart": 1
+    },
+    {
+      "lr": 0.01,
+      "initialization": "dense_adam",
+      "restart": 0
+    },
+    {
+      "lr": 0.01,
+      "initialization": "dense_adam",
+      "restart": 1
+    },
+    {
+      "lr": 0.03,
+      "initialization": "cold",
+      "restart": 0
+    },
+    {
+      "lr": 0.03,
+      "initialization": "cold",
+      "restart": 1
+    },
+    {
+      "lr": 0.03,
+      "initialization": "dense_adam",
+      "restart": 0
+    },
+    {
+      "lr": 0.03,
+      "initialization": "dense_adam",
+      "restart": 1
+    }
+  ],
+  "steps": 2500,
+  "checkpoint_every": 50,
+  "code_sha256": "65aaebcb466e9f12ad6825a3e9c64d5e4a844bff491e2596170fed9b3c6b646e",
+  "registered_utc": "2026-11-07T04:12:15.674765+00:00"
+}

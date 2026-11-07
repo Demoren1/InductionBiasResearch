@@ -1,0 +1,56 @@
+{
+  "seed": 2611056817,
+  "data_seed_offset": 4000000,
+  "families": [
+    8401,
+    8402,
+    8403,
+    8404
+  ],
+  "function": "fresh_gaussian_codes",
+  "points": 8,
+  "features": 2,
+  "point_hidden": 2,
+  "codes": 4,
+  "inputs": 16,
+  "hidden": 16,
+  "bias": 0.15,
+  "amplitude": 1.0,
+  "noise": [
+    0.0,
+    0.2
+  ],
+  "source": 262144,
+  "readout_support": 8192,
+  "validation": 8192,
+  "initializations": [
+    "cold",
+    "moment_pairs8388608",
+    "moment_pairs67108864",
+    "moment_pairs536870912"
+  ],
+  "stage": "G9 local nonlinear-curvature diagnostic on opened G8 geometries, not independent confirmation",
+  "registered_utc": "2026-11-05T04:46:45.587294+00:00",
+  "parent": "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/moment_refinement_g8",
+  "parent_protocol_sha256": "1f8613e05c6ccc0fe1a728a90590fb8c705b0123f05dc9e3f9d195cca106793a",
+  "max_newton_steps": 40,
+  "line_search_levels": 16,
+  "ridge_relative": 1e-10,
+  "rank_relative": 1e-10,
+  "decrement_stop": 1e-06,
+  "decrement_eligibility": 0.0001,
+  "alpha_per_family": 0.05,
+  "rounding_variance_floor_relative": 1e-14,
+  "rounding_reason": "G8 observed labels were stored in float32. Use observed mean squared labels x1e-14 as a conservative numerical floor in noise0; not a finite-sample stochastic guarantee.",
+  "methods": [
+    "scalar_dp",
+    "wald_full",
+    "wald_diagonal",
+    "zero_wald_then_dp"
+  ],
+  "inference": "All E^2 zero/signed-pair Wald relations; alpha divided by8 converged source-fit views per family. Full inverse information includes beta/d nuisance. Exact knownK4 signed graph may abstain. Nonlinear normal approximation is local/asymptotic only, with rank/decrement checks; no exact finite-sample F claim.",
+  "controls": "Same refined numeric estimate for all four decoders. Zero-Wald then DP is a known two-stage mask/quantization control, not the proposed direct graph. Diagonal covariance graph is an ablation without its own valid full-covariance guarantee.",
+  "data": "Regenerate exactly G8 source/readout/validation tensors and verify observation hash. Use source only for numerical fit/covariance; independent validation reports functional fit. No teacher autograd or fixed mask. No software tests.",
+  "theory_sha256": "1aa5516edd72466fc499589e86ba398d1a9728297b4da31f3b90c5e6c321d2fe",
+  "code_sha256": "151a7aa66099a2d60a157950098487c03d0319a5ec5294b0ce8b104ed8f998ed"
+}

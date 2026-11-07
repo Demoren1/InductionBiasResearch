@@ -1,0 +1,65 @@
+{
+  "stage": "G28 frozen-I joint C/W2 numerical control",
+  "registered_utc": "2026-11-05T23:39:56.422966+00:00",
+  "seed": 26110628017,
+  "scope": "Reuse frozen learned I. No new structure search. Learner receives no teacher C/W2. This does not validate extraction with unknown readout.",
+  "pattern": {
+    "seeds": 3,
+    "starts": 32,
+    "rates": [
+      0.01,
+      0.03
+    ],
+    "steps": 4096,
+    "warmup": 64,
+    "batch": 128,
+    "checkpoint_every": 64,
+    "l2": 0.001,
+    "clip": 0.5,
+    "heads": [
+      "shared",
+      "free"
+    ],
+    "policy": "Same old 0110 support/query/test. Joint Adam on C, common hidden b, output b and readout. Identical paired C/-C branch budget for both heads. Select each checkpoint/start/rate on query BCE only. Free head has eight independent parameters. Head L2 is mean square, matching scalar-head scale."
+  },
+  "sets": {
+    "families": 4,
+    "targets": 8,
+    "starts": 64,
+    "steps": 64,
+    "checkpoint_every": 4,
+    "ridge": 1e-06,
+    "line_search": 12,
+    "bias": 0.15,
+    "codes": 4,
+    "hidden": 16,
+    "noise": [
+      0.0,
+      0.2
+    ],
+    "repeats": 64,
+    "support": 4096,
+    "validation": 1024,
+    "test": 8192,
+    "tasks": [
+      "original_sum",
+      "learned_pool_matrix"
+    ],
+    "heads": [
+      "fixed",
+      "pooled",
+      "free",
+      "random_free"
+    ],
+    "policy": "Simultaneous damped Gauss-Newton on C and readout, fresh signed starts. For each function, half the free-head starts begin with equal coefficients, half with independent random coefficients. Known b stays fixed. Observed f(0) anchors an unknown output offset. All predictors frozen before test. Pooled head groups inferred only from learned I column signatures. Fully free head has 16 independent coefficients/output; permutation invariance is audited, not assumed.",
+    "matrix_task": "Two outputs with a new learned 2x2 matrix after pooling the two local feature channels, expanded across eight points. New Gaussian C and signed matrices. This teacher remains a set function; no unknown-readout structure extraction is performed."
+  },
+  "resource_policy": "Only GPUs0-3, packed numerical starts; never6/7 or foreign4/5.",
+  "software_tests": false,
+  "code_sha256": "d3aebd8447a72026b1ea665c7d26f5bd7e694c6f3104e9ec81b6f6ce6f44c09d",
+  "parents": {
+    "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/pattern_0110_prefix_g26/source_frozen.json": "82843357f299a5f4be8b68f10c9e935c69b139d109a010cba805f85695e68c7f",
+    "/home/udeneev-av/InductionBiasResearch/experiments/sharing_structure_research_v1/results/20261105/deepsets_prefix_g27/source_frozen.json": "8c099086208eced88d31bcddb30bdeb8fec9a51ada4cc75f14819844fe5d25da"
+  },
+  "pre_fit_recovery": "Preparation wrote and froze all data, then failed only while converting a relative bookkeeping path. Path normalized; code snapshot refreshed before any fitting. Data untouched."
+}

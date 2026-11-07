@@ -1,0 +1,69 @@
+{
+  "stage": "G6 exploratory nonlinear observability diagnostic; no new method or competitive confirmation claim",
+  "registered_utc": "2026-11-05T04:03:16.598494+00:00",
+  "seed": 2611056817,
+  "families": [
+    8401,
+    8402,
+    8403,
+    8404
+  ],
+  "functions": [
+    "original_codes",
+    "fresh_gaussian_codes"
+  ],
+  "points": 8,
+  "features": 2,
+  "point_hidden": 2,
+  "codes": 4,
+  "inputs": 16,
+  "hidden": 16,
+  "bias": 0.15,
+  "amplitude": 1.0,
+  "noise": [
+    0.0,
+    0.2
+  ],
+  "observations": [
+    16384,
+    131072,
+    1048576,
+    8388608
+  ],
+  "affine_pilot": 8192,
+  "validation": 8192,
+  "chunk": 32768,
+  "moment_variants": [
+    "raw",
+    "affine_residual"
+  ],
+  "reconstruction_sketches": 8,
+  "dense": {
+    "n": 1048576,
+    "steps": 3000,
+    "batch": 1024,
+    "rates": [
+      0.001,
+      0.003,
+      0.01
+    ],
+    "seeds": [
+      31,
+      32,
+      33
+    ],
+    "checkpoint_every": 100,
+    "selection": "Separate observed noisy validation loss, then best restart/rate selected with no teacher. Dense first-layer weights, one shared bias, amplitude and offset; no sharing prior during training."
+  },
+  "known_to_reconstruction": "Standard Gaussian inputs, shape H=D, common positive bias and common positive readout; no values of bias/readout or true weights/indices/roles. Moment reconstruction recovers W/b. No teacher autograd queries.",
+  "projection": "Additional exact signed scalar DP with fixed zero and at most4 codes, zero sparsity charge. Explicit postprocessing control, not a native indexator learner.",
+  "selection": "Eight random matrix sketches chosen by observed whitened tensor off-diagonal residual. No true I used; no change to algorithm after diagnostic metrics.",
+  "audit": "Per-function outputs frozen before opening population moment formulas and teacher indices for metrics; these are diagnostic oracle controls, not learning data. Hidden columns and signed code names aligned only for audit.",
+  "data": "Nested IID Gaussian input/label prefixes, generated in chunks; raw samples are not written to disk. Independent pilot affine fit, independent validation. Both noise levels share input and unit Gaussian noise. No software tests.",
+  "theory_sha256": "c11c68233fbd6eb1dbeffeab11668daecc956572cb4a4536486c76b916888c8d",
+  "code_sha256": "151a0cbb45f6cd5b7f3e2898030dab46007d799d32dda952e437e45f3d94122f",
+  "pre_execution_implementation_correction": {
+    "reason": "Convert validation-score arrays to JSON lists before any scientific worker launch; no algorithm/data/settings change.",
+    "registered_code_sha256": "e346957200905e32b0e6c12a7906c13bf6ac31f6eb394d5388005197bf49a0e3"
+  }
+}

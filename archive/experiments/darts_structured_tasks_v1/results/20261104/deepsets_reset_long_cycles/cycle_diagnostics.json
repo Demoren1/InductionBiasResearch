@@ -1,0 +1,290 @@
+{
+  "families": {
+    "consensus_baseline": {
+      "settings": {
+        "family": "consensus_baseline",
+        "use_consensus": true,
+        "z_steps": 50,
+        "c_steps": 0,
+        "cycle_updates": 50,
+        "copy_z": false,
+        "clear_z_moments": false,
+        "projection_tau": null,
+        "dual_step": 0.25,
+        "rho_final": 100.0,
+        "nonzero_penalty": 0.3,
+        "numeric_lr": 0.01,
+        "latent_lr": 0.01,
+        "codebook_lr": 0.01,
+        "radius": 0.5,
+        "mode": "joint",
+        "configuration": 0,
+        "seed": 343
+      },
+      "per_seed": [
+        {
+          "seed": 343,
+          "z_updates": 12000,
+          "c_updates": 0,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 201,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9476757645606995,
+          "index_changes": 2042
+        },
+        {
+          "seed": 344,
+          "z_updates": 12000,
+          "c_updates": 0,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 201,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9464696049690247,
+          "index_changes": 1926
+        },
+        {
+          "seed": 345,
+          "z_updates": 12000,
+          "c_updates": 0,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 201,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9471880197525024,
+          "index_changes": 1765
+        }
+      ]
+    },
+    "consensus_adapt_keep": {
+      "settings": {
+        "family": "consensus_adapt_keep",
+        "use_consensus": true,
+        "z_steps": 500,
+        "c_steps": 500,
+        "cycle_updates": 1000,
+        "copy_z": false,
+        "clear_z_moments": false,
+        "projection_tau": null,
+        "dual_step": 0.25,
+        "rho_final": 100.0,
+        "nonzero_penalty": 0.3,
+        "numeric_lr": 0.01,
+        "latent_lr": 0.01,
+        "codebook_lr": 0.01,
+        "radius": 0.5,
+        "mode": "joint",
+        "configuration": 4,
+        "seed": 343
+      },
+      "per_seed": [
+        {
+          "seed": 343,
+          "z_updates": 7000,
+          "c_updates": 5000,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9430832862854004,
+          "index_changes": 45
+        },
+        {
+          "seed": 344,
+          "z_updates": 7000,
+          "c_updates": 5000,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9388615489006042,
+          "index_changes": 61
+        },
+        {
+          "seed": 345,
+          "z_updates": 7000,
+          "c_updates": 5000,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9422105550765991,
+          "index_changes": 52
+        }
+      ]
+    },
+    "consensus_adapt_reset": {
+      "settings": {
+        "family": "consensus_adapt_reset",
+        "use_consensus": true,
+        "z_steps": 800,
+        "c_steps": 200,
+        "cycle_updates": 1000,
+        "copy_z": true,
+        "clear_z_moments": true,
+        "projection_tau": null,
+        "dual_step": 0.25,
+        "rho_final": 100.0,
+        "nonzero_penalty": 0.3,
+        "numeric_lr": 0.01,
+        "latent_lr": 0.01,
+        "codebook_lr": 0.01,
+        "radius": 0.5,
+        "mode": "joint",
+        "configuration": 3,
+        "seed": 343
+      },
+      "per_seed": [
+        {
+          "seed": 343,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 10,
+          "projections": 11,
+          "distinct_final_columns": 10,
+          "final_column_spread": 0.9374998807907104,
+          "index_changes": 14
+        },
+        {
+          "seed": 344,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 10,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9448726177215576,
+          "index_changes": 31
+        },
+        {
+          "seed": 345,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 10,
+          "projections": 11,
+          "distinct_final_columns": 15,
+          "final_column_spread": 0.9461272358894348,
+          "index_changes": 24
+        }
+      ]
+    },
+    "plain_adapt_keep": {
+      "settings": {
+        "family": "plain_adapt_keep",
+        "use_consensus": false,
+        "z_steps": 800,
+        "c_steps": 200,
+        "cycle_updates": 1000,
+        "copy_z": false,
+        "clear_z_moments": false,
+        "projection_tau": 0.006,
+        "dual_step": 0.0,
+        "rho_final": 100.0,
+        "nonzero_penalty": 0.3,
+        "numeric_lr": 0.01,
+        "latent_lr": 0.01,
+        "codebook_lr": 0.01,
+        "radius": 0.5,
+        "mode": "joint",
+        "configuration": 13,
+        "seed": 343
+      },
+      "per_seed": [
+        {
+          "seed": 343,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9457851052284241,
+          "index_changes": 721
+        },
+        {
+          "seed": 344,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.936043381690979,
+          "index_changes": 540
+        },
+        {
+          "seed": 345,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 0,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9389364123344421,
+          "index_changes": 576
+        }
+      ]
+    },
+    "plain_adapt_reset": {
+      "settings": {
+        "family": "plain_adapt_reset",
+        "use_consensus": false,
+        "z_steps": 800,
+        "c_steps": 200,
+        "cycle_updates": 1000,
+        "copy_z": true,
+        "clear_z_moments": true,
+        "projection_tau": 0.006,
+        "dual_step": 0.0,
+        "rho_final": 100.0,
+        "nonzero_penalty": 0.3,
+        "numeric_lr": 0.01,
+        "latent_lr": 0.01,
+        "codebook_lr": 0.01,
+        "radius": 0.5,
+        "mode": "joint",
+        "configuration": 15,
+        "seed": 343
+      },
+      "per_seed": [
+        {
+          "seed": 343,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 10,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9473490715026855,
+          "index_changes": 814
+        },
+        {
+          "seed": 344,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 10,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9469375610351562,
+          "index_changes": 654
+        },
+        {
+          "seed": 345,
+          "z_updates": 10000,
+          "c_updates": 2000,
+          "head_updates": 12000,
+          "resets": 10,
+          "projections": 11,
+          "distinct_final_columns": 16,
+          "final_column_spread": 0.9342874884605408,
+          "index_changes": 561
+        }
+      ]
+    }
+  },
+  "maximum_reset_error": 0.0
+}

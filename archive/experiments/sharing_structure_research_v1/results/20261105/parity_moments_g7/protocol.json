@@ -1,0 +1,60 @@
+{
+  "stage": "G7 diagnostic factorial ablation on opened G6 geometries, not independent confirmation or novelty claim",
+  "registered_utc": "2026-11-05T04:20:52.989552+00:00",
+  "seed": 2611056817,
+  "data_seed_offset": 2000000,
+  "families": [
+    8401,
+    8402,
+    8403,
+    8404
+  ],
+  "functions": [
+    "original_codes",
+    "fresh_gaussian_codes"
+  ],
+  "points": 8,
+  "features": 2,
+  "point_hidden": 2,
+  "codes": 4,
+  "inputs": 16,
+  "hidden": 16,
+  "bias": 0.15,
+  "amplitude": 1.0,
+  "noise": [
+    0.0,
+    0.2
+  ],
+  "pairs": [
+    16384,
+    131072,
+    1048576,
+    8388608,
+    67108864,
+    536870912
+  ],
+  "chunk": 65536,
+  "affine_pilot_pairs": 8192,
+  "reconstruction_sketches": 8,
+  "joint_sweeps": 50,
+  "joint_angle_tolerance": 1e-08,
+  "methods": [
+    "iid_affine__sketch",
+    "iid_affine__joint",
+    "antithetic_affine__sketch",
+    "antithetic_affine__joint"
+  ],
+  "labels": "Each IID view uses2n independent labels, each parity view n pairs at x/-x, also2n labels. The same16384 additional paired pilot labels estimate affine coefficients for both views. Different views do not exchange main-source labels. Noise at x/-x is independent. Counts concern actual noisy function evaluations, not free second branches.",
+  "known": "Identical architectural and Gaussian-input assumptions as G6. Positive common bias/readout known qualitatively, their numerical values and W/I/roles not given. No teacher autograd.",
+  "readout": "Additional exact signed scalar DP, fixed zero and at most4 centers, zero sparsity penalty. This is explicit quantization, not native neural assignments.",
+  "stopping": "All prespecified budgets run. No teacher-driven early stopping or settings selection. Per-function models frozen before its structural audit. No software tests.",
+  "theory_sha256": "b20190a1bcc0734d47406daa941d10561f5fa661fcd8aae3e3f8b64368cbd9c8",
+  "executed_sha256": {
+    "parity_moments.py": "f67e63e8eb983ae750db7bb7b8d19fa60dcc0c2f0d2a15b76146e5e79d3e12d9",
+    "nonlinear_moments.py": "151a0cbb45f6cd5b7f3e2898030dab46007d799d32dda952e437e45f3d94122f"
+  },
+  "pre_execution_lint_correction": {
+    "reason": "Iterate over dictionary.items() per repository linter before any scientific worker launch; no data/settings/algorithm change.",
+    "registered_code_sha256": "9c59f5284ab12162d3425ff6e859a935fb38559157774d39d68683e55d7533c7"
+  }
+}

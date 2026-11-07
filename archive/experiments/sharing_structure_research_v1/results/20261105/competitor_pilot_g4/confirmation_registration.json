@@ -1,0 +1,620 @@
+{
+  "registered_utc": "2026-11-05T02:41:17.159852+00:00",
+  "hpo_sha256": "d892c392bb8336eaa436dd6ec1ec9eb0cf3d1073db9db709a61a4aa121f14914",
+  "seed": 2611055917,
+  "families": [
+    {
+      "id": 7101,
+      "kind": "conv"
+    },
+    {
+      "id": 7102,
+      "kind": "conv"
+    },
+    {
+      "id": 7103,
+      "kind": "conv"
+    },
+    {
+      "id": 7104,
+      "kind": "conv"
+    },
+    {
+      "id": 7105,
+      "kind": "conv"
+    },
+    {
+      "id": 7106,
+      "kind": "conv"
+    },
+    {
+      "id": 7201,
+      "kind": "signed"
+    },
+    {
+      "id": 7202,
+      "kind": "signed"
+    },
+    {
+      "id": 7203,
+      "kind": "signed"
+    },
+    {
+      "id": 7204,
+      "kind": "signed"
+    },
+    {
+      "id": 7205,
+      "kind": "signed"
+    },
+    {
+      "id": 7206,
+      "kind": "signed"
+    }
+  ],
+  "observations": [
+    512,
+    2048,
+    8192,
+    16384,
+    32768,
+    65536,
+    131072
+  ],
+  "alpha": 0.05,
+  "regimes": [
+    {
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    }
+  ],
+  "seeds": [
+    31,
+    32,
+    33
+  ],
+  "methods": [
+    "yeh",
+    "msr_exact",
+    "lc",
+    "lutq",
+    "ols_profiles",
+    "ols_pca",
+    "ols_pca_scores",
+    "corrected_pca",
+    "noise_whitened_pca",
+    "signed_contrast_graph",
+    "codebook_crossfit",
+    "whitened_pca_direction_crossfit"
+  ],
+  "main_method": "codebook_crossfit",
+  "source_validation": "Same separate observed full-C/isotropic/noise0.1 source-validation functions as tuning; gradients do not use these. Available to all algorithms for selection. Point spectral estimators and contrast methods have no validation-selected hyperparameters and ignore these extra labels. They are counted separately from main weak-C data. This is an optimizer/recovery benchmark, not a claim of information-theoretic impossibility from all provided data.",
+  "confirmation_policy": "Save all models and all source-statistic hashes, then freeze cohort before reading teacher for structural scoring or generating fresh coefficient target tasks. No correction based on confirmation geometry metrics.",
+  "transfer": {
+    "tasks": 100,
+    "support": [
+      1,
+      4,
+      16,
+      64
+    ],
+    "noise": 0.1,
+    "codes": "Fresh independent standard Gaussian, not weak source values",
+    "query": "Exact isotropic population clean prediction MSE, computed analytically after new support-fit C; no target query used for selection."
+  },
+  "executed_sha256": {
+    "confirmation.py": "3732580783a10068a9d1d13c8f9a2e12645c9061c4d1f8c61db74defeccb33c4",
+    "competitor_models.py": "8e329200828790b7f41b7eb915ec91222b05168cf5a8cafc19374ba7944b9843",
+    "competitor_pilot.py": "e098af68d91d76484901b587de057334ab033fc211dc0c63896d78f96d3e9e64",
+    "contrasts.py": "63fb8ceecc89f1dbddedf264f264bc399044b086810229a1b0b2c9e110e3236c",
+    "gaussian_stats.py": "3a815cf410170d59a2cf6e6c94f08c28dd40a3dd434b68d72c7e4d89a9be598e",
+    "projected_contrasts.py": "685eab6540ed95e226829df5b9db0337443f0e4b656851394e7c3281d61e91d5",
+    "gradient_spectrum.py": "df220251f6c71213d53536a8daaef80f3bd3ad0dabed05642739d1814ceb665e"
+  },
+  "jobs": [
+    {
+      "family": {
+        "id": 7101,
+        "kind": "conv"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7101,
+        "kind": "conv"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7101,
+        "kind": "conv"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7102,
+        "kind": "conv"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7102,
+        "kind": "conv"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7102,
+        "kind": "conv"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7103,
+        "kind": "conv"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7103,
+        "kind": "conv"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7103,
+        "kind": "conv"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7104,
+        "kind": "conv"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7104,
+        "kind": "conv"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7104,
+        "kind": "conv"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7105,
+        "kind": "conv"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7105,
+        "kind": "conv"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7105,
+        "kind": "conv"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7106,
+        "kind": "conv"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7106,
+        "kind": "conv"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7106,
+        "kind": "conv"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7201,
+        "kind": "signed"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7201,
+        "kind": "signed"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7201,
+        "kind": "signed"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7202,
+        "kind": "signed"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7202,
+        "kind": "signed"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7202,
+        "kind": "signed"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7203,
+        "kind": "signed"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7203,
+        "kind": "signed"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7203,
+        "kind": "signed"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7204,
+        "kind": "signed"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7204,
+        "kind": "signed"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7204,
+        "kind": "signed"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7205,
+        "kind": "signed"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7205,
+        "kind": "signed"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7205,
+        "kind": "signed"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7206,
+        "kind": "signed"
+      },
+      "name": "primary",
+      "condition": 100.0,
+      "noise": 1.0,
+      "excitation": "weak",
+      "train_at": [
+        8192,
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7206,
+        "kind": "signed"
+      },
+      "name": "low_noise",
+      "condition": 100.0,
+      "noise": 0.2,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    },
+    {
+      "family": {
+        "id": 7206,
+        "kind": "signed"
+      },
+      "name": "high_noise",
+      "condition": 100.0,
+      "noise": 2.0,
+      "excitation": "weak",
+      "train_at": [
+        131072
+      ]
+    }
+  ]
+}

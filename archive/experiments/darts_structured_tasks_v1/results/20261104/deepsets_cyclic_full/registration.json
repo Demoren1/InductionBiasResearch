@@ -1,0 +1,215 @@
+{
+  "registered_utc": "2026-11-04T17:38:50.438820+00:00",
+  "candidates": [
+    {
+      "configuration": 0,
+      "family": "soft_P_soft_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.01,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 1,
+      "family": "soft_P_soft_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.03,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 2,
+      "family": "soft_P_soft_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.1,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 3,
+      "family": "soft_P_soft_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.01,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 4,
+      "family": "soft_P_soft_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.03,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 5,
+      "family": "soft_P_soft_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.1,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 6,
+      "family": "soft_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.01,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 7,
+      "family": "soft_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.03,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 8,
+      "family": "soft_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.1,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 9,
+      "family": "soft_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.01,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 10,
+      "family": "soft_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.03,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 11,
+      "family": "soft_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.1,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 12,
+      "family": "hard_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.01,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 13,
+      "family": "hard_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.03,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 14,
+      "family": "hard_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.01,
+      "architecture_lr": 0.1,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 15,
+      "family": "hard_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.01,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 16,
+      "family": "hard_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.03,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    },
+    {
+      "configuration": 17,
+      "family": "hard_P_hard_C",
+      "mode": "cyclic",
+      "numeric_lr": 0.03,
+      "architecture_lr": 0.1,
+      "radius": 0.5,
+      "sparsity": 0.03,
+      "commitment": 0.0
+    }
+  ],
+  "rules": [
+    "Full256-position search only; no supplied mask, teacher connections, groups or edge count.",
+    "A repeated cycle first freezes C/head and trains P for4 support minibatches, then freezes P and trains C/head for64 support minibatches. No parameter is frozen permanently.",
+    "Keep soft logits P between all cycles; recompute argmax after each P phase. On the hard-C branch this MAP I stays fixed only for that numerical block.",
+    "Three families: soft P/soft C control, user-proposed soft P/hard C, hard P/hard C. Hard P uses deterministic MAP forward and softmax STE backward.",
+    "Four independent numerical starts share P. Average their losses for P; compute independent numerical gradients without averaging across starts.",
+    "All families have200 cycles:800 P updates and12800 C updates per root, four numerical replicas; matched initial logits/C and phase minibatches.",
+    "P=softmax(alpha), no temperature cooling or sampling. Late entropy0.02 and sparsity0.03 are common. Hard forward uses one code, no cancellation-mass projection alters MAP.",
+    "Source selection only: pilot241/242 chooses one configuration per family among six learning-rate pairs; confirmation243/244/245 uses these fixed settings.",
+    "Snapshots after0/67/133/200 complete cycles freeze raw MAP, then four inherited numerical starts get3000 C-fit updates with reset optimizer moments. Query selects numerical checkpoints and mean selection chooses snapshots/configurations.",
+    "Both phases use support to isolate hard numerical adaptation; independent query/selection monitor generalization. This is block-coordinate training, not an unrolled bilevel gradient.",
+    "Codebook optimizer moments persist across cycles and are reset only in final fixed-I fits. Numerical initialization is normalized against the same hard MAP matrix in all families.",
+    "After source freeze, fresh-C calibration and32 new numerical initializations, then a new heldout draw. One previously inspected teacher; no transfer claim.",
+    "No software tests are added or run."
+  ],
+  "source_sha256": "205c827d2282d40dc4cdc75515312fac602685868425b372f8de631fc50bdbc5",
+  "snapshot_sha256": {
+    "cyclic_search.py": "d99c20960ea167922d00581744aeca0567216ea40dae037a7e5955b7de2f860c",
+    "sharing_report.py": "ae84aff28ab18e8ed5607f08613d1595d5c5b6ac756708135444aef620ff3bc5",
+    "model.py": "5f41e1148f47319aaa80d0e4af0f0020b3720f50378904b2bb36c2331858b1d7",
+    "run.py": "b442e331c683597ebbf716b8667e09c2105ed103f8431e314098852df3b42844",
+    "evaluate.py": "751bc600964193224eef04759440dee3fe615044c422f9a72bdc478d090aee7d",
+    "sharing_ablation.py": "da020ccd520c2e302ade7ff3bac0166881572e2ff0176663f7fff2e6b0ea1011",
+    "cyclic_report.py": "16c8f34d6e9d79223ca8b260f2f0e158ab87c157a268a707644e7d4c193ce2b3",
+    "data.py": "4066efd516f165efdfcddb1e5bca7a0c1eb98caac48acc10e68b84cd7a5644c5",
+    "train.py": "f4db01e2a40fdfec79e0411ece62e87539d69710e3eb3fdb3565b41277d5231a"
+  },
+  "references": [
+    "https://arxiv.org/abs/1812.00332"
+  ]
+}

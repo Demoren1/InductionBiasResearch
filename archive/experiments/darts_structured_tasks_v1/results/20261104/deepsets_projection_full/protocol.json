@@ -1,0 +1,121 @@
+{
+  "seed": 261104731,
+  "output": "experiments/darts_structured_tasks_v1/results/20261104",
+  "deepsets": {
+    "points": 8,
+    "features": 2,
+    "point_hidden": 2,
+    "codes": 4,
+    "support": 1024,
+    "query": 512,
+    "selection": 2048,
+    "test": 8192,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      1.5
+    ],
+    "sparsity": [
+      0.0,
+      0.003
+    ]
+  },
+  "sine": {
+    "inputs": 24,
+    "hidden": 1,
+    "codes": 3,
+    "frequencies": [
+      4.0,
+      6.0,
+      8.0
+    ],
+    "low_frequency": 0.7,
+    "low_amplitude": 0.4,
+    "support": 16384,
+    "query": 4096,
+    "selection": 8192,
+    "test": 16384,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      2.0,
+      6.0,
+      8.0
+    ],
+    "sparsity": [
+      0.0
+    ]
+  },
+  "search": {
+    "pilot_seeds": [
+      261,
+      262
+    ],
+    "confirmation_seeds": [
+      263,
+      264,
+      265
+    ],
+    "pilot_steps": 12000,
+    "confirmation_steps": 12000,
+    "snapshots": [
+      0,
+      0.3333333333,
+      0.6666666667,
+      1.0
+    ],
+    "restarts": 1,
+    "batch": 128,
+    "numeric_warmup": 0,
+    "initial_logit_std": 1.0,
+    "zero_probability": 0.5,
+    "minimum_temperature": 0.03,
+    "late_entropy": 0.02,
+    "gradient_clip": 10.0,
+    "alpha_clip": 5.0,
+    "numeric_l2": 1e-05,
+    "checkpoint_every": 250,
+    "top_configurations": 4
+  },
+  "fit": {
+    "steps": 3000,
+    "batch": 128,
+    "checkpoint_every": 125,
+    "restarts": 4,
+    "fresh_restarts": 32,
+    "gradient_clip": 10.0,
+    "numeric_l2": 1e-05
+  },
+  "rules": [
+    "Full256-position search. No mask, point partition, teacher edge count, true code values or true indexator enter the learner.",
+    "Signed dictionary[0,C1,...,C4,-C1,...,-C4]. Learn a latent real matrix Z; choose the code minimizing normalized squared distance plus a nonzero-code charge.",
+    "The charge is a proximal assignment rule, not an unbiased task-gradient estimate for L0. It widens the zero decision region independently of tiny nonzero centers.",
+    "The hard numerical forward is exactly the selected code. Z uses identity STE, C receives selected-code task gradients. This gradient estimator is biased.",
+    "Compare nearest with centering loss, nearest with task-only centers, charged projection, and3000-step full dense numerical warmup followed by charged projection.",
+    "Warmup trains every matrix position and freezes none. At the transition use the best query numerical warmup state and empirical absolute-value quantile centers; all256 positions remain trainable.",
+    "All searches12000 updates including warmup. Nonzero charge ramps over the first60percent of discrete training; no late entropy or known edge budget.",
+    "One numeric search replica per root. Every hard snapshot gets one inherited plus three fresh Gaussian C fits of3000 steps; query selects C checkpoints, mean selection chooses the structure/configuration.",
+    "Pilot261/262 selects among registered settings per family, then confirmation263/264/265 runs frozen settings. Teacher is read only after source/fresh freeze.",
+    "Fresh-C32 repeats use the same function and measure numerical convergence, not structural transfer. New-coefficient functions require a separate frozen-I evaluation.",
+    "No new software tests. Do not overwrite previous experiments."
+  ],
+  "sharing_heldout_offset": 7900000
+}

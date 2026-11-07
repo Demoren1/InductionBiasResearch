@@ -1,0 +1,82 @@
+{
+  "seed": 2611052301,
+  "pilot_families": [
+    2001,
+    2002
+  ],
+  "pilot_seeds": [
+    21,
+    22
+  ],
+  "confirmation_families": [
+    2101,
+    2102,
+    2103,
+    2104,
+    2105,
+    2106
+  ],
+  "confirmation_seeds": [
+    41,
+    42,
+    43
+  ],
+  "task_budgets": [
+    8,
+    64
+  ],
+  "pilot_task_budget": 8,
+  "restarts": 4,
+  "projection_sweeps": 8,
+  "projection_checkpoint": 10,
+  "meta_steps": 800,
+  "meta_checkpoint": 20,
+  "inner_ridge": 1e-06,
+  "latent_clip": 1.5,
+  "hidden": {
+    "inputs": 16,
+    "outputs": 14,
+    "codes": 3,
+    "train_tasks": 64,
+    "train_support": 4,
+    "train_query": 4,
+    "selection_tasks": 24,
+    "selection_support": 4,
+    "selection_query": 64,
+    "noise": 0.1,
+    "consensus_rounds": 80,
+    "test_tasks": 100,
+    "test_support": [
+      1,
+      4,
+      16
+    ],
+    "test_query": 256,
+    "hidden_permutations": true
+  },
+  "methods": [
+    "z_euclidean",
+    "z_hessian",
+    "z_taylor",
+    "meta_stop",
+    "meta_full",
+    "query_edits"
+  ],
+  "definitions": {
+    "z_euclidean": "Common I, separate Z_t/C_t, Euclidean projection. Same initialization, source observations, L-step and dual schedule as both other Z variants; no sparsity penalty.",
+    "z_hessian": "Only replace projection by full empirical Hessian plus Euclidean proximal term. Omit the linear task-gradient term. Local conditional assignment/C sweeps; no exact multidimensional DP claim.",
+    "z_taylor": "Same full metric as z_hessian, add the task gradient at Z+U. For squared loss this projector minimizes actual source support+query loss plus proximity. Its temporary C sees these source training observations; all evaluation C are reset and fit on support only.",
+    "meta_stop": "Warm-start the pilot-selected z_euclidean I. Shared signed-one-hot/zero A, hard forward, support-fitted C, query gradient with C response stopped. Six Adam rates, four latent jitters, no per-entry query enumeration.",
+    "meta_full": "Exactly meta_stop except differentiate through the damped exact support-fit C. The hard projection uses a surrogate straight-through backward, not an exact discrete gradient.",
+    "query_edits": "Existing exact one-entry source-query refinement, at most64 accepted changes, initialized with the same z_euclidean I. Reference only, no HPO."
+  },
+  "selection": {
+    "checkpoint": "For each configuration, source-query chooses restart and improving source proposals; independent coefficient validation selects checkpoint. Exact unregularized support adaptation for all reported checkpoint scores.",
+    "hpo": "Mean pilot validation over two new geometries and two seeds. First freeze projection settings, then meta pilots start their selected z_euclidean states. Meta settings frozen before new confirmation geometry preparation.",
+    "64_control": "Uses the same selected settings as8-task primary; no64-task HPO. The first8 functions are a subset of64. Same independent validation tasks within family.",
+    "truth": "Only W shape and K enter search. Teacher mask, groups, active count and permutations are closed until every confirmation model is frozen.",
+    "transfer": "100 new independent coefficient functions per new family, fresh exact support fit C, no source numeric state. Six independent geometries; seeds not counted as extra geometries.",
+    "diagnostic": "Identical candidate pool from saved Z checkpoints and a fixed random set of one-entry perturbations. Compare Euclidean/refitted-C, empirical prediction metric, Taylor and actual post-support-fit query loss. Taylor equality is an algebraic guard, not evidence of a novel predictor.",
+    "checks": "No software tests. One scientific gradient directional audit, exact Taylor identity guard, lint and figure inspection."
+  }
+}

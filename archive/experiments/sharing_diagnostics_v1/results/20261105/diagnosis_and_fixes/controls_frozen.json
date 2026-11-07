@@ -1,0 +1,37 @@
+{
+  "registered_utc": "2026-11-04T23:44:31.601800+00:00",
+  "before_confirmation_and_test": true,
+  "reason": "Pilot joint search fits well. Add causal reduction controls to determine whether the consensus loop and all64 source functions are necessary; no further hyperparameter tuning.",
+  "source_hpo_sha256": "a8388bdf85d287bbcc2fefe7608aece65834f99d9787416dfb7cd6b8d192b7a7",
+  "choices": {
+    "joint_projection": {
+      "settings": {
+        "configuration": 0,
+        "rho_final": 10.0,
+        "charge": 0.0,
+        "dual_step": 0.25
+      }
+    },
+    "joint_8": {
+      "settings": {
+        "configuration": 0,
+        "rho_final": 10.0,
+        "charge": 0.0,
+        "dual_step": 0.25
+      }
+    },
+    "joint_projection_8": {
+      "settings": {
+        "configuration": 0,
+        "rho_final": 10.0,
+        "charge": 0.0,
+        "dual_step": 0.25
+      }
+    }
+  },
+  "definitions": {
+    "joint_projection": "Project all64 dense source solutions once, no consensus L/dual updates.",
+    "joint_8": "Exactly joint_constant with only first8 source functions in L/projection; candidate selection still uses all64 source functions.",
+    "joint_projection_8": "The one-projection control with only8 source functions; no task or code values known."
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "kind": "performance diagnosis only, not structural audit or phase fits",
+  "GPU": 0,
+  "wall_seconds_with_profiler": 0.7027634512633085,
+  "source_job": "experiments/sharing_structure_research_v1/results/20261105/shared_structure_g23/extract/job_0000.json",
+  "source_case": {
+    "family_id": 4,
+    "task": 2,
+    "noise": 2.0,
+    "method": "lc"
+  },
+  "numeric_steps_limit": 3,
+  "fresh_C_starts": 32,
+  "synchronization_events": [
+    {
+      "key": "cudaMemcpyAsync",
+      "count": 66,
+      "self_cpu_us": 1437.2240000001511,
+      "self_device_us": 0
+    },
+    {
+      "key": "cudaStreamSynchronize",
+      "count": 55,
+      "self_cpu_us": 6452.67600000032,
+      "self_device_us": 0
+    },
+    {
+      "key": "Memcpy HtoD (Pageable -> Device)",
+      "count": 2,
+      "self_cpu_us": 0,
+      "self_device_us": 4.799999999995634
+    },
+    {
+      "key": "Memcpy DtoD (Device -> Device)",
+      "count": 11,
+      "self_cpu_us": 0,
+      "self_device_us": 34.49500000005355
+    },
+    {
+      "key": "Memcpy DtoH (Device -> Pinned)",
+      "count": 43,
+      "self_cpu_us": 0,
+      "self_device_us": 67.29699999981676
+    },
+    {
+      "key": "aten::item",
+      "count": 25,
+      "self_cpu_us": 92.01999999987311,
+      "self_device_us": 0.0
+    },
+    {
+      "key": "aten::_local_scalar_dense",
+      "count": 25,
+      "self_cpu_us": 323.84499999973923,
+      "self_device_us": 32.959999999788124
+    },
+    {
+      "key": "Memcpy DtoH (Device -> Pageable)",
+      "count": 10,
+      "self_cpu_us": 0,
+      "self_device_us": 18.880000000062864
+    },
+    {
+      "key": "cudaDeviceSynchronize",
+      "count": 2,
+      "self_cpu_us": 15.351999999955297,
+      "self_device_us": 0
+    }
+  ],
+  "max_memory_bytes": 114058240,
+  "teacher_or_meta_Y_opened": false
+}

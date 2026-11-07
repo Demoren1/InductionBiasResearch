@@ -1,0 +1,32 @@
+{
+  "registered_utc": "2026-11-05T16:07:57.613864+00:00",
+  "stage": "G23 common-bank/fresh-C/meta-selection; source extractors and source protocol unchanged",
+  "source_protocol_sha256": "e770660cbf6da5f572696bb81e0f1e5a64d5750b828313ff1097dbb96448f9c5",
+  "source_extract_freeze_sha256": "68381611a784664c8aa16ce2ff7e26808ceeabd2ca31262a685f957fc80e2738",
+  "data_freeze_sha256": "3d3c2b474d092787fb1c5feac5afb8f0705b03e0a8a142aecddb4f83bde96f2e",
+  "settings": {
+    "seed": 26110523017,
+    "numeric_code_steps": 24,
+    "numeric_ridge": 1e-10,
+    "numeric_line_search": 16,
+    "bank_per_source": 4,
+    "meta_alpha": 0.05
+  },
+  "numeric_fit": "Every unique canonicalI is fitted from32freshsignedstarts independently on4source tasks. Uniformmean-query trainingloss, numericrestart/checkpoint onfit-validation. No sourceC ormetaY. EquivalentI numericfits reusedacrossmethods withsameobservations/initials.",
+  "selection": "Native MAP checkpoints every25updates, warm-C fixed-I polish on T/H only, no feedback of polished C or I into the bilevel trajectory. At most16uniquecanonicalI per inverse method, ranked on mean four-task H. Standard fresh32signedC fits on T/H, whole predictor freeze, meta selection, whole selected-I freeze, late teacher audit. Only common4 evaluated; source1 is not a failed trial.",
+  "code_sha256": {
+    "shared_structure_common.py": "e287255bcdeb11b2d3980f045dab2a914d5505682900f85039779af66d062d74",
+    "shared_structure_numeric.py": "850579fe4176e443da87b0e7d8d40c1f5420fa73dcfa8af7b6185fdde77598d0",
+    "shared_structure_numeric_batch.py": "fa58317e25086c9cf23f3e171dd1a4c71053615e8bdfcec2aafe299caad11546"
+  },
+  "theory_sha256": "eebac8e3a63e77a0ff0b842e9dd15540f89690628d48da8b15885357f0925a92",
+  "evaluated_scopes": [
+    "common4"
+  ],
+  "batched_numeric_execution": {
+    "code_sha256": "fa58317e25086c9cf23f3e171dd1a4c71053615e8bdfcec2aafe299caad11546",
+    "indexators_per_batch": 4,
+    "measurement_sha256": "55acf25ed9be38108d6f7f19116ab5f5e7c4390effb96a3e091299082cd4169f",
+    "policy": "Same uniform query loss, data, fresh signed starts, code cap, GN/ridge, per-start backtracking and validation checkpoint. Only vectorization/active compaction and delayed CPU history copies differ. Floating summation differs; measured selected C within5.33e-15, identical selected starts, same training trajectories within2.25e-14 on the declared diagnosis. This is local numerical parity evidence, not a guarantee of bitwise equality on every case."
+  }
+}

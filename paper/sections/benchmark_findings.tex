@@ -1,0 +1,115 @@
+\paragraph{Recovery and prediction are different criteria.}
+Our method recovers the generating Pattern indexator in all six cases
+and the clean DeepSets indexator in all three cases
+(Table~\ref{tab:benchmark-recovery}). LUT-Q matches the Pattern result
+and recovers two of the three clean DeepSets indexators. Nevertheless,
+LUT-Q has lower clean DeepSets query MSE, $1.29\times10^{-4}$ versus
+$6.10\times10^{-4}$. Finite numerical fitting can leave residual error
+even when the selected structure admits the generating function;
+recovery alone does not guarantee that optimization reaches it.
+Figure~\ref{fig:benchmark-transfer} separates sample size from numerical
+training progress.
+
+With source noise $0.1$, neither method exactly recovers any of the
+three DeepSets indexators. Our frozen banks contain no generating
+indexator in these cases, so functional selection cannot recover it
+from those banks. Two selected masks remain exact; the third contains
+117 active connections instead of 32. Thus the remaining failure
+includes candidate coverage and sharing, rather than only codebook
+optimization. Figure~\ref{fig:benchmark-deepsets} displays the first
+registered family under both noise conditions. Binary Pattern
+follow-up results appear in Appendix~\ref{app:binary}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_transfer.pdf}
+    \includegraphics[width=\linewidth]{benchmark_numeric_loss.pdf}
+    \caption{Top: clean-source transfer MSE over three families at
+        different support sizes. Bottom: numerical-selection loss during
+        Adam for the first registered family, taking the best checkpoint
+        and restart so far and averaging eight new tasks. The lower
+        panels precede Gauss--Newton and are not test-loss curves.}
+    \label{fig:benchmark-transfer}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_deepsets_heatmaps.pdf}
+    \caption{First registered DeepSets family. Discrete labels are
+        aligned with the generating indexator only for this late audit;
+        zero is white. Equal signed labels denote the same signed code.
+        The right column shows unconstrained Adam weights in their native
+        hidden-unit order, with an independent numerical scale.}
+    \label{fig:benchmark-deepsets}
+\end{figure}
+
+\paragraph{Real-data transfer.}
+Our Omniglot accuracy is $37.73\%$ with 64 independent first-layer
+values, compared with Dense at $37.14\%$ with 12544 first-layer weights.
+The selected mask is fully connected; the transferred restriction here
+is sharing rather than sparsity.
+The paired difference is $+0.59$ percentage points, with a 95\% interval
+of approximately $[-0.02,1.19]$, conditional on one source cohort.
+This supports competitive transfer with a smaller numerical family,
+but does not establish an accuracy advantage over Dense. All absolute
+accuracies concern the narrow fully connected setting here. The
+published MSR result of $97.7\pm0.2\%$ on augmented 5-way 5-shot
+Omniglot~\cite{zhou2021meta} uses a CNN, learned numerical initialization
+and a much larger meta-training budget; it is contextual evidence,
+not a matched row in Table~\ref{tab:benchmark-real}.
+
+On paired MNIST sums, our 128-code structure has MSE 1.185 versus
+Dense at 1.058, a paired increase of 0.127 with a 95\% interval of
+approximately $[0.087,0.167]$. The other tested 128-dimensional
+structural families also trail Dense. This experiment does not
+demonstrate useful sharing at the tested code budgets.
+
+\paragraph{Conditional diagnosis on MNIST.}
+Before opening target responses, development loss revealed an 11.1\%
+gap to Dense. We therefore evaluated the source-only hard-assignment
+refinement in Appendix~\ref{app:functional}. Its own source
+numerical-selection MSE fell from 0.574 to 0.433, but development
+transfer worsened from 1.203 to 1.238. It was not adopted. Its frozen
+test MSE, 1.192, also fails to improve the original 1.185.
+
+Keeping the learned mask and releasing equality constraints gives
+test MSE 1.062, close to Dense at 1.058. A random mask preserving every
+hidden neuron's degree gives 1.145. This isolates useful connectivity
+from the limitations of the selected sharing constraints at 128 codes.
+The mask control has 627 independent first-layer values, versus 128
+for sharing and 3136 for Dense, so it is a larger-budget diagnostic.
+It does not verify a true neural indexator, which is unavailable on
+real data. Figure~\ref{fig:benchmark-real} includes all conditional
+controls rather than replacing the primary row with a favorable one.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_real_transfer.pdf}
+    \caption{Real-data transfer. Intervals describe episode/task
+        variability conditional on one source cohort. Hatching marks
+        larger numerical budgets or transfer of learned initialization;
+        these are separate controls.}
+    \label{fig:benchmark-real}
+\end{figure}
+
+\paragraph{Computation.}
+Full measurements are in Appendix~\ref{app:costs}. On the representative
+DeepSets family, fresh adaptation plus prediction takes 0.993 seconds
+per task for our structure versus 1.212 for Dense Adam plus Gauss--Newton;
+Dense Adam alone takes 0.775 seconds and has higher error. On Omniglot,
+our packed target cost is 2.75 ms per task versus Dense at 1.58 ms.
+On MNIST it is 29.7 versus 30.9 ms, but peak target allocation is
+1096 versus 71 MiB: the current basis implementation materializes
+large intermediate feature tensors. Fewer independent parameters
+therefore do not imply universally faster or smaller-memory execution.
+Extraction is an additional offline cost, and the incomplete operator
+counts must not be interpreted as total hardware FLOPs.
+
+\paragraph{Scope.}
+Three synthetic families and one source cohort per real benchmark do
+not quantify variability over arbitrary task environments. The real
+protocols, signed dictionaries and common fully connected architectures
+are disclosed adaptations of the original work. Our results support
+exact extraction and transfer in the clean synthetic setting and
+competitive few-shot transfer on the reduced Omniglot setting, while
+exposing failures under noise and restrictive real-data sharing.

@@ -1,0 +1,77 @@
+{
+  "stage": "G1 diagnostic, not confirmation or novelty claim",
+  "seed": 2611053307,
+  "families": [
+    4101,
+    4102,
+    4103,
+    4201,
+    4202,
+    4203
+  ],
+  "inputs": 16,
+  "outputs": 14,
+  "codes": 3,
+  "observations": [
+    32,
+    128,
+    512,
+    2048
+  ],
+  "source_tasks": [
+    8,
+    32,
+    128
+  ],
+  "input_condition": [
+    1.0,
+    100.0
+  ],
+  "code_excitation": [
+    "full",
+    "weak"
+  ],
+  "noise": [
+    0.0,
+    0.2,
+    1.0
+  ],
+  "additional": [
+    {
+      "excitation": "collision",
+      "condition": 1.0,
+      "noise": 0.0,
+      "tasks": 128,
+      "n": 2048
+    },
+    {
+      "excitation": "weak",
+      "condition": 100.0,
+      "noise": 1.0,
+      "tasks": 128,
+      "n": 8192
+    }
+  ],
+  "decoder_restarts": 8,
+  "decoder_steps": 64,
+  "methods": [
+    "gradient_profiles",
+    "gradient_pca",
+    "population_preconditioned_profiles",
+    "ols_profiles",
+    "ols_pca",
+    "ols_pca_scores",
+    "gradient_cross_spectrum",
+    "ols_cross_spectrum",
+    "ols_noise_debiased_spectrum"
+  ],
+  "dictionary": "Fixed zero plus three vector centers and their negatives; no known active count.",
+  "families_description": {
+    "4101_4103": "Randomly permuted valid convolution, 14 entries per code.",
+    "4201_4203": "Arbitrary signed sharing with hidden group sizes48/12/3 and161 zeros. Counts are teacher sampling only, never passed to decoder."
+  },
+  "data": "Nested source task/sample prefixes per family/condition/excitation. Same X and Gaussian noise realization across noise levels. Two source halves are independent observations with the same task C. No teacher derivatives or code values enter estimators.",
+  "scope": "All algorithms here are diagnostic baselines, including covariance correction. Population covariance preconditioning is an oracle-design diagnostic, explicitly excluded from fair production comparison.",
+  "identifiability_control": "collision has c2=c1 for every source task. Its true distinction is unidentifiable from arbitrarily many observations of those functions.",
+  "checks": "No software tests. Check empirical gradient preconditioning equals OLS and OLS gradient vanishes, then scientific metrics and plots."
+}

@@ -1,0 +1,158 @@
+{
+  "families": {
+    "hard_argmax": {
+      "configuration": 11,
+      "commitment": 0.0,
+      "settings": {
+        "row": 6,
+        "selection_mse": 0.05219859629869461,
+        "configuration": 11,
+        "numeric_lr": 0.01,
+        "architecture_lr": 0.1,
+        "radius": 0.5,
+        "sparsity": 0.03,
+        "mode": "joint",
+        "family": "hard_argmax",
+        "commitment": 0.0,
+        "samples": 1,
+        "seed": 43,
+        "search_step": 8000,
+        "root": 0,
+        "snapshot": 2
+      },
+      "selection_nmse_mean": 0.08440711065396697,
+      "per_seed": [
+        {
+          "seed": 43,
+          "row": 6,
+          "search_step": 8000,
+          "selection_nmse": 0.08328134274975879,
+          "test_nmse": 0.08644577115774155,
+          "test_mean_over_four": 0.08644711971282959,
+          "query_selected_restart": 2,
+          "recovery": {
+            "categorical_errors": 136,
+            "categorical_positions": 256,
+            "active_edges": 151,
+            "true_active_edges": 32,
+            "mask_precision": 0.1986754966887417,
+            "mask_recall": 0.9375,
+            "mask_f1": 0.32786885245901637,
+            "groups_used": 4
+          }
+        },
+        {
+          "seed": 44,
+          "row": 10,
+          "search_step": 12000,
+          "selection_nmse": 0.08177258560342107,
+          "test_nmse": 0.08072535693645477,
+          "test_mean_over_four": 0.08072249591350555,
+          "query_selected_restart": 3,
+          "recovery": {
+            "categorical_errors": 152,
+            "categorical_positions": 256,
+            "active_edges": 169,
+            "true_active_edges": 32,
+            "mask_precision": 0.1893491124260355,
+            "mask_recall": 1.0,
+            "mask_f1": 0.31840796019900497,
+            "groups_used": 4
+          }
+        },
+        {
+          "seed": 45,
+          "row": 11,
+          "search_step": 12000,
+          "selection_nmse": 0.08816740360872105,
+          "test_nmse": 0.0859563872218132,
+          "test_mean_over_four": 0.0859951451420784,
+          "query_selected_restart": 1,
+          "recovery": {
+            "categorical_errors": 137,
+            "categorical_positions": 256,
+            "active_edges": 154,
+            "true_active_edges": 32,
+            "mask_precision": 0.2077922077922078,
+            "mask_recall": 1.0,
+            "mask_f1": 0.34408602150537637,
+            "groups_used": 3
+          }
+        }
+      ],
+      "exact_indexators": 0,
+      "exact_masks": 0,
+      "primary": {
+        "seed": 44,
+        "row": 10,
+        "search_step": 12000,
+        "selection_nmse": 0.08177258560342107,
+        "test_nmse": 0.08072535693645477,
+        "test_mean_over_four": 0.08072249591350555,
+        "query_selected_restart": 3,
+        "recovery": {
+          "categorical_errors": 152,
+          "categorical_positions": 256,
+          "active_edges": 169,
+          "true_active_edges": 32,
+          "mask_precision": 0.1893491124260355,
+          "mask_recall": 1.0,
+          "mask_f1": 0.31840796019900497,
+          "groups_used": 4
+        }
+      },
+      "fresh": {
+        "source_row": 10,
+        "settings": {
+          "family": "hard_argmax",
+          "source_row": 10,
+          "radius": 0.5,
+          "numeric_lr": 0.03,
+          "seed": 122,
+          "aligned_initial_codes": false
+        },
+        "query_selected_test_nmse": 0.07992632687091827,
+        "mean_test_nmse": 0.08011405169963837,
+        "all_test_nmse": [
+          0.08015991747379303,
+          0.07996857166290283,
+          0.080005943775177,
+          0.08001796156167984,
+          0.08008676022291183,
+          0.08007998764514923,
+          0.08007214963436127,
+          0.08009539544582367,
+          0.08017311990261078,
+          0.0803079679608345,
+          0.07992632687091827,
+          0.08014114201068878,
+          0.08042418956756592,
+          0.08011400699615479,
+          0.08021372556686401,
+          0.08006706088781357,
+          0.08018778264522552,
+          0.08005919307470322,
+          0.07999452203512192,
+          0.0802149698138237,
+          0.08031420409679413,
+          0.07998120784759521,
+          0.08019345998764038,
+          0.0800839439034462,
+          0.07973260432481766,
+          0.08016110211610794,
+          0.08002341538667679,
+          0.07991988211870193,
+          0.08021208643913269,
+          0.08028102666139603,
+          0.0802825316786766,
+          0.0801537036895752
+        ],
+        "successes_below_0_01": 0,
+        "restarts": 32
+      }
+    }
+  },
+  "teacher_used_only_after_source_freeze": true,
+  "exploratory": true,
+  "observations": "New test inputs for one previously studied teacher; new search seeds are not independent functions."
+}

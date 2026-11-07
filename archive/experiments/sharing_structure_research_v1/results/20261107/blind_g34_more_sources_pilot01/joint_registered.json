@@ -1,0 +1,36 @@
+{
+  "registered_utc": "2026-11-06T22:26:41.810396+00:00",
+  "code_sha256": {
+    "blind_contract.py": "a7fcb543df18135c8f1ead3ae87a1304b3c099f8ecd7dc4ae4ae5d464c331d48",
+    "blind_runtime.py": "0bf4b760b02490f198ddea24ad86231df1f52c44446a89985d4c42fec2586d33",
+    "blind_dense.py": "69d5a5ba5a5159ba119b83327b64a9a429d421d825acd0d8c0803528a764f3e6",
+    "blind_dense_extract.py": "0ec45c078a07db61078e3600f54a3a6479f71bbd18a062f03fd11ff415958fbd",
+    "blind_dense_repair.py": "3bc3e4d9b584ceb3e7ef58ea96bbc1b71f4d467d786c6efd7fb99838b867fa9d",
+    "blind_numeric.py": "99e65cbab3d4b093bf41f0de4c2d6680094eb5b71532507a912c8343be20475d",
+    "blind_orientation_refine.py": "2c37800059ddf8f07159f1c35c0da949989b0cc6222c570c771100ef0d3c49ce",
+    "blind_joint_bank.py": "ee209c56694d33ac268ccbf5a575afbbe98486c47d8a2ae300fa460b21ee3fca",
+    "blind_joint_job.py": "d0d085189ccbc038e40d139122bd7bedeea19ba4c74792c5f974412c27641b8f"
+  },
+  "private_teacher_opened": false,
+  "sources": 16,
+  "total_observation_budget_per_case": 122880,
+  "source_seed_ranking": "H0 MSE / observed response variance",
+  "source_seeds": 4,
+  "source_candidates_each": 2,
+  "anchors": 4,
+  "joint_starts": 16,
+  "zero_masks": "anchor mask and >=1/2/3 source votes from own uncertainty",
+  "projection_loss": "Student4",
+  "numerical_candidates": 32,
+  "numerical_starts": 4,
+  "numerical_steps": 48,
+  "primary": "joint_functional: independent meta MSE",
+  "secondary": [
+    "paired 2SE then own joint geometry",
+    "Gaussian BIC with inferred variance and graph gauge dimension"
+  ],
+  "no_true_numerical_priors": true,
+  "scope": "All10 anonymous cases, paired noise conditions. Extra source-task diversity at unchanged total raw observation budget; new proposal algorithm also differs from G33, so this series alone cannot isolate causal T effect.",
+  "clarification_joint_starts": "16 is minimum, not cap: one anchor plus up to2 candidates from each source are retained; withT16 this may give33 seeds. No learner code/hyperparameter changed.",
+  "data_frozen_sha256": "ae264239c3b8594e6a48f3bd7888c05735b728c43513a2f0a0f63486b94fd240"
+}

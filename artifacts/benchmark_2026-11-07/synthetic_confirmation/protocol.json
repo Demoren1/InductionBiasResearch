@@ -1,0 +1,88 @@
+{
+  "created_utc": "2026-11-07T03:50:56.247148+00:00",
+  "stage": "confirmation",
+  "sources": 16,
+  "conditions": [
+    0,
+    1
+  ],
+  "folds": {
+    "fixed_train": 4096,
+    "selection": 512,
+    "meta": 1024,
+    "test": 2048
+  },
+  "cases": [
+    {
+      "name": "case_00",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "case_01",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "case_02",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "case_03",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "case_04",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "case_05",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    }
+  ],
+  "source_settings": {
+    "adam_steps": 2500,
+    "adam_starts": 12,
+    "adam_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "gn_steps": 32,
+    "revival_rounds": 2
+  },
+  "allowed_gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "forbidden_gpus": [
+    6,
+    7
+  ],
+  "truth_policy": "Only prescribed architecture and codebook size enter learning. No true weights, bias, noise, masks, groups, coordinates, generation seed or target responses.",
+  "selection_policy": "Support fits numbers; selection chooses numerical checkpoints; source meta chooses structures. Target query and structural truth stay sealed until every method is frozen.",
+  "adaptation_policy": "Transfer only shared structure. Every target codebook, hidden bias, free readout and output offset is initialized afresh.",
+  "development_policy": "Tune on pilot source validation. If ours loses, diagnose only from pilot observations and registered hypotheses. Retain original result, register changes, and confirm on new data.",
+  "measurement_policy": "Synchronized wall time, CPU peak RSS, peak CUDA allocated/reserved bytes, and PyTorch registered-operator FLOPs. CPU NumPy/SciPy work is excluded from the FLOP count and this limitation must be labelled.",
+  "cleanup_policy": "Remove unselected heavy checkpoints and scratch caches after paper/report/metrics/curves/selected indexators and reproducibility manifests are preserved."
+}

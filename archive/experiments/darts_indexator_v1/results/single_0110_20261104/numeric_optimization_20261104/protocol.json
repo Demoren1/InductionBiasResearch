@@ -1,0 +1,75 @@
+{
+  "registered_utc": "2026-11-04T02:34:54.767609+00:00",
+  "seed": 261104011,
+  "fit": {
+    "steps": 4096,
+    "batch": 128,
+    "checkpoint_every": 64,
+    "numeric_l2": 0.0001,
+    "gradient_clip": 10.0,
+    "fresh_learning_rates": [
+      0.01,
+      0.03,
+      0.1
+    ],
+    "fresh_initial_norms": [
+      0.5,
+      2.0
+    ],
+    "calibration_restarts": 8,
+    "evaluation_restarts": 32
+  },
+  "rate": 0.03,
+  "norm": 0.5,
+  "calibration_starts": 32,
+  "confirmation_starts": 64,
+  "settings": [
+    {
+      "name": "legacy",
+      "backend": "legacy",
+      "batch": 128,
+      "paired_initialization_steps": 0
+    },
+    {
+      "name": "torch_minibatch",
+      "backend": "torch",
+      "batch": 128,
+      "paired_initialization_steps": 0
+    },
+    {
+      "name": "torch_fullbatch",
+      "backend": "torch",
+      "batch": 768,
+      "paired_initialization_steps": 0
+    },
+    {
+      "name": "paired_64",
+      "backend": "legacy",
+      "batch": 128,
+      "paired_initialization_steps": 64
+    },
+    {
+      "name": "paired_256",
+      "backend": "legacy",
+      "batch": 128,
+      "paired_initialization_steps": 256
+    }
+  ],
+  "source_sha256": "cfbc9cb214c6fc5b7d44d155968ed2746099a62fa2e916f1dfa39b2b2266c21d",
+  "original_oracle_sha256": "5a0067f8162bdd9900b9cfc608e746a4d0b7523019b6f19ac904534c85135d7a",
+  "rules": [
+    "Fix the original true Pattern 0110 indexator; no architecture updates. Fit only two code values and shared bias/readout/output offset.",
+    "Reproduce original 32 starts with standard torch.optim.Adam using the same initial values, support minibatches, L2 and rowwise clipping; no software tests.",
+    "Compare legacy Adam, standard PyTorch Adam, full-batch Adam, and two data-driven paired-polarity initializations on 32 new raw initializations. All use the previously source-selected lr.03 and norm.5.",
+    "Paired initialization tries C and -C for 64/256 support updates each, chooses a branch by query BCE, preserves its Adam moments, and continues training. No desired signs or analytic code values are provided.",
+    "Budget4096 counts both warmup branches. Thus the selected branch receives4096-warmup updates; discarded branch warmup costs the remaining warmup updates. Full-batch Adam uses more observations per update and is explicitly a noise control.",
+    "Mean selection BCE chooses the policy before confirmation/test. Confirm selected policy and unmodified controls on64 new raw initializations. Query chooses checkpoints; report all-start accuracy and success counts, not just the best start.",
+    "Existing task test results have already been inspected; this is an explicitly exploratory numerical diagnosis, not a new benchmark. Structural-search results are preserved."
+  ],
+  "confirmation_families": [
+    "opposite_signs",
+    "unconstrained_gaussian"
+  ],
+  "initialization_extension_registered_utc": "2026-11-04T02:38:08.296365+00:00",
+  "initialization_extension_reason": "Before confirmation evaluation, also inspect 64 unconstrained Gaussian codebooks; the policy remains selected using only the original calibration family."
+}

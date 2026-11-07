@@ -1,0 +1,24 @@
+{
+  "seed": 26111509018,
+  "pattern": {
+    "seeds": 3,
+    "starts": 32,
+    "rates": [
+      0.01,
+      0.03
+    ],
+    "steps": 4096,
+    "warmup": 64,
+    "batch": 128,
+    "checkpoint_every": 64,
+    "l2": 0.001,
+    "clip": 0.5,
+    "heads": [
+      "shared",
+      "free"
+    ],
+    "policy": "Same old 0110 support/query/test. Joint Adam on C, common hidden b, output b and readout. Identical paired C/-C branch budget for both heads. Select each checkpoint/start/rate on query BCE only. Free head has eight independent parameters. Head L2 is mean square, matching scalar-head scale."
+  },
+  "source_freeze_sha256": "146c9eadc4074d3373f4919e85ade302e2a449d17711f7ead3f603a253c0d87a",
+  "scope": "Fresh binary C/b/W2/d fit after unknown-readout I search. All selected Pattern I must be identical for deduplication."
+}

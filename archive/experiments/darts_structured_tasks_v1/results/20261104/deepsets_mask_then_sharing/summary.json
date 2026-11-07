@@ -1,0 +1,55 @@
+{
+  "task": {
+    "points": 8,
+    "features": 2,
+    "point_hidden": 2,
+    "codes": 4,
+    "support": 1024,
+    "query": 512,
+    "selection": 2048,
+    "test": 8192,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      1.5
+    ],
+    "sparsity": [
+      0.0,
+      0.003
+    ],
+    "kind": "deepsets",
+    "name": "deepsets_refinement",
+    "inputs": 16,
+    "hidden": 16,
+    "target_variance": 0.6267741918563843,
+    "target_mean": 0.02547413483262062
+  },
+  "method": "DARTS mask -> independent masked weights -> signed k-means -> fixed-I codebook fit",
+  "exploratory": true,
+  "test_seed": 263004731,
+  "recovery": {
+    "categorical_errors": 0,
+    "categorical_positions": 256,
+    "active_edges": 32,
+    "true_active_edges": 32,
+    "mask_precision": 1.0,
+    "mask_recall": 1.0,
+    "mask_f1": 1.0,
+    "groups_used": 4
+  },
+  "inherited_test_mse": 2.1899704272243525e-09,
+  "inherited_test_nmse": 3.4940341444788633e-09,
+  "fresh_test_mse": 0.00024548551300540566,
+  "fresh_test_nmse": 0.000391665002098307,
+  "fresh_successes": 32,
+  "fresh_restarts": 32
+}

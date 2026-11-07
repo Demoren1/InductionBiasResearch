@@ -1,0 +1,126 @@
+{
+  "seed": 261104731,
+  "output": "experiments/darts_structured_tasks_v1/results/20261104",
+  "deepsets": {
+    "points": 8,
+    "features": 2,
+    "point_hidden": 2,
+    "codes": 4,
+    "support": 1024,
+    "query": 512,
+    "selection": 2048,
+    "test": 8192,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      1.5
+    ],
+    "sparsity": [
+      0.0,
+      0.003
+    ]
+  },
+  "sine": {
+    "inputs": 24,
+    "hidden": 1,
+    "codes": 3,
+    "frequencies": [
+      4.0,
+      6.0,
+      8.0
+    ],
+    "low_frequency": 0.7,
+    "low_amplitude": 0.4,
+    "support": 16384,
+    "query": 4096,
+    "selection": 8192,
+    "test": 16384,
+    "numeric_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "architecture_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "radii": [
+      0.5,
+      2.0,
+      6.0,
+      8.0
+    ],
+    "sparsity": [
+      0.0
+    ]
+  },
+  "search": {
+    "pilot_seeds": [
+      281,
+      282
+    ],
+    "confirmation_seeds": [
+      283,
+      284,
+      285
+    ],
+    "pilot_steps": 12000,
+    "confirmation_steps": 12000,
+    "snapshots": [
+      0,
+      0.3333333333,
+      0.6666666667,
+      1.0
+    ],
+    "restarts": 1,
+    "batch": 128,
+    "numeric_warmup": 2000,
+    "initial_logit_std": 1.0,
+    "zero_probability": 0.5,
+    "minimum_temperature": 0.03,
+    "late_entropy": 0.02,
+    "gradient_clip": 10.0,
+    "alpha_clip": 5.0,
+    "numeric_l2": 1e-05,
+    "checkpoint_every": 250,
+    "top_configurations": 3
+  },
+  "fit": {
+    "steps": 3000,
+    "batch": 128,
+    "checkpoint_every": 125,
+    "restarts": 4,
+    "fresh_restarts": 32,
+    "gradient_clip": 10.0,
+    "numeric_l2": 1e-05
+  },
+  "rules": [
+    "Full256-position search, no teacher mask/groups/edge count/numerical values. All positions can change until the source indexator is frozen.",
+    "Optimize continuous Z and numerical heads on support with normalized task loss plus rho/2*mean((Z-Q+U)^2). Q=C[I] is a separate hard signed codebook projection.",
+    "After2000 unstructured dense warmup steps initialize four positive code magnitudes from empirical Z quantiles. Continue10000 updates; all positions remain available. Warmup uses its best query state.",
+    "Every50 updates globally solve the scalar signed projection: sort abs(Z+U), allow a fixed-zero prefix, use dynamic programming for at most four contiguous positive clusters and charge2*lambda/rho per nonzero element. Signs restore signed labels. Double precision interval costs; no known support size, groups or code magnitudes.",
+    "Then U += dual_step*(Z-Q). Compare no dual, dual_step.25 and1. Rho increases geometrically from.01 to1 or100; rescale U to preserve the unscaled multiplier when rho changes.",
+    "The projection subproblem is globally solved by one-dimensional dynamic programming, but the overall continuous/nonconvex consensus optimization has no global recovery guarantee. Compare the same initial seeds, minibatches, settings and budgets as the Lloyd series.",
+    "Continuous search forward is Z, not a soft mixture. Save Q indexators explicitly and select them only after hard3000-step C refits with1inherited+3freshGaussian numerical initializations.",
+    "Query selects numerical checkpoints, independent selection selects I/config by mean four-start loss. Pilot281/282 selects one setting per family; confirmation283/284/285 uses frozen settings.",
+    "Fresh32 on the source function is an optimizer diagnostic, not structural transfer. Any new-coefficient transfer must keep learned I fixed and initialize all numerical parameters freshly.",
+    "No new software tests; do not overwrite earlier result folders."
+  ],
+  "sharing_heldout_offset": 9900000,
+  "consensus": {
+    "block_steps": 50,
+    "lloyd_iterations": 12,
+    "rho_initial": 0.01,
+    "projection": "dynamic"
+  }
+}

@@ -1,2 +1,16 @@
 \section{Conclusion}
-TODO
+
+We extract a common connectivity and weight-sharing constraint by
+aligning source solutions, jointly projecting their task-specific
+weights and selecting a finite bank by prediction error after numerical
+refitting. New tasks receive only the selected constraint; their
+numerical parameters are learned afresh.
+
+The method recovers the generating structure on the tested Pattern
+and clean DeepSets families. Recovery degrades under source noise,
+and lower-dimensional sharing does not consistently improve real-data
+prediction or execution cost. On paired MNIST, retaining connectivity
+while releasing equality constraints nearly matches Dense, whereas
+functional refinement of the hard assignments does not improve transfer.
+These results make candidate coverage, noise tolerance and the choice
+of sharing strength the main unresolved limitations.

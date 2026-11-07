@@ -1,0 +1,140 @@
+{
+  "stage": "G33 independent fixed-example confirmation without teacher numerical priors",
+  "registered_utc": "2026-11-06T22:22:42.753944+00:00",
+  "sources": 16,
+  "conditions": [
+    0,
+    1
+  ],
+  "sizes_allowlist": [
+    "inputs",
+    "hidden",
+    "codes",
+    "outputs"
+  ],
+  "observation_mode": "Fixed independent examples. One raw response per x. No repeat measurements, active training queries, true bias, noise, parameter ranges, roles, masks, code values or generation seeds enter the learner.",
+  "learner_bias": "H independent learned hidden biases and O learned output offsets",
+  "learner_head": "Free H by O numeric matrix for every source task",
+  "learner_settings": {
+    "adam_starts_per_source": 12,
+    "adam_steps": 2500,
+    "adam_learning_rates": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "dense_polish_starts": 4,
+    "dense_polish_steps": 32,
+    "residual_repair_rounds": 2,
+    "residual_neuron_starts": 32,
+    "residual_neuron_steps": 300,
+    "zero_standard_error_multipliers": [
+      3,
+      5
+    ],
+    "numeric_starts": 2,
+    "numeric_steps": 32,
+    "code_norm_gauge": "RMS(C)=1, function-preserving scale change",
+    "head_refit": "Profile free W2/offset on every numeric step"
+  },
+  "folds": {
+    "fixed_train": 4096,
+    "selection": 512,
+    "meta": 1024,
+    "test": 2048
+  },
+  "cases": [
+    {
+      "name": "case_00",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "case_01",
+      "inputs": 11,
+      "hidden": 8,
+      "codes": 2,
+      "outputs": 1
+    },
+    {
+      "name": "case_02",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "case_03",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "case_04",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 1
+    },
+    {
+      "name": "case_05",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "case_06",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 1
+    },
+    {
+      "name": "case_07",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    },
+    {
+      "name": "case_08",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 1
+    },
+    {
+      "name": "case_09",
+      "inputs": 16,
+      "hidden": 16,
+      "codes": 4,
+      "outputs": 2
+    }
+  ],
+  "cohort_audit": "Freeze every selected predictor before opening any teacher structure or clean test responses. No method changes based on this cohort's structural audit.",
+  "software_tests": false,
+  "resource_policy": "Only free GPUs0-3; never6/7. No foreign jobs touched.",
+  "code_sha256": {
+    "blind_contract.py": "a7fcb543df18135c8f1ead3ae87a1304b3c099f8ecd7dc4ae4ae5d464c331d48",
+    "blind_relu.py": "89b18b46398bee65c5b13ee7a0d53371e59be19f76178170ec28f5ea501a717c",
+    "blind_dense.py": "69d5a5ba5a5159ba119b83327b64a9a429d421d825acd0d8c0803528a764f3e6",
+    "blind_numeric.py": "99e65cbab3d4b093bf41f0de4c2d6680094eb5b71532507a912c8343be20475d",
+    "blind_dense_repair.py": "3bc3e4d9b584ceb3e7ef58ea96bbc1b71f4d467d786c6efd7fb99838b867fa9d",
+    "blind_joint_job.py": "c34adecfaf224149e2b3076fc7497b51e0482673cce57d78ce907c59c551be47",
+    "blind_fixed_job.py": "b4e88fbadec8cbd55703819c96e1daf90fc6e28ce89bf6e8995d83b0c7dcfd08",
+    "blind_dense_extract.py": "0ec45c078a07db61078e3600f54a3a6479f71bbd18a062f03fd11ff415958fbd",
+    "blind_fixed_fleet.py": "f3c043cb05790d087d492345a5a6db0e5163fd1d4b38309f2487ed0a90d47011",
+    "blind_study.py": "becb62dc17001414c25d78cb65dfab68cd803a9f2582275133e8772d7d65a0dc",
+    "blind_joint_bank.py": "5d14677f108956ba7789ecd596a342f26b26b3194b0387d57aac8ef0691802e1",
+    "blind_orientation_refine.py": "2c37800059ddf8f07159f1c35c0da949989b0cc6222c570c771100ef0d3c49ce",
+    "blind_pipeline.py": "c62ffaf4b74728c60349725447d88953869f5d56adbcb2eccdcd38150ee2599e",
+    "blind_dense_job.py": "2343152f9a6334485e8c60a41641ab41f708ea821ceb07f7a37713f5fa22c4a5",
+    "blind_fixed_protocol.py": "392936f21c0c951597c0193b642369016a063391c1f094cb9d2fe222dadd6a20",
+    "blind_runtime.py": "0bf4b760b02490f198ddea24ad86231df1f52c44446a89985d4c42fec2586d33",
+    "blind_report.py": "f0eeb644988ca4b4f0d336d5f7fcf08e66e2e93b6ac74f5d5bc2018d46e61bc0"
+  }
+}

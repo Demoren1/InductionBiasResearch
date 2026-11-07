@@ -1,0 +1,169 @@
+\appendix
+\section{Additional benchmark details}
+
+\subsection{Functional hard-assignment control}
+\label{app:functional}
+
+This conditional MNIST control starts from the source-selected
+indexator and its fitted source parameters. Let $J$ be its signed
+representation, and let $V_\tau^{\mathrm{num}}$ be the source
+numerical-selection sample. At fixed task parameters, write
+\begin{equation}
+    g_{\tau,p}:=\frac{\partial
+        \mathcal L_{V_\tau^{\mathrm{num}}}}{\partial w_{\tau,p}},
+    \qquad
+    h_{\tau,p}:=\frac{2}{n_\tau O}
+        \sum_{n,o}\left(
+            \frac{\partial f_{\tau,o}(x_n)}{\partial w_{\tau,p}}
+        \right)^2,
+    \label{eq:benchmark-functional-ggn}
+\end{equation}
+where $n_\tau=|V_\tau^{\mathrm{num}}|$ and $O$ is the output dimension.
+For a replacement $j\in\{0,\pm1,\ldots,\pm m\}$, define
+$q_\tau(j):=\operatorname{sign}(j)c_{\tau,|j|}$, with $q_\tau(0)=0$,
+and $\delta_{\tau,pj}:=q_\tau(j)-q_\tau(J_p)$. The shared proposal is
+\begin{equation}
+    j_p^+\in\operatorname*{arg\,min}_j
+        \frac1T\sum_\tau
+        \left(g_{\tau,p}\delta_{\tau,pj}
+            +\frac12h_{\tau,p}\delta_{\tau,pj}^2\right).
+    \label{eq:benchmark-functional-move}
+\end{equation}
+This diagonal Gauss--Newton score is a proposal surrogate, not an exact
+loss change for a nonlinear network or simultaneous replacements.
+The actual numerical-selection loss must decrease before a proposed
+packet is accepted.
+Write $R(J,\eta):=T^{-1}\sum_\tau
+\mathcal L_{V_\tau^{\mathrm{num}}}(f_{J,\eta_\tau})$.
+
+\begin{algorithm}[htbp]
+    \small\DontPrintSemicolon\SetAlgoNoEnd
+    \KwIn{Source-selected $J$, fitted numerical parameters
+        $\{\eta_\tau\}$, source fitting and numerical-selection data.}
+    $\mathcal B_{\mathrm f}\leftarrow\{J\}$\;
+    \For{$k=1,\ldots,400$}{
+        $\eta_\tau\leftarrow$ 20 Adam updates on
+            $\mathcal L_{S_\tau^{\mathrm s}}$ at fixed $J$, for all $\tau$\;
+        Compute $g_{\tau,p},h_{\tau,p}$ and $j_p^+$ by
+            \eqref{eq:benchmark-functional-ggn}--\eqref{eq:benchmark-functional-move}\;
+        Order profitable replacements by their predicted loss decrease\;
+        $a\leftarrow0$\;
+        \For{$b\in(64,32,16,8,4,2,1)$}{
+            $J'\leftarrow J$ with its first $b$ profitable replacements\;
+            \If{$R(J',\eta)<R(J,\eta)$}{
+                $(J,a)\leftarrow(J',1)$; \textbf{break}\;
+            }
+        }
+        \If{$a=0$}{
+            $\mathcal N_{16}\leftarrow\{J\text{ with one of its first
+                16 profitable replacements}\}$\;
+            \tcp{Actual loss rescues a misleading quadratic ordering.}
+            $J\in\operatorname*{arg\,min}_{J'\in\mathcal N_{16}\cup\{J\}}
+                R(J',\eta)$\;
+        }
+        Retain distinct trajectory checkpoints in $\mathcal B_{\mathrm f}$\;
+    }
+    Refit the finite bank and select by
+        \eqref{eq:method-structure-selection}\;
+    \caption{Conditional functional proposal refinement}
+\end{algorithm}
+
+Four numerical learning rates, $0.0003,0.001,0.003,0.01$, are run;
+seven distinct candidates including the unchanged baseline receive
+common refitting. Because the starting indexator was selected using
+source structure-selection data, its reuse here makes those source
+losses exploratory; the disjoint development and final target cohorts
+remain separate. A preliminary attempt with an incorrect basis-scale
+conversion was excluded before candidate export. In the corrected
+attempt, the initial source predictor and its loss agree in both
+representations. No target responses or reference parameters enter
+this procedure. Development results rejected it before test scoring.
+
+\subsection{Numerical and competitor controls}
+
+Synthetic target adaptation uses 18 fresh Adam starts: learning rates
+$0.003,0.01,0.03$, three bias-activity quantiles $0.1,0.5,0.9$, and two
+random starts per setting. Numerical-selection data choose checkpoints
+over 2000 updates; four retained starts receive up to 48 Gauss--Newton
+updates. Dense receives the same budget, with its Adam checkpoint
+reported separately. On real data, development tasks select one global
+learning rate, quantile and update count; a target task uses a single
+fresh start and only its support responses. The selected update counts
+are 25/50 for Dense/ours on Omniglot and 225/250 on MNIST.
+
+A stronger Yeh source-only control on one separate DeepSets pilot uses
+100 rather than 20 following inner steps and an explicit spectrally
+damped inner Hessian solve rather than a 20-term Neumann action.
+Its source structure-selection MSE improves from 0.04854 to 0.04325
+for MAP and from 0.02905 to 0.02507 for the continuous basis; our
+pilot value is 0.001762. This limited control does not establish
+optimal tuning of Yeh, and these source losses are not target results.
+
+The image implementation eliminates code variables from the weighted
+calibration solve before solving for column scales. Comparison against
+the unreduced system on learned source descriptors gives relative
+code difference $3.50\times10^{-13}$. Thus this computational reduction
+preserves that conditional calibration objective; it does not add
+structural information.
+
+\subsection{Binary Pattern and additional heatmaps}
+\label{app:binary}
+
+\input{tables/benchmark_binary_pattern.tex}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_pattern_heatmaps.pdf}
+    \caption{Pattern indexators for the first registered family.
+        Display alignment uses reference labels only after all
+        predictions are frozen. Dense weights retain native unit order.}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_mnist_heatmaps.pdf}
+    \caption{Paired MNIST source weights, learned mask, selected signed
+        indexator, functional control and degree-matched random mask.
+        Group labels are names, not numerical weight magnitudes.
+        Releasing weights in the learned mask changes the numerical
+        budget from 128 to 627; no reference indexator is available.}
+\end{figure}
+
+\subsection{Measured computational costs}
+\label{app:costs}
+
+Offline costs include required dense preparation, all configurations,
+common source refitting and development selection. Continuous
+competitors pay only for the dense preparation they use, rather than
+the extra descriptor refinement required by discrete refitting.
+The conditional functional row additionally includes the original
+search and its diagnostic/refinement stages. Shared stages are counted
+in each independent pipeline; summing rows would count them repeatedly.
+Search seconds are measured with operator profiling under shared
+scheduling and are not an isolated latency benchmark. The CPU parts
+of calibration are timed but absent from the registered Torch counts.
+
+Target timings are separate unprofiled runs, one process per GPU.
+Synthetic rows measure the first registered family at 1024 fitting
+examples; real rows measure the complete target cohort. Allocated
+memory depends on packing: eight tasks for synthetic data and chunks
+of up to 64 for images. Synthetic target operator counts in the CSV
+cover all three support sizes, whereas its timing column covers only
+1024; these scopes must not be combined as a single FLOP rate.
+An unavailable Adam-only peak is left blank rather than replaced by
+the later Gauss--Newton peak.
+The target GFLOPs column reports work per task, including all numerical
+starts and updates in the stated scope. FLOP/s is a throughput measure
+and is not measured here. Unsupported Torch operations and CPU numerical
+linear algebra are excluded from these counts.
+
+\input{tables/benchmark_costs.tex}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{benchmark_omniglot_heatmaps.pdf}
+    \caption{Omniglot source weights, transferred mask and signed
+        indexator, with one $28\times28$ tile per hidden unit.
+        Hidden-unit orders are native to each model; numerical weights
+        and arbitrary group labels have separate color scales.}
+\end{figure}
