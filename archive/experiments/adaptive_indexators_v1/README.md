@@ -24,6 +24,6 @@ python experiments/adaptive_indexators_v1/report.py
 Выбор для каждого банка сохраняется в `*_frozen.json` до создания target.
 Хеши кода и протокола записываются в `environment.json`.
 
-Отчёты: [теория](../../reports/worknotes/theory/STRUCTURAL_ADVANTAGE_THEORY_2026-11-02.md),
+Отчёты: [теория](../../../paper/theory/history/structural_transfer/STRUCTURAL_ADVANTAGE_THEORY_2026-11-02.md),
 [конструкция индексаторов](../../2026-11-03/mds/ADAPTIVE_INDEXATOR_DESIGN_2026-11-02.md),
 [результаты пилота](../../2026-11-03/mds/ADAPTIVE_INDEXATORS_PILOT_2026-11-02.md).

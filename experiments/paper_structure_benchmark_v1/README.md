@@ -46,8 +46,10 @@ model selection or tuning.
 
 ## New runs
 
-The completed local series remains in `results/20261107/`, excluded from
-Git. New runs must use new output roots. Each component is a module with
+The raw `results/20261107/` directory was removed during the
+[8 November cleanup](../../archive/2026-11-08/README.md); the published
+audit bundle and manuscript outputs remain available. New runs must
+prepare their observations again and use new output roots. Each component is a module with
 `--help`; for example:
 
 ```bash

@@ -1,6 +1,6 @@
 # Что даёт изученная структура, когда данные подсказывают направление
 
-2 ноября 2026. [Теория](theory/INDEXATOR_TASK_ROUTING_THEORY_2026-11-02.md),
+2 ноября 2026. [Теория](../../../paper/theory/history/structural_transfer/INDEXATOR_TASK_ROUTING_THEORY_2026-11-02.md),
 [протокол](../../experiments/basin_routing_v1/cue_protocol.json),
 [протокол сильных контролей](../../experiments/basin_routing_v1/cue_control_protocol.json),
 [все результаты](../../experiments/basin_routing_v1/results/cue_holdout_v1/summary.json).

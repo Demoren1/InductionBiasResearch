@@ -111,14 +111,15 @@ Learning rates, restarts and numerical checkpoints are selected using
 the designated development data; target query responses remain closed
 until predictors and predictions are frozen.
 
-The synthetic extractor is the unchanged G34 implementation.
-For images, code elimination reduces its weighted calibration system
-to a column-scale Schur system, preserving the projection objective.
-The finite real-data bank uses two dense anchors, direction dispersion
-among four fitted starts, four support proposals and 40 assignment
-iterations; only exact duplicate arrays are removed at large $m$.
-Real numerical fitting uses Adam. These implementation choices and
-their full search costs are recorded with the results.
+The main G34 comparison uses the fixed-support variant of
+Algorithm~\ref{alg:joint-projection}: each run preserves its proposed
+zero positions and reassigns only nonzero groups. Synthetic extraction
+uses the unchanged G34 implementation. Image experiments use the same
+support restriction and eliminate code variables to reduce calibration
+to a column-scale Schur system; numerical fitting uses Adam.
+Support proposals, initialization rules and projection budgets are
+given in Appendix~\ref{app:support-proposals}; their full search costs
+are included in the reported measurements.
 
 \subsection{Measurements}
 

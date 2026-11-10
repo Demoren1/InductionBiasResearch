@@ -3,7 +3,7 @@
 2 ноября 2026. [Протокол](../../experiments/basin_routing_v1/protocol.json),
 [код](../../experiments/basin_routing_v1/run.py),
 [все результаты](../../experiments/basin_routing_v1/results/heldout_v1/summary.json),
-[теория выбора структуры](theory/INDEXATOR_TASK_ROUTING_THEORY_2026-11-02.md).
+[теория выбора структуры](../../../paper/theory/history/structural_transfer/INDEXATOR_TASK_ROUTING_THEORY_2026-11-02.md).
 
 **Выбор структуры по короткому численному обучению помогает в одном
 сложном режиме и вредит в другом.** Успех зависит от надёжности раннего

@@ -34,7 +34,7 @@ CUDA_VISIBLE_DEVICES=5 python3 -m experiments.basin_routing_v1.cue_run --frequen
 Отрицательный контроль удаляет слабую низкочастотную компоненту.
 Настройки оптимизаторов остаются прежними: это проверка механизма,
 а не новый независимо настроенный набор оптимизаторов для другой цели.
-[Теория](../../reports/worknotes/theory/INDEXATOR_TASK_ROUTING_THEORY_2026-11-02.md).
+[Теория](../../../paper/theory/history/structural_transfer/INDEXATOR_TASK_ROUTING_THEORY_2026-11-02.md).
 
 Дополнительные сильные контроли без изученной библиотеки используют
 тот же признак для выделения групп или плотной инициализации.

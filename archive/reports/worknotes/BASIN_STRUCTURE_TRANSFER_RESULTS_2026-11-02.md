@@ -1,7 +1,7 @@
 # Перенос индексаторов через оптимизационные ловушки
 
 2 ноября 2026. [Код и протокол](../../experiments/basin_structure_transfer_v1/README.md),
-[проверка теории](theory/BASIN_TRANSFER_THEORY_AUDIT_2026-11-02.md),
+[проверка теории](../../../paper/theory/history/structural_transfer/BASIN_TRANSFER_THEORY_AUDIT_2026-11-02.md),
 [все машинные результаты](../../experiments/basin_structure_transfer_v1/results/frequency_comparison.json).
 
 Последующие проверки:
@@ -211,7 +211,7 @@ Oracle с 32 правильными предложениями на функци
 ## Отдельная строгая проверка узкого глобального минимума
 
 Для искусственной функции из двух квадратичных ветвей в
-[теоретической записке](theory/BASIN_TRANSFER_THEORY_AUDIT_2026-11-02.md)
+[теоретической записке](../../../paper/theory/history/structural_transfer/BASIN_TRANSFER_THEORY_AUDIT_2026-11-02.md)
 глобальный минимум известен точно. При **одинаковой норме старта 2,5**
 вероятность успеха непрерывного спуска равна:
 

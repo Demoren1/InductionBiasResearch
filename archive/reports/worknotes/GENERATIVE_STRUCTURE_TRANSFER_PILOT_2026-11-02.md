@@ -1,6 +1,6 @@
 # Перенос изученных структур с новым обучением кодбуков
 
-2 ноября 2026. [Теория](theory/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md),
+2 ноября 2026. [Теория](../../../paper/theory/history/structural_transfer/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md),
 [код и протокол](../../experiments/generative_structure_transfer_v1/README.md),
 [машинные результаты](../../experiments/generative_structure_transfer_v1/results/pilot_v1/summary.csv).
 
@@ -225,7 +225,7 @@ readout и один запуск генератора. Источники зде
 [признак задачи и сильные контроли](INDEXATOR_TASK_CUE_RESULTS_2026-11-02.md),
 [одинаковые старты и освобождение весов](BASIN_RELEASE_CONTROL_2026-11-03.md).
 Результаты и границы доказательств разобраны в
-[теории](theory/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md).
+[теории](../../../paper/theory/history/structural_transfer/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md).
 Сам tanh-пилот устанавливает эффект малой выборки, а не оптимизационный барьер.
 
 Повышение надёжности покрытия уже изученных схем остаётся отдельным

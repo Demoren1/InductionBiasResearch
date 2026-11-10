@@ -55,6 +55,8 @@ def identity(module, arguments):
     fields["timing_only"] = "--timing-only" in arguments
     for key in ("root", "case", "condition", "method", "codes"):
         flag = f"--{key}"
+        if key == "root" and flag not in arguments and "--base" in arguments:
+            flag = "--base"
         fields[key] = (
             arguments[arguments.index(flag) + 1]
             if flag in arguments
@@ -65,7 +67,9 @@ def identity(module, arguments):
     return module, tuple(fields.items())
 
 
-def run(plan, per_gpu):
+def run(plan, per_gpu, gpus=tuple(range(6))):
+    if len(set(gpus)) != len(gpus):
+        raise ValueError("GPU indices must be unique")
     configuration = json.loads(plan.read_text())
     jobs = configuration["jobs"]
     by_id = {row["id"]: row for row in jobs}
@@ -94,7 +98,10 @@ def run(plan, per_gpu):
             if status:
                 failed[key] = {"exit_code": status, "log": entry["log"]}
             del children[key]
-        occupied, live, foreign = {gpu: 0 for gpu in range(6)}, set(children), set()
+        occupied, live, foreign = {gpu: 0 for gpu in gpus}, set(children), set()
+        modules = {
+            MODULE_MOVES.get(row["module"], row["module"]) for row in jobs
+        }
         observed_pids = set()
         for row in subprocess.check_output(
             [
@@ -122,14 +129,16 @@ def run(plan, per_gpu):
             except (FileNotFoundError, PermissionError):
                 foreign.add(gpu)
                 continue
-            if "-m" not in args or not args[args.index("-m") + 1].startswith(
-                "experiments.paper_structure_benchmark_v1."
-            ):
+            module = args[args.index("-m") + 1] if "-m" in args else ""
+            module = MODULE_MOVES.get(module, module)
+            if module not in modules:
                 foreign.add(gpu)
                 continue
-            key = identity(args[args.index("-m") + 1], args)
+            key = identity(module, args)
             if key in keys:
                 live.add(keys[key])
+            else:
+                foreign.add(gpu)
         for entry in children.values():
             if entry["pid"] not in observed_pids:
                 occupied[entry["gpu"]] += 1
@@ -152,7 +161,7 @@ def run(plan, per_gpu):
                     "status": "partial_without_live_process",
                     "registration": job["registration"],
                 }
-        for gpu in range(6):
+        for gpu in gpus:
             if gpu in foreign or occupied[gpu] >= per_gpu:
                 continue
             ready = [
@@ -218,7 +227,7 @@ def run(plan, per_gpu):
                     },
                     "failures": failed,
                     "per_gpu_limit": per_gpu,
-                    "allowed_gpus": list(range(6)),
+                    "allowed_gpus": list(gpus),
                 },
             )
             updated = time.monotonic()
@@ -256,8 +265,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", type=Path, required=True)
     parser.add_argument("--per-gpu", type=int, choices=(1, 2), default=2)
+    parser.add_argument(
+        "--gpus", type=int, nargs="+", choices=range(8), default=list(range(6))
+    )
     args = parser.parse_args()
-    run(args.plan.resolve(), args.per_gpu)
+    run(args.plan.resolve(), args.per_gpu, tuple(args.gpus))
 
 
 if __name__ == "__main__":

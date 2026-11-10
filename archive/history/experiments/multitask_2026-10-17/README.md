@@ -2,7 +2,7 @@
 
 Четыре поручения: обратное sharing encoder/decoder, теория, контроль Pattern при начальном z и cVAE на Multimask. Весь новый код и результаты изолированы здесь; production и банки не перезаписываются.
 
-Отчёты — [сводка](reports/SUMMARY.md), [архитектуры](reports/01_shared_encoder_many_decoders.md), [теория](reports/02_theory.md), [Pattern](reports/03_pattern_initial_z.md), [cVAE](reports/04_multimask_cvae.md).
+Отчёты — [сводка](reports/SUMMARY.md), [архитектуры](reports/01_shared_encoder_many_decoders.md), [теория](../../../../paper/theory/history/MULTITASK_THEORY_2026-10-17.md), [Pattern](reports/03_pattern_initial_z.md), [cVAE](reports/04_multimask_cvae.md).
 
 ## Воспроизведение
 

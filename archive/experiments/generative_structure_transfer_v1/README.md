@@ -1,7 +1,7 @@
 # Генерация изученных структур и обучение новых кодбуков
 
 [Результаты завершённого пилота](../../reports/worknotes/GENERATIVE_STRUCTURE_TRANSFER_PILOT_2026-11-02.md),
-[теоретическая постановка](../../reports/worknotes/theory/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md).
+[теоретическая постановка](../../../paper/theory/history/structural_transfer/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md).
 
 Пилот от 2 ноября 2026. Генеративная модель обучается **только выдавать
 индексаторы**. На новой задаче её параметры заморожены. Для каждой попытки

@@ -1,7 +1,7 @@
 # Четыре исследования — 17 октября 2026
 
 1. [Один encoder, несколько decoder](01_shared_encoder_many_decoders.md): качество и размер модели, три seeds, вмешательства в latent и routing-контроль.
-2. [Теория sharing](02_theory.md): неидентифицируемость координат, частотный decoder, top-k plateau, роль condition и различие ELBO/surrogate.
+2. [Теория sharing](../../../../../paper/theory/history/MULTITASK_THEORY_2026-10-17.md): неидентифицируемость координат, частотный decoder, top-k plateau, роль condition и различие ELBO/surrogate.
 3. [Pattern и начальный z](03_pattern_initial_z.md): буквальный ноль не оптимален;96.92% случайных prior-масок точны. Выравнивание не создаёт оптимум, канонизированный частотный prior уже точен.
 4. [cVAE на Multimask](04_multimask_cvae.md): два loss-варианта, три seeds, контроли condition/z и перенос.
 

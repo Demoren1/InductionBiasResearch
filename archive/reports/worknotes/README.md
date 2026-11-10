@@ -36,8 +36,8 @@ Method и Experiments ещё не заполнены: здесь собраны 
 разбиение на известные выходы явно учитывается как предположение метода.
 
 Текущая формулировка и условия успеха разобраны в
-[теории генерации структур](theory/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md).
-[Полный указатель теории](theory/README.md) связывает общую постановку,
+[теории генерации структур](../../../paper/theory/history/structural_transfer/GENERATIVE_STRUCTURE_TRANSFER_THEORY_2026-11-02.md).
+[Полный указатель теории](../../../paper/theory/history/structural_transfer/README.md) связывает общую постановку,
 обобщение, геометрию оптимизации и доказательства для частных моделей.
 
 ## Экспериментальная основа Introduction

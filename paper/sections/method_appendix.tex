@@ -1,0 +1,519 @@
+\section{Calibration scale normalization}
+\label{app:calibration-normalization}
+
+Normalization is specified for each descriptor. The general affine
+representation alone does not prescribe a normalization rule.
+The identity descriptor requires no constraints; the ReLU construction
+is given below.
+
+\subsection{One-neuron example}
+\label{app:calibration-example}
+
+Fix a source task $\tau$ and consider one hidden neuron with $P$ input
+weights. Let $\mathbf r_\tau\in\mathbb R^P$ be the unit-norm direction
+of its fitted input-weight vector, and let $s_\tau\in\mathbb R$ be
+its adjustable scalar calibration. The descriptor is
+$\mathbf z_\tau(s_\tau)=s_\tau\mathbf r_\tau$.
+For a fixed indexator $\mathbf I$, the codebook
+$\mathbf c_\tau\in\mathbb R^K$ gives the lookup weights
+$\mathbf A_{\mathbf I}\mathbf c_\tau$.
+
+An exact match alone does not determine a common absolute scale.
+For any positive scalar $\alpha$,
+\begin{equation}
+    \mathbf A_{\mathbf I}\mathbf c_\tau=s_\tau\mathbf r_\tau
+    \quad\Longrightarrow\quad
+    \mathbf A_{\mathbf I}(\alpha\mathbf c_\tau)
+        =(\alpha s_\tau)\mathbf r_\tau.
+    \label{eq:appendix-calibration-scale}
+\end{equation}
+Thus a nonzero exact match belongs to a family of equally exact matches.
+
+The unconstrained least-squares subproblem has an additional degeneracy,
+even when no nonzero exact match exists. Let
+$\mathbf D_\tau\in\mathbb R^{P\times P}$ be the diagonal matrix of
+fixed positive discrepancy scales used in this subproblem. Then
+\begin{equation}
+    \begin{aligned}
+        &\left\|\mathbf D_\tau^{-1}
+            \bigl(\mathbf A_{\mathbf I}(\alpha\mathbf c_\tau)
+                -\alpha s_\tau\mathbf r_\tau\bigr)\right\|_2^2\\
+        &\qquad=\alpha^2
+        \left\|\mathbf D_\tau^{-1}
+            \bigl(\mathbf A_{\mathbf I}\mathbf c_\tau
+                -s_\tau\mathbf r_\tau\bigr)\right\|_2^2.
+    \end{aligned}
+    \label{eq:appendix-calibration-collapse}
+\end{equation}
+Jointly shrinking the codebook and calibration therefore reduces this
+objective, and $\mathbf c_\tau=\mathbf0$, $s_\tau=0$ gives zero loss
+regardless of the sharing assignment.
+
+We fix the common scale by imposing $s_\tau=1$. With the numerical
+variables collected in
+\begin{equation*}
+    \boldsymbol\xi_\tau
+    :=\begin{pmatrix}\mathbf c_\tau\\s_\tau\end{pmatrix}
+    \in\mathbb R^{K+1},
+\end{equation*}
+there is one normalization constraint. Its matrix
+has a single row with $K$ zeros followed by a one, and its prescribed
+value is one:
+\begin{equation}
+    q_{\tau,\mathbf I}=1,\qquad
+    \mathbf G_{\tau,\mathbf I}
+        =\begin{pmatrix}0&\cdots&0&1\end{pmatrix},\qquad
+    \mathbf h_{\tau,\mathbf I}=\begin{pmatrix}1\end{pmatrix}.
+    \label{eq:appendix-calibration-constraint}
+\end{equation}
+The constraint $\mathbf G_{\tau,\mathbf I}\boldsymbol\xi_\tau
+=\mathbf h_{\tau,\mathbf I}$ therefore fixes the calibration scale
+while leaving the codebook values free to fit the source direction.
+
+\subsection{ReLU normalization rule}
+\label{app:relu-normalization}
+
+For the signed ReLU parameterization in
+Section~\ref{sec:method-relu-instance}, use the signed labels
+$J_{dh}\in\{0,\pm1,\ldots,\pm m\}$ of the current indexator
+$\mathbf I$. Construct a bipartite graph with one vertex for each
+independent code $j\in\{1,\ldots,m\}$ and one for each hidden neuron
+$h\in\{1,\ldots,H\}$. Connect code $j$ to neuron $h$ if
+$|J_{dh}|=j$ for at least one input coordinate $d$.
+Let $L(\mathbf I)$ be the number of connected components containing
+at least one neuron, and let
+$\mathcal H_\ell(\mathbf I)\subseteq\{1,\ldots,H\}$ collect the
+neuron indices in component $\ell$, for
+$\ell=1,\ldots,L(\mathbf I)$. An isolated neuron forms a singleton
+component; an unused code introduces no column scale to normalize.
+Components are ordered by their smallest neuron index.
+
+Using the source uncertainty estimates $\widehat u_{\tau,h}$ from
+\eqref{eq:method-relu-descriptor}, choose the least uncertain neuron
+in each component and fix its scale:
+\begin{equation}
+    h_{\tau,\ell}^{\star}
+        :=\min\operatorname*{arg\,min}_{h\in\mathcal H_\ell(\mathbf I)}
+            \widehat u_{\tau,h},
+    \qquad
+    s_{\tau,h_{\tau,\ell}^{\star}}=1,
+    \quad \ell=1,\ldots,L(\mathbf I).
+    \label{eq:appendix-relu-normalization}
+\end{equation}
+The outer minimum breaks ties by neuron index. All other column
+scales remain free. The components and selected neurons are recomputed
+after each indexator update.
+
+Collect the independent numerical variables in
+\begin{equation*}
+    \boldsymbol\xi_\tau
+        :=\begin{pmatrix}\mathbf c_\tau\\\mathbf s_\tau\end{pmatrix}
+        \in\mathbb R^{m+H}.
+\end{equation*}
+Let $\mathbf e_h\in\mathbb R^H$ denote the
+$h$th standard basis vector and let $\mathbf1_{L(\mathbf I)}$ be
+the vector of $L(\mathbf I)$ ones. The constraint matrix
+$\mathbf G_{\tau,\mathbf I}\in
+\mathbb R^{L(\mathbf I)\times(m+H)}$ and right-hand side
+$\mathbf h_{\tau,\mathbf I}\in\mathbb R^{L(\mathbf I)}$ are given by
+\begin{equation}
+    \begin{aligned}
+        q_{\tau,\mathbf I}&=L(\mathbf I),\\
+        (\mathbf G_{\tau,\mathbf I})_{\ell,:}
+            &=\left[\mathbf0_{1\times m},
+                \mathbf e_{h_{\tau,\ell}^{\star}}^{\mathsf T}\right],
+            \qquad \ell=1,\ldots,L(\mathbf I),\\
+        \mathbf h_{\tau,\mathbf I}&=\mathbf1_{L(\mathbf I)}.
+    \end{aligned}
+    \label{eq:appendix-relu-constraints}
+\end{equation}
+Each row selects one column scale and sets it to $1$. These constraints
+are feasible by construction and use only the proposed indexator and
+uncertainty estimates from fitted source models.
+
+\section{Preparation of the initial bank and anchors}
+\label{app:bank-preparation}
+
+We construct indexators from individual source models and evaluate
+them across source tasks to choose alignment anchors. Both stages
+use fitted source solutions, support and numerical-validation samples;
+$V_\tau^{\mathrm{str}}$ and held-out tasks are not used.
+
+\subsection{Single-source bank construction}
+\label{app:initial-bank}
+
+Let $\mathcal T_0\subseteq\mathcal T_{\mathrm{tr}}$ be the nonempty
+set of proposal-generating tasks. For each $\tau\in\mathcal T_0$,
+prescribe an initial
+calibration $\mathbf a_\tau^{(0)}$ and a finite family of initial
+codebooks $\{\mathbf c_{\tau,b}^{(0)}\}_{b=1}^{L_\tau}$, where
+$L_\tau\ge1$ is the number of starts and
+$\mathbf c_{\tau,b}^{(0)}\in\mathbb R^K$ contains the trainable
+entries. One data-derived initialization samples positions
+$q_{\tau,b,j}$ uniformly from $\{1,\ldots,P\}$ and sets
+\begin{equation}
+    C_{\tau,b,j}^{(0)}
+        :=z_{\tau,q_{\tau,b,j}}(\mathbf a_\tau^{(0)}),
+    \qquad j=1,\ldots,K.
+    \label{eq:appendix-codebook-seeds}
+\end{equation}
+Quantiles can supply deterministic starts; random draws use prescribed
+seeds. Each codebook induces an initial assignment
+\begin{equation}
+    \forall p\in\{1,\ldots,P\},\qquad
+    I_{\tau,b,p}^{(0)}\in
+        \operatorname*{arg\,min}_{j\in\{0,\ldots,K\}}
+        \rho_\nu\!\left(
+            \frac{C_{\tau,b,j}^{(0)}
+                -z_{\tau,p}(\mathbf a_\tau^{(0)})}
+                 {u_{\tau,p}(\mathbf a_\tau^{(0)})}\right).
+    \label{eq:appendix-initial-assignment}
+\end{equation}
+We refine this assignment by Algorithm~\ref{alg:joint-projection}
+with source set $\{\tau\}$, so its score uses $T=1$.
+
+For a finite set $\mathcal U\subset\mathcal I_K\times\mathbb R$
+of scored candidates and an integer $L\ge1$,
+$\operatorname{Best}_L(\mathcal U)$ returns up to $L$ distinct
+indexators in ascending score order. Duplicates keep their lowest
+score; ties use lexicographic order. The budget
+$N_{\mathrm{local}}\ge1$ limits candidates per source.
+Algorithm~\ref{alg:initial-bank} stores canonical indexators
+$\kappa(\mathbf I)$ and their returned projection scores $q$ in the
+local set $\mathcal U_\tau$; $\kappa$ is defined in
+Section~\ref{sec:method-bank}.
+
+\begin{algorithm}[htbp]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \KwIn{Source descriptors for $\mathcal T_0$;
+        initial calibrations and codebooks;
+        $N_{\mathrm{local}},N_{\mathrm{proj}},N_{\mathrm{cal}}$.}
+    \KwOut{Initial bank $\mathcal B_0$.}
+    $\mathcal B_0\leftarrow\varnothing$\;
+    \ForEach{$\tau\in\mathcal T_0$}{
+        $\mathcal U_\tau\leftarrow\varnothing$\;
+        \For{$b=1,\ldots,L_\tau$}{
+            $\mathbf I^{(0)}\leftarrow$
+                assignments in \eqref{eq:appendix-initial-assignment}\;
+            \tcp{Only this source descriptor enters the local projection.}
+            $(\mathbf I,q)\leftarrow$
+                Algorithm~\ref{alg:joint-projection} with source set
+                $\{\tau\}$, $\mathbf I^{(0)}$ and
+                $\mathbf a_\tau^{(0)}$\;
+            $\mathcal U_\tau\leftarrow\mathcal U_\tau\cup
+                \{(\kappa(\mathbf I),q)\}$\;
+        }
+        $\mathcal B_0\leftarrow\mathcal B_0\cup
+            \operatorname{Best}_{N_{\mathrm{local}}}(\mathcal U_\tau)$\;
+    }
+    \KwRet{$\mathcal B_0$}\;
+    \caption{Initial bank from single-source projections}
+    \label{alg:initial-bank}
+\end{algorithm}
+
+The optional fixed-support variant restricts both the initial
+assignment and subsequent projection to the allowed labels in
+\eqref{eq:appendix-fixed-support}. In the synthetic ReLU experiments,
+the local refinement instead uses the log-magnitude initializer in
+Appendix~\ref{app:task-local-initialization}, with the pruning settings
+reported in Appendix~\ref{app:bank-benchmark-settings}. This is not a
+raw-weight calibration run of Algorithm~\ref{alg:joint-projection}.
+
+\subsection{Numerical evaluation and anchor selection}
+\label{app:anchor-preparation}
+
+Every $\mathbf I\in\mathcal B_0$ is evaluated on all
+$T$ source tasks, including tasks that did not generate it.
+For a fixed candidate and task, use $R\ge1$ numerical starts
+$\boldsymbol\eta_{\tau,r}^{(0)}(\mathbf I)$, $r=1,\ldots,R$,
+and at most $N_{\mathrm{fit}}\ge0$ updates per start. The vector
+$\boldsymbol\eta_\tau$ contains the codebook and all unconstrained
+trainable parameters, as in Section~\ref{sec:method-selection}.
+Starts may be derived from that task's fitted source solution.
+
+Let $b_\tau(\mathbf I)$ be the lowest loss on
+$V_\tau^{\mathrm{num}}$ among these numerical states, and let
+$\widehat{\boldsymbol\eta}_\tau(\mathbf I)$ be a state attaining it.
+With an anchor budget $N_{\mathrm A}\ge1$, define
+\begin{equation}
+    b(\mathbf I):=\frac1T\sum_{\tau\in\mathcal T_{\mathrm{tr}}}
+        b_\tau(\mathbf I),
+    \qquad
+    \mathcal A:=\operatorname{Best}_{N_{\mathrm A}}
+        \bigl(\{(\mathbf I,b(\mathbf I)):
+            \mathbf I\in\mathcal B_0\}\bigr).
+    \label{eq:appendix-anchor-selection}
+\end{equation}
+Algorithm~\ref{alg:anchor-preparation} gives the numerical loop for
+the update rule \eqref{eq:method-numerical-update}.
+Here $v$ is the current numerical-validation loss, and
+$F_{\tau,\mathbf I}$, $\mathbf H_{\tau,\mathbf I}$,
+$\lambda$ and $\mathcal S$ are the support objective, curvature
+matrix, damping coefficient and line-search set defined in
+Section~\ref{sec:method-selection}.
+
+\begin{algorithm}[htbp]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \KwIn{$\mathcal B_0$; source support and numerical-validation
+        samples; numerical starts; $N_{\mathrm{fit}},N_{\mathrm A}$.}
+    \KwOut{Anchors $\mathcal A$ and their fitted numerical states.}
+    \ForEach{$\mathbf I\in\mathcal B_0$}{
+        \ForEach{$\tau\in\mathcal T_{\mathrm{tr}}$}{
+            $b_\tau(\mathbf I)\leftarrow+\infty$\;
+            \For{$r=1,\ldots,R$}{
+                $\boldsymbol\eta\leftarrow
+                    \boldsymbol\eta_{\tau,r}^{(0)}(\mathbf I)$\;
+                \For{$k=0,\ldots,N_{\mathrm{fit}}$}{
+                    $v\leftarrow\mathcal L_{V_\tau^{\mathrm{num}}}
+                        (f_{\mathbf I,\boldsymbol\eta})$\;
+                    \If{$v<b_\tau(\mathbf I)$}{
+                        $(b_\tau(\mathbf I),
+                            \widehat{\boldsymbol\eta}_\tau(\mathbf I))
+                            \leftarrow(v,\boldsymbol\eta)$\;
+                    }
+                    \If{$k=N_{\mathrm{fit}}$}{\textbf{break}\;}
+                    \tcp{Fit numerical parameters on support; keep the indexator fixed.}
+                    $\boldsymbol\Delta\leftarrow
+                        -(\mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)
+                            +\lambda\mathbf{Id})^{-1}
+                        \nabla F_{\tau,\mathbf I}(\boldsymbol\eta)$\;
+                    $\alpha\leftarrow\max(\{0\}\cup
+                        \mathcal S(\boldsymbol\eta,\boldsymbol\Delta))$\;
+                    \If{$\alpha=0$}{\textbf{break}\;}
+                    $\boldsymbol\eta\leftarrow
+                        \boldsymbol\eta+\alpha\boldsymbol\Delta$\;
+                }
+            }
+        }
+        $b(\mathbf I)\leftarrow\displaystyle\frac1T\sum_\tau
+            b_\tau(\mathbf I)$\;
+    }
+    $\mathcal A\leftarrow\operatorname{Best}_{N_{\mathrm A}}
+        (\{(\mathbf I,b(\mathbf I)):\mathbf I\in\mathcal B_0\})$\;
+    \KwRet{$\mathcal A,
+        \{\widehat{\boldsymbol\eta}_\tau(\mathbf I):
+            \mathbf I\in\mathcal A,\ \tau\in\mathcal T_{\mathrm{tr}}\}$}\;
+    \caption{Numerical evaluation and anchor selection}
+    \label{alg:anchor-preparation}
+\end{algorithm}
+
+Only numerical parameters change during this evaluation. The selected
+states supply the anchor reference weights used for source alignment;
+no shared-assignment update occurs until the subsequent joint
+projection. Selecting anchors does not remove the other members of
+$\mathcal B_0$ from the final candidate bank.
+
+\section{Support proposals and initialization}
+\label{app:support-proposals}
+
+\subsection{Optional fixed-support restriction}
+
+The zero entries of an indexator already encode connectivity.
+A separate binary mask $\mathbf M\in\{0,1\}^P$ can additionally
+restrict projection to a prescribed support. For each position
+$p\in\{1,\ldots,P\}$, define its allowed labels and the resulting
+indexator set by
+\begin{equation}
+    \mathcal J_p(\mathbf M):=
+        \begin{cases}
+            \{0\}, & M_p=0,\\
+            \{1,\ldots,K\}, & M_p=1,
+        \end{cases}
+    \qquad
+    \mathcal I_K(\mathbf M):=
+        \prod_{p=1}^P\mathcal J_p(\mathbf M).
+    \label{eq:appendix-fixed-support}
+\end{equation}
+The fixed-support version of Algorithm~\ref{alg:joint-projection}
+takes $\mathbf M$ as an additional input, starts from
+$\mathbf I^{(0)}\in\mathcal I_K(\mathbf M)$, and replaces its
+assignment update by
+\begin{equation}
+    \forall p\in\{1,\ldots,P\},\qquad
+    I_p^+\in\operatorname*{arg\,min}_{j\in\mathcal J_p(\mathbf M)}d_{pj}.
+    \label{eq:appendix-restricted-assignment}
+\end{equation}
+Only costs for allowed labels need to be computed; the numerical
+calibration and scoring steps are unchanged. A full mask requires
+a nonzero label at every position, whereas the unrestricted algorithm
+also permits assigning zero at any position.
+
+\subsection{Task-local initialization}
+\label{app:task-local-initialization}
+
+Choose a floor $\varepsilon>0$ and a finite grid
+$\Lambda\subset[0,\infty)$ of threshold multipliers.
+For each source task $\tau$ and $\lambda\in\Lambda$, define
+$\widetilde{\mathbf M}_\tau^{(\lambda)}\in\{0,1\}^P$ by
+\begin{equation}
+    \widetilde M_{\tau,p}^{(\lambda)}
+    :=\mathbf1\!\left\{
+        |z_{\tau,p}(\mathbf a_\tau^{(0)})|
+        >\max\{\lambda u_{\tau,p}(\mathbf a_\tau^{(0)}),\varepsilon\}
+    \right\},\qquad p=1,\ldots,P.
+    \label{eq:method-source-support}
+\end{equation}
+These masks are derived separately from fitted source solutions.
+They can initialize zero positions without constraining subsequent
+assignments, or remain fixed in the restricted variant.
+
+For synthetic ReLU sources, the masks are constructed with initial
+column scales equal to $1$. Fix one source and mask and suppress the
+task index. Let $\Omega:=\{(d,h):M_{dh}=1\}$ be its active positions,
+and set $\ell_{dh}:=\log|r_{dh}|$ on $\Omega$.
+Write $\boldsymbol\mu\in\mathbb R^m$ for log code magnitudes and
+$\mathbf t\in\mathbb R^H$ for log column scales, with active group
+labels $g_{dh}\in\{1,\ldots,m\}$.
+Given initial centres $\boldsymbol\mu^{(0)}$, initialize each
+nonempty column's $t_h$ by testing shifts
+$\mu_j^{(0)}-\ell_{dh}$ and retaining the one with the lowest
+nearest-centre squared error; empty columns use $t_h=0$.
+Then alternate
+\begin{equation}
+    \begin{aligned}
+        g_{dh}^{+}
+            &\in\operatorname*{arg\,min}_{j=1,\ldots,m}
+                (\ell_{dh}+t_h-\mu_j)^2,
+                &&(d,h)\in\Omega,\\
+        (\boldsymbol\mu^{+},\mathbf t^{+})
+            &\in\operatorname*{arg\,min}_{\boldsymbol\mu,\mathbf t:
+                t_1=0}
+                \sum_{(d,h)\in\Omega}
+                    (\mu_{g_{dh}^{+}}-t_h-\ell_{dh})^2.
+    \end{aligned}
+    \label{eq:appendix-log-initializer}
+\end{equation}
+Use a minimum-norm least-squares solution, stop at unchanged
+assignments or after 80 iterations, and form the signed indexator
+$J_{dh}=\operatorname{sign}(r_{dh})g_{dh}$ on $\Omega$ and zero
+elsewhere. The associated magnitudes and scales are
+$c_j=\exp(\mu_j)$ and $s_h=\exp(t_h)$.
+Candidates are ranked by the mean squared log residual in
+\eqref{eq:appendix-log-initializer}, rather than the robust raw-weight
+score $\mathcal Q$.
+
+Initial log centres use quantiles, neuron-wise magnitude clusters
+and random observed active log magnitudes. Different centres can
+produce different indexators under the same mask. These are local
+proposals for the assembly step of Algorithm~\ref{alg:initial-bank}.
+
+\subsection{Alignment and joint proposals}
+\label{app:source-alignment}
+
+For an anchor $\mathbf I^{\mathrm a}\in\mathcal A$ and task $\tau$,
+let $\mathbf c_\tau^{\mathrm a}\in\mathbb R^K$ contain its fitted
+codebook entries and let $\mathbf w_\tau^{\mathrm a}:=
+\mathbf A_{\mathbf I^{\mathrm a}}\mathbf c_\tau^{\mathrm a}$ be its
+reference weights. An admissible bijection
+$\gamma_\tau^{\mathrm a}:\{1,\ldots,P\}\to\{1,\ldots,P\}$ maps
+anchor positions $p$ to dense-source positions
+$\gamma_\tau^{\mathrm a}(p)$. For ReLU networks it permutes whole
+hidden neurons; descriptor quantities and masks are reordered together.
+
+Let $M_p^{\mathrm a}:=\mathbf1\{I_p^{\mathrm a}\ne0\}$ denote
+the anchor support. For ReLU matching, reshape the support and
+reference weights to $D\times H$, and let
+$\overline{\mathbf r}_{\tau,h}\in\mathbb R^D$ be the normalized
+reference column $h$, using zero for an empty column. Let
+$\widetilde{\mathbf M}_\tau:=
+\widetilde{\mathbf M}_\tau^{(\lambda_{\mathrm{align}})}$
+be the source mask at a prescribed threshold
+$\lambda_{\mathrm{align}}\in\Lambda$.
+With direction weight $\omega>0$, define the matching cost matrix
+$\mathbf L_\tau^{\mathrm a}\in\mathbb R^{H\times H}$ and choose a
+hidden-unit permutation from the set $\mathfrak S_H$ of all
+permutations of $\{1,\ldots,H\}$:
+\begin{equation}
+    \begin{aligned}
+        L_{\tau,hk}^{\mathrm a}
+        &:=\sum_{d=1}^D
+            \mathbf1\{M^{\mathrm a}_{dh}\ne\widetilde M_{\tau,dk}\}
+            +\omega\min_{\sigma\in\{-1,1\}}
+                \|\overline{\mathbf r}_{\tau,h}
+                    -\sigma\mathbf r_{\tau,k}\|_2^2,\\
+        \pi_\tau^{\mathrm a}
+        &\in\operatorname*{arg\,min}_{\pi\in\mathfrak S_H}
+            \sum_{h=1}^H L_{\tau,h,\pi(h)}^{\mathrm a}.
+    \end{aligned}
+    \label{eq:method-relu-alignment}
+\end{equation}
+This permutation induces $\gamma_\tau^{\mathrm a}$; matching a full
+predictor also reorders hidden biases and output-layer rows.
+
+In this common coordinate order, define aligned source masks and
+consensus masks for prescribed vote counts $v\in\{1,\ldots,T\}$:
+\begin{equation}
+    \begin{aligned}
+        \widetilde M_{\tau,p}^{(\mathrm a,\lambda)}
+        &:=\widetilde M_{\tau,\gamma_\tau^{\mathrm a}(p)}^{(\lambda)},\\
+        M_p^{(\mathrm a,\lambda,v)}
+        &:=\mathbf1\!\left\{
+            \sum_\tau\widetilde M_{\tau,p}^{(\mathrm a,\lambda)}\ge v
+        \right\},\qquad\lambda\in\Lambda.
+    \end{aligned}
+    \label{eq:method-support-proposals}
+\end{equation}
+Each consensus mask retains positions supported by at least $v$
+matched source tasks. Proposed supports include these masks and
+the anchor support $\mathbf M^{\mathrm a}$.
+
+For each alignment and proposed support, initial indexators use the
+anchor, matched single-source candidates and random assignments.
+To satisfy a proposed mask, positions outside it are set to zero;
+newly active positions receive a fixed cycle of nonzero labels.
+For joint random starts, independent group labels are drawn uniformly
+from $\{1,\ldots,m\}$ and signs follow an aligned source direction.
+The fixed-support variant preserves this support throughout the run;
+unrestricted projection uses it only for initialization.
+
+\subsection{Benchmark settings}
+\label{app:bank-benchmark-settings}
+
+The original synthetic G34 runs use $\varepsilon=0.002$,
+single-source thresholds $\lambda\in\{3,5\}$, and joint consensus
+masks with $\lambda=3$ and $v\in\{1,2,3\}$, together with each
+anchor's support. Matching uses $\lambda_{\mathrm{align}}=3$ and
+$\omega=0.25$. Joint projection uses $\nu=4$, at most
+$N_{\mathrm{proj}}=40$ assignment updates and
+$N_{\mathrm{cal}}=3$ numerical solves per calibration block.
+The descriptor floors are $\varepsilon_s=0.01$ and
+$\varepsilon_u=0.0003$.
+
+For the initial bank, each source threshold uses at least 24 sets of
+log centres. Let $\widehat v_\tau\ge0$ denote the empirical variance
+of the support targets over all entries. Up to four source models
+with the lowest dense numerical-validation MSE divided by
+$\max\{\widehat v_\tau,10^{-12}\}$ supply proposals. The two
+lowest-scoring local proposals from each selected source are retained
+before canonical deduplication. Up to $N_{\mathrm A}=4$ candidates
+become anchors.
+
+The original synthetic anchor pass uses source-derived numerical
+states rather than the iterative line-search refit. Candidate code
+magnitudes are permuted and signed, matched to that task's fitted
+neuron directions, and geometrically calibrated. Hidden biases are
+transformed using the matched column scales; the free output head is
+then fitted on support by \eqref{eq:method-free-head}. The best state
+is selected on $V_\tau^{\mathrm{num}}$.
+In Algorithm~\ref{alg:anchor-preparation}, this corresponds to using
+these fitted states as numerical starts with $N_{\mathrm{fit}}=0$.
+Later candidate evaluation performs the numerical refitting described
+in Section~\ref{sec:method-selection}.
+
+For images, the two dense source solutions with the lowest
+numerical-validation loss serve directly as alignment references.
+Direction dispersion among four fitted starts supplies discrepancy
+scales. Each reference proposes four supports: the full mask, its
+own threshold mask and consensus masks at $\lambda=3$ with
+$v\in\{1,3\}$. The floor remains $\varepsilon=0.002$, and projection
+uses 40 assignment updates. Only exact duplicate arrays are removed
+at large $m$. Numerical refitting uses Adam, with calibration
+implemented by code elimination and a column-scale Schur solve.
+
+Allowing zero assignments during projection does not require
+removing threshold-based initialization. Complete removal of these
+initializers has not been evaluated.

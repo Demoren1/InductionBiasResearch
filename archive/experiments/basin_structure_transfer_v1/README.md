@@ -1,6 +1,6 @@
 # Индексатор, свежий кодбук и плохие локальные минимумы
 
-[Проверка теории](../../reports/worknotes/theory/BASIN_TRANSFER_THEORY_AUDIT_2026-11-02.md).
+[Проверка теории](../../../paper/theory/history/structural_transfer/BASIN_TRANSFER_THEORY_AUDIT_2026-11-02.md).
 [Результаты трёх режимов](../../reports/worknotes/BASIN_STRUCTURE_TRANSFER_RESULTS_2026-11-02.md).
 Протокол `protocol.json` зафиксирован до создания целевых функций.
 

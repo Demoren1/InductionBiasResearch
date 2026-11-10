@@ -36,7 +36,7 @@ def outputs_for(x, index, code, bias, head, offset):
     return np.maximum(x @ weight + bias, 0) @ head / math.sqrt(index.shape[1]) + offset
 
 
-def prepare(root, stage, replicates, sources):
+def prepare(root, stage, replicates, sources, *, seed=None):
     root.mkdir(parents=True, exist_ok=False)
     for folder in (
         "private",
@@ -51,7 +51,8 @@ def prepare(root, stage, replicates, sources):
         "code_snapshot",
     ):
         (root / folder).mkdir()
-    seed = 26110754013 + (10000019 if stage == "confirmation" else 0)
+    if seed is None:
+        seed = 26110754013 + (10000019 if stage == "confirmation" else 0)
     conditions = [0] if stage == "pilot" else [0, 1]
     folds = {"fixed_train": 4096, "selection": 512, "meta": 1024, "test": 2048}
     protocol = {
@@ -198,8 +199,15 @@ def main():
     parser.add_argument("--stage", choices=("pilot", "confirmation"), default="pilot")
     parser.add_argument("--replicates", type=int, default=3)
     parser.add_argument("--sources", type=int, default=16)
+    parser.add_argument("--seed", type=int)
     args = parser.parse_args()
-    prepare(args.root.resolve(), args.stage, args.replicates, args.sources)
+    prepare(
+        args.root.resolve(),
+        args.stage,
+        args.replicates,
+        args.sources,
+        seed=args.seed,
+    )
 
 
 if __name__ == "__main__":

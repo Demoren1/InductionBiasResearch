@@ -15,11 +15,18 @@ __pycache__/
 *.npy
 *.pt
 *.pth
+*.ckpt
 *.pkl
 *.pickle
 
+# Full numerical states and historical audit archives stay local.
+/artifacts/g34_*_2026-11-08/audit_*.tar.gz
+/artifacts/anchor_start_2026-11-10/numerical_state.tar.gz
+/paper-overleaf.zip
+
 # Explicitly curated, compact scientific evidence.
 !artifacts/benchmark_2026-11-07/**/*.npz
+!artifacts/anchor_start_2026-11-10/**/*.npz
 !archive/experiments/**/*.summary.npz
 !archive/reports/**/*.npz
 
