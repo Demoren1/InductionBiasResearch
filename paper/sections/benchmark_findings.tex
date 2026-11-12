@@ -44,7 +44,8 @@ follow-up results appear in Appendix~\ref{app:binary}.
 \end{figure}
 
 \paragraph{Real-data transfer.}
-Our Omniglot accuracy is $37.73\%$ with 64 independent first-layer
+In the original benchmark (Table~\ref{tab:benchmark-real}), our Omniglot
+accuracy is $37.73\%$ with 64 independent first-layer
 values, compared with Dense at $37.14\%$ with 12544 first-layer weights.
 The selected mask is fully connected; the transferred restriction here
 is sharing rather than sparsity.
@@ -57,6 +58,22 @@ published MSR result of $97.7\pm0.2\%$ on augmented 5-way 5-shot
 Omniglot~\cite{zhou2021meta} uses a CNN, learned numerical initialization
 and a much larger meta-training budget; it is contextual evidence,
 not a matched row in Table~\ref{tab:benchmark-real}.
+
+Table~\ref{tab:omniglot-signature} reports a separate matched rerun
+on 1000 new episodes after refitting the source dense models and G34.
+G34 reaches $41.02\%$ accuracy and cross-entropy 1.4288 with 165 task
+parameters; Dense reaches $37.07\%$ with 12645 parameters. Unlike the
+original G34 structure, the rerun uses a sparse mask with 4305 active
+connections. The alternative signature extractor estimates the
+log-contrast space by weighted SVD and applies the pair-signature rule
+of Theorem~\ref{thm:theory-pair-recovery}. Geometric ranking chooses
+one candidate per budget, and development tasks choose the budget
+and numerical adaptation rule. Its selected 16-code structure reaches
+$34.62\%$, versus $23.88\%$ after shuffling its entries. However, its
+estimated contrast rank is zero and each hidden neuron has its own
+unsigned group, so this result does not demonstrate recovery of
+sharing between neurons. The original competitor, timing and heatmap
+results describe the original benchmark, not this rerun.
 
 On paired MNIST sums, our 128-code structure has MSE 1.185 versus
 Dense at 1.058, a paired increase of 0.127 with a 95\% interval of
@@ -85,7 +102,7 @@ controls rather than replacing the primary row with a favorable one.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{benchmark_real_transfer.pdf}
-    \caption{Real-data transfer. Intervals describe episode/task
+    \caption{Original real-data benchmark. Intervals describe episode/task
         variability conditional on one source cohort. Hatching marks
         larger numerical budgets or transfer of learned initialization;
         these are separate controls.}

@@ -26,8 +26,12 @@ retained in `audit_arrays.tar.gz`; registrations, receipts, executed code
 and numerical/scoring records are in `audit_records.tar.gz`.
 [The cleanup record](../../archive/2026-11-08/README.md) describes their
 contents and reconstruction limits. Source code is preserved in
-[the experiment archive](../../archive/experiments/g34_theory_v1/README.md).
+[the experiment archive](https://github.com/Demoren1/InductionBiasResearch/tree/ba7384914dd7aaabe0ed627e812cbb2b11731a6f/archive/experiments/g34_theory_v1).
 
 Архивы `audit_arrays.tar.gz` и `audit_records.tar.gz` сохранены локально
 на рабочем сервере и исключены из Git; в clone доступны сводки, рисунки
 и манифесты. Правила хранения — в [README артефактов](../README.md).
+
+## Уборка 12 ноября
+
+Тяжёлые локальные audit_arrays.tar.gz и audit_records.tar.gz удалены по запросу пользователя. Сводки, выбранные структуры, рисунки и исходные фиксации сохранены. Полный повтор требует заново получить исходные данные. Исследовательский код прежней ветки доступен в Git-ревизии ba7384914dd7aaabe0ed627e812cbb2b11731a6f. [Журнал уборки](../../archive/2026-11-12/README.md).

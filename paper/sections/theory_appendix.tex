@@ -1,0 +1,819 @@
+\section{Proofs of theoretical results}
+\label{app:theory-proofs}
+
+The structural proofs use the fixed active positions and neuron
+correspondence of Section~\ref{sec:theory-observations}.
+All active code values are nonzero and neuron scales are positive.
+The grouping under consideration uses every one of its code labels.
+
+\subsection{Observable dimension and calibration scales}
+\label{app:theory-dimension}
+
+\begin{proof}[Proof of Proposition~\ref{prop:theory-dimension}]
+    Set
+    $\mathcal V_{\mathbf I}
+    :=\operatorname{range}[\mathbf U_{\mathbf I},-\mathbf N]$.
+    For vectors $\mathbf a\in\mathbb R^m$ and
+    $\mathbf v\in\mathbb R^H$, the equation
+    $\mathbf U_{\mathbf I}\mathbf a-\mathbf N\mathbf v=\mathbf0$
+    requires $a_{j_{\mathbf I}(p)}=v_{h(p)}$ along every edge.
+    These coordinates are constant on each component of
+    $G_{\mathbf I}$, and each component allows one independent
+    constant. Rank--nullity gives
+    $\dim\mathcal V_{\mathbf I}=m+H-g_{\mathbf I}$.
+
+    The centering matrix $\boldsymbol\Pi$ is the orthogonal projector
+    onto the complement of $\operatorname{range}(\mathbf N)$.
+    Since this range is contained in $\mathcal V_{\mathbf I}$,
+    \begin{equation}
+        \mathcal V_{\mathbf I}
+        =\mathcal S_{\mathbf I}
+            \mathbin{\oplus}\operatorname{range}(\mathbf N).
+        \label{eq:appendix-theory-space-decomposition}
+    \end{equation}
+    The sum is orthogonal and $\mathbf N$ has rank $H$.
+    Hence $\dim\mathcal S_{\mathbf I}=m-g_{\mathbf I}$.
+
+    An exact calibration has
+    $\sigma_{\mathbf I,p}c_{j_{\mathbf I}(p)}
+    =s_{h(p)}r_p$.
+    Let $\Delta\mathbf c$ and $\Delta\mathbf s$ denote perturbations
+    of the code values and scales. Divide each homogeneous
+    perturbation equation by the corresponding nonzero exact weight:
+    \begin{equation*}
+        \frac{\Delta c_{j_{\mathbf I}(p)}}{c_{j_{\mathbf I}(p)}}
+        =\frac{\Delta s_{h(p)}}{s_{h(p)}}.
+    \end{equation*}
+    Thus the numerical calibration system also has exactly one
+    common scale freedom per component. Fixing one scale in each
+    component makes its exact solution unique.
+    Exponentiating a common shift of the logarithmic variables
+    gives the positive rescaling stated in the proposition.
+\end{proof}
+
+The rows of $[\mathbf U_{\mathbf I},-\mathbf N]$ are the transposes
+of the oriented incidence columns of $G_{\mathbf I}$.
+Its left nullspace is the cycle space, of dimension
+$E-m-H+g_{\mathbf I}$. A fundamental cycle gives the alternating
+logarithmic sum, or equivalently the product relation, described
+in Section~\ref{sec:theory-observations}.
+For a forest this dimension is zero, so the logarithmic incidence
+map is onto $\mathbb R^E$. Every positive collection of edge
+magnitudes can therefore be fitted.
+
+\subsection{Pair signatures and recovery}
+\label{app:theory-pairs}
+
+\begin{lemma}[Information in an ordered-pair signature]
+    \label{lem:theory-signatures}
+    For the basis and signatures of
+    \eqref{eq:theory-signature},
+    \begin{equation}
+        \begin{aligned}
+            \boldsymbol\delta_{pq}=\mathbf0
+            &\ \Longleftrightarrow\
+                j_{\mathbf I}(p)=j_{\mathbf I}(q),\\
+            \boldsymbol\delta_{pq}=\boldsymbol\delta_{uv}
+                \ne\mathbf0
+            &\ \Longleftrightarrow\
+                (j_{\mathbf I}(p),j_{\mathbf I}(q))
+                =(j_{\mathbf I}(u),j_{\mathbf I}(v)).
+        \end{aligned}
+        \label{eq:appendix-theory-signature-information}
+    \end{equation}
+    Each pair is taken within one neuron.
+\end{lemma}
+
+\begin{proof}
+    There is a full-row-rank matrix
+    $\mathbf T\in\mathbb R^{r\times m}$ such that
+    $\mathbf M_{\mathbf I}=\mathbf Q\mathbf T$.
+    Write $\mathbf e_j^{(m)}$ for the $j$th standard basis vector
+    of $\mathbb R^m$. Centering subtracts the same row within a
+    neuron, so
+    \begin{equation*}
+        \boldsymbol\delta_{pq}\mathbf T
+        =(\mathbf e_{j_{\mathbf I}(p)}^{(m)})^{\mathsf T}
+            -(\mathbf e_{j_{\mathbf I}(q)}^{(m)})^{\mathsf T}.
+    \end{equation*}
+    Multiplication of a row by $\mathbf T$ is injective.
+    A difference of two standard basis vectors is zero exactly
+    when their indices agree. Two nonzero differences agree
+    exactly when both their positive and negative indices agree.
+    These observations prove both statements.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:theory-pair-recovery}]
+    By Lemma~\ref{lem:theory-signatures}, every merge made by the
+    rule joins positions of the same true code.
+    Within one neuron all occurrences of a code are merged.
+    Between two neurons, direct merging of occurrences of code $j$
+    occurs exactly when the neurons share another code.
+    Consequently, the transitive closure joins exactly the
+    occurrences in each connected component of $W_{\mathbf I}(j)$.
+    The assumed connectivity recovers every entire group.
+
+    A candidate with the same contrast space has the same
+    signatures and must satisfy all these merges.
+    Its partition is therefore a coarsening of the recovered
+    partition. Since both have $m$ nonempty groups, the partitions
+    agree up to their group names.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:theory-task-diversity}]
+    A grouping explains all magnitudes exactly when the columns
+    of $\mathbf Z$ lie in its contrast space.
+    For sufficiency of this characterization, a fitted centered
+    logarithm leaves a residual in $\ker\boldsymbol\Pi
+    =\operatorname{range}(\mathbf N)$, which can be absorbed by
+    the logarithms of positive neuron scales.
+    Since $\mathbf Z$ has rank $r$, its columns span the true
+    contrast space. Any candidate space of dimension $r$
+    containing them equals that space.
+    Apply Theorem~\ref{thm:theory-pair-recovery}.
+\end{proof}
+
+\subsection{The exact cycle criterion}
+\label{app:theory-cycles}
+
+\begin{proof}[Proof of Theorem~\ref{thm:theory-cycle-equivalence}]
+    Fundamental cycles form a basis of the left nullspace of
+    $[\mathbf U_{\mathbf I},-\mathbf N]$. Therefore
+    \begin{equation}
+        \mathbf R_{\mathbf I}\mathbf U_{\mathbf I}=\mathbf0,
+        \qquad
+        \mathbf R_{\mathbf I}\mathbf N=\mathbf0,
+        \qquad
+        \ker\mathbf R_{\mathbf I}=\mathcal V_{\mathbf I},
+        \label{eq:appendix-theory-cycle-kernel}
+    \end{equation}
+    where $\mathcal V_{\mathbf I}$ is defined in
+    Appendix~\ref{app:theory-dimension}.
+    Parallel edges contribute cycles of length two.
+
+    If the contrast spaces agree, their orthogonal decompositions
+    in \eqref{eq:appendix-theory-space-decomposition} give
+    $\mathcal V_{\mathbf J}=\mathcal V_{\mathbf I}$.
+    Every column of $\mathbf U_{\mathbf J}$ then belongs to
+    $\ker\mathbf R_{\mathbf I}$, and the dimensions in
+    \eqref{eq:theory-cycle-equivalence} agree.
+
+    Conversely, $\mathbf R_{\mathbf I}\mathbf U_{\mathbf J}
+    =\mathbf0$ places every column of $\mathbf U_{\mathbf J}$
+    in $\mathcal V_{\mathbf I}$.
+    Together with the columns of $\mathbf N$, this gives
+    $\mathcal V_{\mathbf J}\subseteq\mathcal V_{\mathbf I}$,
+    and centering gives
+    $\mathcal S_{\mathbf J}\subseteq\mathcal S_{\mathbf I}$.
+    The dimension condition makes this inclusion an equality.
+\end{proof}
+
+The criterion also describes a complete finite enumeration.
+For a nonempty subset $A\subseteq\mathcal E$, let
+$\mathbf x_A\in\{0,1\}^E$ be its indicator vector.
+Call $A$ admissible if $\mathbf R_{\mathbf I}\mathbf x_A=\mathbf0$.
+Partition the positions into admissible groups and retain the
+partitions for which the number of groups minus the number of
+calibration components equals $\dim\mathcal S_{\mathbf I}$.
+Each column of a membership matrix is exactly one such indicator.
+Theorem~\ref{thm:theory-cycle-equivalence} thus proves that this
+construction enumerates precisely the magnitude-equivalent
+partitions, up to code names.
+
+\subsection{Sign recovery}
+\label{app:theory-sign-proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:theory-signs}]
+    Assume $T\ge1$ and normalize each observed profile by its first
+    coordinate, defining $\overline{\mathbf b}_p:=b_{p,1}\mathbf b_p$.
+    The fixed position sign cancels, and
+    $\overline{\mathbf b}_p
+    =\epsilon_{j_{\mathbf I}(p),1}
+        \boldsymbol\epsilon_{j_{\mathbf I}(p)}$.
+    Distinct code profiles up to sign give exactly $m$ distinct
+    normalized profiles. Their equality therefore recovers the groups.
+
+    If $p_0$ is a representative of the group containing $p$,
+    then $b_{p,1}b_{p_0,1}
+    =\sigma_{\mathbf I,p}\sigma_{\mathbf I,p_0}$.
+    This recovers the relative signs. A representation with $m$
+    codes needs a separate code for each of the $m$ normalized
+    profiles. The only remaining choices are their names and
+    one common sign per group.
+\end{proof}
+
+\subsection{Selection on independent tasks}
+\label{app:theory-transfer-proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:theory-transfer}]
+    Condition on the information used to construct the bank and
+    fix the adaptation rules.
+    For each candidate $\mathbf I$, its query loss averaged
+    within task $\tau\in\mathcal H$ is an independent observation
+    in $[0,L]$ across tasks, with mean
+    $\mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)$.
+    For any $a>0$, Hoeffding's inequality and a union bound give
+    \begin{equation*}
+        \Pr\left\{
+            \max_{\mathbf I\in\mathcal B}
+            \left|\widehat{\mathcal R}_{\mathcal H}(\mathbf I)
+                -\mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)\right|
+                >a
+            \right\}
+        \le 2|\mathcal B|\exp(-2T_{\mathcal H}a^2/L^2).
+    \end{equation*}
+    Set $a=L\sqrt{\log(2|\mathcal B|/\delta)/(2T_{\mathcal H})}$.
+    On the complementary event, replacing empirical risks by
+    their true risks costs at most $a$ on each side of the
+    empirical minimization inequality. This proves the bound.
+\end{proof}
+
+\section{Additional theoretical results}
+\label{app:theory-additional}
+
+\subsection{Stability under errors in source directions}
+\label{app:theory-noise}
+
+Let $r=\dim\mathcal S_{\mathbf I}>0$ and define the largest group
+size by
+$n_{\max}:=\max_j|\{p:j_{\mathbf I}(p)=j\}|$.
+Let $\mathbf P_{\mathbf I}$ be the orthogonal projector onto
+$\mathcal S_{\mathbf I}$.
+Suppose an estimated space $\widehat{\mathcal S}$ also has rank $r$,
+with projector $\widehat{\mathbf P}$.
+Let $\eta\ge0$ bound their operator-norm difference.
+
+\begin{proposition}[Stable pair recovery]
+    \label{prop:theory-stable-pairs}
+    Suppose
+    \begin{equation}
+        \|\widehat{\mathbf P}-\mathbf P_{\mathbf I}\|_{\mathrm{op}}
+        \le\eta<\frac1{8\sqrt{n_{\max}}}.
+        \label{eq:appendix-theory-space-error}
+    \end{equation}
+    Compute signatures from an orthonormal basis of
+    $\widehat{\mathcal S}$.
+    Using $2\sqrt2\eta$ as the threshold for a zero signature and
+    $4\sqrt2\eta$ as the threshold for equal signatures recovers
+    exactly the merges of the noiseless rule.
+    Under the assumptions of
+    Theorem~\ref{thm:theory-pair-recovery}, this recovers all groups.
+\end{proposition}
+
+\begin{proof}
+    Write $\mathbf M_{\mathbf I}=\mathbf Q\mathbf T$ as in
+    Lemma~\ref{lem:theory-signatures}.
+    Since centering is an orthogonal projection,
+    \begin{equation*}
+        \|\mathbf T\|_{\mathrm{op}}
+        =\|\mathbf M_{\mathbf I}\|_{\mathrm{op}}
+        \le\|\mathbf U_{\mathbf I}\|_{\mathrm{op}}
+        =\sqrt{n_{\max}}.
+    \end{equation*}
+    The image under $\mathbf T$ of a nonzero signature has norm
+    $\sqrt2$. The difference of two distinct nonzero ordered-pair
+    signatures has image of norm at least $\sqrt2$.
+    Hence the distance from zero, and the separation between
+    distinct nonzero signatures, are both at least
+    $\sqrt{2/n_{\max}}$.
+
+    The estimated orthonormal basis can be rotated to differ from
+    $\mathbf Q$ in operator norm by at most
+    $\varepsilon:=\sqrt2\eta$, by the principal-angle relation
+    between equal-dimensional spaces.
+    This rotation preserves signature distances.
+    Each row has error at most $\varepsilon$, each signature
+    at most $2\varepsilon$, and each difference of two signatures
+    at most $4\varepsilon$.
+    Condition~\eqref{eq:appendix-theory-space-error} makes the true
+    separation strictly larger than $8\varepsilon$.
+    The two stated thresholds therefore separate all required cases.
+\end{proof}
+
+This error criterion can be related to the observed directions.
+Let the noiseless matrix $\mathbf Z$ of source contrasts have rank
+$r$, let $\sigma_r(\mathbf Z)>0$ be its smallest nonzero singular
+value, and write the observed matrix as
+$\widetilde{\mathbf Z}=\mathbf Z+\mathbf E_Z$, where
+$\mathbf E_Z\in\mathbb R^{E\times T}$ is its error.
+Estimating the space by the first $r$ left singular vectors gives
+\begin{equation}
+    \|\widehat{\mathbf P}-\mathbf P_{\mathbf I}\|_{\mathrm{op}}
+    \le\frac{2\|\mathbf E_Z\|_{\mathrm{op}}}
+             {\sigma_r(\mathbf Z)}.
+    \label{eq:appendix-theory-subspace-perturbation}
+\end{equation}
+Indeed, the residual of $\widetilde{\mathbf Z}$ outside its
+estimated rank-$r$ space is at most $\|\mathbf E_Z\|_{\mathrm{op}}$.
+The residual of $\mathbf Z$ is at most twice that amount.
+Multiplying by its pseudoinverse proves the displayed bound.
+For spaces of equal rank, the residual projector norm equals
+the norm of the difference of projectors.
+
+To control the logarithmic error, let $a>0$ satisfy
+$|r_{\tau,p}|\ge a$ on all active positions and tasks.
+Let $\Delta\mathbf R_{\mathrm{obs}}\in\mathbb R^{E\times T}$
+collect their direction errors, each of magnitude at most $a/2$.
+The logarithm is Lipschitz with constant $2/a$ on the relevant
+magnitude intervals, so
+\begin{equation}
+    \|\mathbf E_Z\|_{\mathrm{op}}
+    \le\|\mathbf E_Z\|_{\mathrm F}
+    \le\frac2a\|\Delta\mathbf R_{\mathrm{obs}}\|_{\mathrm F}.
+    \label{eq:appendix-theory-log-error}
+\end{equation}
+Together, \eqref{eq:appendix-theory-subspace-perturbation} and
+Proposition~\ref{prop:theory-stable-pairs} give the sufficient
+condition
+\begin{equation*}
+    \|\mathbf E_Z\|_{\mathrm{op}}
+    <\frac{\sigma_r(\mathbf Z)}{16\sqrt{n_{\max}}}.
+\end{equation*}
+The denominator captures group size, while the singular value
+captures excitation by the source tasks.
+Small active weights amplify logarithmic errors.
+Using this condition for fitted models requires an error bound
+for their aligned directions.
+
+\subsection{Uniqueness from longer cycles}
+\label{app:theory-long-cycles}
+
+Merge repeated occurrences of a code within each neuron and retain
+one position from each resulting local group.
+Lemma~\ref{lem:theory-signatures} determines these local groups from
+the contrast space. Their representatives give a simple bipartite
+calibration graph, denoted $G_{\mathbf I}^*$.
+A graph is \emph{3-vertex-connected} if it has at least four vertices
+and remains connected after deletion of any two or fewer vertices.
+
+\begin{proposition}[A sufficient condition using all cycles]
+    \label{prop:theory-three-connected}
+    If $G_{\mathbf I}^*$ is 3-vertex-connected, every grouping
+    $\mathbf J$ on the fixed active positions and neurons, with
+    $m$ used codes and $\mathcal S_{\mathbf J}=\mathcal S_{\mathbf I}$,
+    has the same groups up to code renaming.
+    This follows from the cycle characterization and Whitney's
+    graph-isomorphism theorem; see \citet{fomin2020whitney}.
+\end{proposition}
+
+\begin{proof}
+    Equal contrast spaces force equal local groups by
+    Lemma~\ref{lem:theory-signatures}. Restrict both models to
+    their common representatives.
+    Equation~\eqref{eq:appendix-theory-space-decomposition}
+    gives equal incidence column spaces, hence equal cycle
+    spaces on the same labelled edges.
+    Minimal nonempty supports of vectors in a cycle space are
+    the simple cycles, so the identity on edges preserves cycles.
+
+    All edges of the 3-vertex-connected graph belong to one
+    2-connected block. Cycle preservation places all candidate
+    edges in one such block as well.
+    Every candidate vertex is used, so its graph is 2-connected.
+    Whitney's theorem then makes this edge bijection arise from
+    a vertex isomorphism.
+    For every known neuron, the incident edge set is fixed.
+    Its at least two distinct edges have that neuron as their
+    unique common endpoint in a simple graph.
+    The isomorphism therefore fixes the neurons and only
+    renames the code vertices.
+\end{proof}
+
+This condition can exploit cycles beyond the repeated pairs used
+in Theorem~\ref{thm:theory-pair-recovery}.
+Each is a sufficient condition in its own setting.
+For graphs with small separators, candidate transformations must
+also preserve the real oriented cycle space and the known neuron
+blocks; preservation of cycle supports alone is weaker.
+
+\subsection{Magnitude equivalence and different function classes}
+\label{app:theory-counterexample}
+
+Consider two unsigned assignments on two inputs and four neurons:
+\begin{equation}
+    \mathbf I=
+    \begin{pmatrix}
+        1&1&1&1\\
+        2&2&3&3
+    \end{pmatrix},
+    \qquad
+    \mathbf J=
+    \begin{pmatrix}
+        1&1&2&2\\
+        3&3&3&3
+    \end{pmatrix}.
+    \label{eq:appendix-theory-ambiguous-pair}
+\end{equation}
+Both calibration graphs are connected and use three codes.
+Identifying a vector of active positions with a $2\times4$ matrix,
+their common contrast space consists of
+\begin{equation*}
+    \left\{
+    \begin{pmatrix}
+        u&u&v&v\\
+        -u&-u&-v&-v
+    \end{pmatrix}
+    :u,v\in\mathbb R
+    \right\}.
+\end{equation*}
+Thus known code count and graph connectivity alone allow ambiguity.
+
+\begin{proposition}[Positive codes and signed separation]
+    \label{prop:theory-functional-counterexample}
+    Restricted to strictly positive code values, the assignments in
+    \eqref{eq:appendix-theory-ambiguous-pair} define the same
+    ReLU predictor class with free hidden biases and output layer.
+    Allowing arbitrary real code values gives different classes.
+\end{proposition}
+
+\begin{proof}
+    Equality of contrast spaces implies equality of the full
+    logarithmic incidence spaces in
+    \eqref{eq:appendix-theory-space-decomposition}.
+    Any positive weights represented by one assignment can
+    therefore be represented by the other up to positive neuron
+    scales. Rescaling hidden biases and output weights
+    accordingly preserves the predictor, in both directions.
+
+    For separation with real codes, use
+    $(c_1,c_2,c_3)=(1,1,-1)$ in $\mathbf I$.
+    For $\mathbf x=(x_1,x_2)^{\mathsf T}$, define
+    \begin{equation*}
+        \begin{aligned}
+            t_1(\mathbf x)&=x_1+x_2,&
+            t_2(\mathbf x)&=x_1+x_2+1,\\
+            t_3(\mathbf x)&=x_1-x_2+2,&
+            t_4(\mathbf x)&=x_1-x_2+3.
+        \end{aligned}
+    \end{equation*}
+    The function $f(\mathbf x):=\tfrac12\sum_{h=1}^4
+    \sigma(t_h(\mathbf x))$ belongs to the class for $\mathbf I$.
+    It has four distinct lines with nonzero gradient jumps.
+    Any representation by four ReLU neurons must assign exactly
+    one neuron to each line. After matching the lines, each
+    contribution has the form $\tfrac12\sigma(t_h)$ or
+    $\tfrac12\sigma(-t_h)$: its jump fixes the product of
+    input scale and output coefficient.
+
+    Let $F\subseteq\{1,\ldots,4\}$ contain the reversed
+    contributions. Their change is
+    $-\tfrac12\sum_{h\in F}t_h$, using
+    $\sigma(-t)-\sigma(t)=-t$.
+    For nonempty $F$, its coefficient of $x_1$ is
+    $-|F|/2$, which an output constant cannot compensate.
+    All four orientations must therefore agree with the
+    displayed ones. Their second input weights have signs
+    $+,+,-,-$. In $\mathbf J$ these weights share one code,
+    so this orientation pattern is impossible.
+    Hence $f$ belongs to the class for $\mathbf I$ and not
+    to that for $\mathbf J$.
+\end{proof}
+
+The positive-code statement concerns strictly positive values;
+its proof uses their logarithms.
+The signed separation is a direct functional example with fixed
+width and free biases and readout.
+
+\subsection{Sign diversity and complete sign information}
+\label{app:theory-sign-details}
+
+Assume code signs are independent and balanced across codes and
+tasks. Normalizing the first coordinate leaves $2^{T-1}$ equally
+likely profiles. A union bound gives
+\begin{equation}
+    \Pr\{\text{a pair of code profiles agrees up to sign}\}
+    \le \binom m2\,2^{1-T}.
+    \label{eq:appendix-theory-sign-collisions}
+\end{equation}
+For $m\ge2$ and $\delta\in(0,1)$, a sufficient task count for this
+probability to be at most $\delta$ is
+\begin{equation*}
+    T\ge1+\left\lceil
+        \log_2\frac{\binom m2}{\delta}
+        \right\rceil.
+\end{equation*}
+This statement isolates sign diversity; the observation model
+still assumes correct support and neuron correspondence.
+
+For noisy profiles, let $d_H$ denote Hamming distance and define
+distance up to a common sign by
+\begin{equation*}
+    d_\pm(\mathbf u,\mathbf v)
+    :=\min\{d_H(\mathbf u,\mathbf v),
+                  T-d_H(\mathbf u,\mathbf v)\}.
+\end{equation*}
+Suppose at most $s$ signs in each position profile are wrong,
+where $s$ is a nonnegative integer and $T>4s$.
+If different code profiles are separated by more than $4s$
+in $d_\pm$, connecting observed profiles at distance at most
+$2s$ recovers exactly the true groups.
+Indeed, within-group distances are at most $2s$, whereas
+between-group distances exceed $2s$ by the triangle inequality.
+The condition on $T$ also distinguishes the two possible
+relative orientations within each group.
+
+There is a corresponding exact description when every combination
+of nonzero real code values is allowed.
+Let $\mathbb F_2$ be the field with two elements, and let
+$\mathbf a_{\mathbf I}\in\mathbb F_2^E$ record the fixed position
+signs, with bit zero for $+1$ and bit one for $-1$.
+The set of allowed sign vectors is the affine binary space
+\begin{equation}
+    \mathcal A_{\mathbf I}
+    :=\mathbf a_{\mathbf I}
+        +\operatorname{range}_{\mathbb F_2}(\mathbf U_{\mathbf I}).
+    \label{eq:appendix-theory-sign-space}
+\end{equation}
+
+\begin{proposition}[Complete oriented weight information]
+    \label{prop:theory-complete-signs}
+    With fixed active positions and neurons, two models have the
+    same families of nonzero weights modulo positive neuron
+    scales exactly when both their contrast spaces and their
+    affine sign spaces agree.
+    Equality of the affine sign spaces determines the grouping
+    and its relative signs up to code renaming and group sign changes.
+\end{proposition}
+
+\begin{proof}
+    A nonzero weight vector is specified by its log magnitudes
+    and signs. Positive neuron rescaling changes only the
+    logarithmic part. Code magnitudes and signs vary independently,
+    so the attainable pairs are exactly
+    $\mathcal S_{\mathbf I}\times\mathcal A_{\mathbf I}$.
+
+    Differences of elements of $\mathcal A_{\mathbf I}$ form
+    $\operatorname{range}_{\mathbb F_2}(\mathbf U_{\mathbf I})$.
+    Two positions have equal coordinates in every vector of
+    this linear space exactly when they have the same code:
+    different codes allow a sign change of only one of them.
+    This recovers the partition.
+    Within a group, the sum modulo two of two coordinates of
+    any vector in $\mathcal A_{\mathbf I}$ is constant and
+    gives their relative sign. The remaining choice is one
+    sign per code.
+\end{proof}
+
+\subsection{Constructing normalization constraints}
+\label{app:theory-normalization}
+
+For one source task, let $r_0$ be the number of calibration variables
+in the affine descriptor of Section~\ref{sec:method-projection}.
+Its numerical variable is
+$\boldsymbol\xi=(\mathbf c^{\mathsf T},
+\mathbf a^{\mathsf T})^{\mathsf T}\in\mathbb R^{K+r_0}$.
+Let $n_0:=K+r_0$ and let $\Omega\subseteq\mathbb R^{n_0}$ be an
+open allowed region.
+Let $q\ge1$ be the number of transformation parameters.
+Suppose known smooth transformations on $\Omega$,
+$\boldsymbol\gamma(\mathbf t,\boldsymbol\xi)$ preserve the
+predictor and the current indexator, with
+$\mathbf t\in\mathbb R^q$ and
+$\boldsymbol\gamma(\mathbf0,\boldsymbol\xi)=\boldsymbol\xi$.
+Compensating changes of unconstrained network parameters are
+included in this assumption.
+For a point $\boldsymbol\xi_0\in\Omega$, define the tangent matrix
+\begin{equation*}
+    \mathbf T_0
+    :=\left.\frac{\partial\boldsymbol\gamma
+        (\mathbf t,\boldsymbol\xi_0)}{\partial\mathbf t}
+        \right|_{\mathbf t=\mathbf0}
+    \in\mathbb R^{n_0\times q}.
+\end{equation*}
+
+\begin{proposition}[Local linear normalization]
+    \label{prop:theory-local-normalization}
+    Suppose $\mathbf T_0$ has rank $q$ and the transformations
+    describe the local representation freedom.
+    If $\mathbf G\in\mathbb R^{q\times n_0}$ satisfies
+    $\det(\mathbf G\mathbf T_0)\ne0$, set
+    $\mathbf h:=\mathbf G\boldsymbol\xi_0$.
+    Every sufficiently close state has a unique sufficiently
+    small transformation taking it to
+    $\mathbf G\boldsymbol\xi=\mathbf h$.
+    In particular, one can choose
+    $\mathbf G=(\mathbf T_0^{\mathsf T}\mathbf T_0)^{-1}
+        \mathbf T_0^{\mathsf T}$.
+\end{proposition}
+
+\begin{proof}
+    Apply the implicit function theorem to
+    $\mathbf G\boldsymbol\gamma(\mathbf t,\boldsymbol\xi)
+    -\mathbf h=\mathbf0$ at $(\mathbf0,\boldsymbol\xi_0)$.
+    Its derivative in $\mathbf t$ is the invertible matrix
+    $\mathbf G\mathbf T_0$. The specified left inverse makes
+    that matrix the identity.
+\end{proof}
+
+For diagonal positive scalings there is also a global construction
+on a fixed sign region, related to the scaling sections studied by
+\citet{hubert2012scalings}.
+Let $\mathbf W\in\mathbb R^{n_0\times q}$ have rank $q$ and define
+$\gamma_i(\mathbf t,\boldsymbol\xi)
+:=\exp(\mathbf W_{i,:}\mathbf t)\xi_i$.
+Assume $\Omega$ is preserved by these transformations.
+Choose $q$ nonzero coordinates with ordered index set $S$
+so that $\mathbf W_{S,:}$ is invertible.
+Fix their signs throughout $\Omega$, and choose target values
+$\mathbf h\in\mathbb R^q$ of the same signs.
+
+\begin{proposition}[Global normalization for positive scalings]
+    \label{prop:theory-global-normalization}
+    Setting $\boldsymbol\xi_S=\mathbf h$ selects exactly one
+    representative of each scaling orbit in $\Omega$.
+    The required transformation is
+    \begin{equation*}
+        \mathbf t
+        =\mathbf W_{S,:}^{-1}
+            \bigl(\log|\mathbf h|-\log|\boldsymbol\xi_S|\bigr).
+    \end{equation*}
+\end{proposition}
+
+\begin{proof}
+    The signs are compatible. Taking log magnitudes of the
+    $q$ required coordinate equalities gives a square linear
+    system with the displayed invertible matrix.
+    Its unique solution defines allowed positive scales.
+\end{proof}
+
+The one-scale-per-component rule of
+Proposition~\ref{prop:theory-dimension} is a special case.
+More generally, on a positive ReLU scale region one may fix a
+positive weighted sum of neuron scales in each component.
+Such a sum is positive and is multiplied by that component's
+common scale, giving a unique normalizing factor.
+
+Geometric normalization and uniqueness of a numerical least-squares
+update have separate conditions.
+At a fixed indexator, let $\mathbf E$ be its calibration residual
+matrix, let $\mathbf v$ be its fixed affine offset, and let
+$\mathbf D$ be a fixed positive diagonal discrepancy matrix,
+as in Section~\ref{sec:method-projection}.
+For feasible constraints $\mathbf G\boldsymbol\xi=\mathbf h$,
+the minimizer of
+$\|\mathbf D^{-1}(\mathbf E\boldsymbol\xi-\mathbf v)\|_2^2$
+is unique exactly when
+\begin{equation*}
+    \ker\mathbf E\cap\ker\mathbf G=\{\mathbf0\}.
+\end{equation*}
+Indeed, the quadratic form is strictly positive on every nonzero
+feasible direction precisely under this condition.
+Preservation of a robust projection score additionally requires
+that its residual and discrepancy scale transform by the same
+positive factor coordinatewise. Their ratio is then invariant.
+
+\subsection{Source selection and candidate coverage}
+\label{app:theory-selection}
+
+For the source procedure in
+Section~\ref{sec:method-selection}, condition on the source tasks,
+all proposal data, the final bank and all fitted candidate predictors.
+Let $q_{\mathrm{str}}\ge1$ be the number of new independent
+structure-selection examples per source task.
+Let $R_{\mathrm{src}}(\mathbf I)$ be the mean true query loss
+of these fixed predictors on the $T$ source tasks, and let
+$\widehat{\mathbf I}_{\mathrm{src}}$ minimize their empirical
+structure-selection loss.
+
+\begin{proposition}[Conditional source-selection bound]
+    \label{prop:theory-source-selection}
+    For loss in $[0,L]$ and $\delta\in(0,1)$, with conditional
+    probability at least $1-\delta$,
+    \begin{equation}
+        R_{\mathrm{src}}(\widehat{\mathbf I}_{\mathrm{src}})
+        \le \min_{\mathbf I\in\mathcal B}R_{\mathrm{src}}(\mathbf I)
+            +2L\sqrt{\frac{\log(2|\mathcal B|/\delta)}
+                              {2Tq_{\mathrm{str}}}}.
+        \label{eq:appendix-theory-source-selection}
+    \end{equation}
+\end{proposition}
+
+\begin{proof}
+    Conditional on the fixed tasks and predictors, the
+    $Tq_{\mathrm{str}}$ example losses are independent and
+    bounded. Apply Hoeffding's inequality to each candidate,
+    take a union bound, and use the empirical minimization
+    argument in the proof of Theorem~\ref{thm:theory-transfer}.
+\end{proof}
+
+This risk averages predictions on the particular source tasks.
+The independent unit in Theorem~\ref{thm:theory-transfer} is instead
+a newly sampled task, with fresh numerical fitting.
+The two bounds therefore address different sources of uncertainty.
+
+For the latter setting, define the bank's adaptation approximation
+error relative to the admissible indexators by
+\begin{equation*}
+    \varepsilon_{\mathrm{bank}}
+    :=\min_{\mathbf I\in\mathcal B}
+        \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
+        -\inf_{\mathbf I\in\mathcal I_K}
+        \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I).
+\end{equation*}
+Subtracting the infimum from
+\eqref{eq:theory-transfer-bound} gives
+\begin{equation*}
+    \mathcal R_{n,b}^{\mathrm{adapt}}
+        (\widehat{\mathbf I}_{\mathcal H})
+        -\inf_{\mathbf I\in\mathcal I_K}
+            \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
+    \le \varepsilon_{\mathrm{bank}}
+        +2L\sqrt{\frac{\log(2|\mathcal B|/\delta)}
+                         {2T_{\mathcal H}}}.
+\end{equation*}
+The algebraic constraints in
+Theorem~\ref{thm:theory-cycle-equivalence} preserve every compatible
+partition if all admissible continuations are retained.
+A fixed-size bank needs an additional coverage argument.
+For example, if $M$ candidates are indistinguishable by the information
+used for pruning and a bank retains at most $B_{\max}<M$ of them,
+then under a uniform conditional distribution of the true candidate,
+coverage probability is at most $B_{\max}/M$.
+This follows by counting the retained candidates, and also holds
+after averaging over randomized pruning.
+
+\subsection{Prediction error and numerical conditioning}
+\label{app:theory-adaptation}
+
+A linear model gives an explicit separation of approximation error
+and estimation variance, as in the analysis of learned sharing in
+\citet{yeh2022equivariance}.
+Let $\mathbf w^\star\in\mathbb R^P$ be the true weights,
+$\mathbf X\in\mathbb R^{n\times P}$ a fixed design satisfying
+$\mathbf X^{\mathsf T}\mathbf X=n\mathbf{Id}_P$, and
+$\mathbf y=\mathbf X\mathbf w^\star+\boldsymbol\varepsilon$,
+where $\sigma>0$ is the noise standard deviation and
+$\boldsymbol\varepsilon\sim
+\mathcal N(\mathbf0,\sigma^2\mathbf{Id}_n)$.
+Let an independent query input have second moment
+$\mathbb E[\mathbf x\mathbf x^{\mathsf T}]=\mathbf{Id}_P$.
+Before observing target data, fix an allowed weight space with
+orthonormal basis $\mathbf U\in\mathbb R^{P\times r}$ and
+projector $\mathbf P_U:=\mathbf U\mathbf U^{\mathsf T}$.
+Let $\widehat{\mathbf w}_U$ be the least-squares estimator in that space.
+
+\begin{proposition}[Bias and variance of a fixed constraint]
+    \label{prop:theory-bias-variance}
+    Under these assumptions,
+    \begin{equation}
+        \mathbb E\bigl[
+            (\mathbf x^{\mathsf T}
+                (\widehat{\mathbf w}_U-\mathbf w^\star))^2
+            \bigr]
+        =\|(\mathbf{Id}_P-\mathbf P_U)\mathbf w^\star\|_2^2
+            +\frac{\sigma^2r}{n}.
+        \label{eq:appendix-theory-bias-variance}
+    \end{equation}
+\end{proposition}
+
+\begin{proof}
+    Orthogonality of the design gives
+    $\widehat{\mathbf w}_U=\mathbf P_U\mathbf w^\star
+    +n^{-1}\mathbf P_U\mathbf X^{\mathsf T}\boldsymbol\varepsilon$.
+    The deterministic error is orthogonal to the random part,
+    whose covariance is $\sigma^2\mathbf P_U/n$.
+    The query second moment turns prediction error into squared
+    weight error. Taking its expectation proves the formula.
+\end{proof}
+
+Dense least squares has variance $\sigma^2P/n$ and zero
+approximation error in this model. Thus a constraint improves
+prediction when its squared approximation error is smaller than
+$\sigma^2(P-r)/n$.
+This exact calculation uses $n\ge P$, as required by the design
+assumption. Nonlinear fitting with a free output layer has a
+different geometry.
+
+For numerical conditioning, consider a positive definite quadratic
+loss with Hessian $\mathbf H\in\mathbb R^{P\times P}$.
+Restricting it to an orthonormal basis
+$\mathbf U\in\mathbb R^{P\times r}$, with $r\ge1$, gives
+the Hessian $\mathbf H_U:=\mathbf U^{\mathsf T}\mathbf H\mathbf U$.
+The Rayleigh quotient yields
+\begin{equation}
+    \lambda_{\min}(\mathbf H_U)\ge\lambda_{\min}(\mathbf H),
+    \qquad
+    \lambda_{\max}(\mathbf H_U)\le\lambda_{\max}(\mathbf H).
+    \label{eq:appendix-theory-conditioning}
+\end{equation}
+Its spectral condition number is therefore no larger.
+These inequalities follow by minimizing and maximizing the
+same quotient over a subset of the unit vectors.
+
+The coordinates of an ordinary codebook need not be orthonormal.
+Let $\mathbf L_{\mathbf I}\in\mathbb R^{P\times m}$ be the
+signed lookup matrix, with active row
+$\sigma_{\mathbf I,p}(\mathbf e_{j_{\mathbf I}(p)}^{(m)})^{\mathsf T}$
+and zero row for an inactive position.
+If $n_j$ is the size of group $j$, then
+$\mathbf L_{\mathbf I}^{\mathsf T}\mathbf L_{\mathbf I}
+=\operatorname{diag}(n_1,\ldots,n_m)$.
+Even for $\mathbf H=\mathbf{Id}_P$, group sizes $1$ and an integer $N\ge1$
+produce codebook condition number $N$.
+The normalized lookup
+$\mathbf L_{\mathbf I}\operatorname{diag}(n_1,\ldots,n_m)^{-1/2}$
+has orthonormal columns and restores
+\eqref{eq:appendix-theory-conditioning}.
+This separates the geometry of a constraint from the effect of
+its numerical coordinates. Training-time comparisons also depend
+on initialization, nonlinear trajectories and the cost of each update.

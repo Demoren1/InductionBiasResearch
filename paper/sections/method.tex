@@ -16,7 +16,7 @@ we refit its codebooks and unconstrained parameters on the source
 tasks, then select the indexator by prediction loss on independent
 structure-selection data (Section~\ref{sec:method-selection}).
 Finally, Section~\ref{sec:method-relu-instance} specifies the descriptors,
-codebook and numerical fitting used for our ReLU experiments.
+parameterization and alignment for a ReLU network.
 
 \subsection{Source solutions and their alignment}
 \label{sec:method-source}
@@ -266,77 +266,57 @@ task, then reorder its descriptor accordingly. For ReLU networks,
 this matches hidden neurons across models. The matching rules are
 specified in Appendix~\ref{app:source-alignment}.
 
-For each anchor, we fix the source alignment and perform a separate
-run of Algorithm~\ref{alg:joint-projection} for each initial indexator.
-Each run is deterministic given its initialization.
+For each anchor, we use the anchor itself and the aligned source
+indexators as initializations, adding random assignments if needed.
+We run Algorithm~\ref{alg:joint-projection} from each initialization
+with each proposed support: the anchor support or a mask retaining
+connections supported by at least a prescribed number of source tasks
+(Appendix~\ref{app:support-proposals}).
 
-Let $\mathcal G$ be a finite group of known admissible label and
-parameter permutations. We remove duplicates under $\mathcal G$ using
-$\kappa(\mathbf I):=\min_{g\in\mathcal G}^{\mathrm{lex}}g\mathbf I$.
-The bank $\mathcal B$ contains the initial candidates
-$\kappa(\mathcal B_0)$ and up to a prescribed number of canonically
-distinct joint proposals with the lowest projection scores $\mathcal Q$.
+We remove duplicate indexators that differ only by renaming code
+labels or reordering interchangeable network units.
+We denote the retained representative by $\kappa(\mathbf I)$.
+We retain all initial candidates $\kappa(\mathcal B_0)$ in the final
+bank $\mathcal B$, including every anchor. We also add up to a
+prescribed number of distinct outputs of
+Algorithm~\ref{alg:joint-projection} with the lowest projection
+scores $\mathcal Q$.
 
 \subsection{Numerical refitting and functional selection}
 \label{sec:method-selection}
 
-For a fixed candidate, collect its trainable numerical parameters in
+The projection score measures agreement with source weights.
+We assess predictive usefulness by fitting task-specific numerical
+parameters under each fixed indexator and comparing validation losses.
+
+For a candidate $\mathbf I$, collect its independently trainable numerical
+parameters in
 $\boldsymbol\eta_\tau:=(C_{\tau,1},\ldots,C_{\tau,K},
-\boldsymbol\theta_\tau)$ and write
+\boldsymbol\theta_\tau)$ and define the support loss
 $F_{\tau,\mathbf I}(\boldsymbol\eta):=
 \mathcal L_{S_\tau^{\mathrm s}}(f_{\mathbf I,\boldsymbol\eta})$.
-One numerical fitting rule uses the damped direction and finite line search
-\begin{equation}
-    \begin{aligned}
-        \mathbf g&:=\nabla F_{\tau,\mathbf I}(\boldsymbol\eta),
-        \qquad
-        \boldsymbol\Delta:=
-            -(\mathbf H+\lambda\mathbf{Id})^{-1}\mathbf g,\\
-        \mathcal S(\boldsymbol\eta,\boldsymbol\Delta)
-        &:=\bigl\{\beta^l:0\le l<N_{\mathrm{ls}},\
-            F_{\tau,\mathbf I}(\boldsymbol\eta+\beta^l\boldsymbol\Delta)
-            <F_{\tau,\mathbf I}(\boldsymbol\eta)\bigr\},\\
-        \alpha&:=\max\bigl(\{0\}\cup
-            \mathcal S(\boldsymbol\eta,\boldsymbol\Delta)\bigr),
-    \end{aligned}
-    \label{eq:method-numerical-update}
-\end{equation}
-where $\mathbf H=\mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)\succeq0$,
-$\lambda>0$, $0<\beta<1$, and $N_{\mathrm{ls}}$ bounds the line search.
-For mean squared error, let $\mathbf r$ stack the $n_\tau$ scalar
-prediction residuals on support data. The Gauss--Newton choice is
-\begin{equation}
-    \mathbf J:=\frac{\partial\mathbf r}{\partial\boldsymbol\eta},
-    \qquad
-    \mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)
-        :=\frac{2}{n_\tau}\mathbf J^{\mathsf T}\mathbf J.
-    \label{eq:method-gn-matrix}
-\end{equation}
-The choice $\mathbf H=\mathbf0$ gives a scaled gradient step.
-Only independent trainable coordinates are included in $\boldsymbol\eta$.
+We update these parameters using gradients of the support loss while
+keeping $\mathbf I$ fixed. The numerical optimizer is an implementation
+choice; Appendix~\ref{app:gauss-newton} describes the damped
+Gauss--Newton variant used in the synthetic experiments.
 
-For each candidate and task, several initial states
-$\{\boldsymbol\eta_{\tau,r}^{(0)}\}_{r=1}^{R}$ generate a finite
-set of iterates. They can include that task's source-derived
-initializations. Numerical states and the shared structure are selected by
+For each candidate and task, choose $R\ge1$ initial states
+$\boldsymbol\eta_{\tau,r}^{(0)}$, $r=1,\ldots,R$,
+and perform at most $N_{\mathrm{fit}}\ge0$ updates per state.
+Let $\widehat{\boldsymbol\eta}_\tau(\mathbf I)$ denote the iterate
+with the lowest loss on $V_\tau^{\mathrm{num}}$ across starts and
+updates. After fixing these states and the bank, we select the shared
+indexator by mean loss on the independent structure-selection samples:
 \begin{equation}
-    \begin{aligned}
-        (\widehat r_\tau,\widehat k_\tau)(\mathbf I)
-        &\in\operatorname*{arg\,min}_{r,k}
-        \mathcal L_{V_\tau^{\mathrm{num}}}
-            (f_{\mathbf I,\boldsymbol\eta_{\tau,r}^{(k)}}),\\
-        \widehat{\mathbf I}
-        &\in\operatorname*{arg\,min}_{\mathbf I\in\mathcal B}
-        \frac1T\sum_\tau\mathcal L_{V_\tau^{\mathrm{str}}}
-            (f_{\mathbf I,\widehat{\boldsymbol\eta}_\tau(\mathbf I)}).
-    \end{aligned}
+    \widehat{\mathbf I}
+    \in\operatorname*{arg\,min}_{\mathbf I\in\mathcal B}
+    \frac1T\sum_\tau\mathcal L_{V_\tau^{\mathrm{str}}}
+        (f_{\mathbf I,\widehat{\boldsymbol\eta}_\tau(\mathbf I)}).
     \label{eq:method-structure-selection}
 \end{equation}
-Here $\widehat{\boldsymbol\eta}_\tau(\mathbf I)$ is the iterate
-selected by the first line. The bank and these iterates are fixed
-before the second line is evaluated.
+Algorithm~\ref{alg:structure-selection} summarizes this procedure.
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[H]
     \small
     \DontPrintSemicolon
     \SetAlgoNoEnd
@@ -344,28 +324,21 @@ before the second line is evaluated.
         fitting budget $N_{\mathrm{fit}}$.}
     \KwOut{Shared indexator $\widehat{\mathbf I}$.}
     \ForEach{$\mathbf I\in\mathcal B$ and $\tau\in\mathcal T_{\mathrm{tr}}$}{
-        $b_\tau(\mathbf I)\leftarrow+\infty$\;
         \For{$r=1,\ldots,R$}{
-            $\boldsymbol\eta\leftarrow\boldsymbol\eta_{\tau,r}^{(0)}$\;
-            \For{$k=0,\ldots,N_{\mathrm{fit}}$}{
-                $v\leftarrow\mathcal L_{V_\tau^{\mathrm{num}}}
-                    (f_{\mathbf I,\boldsymbol\eta})$\;
-                \If{$v<b_\tau(\mathbf I)$}{
-                    $(b_\tau(\mathbf I),\widehat{\boldsymbol\eta}_\tau(\mathbf I))
-                        \leftarrow(v,\boldsymbol\eta)$\;
-                }
-                \If{$k=N_{\mathrm{fit}}$}{\textbf{break}\;}
-                $\mathbf g\leftarrow\nabla F_{\tau,\mathbf I}(\boldsymbol\eta)$\;
-                $\mathbf H\leftarrow\mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)$\;
-                $\boldsymbol\Delta\leftarrow
-                    -(\mathbf H+\lambda\mathbf{Id})^{-1}\mathbf g$\;
-                $\alpha\leftarrow\max(\{0\}\cup
-                    \mathcal S(\boldsymbol\eta,\boldsymbol\Delta))$\;
-                \If{$\alpha=0$}{\textbf{break}\;}
-                $\boldsymbol\eta\leftarrow
-                    \boldsymbol\eta+\alpha\boldsymbol\Delta$\;
+            Initialize the optimizer at $\boldsymbol\eta_{\tau,r}^{(0)}$\;
+            \For{$k=0,\ldots,N_{\mathrm{fit}}-1$}{
+                $\mathbf g\leftarrow
+                    \nabla F_{\tau,\mathbf I}(\boldsymbol\eta_{\tau,r}^{(k)})$\;
+                Obtain $\boldsymbol\eta_{\tau,r}^{(k+1)}$ by an optimizer
+                    step from $\boldsymbol\eta_{\tau,r}^{(k)}$ using $\mathbf g$\;
             }
         }
+        $(r^\star,k^\star)\in\operatorname*{arg\,min}_{\substack{
+            1\le r\le R\\0\le k\le N_{\mathrm{fit}}}}
+            \mathcal L_{V_\tau^{\mathrm{num}}}
+                (f_{\mathbf I,\boldsymbol\eta_{\tau,r}^{(k)}})$\;
+        $\widehat{\boldsymbol\eta}_\tau(\mathbf I)
+            \leftarrow\boldsymbol\eta_{\tau,r^\star}^{(k^\star)}$\;
     }
     \tcp{Structure-selection data enter only after all numerical choices.}
     $s(\mathbf I)\leftarrow\displaystyle\frac1T\sum_\tau
@@ -381,91 +354,62 @@ before the second line is evaluated.
 
 On a target task, $\widehat{\mathbf I}$ is fixed and all its numerical
 parameters are initialized afresh and fitted on the target support
-sample. Query loss measures transfer. Recovery depends on whether
-the finite bank contains a useful structure and whether numerical
-fitting can reveal it.
+sample. Query loss measures the transfer of the selected structure.
 
 \subsection{ReLU implementation}
 \label{sec:method-relu-instance}
 
-Our experimental network is
+Consider a network with input dimension $D$, $H$ hidden neurons and
+output dimension $O$:
 \begin{equation}
     f_\tau(\mathbf x)
-    =H^{-1/2}\mathbf A_\tau^{\mathsf T}
-        \rho(\mathbf W_\tau^{\mathsf T}\mathbf x+\mathbf b_\tau)
-        +\mathbf d_\tau,
+    =\mathbf W_{2,\tau}^{\mathsf T}
+        \sigma(\mathbf W_{1,\tau}^{\mathsf T}\mathbf x+\mathbf b_{1,\tau})
+        +\mathbf b_{2,\tau},
     \label{eq:method-relu-model}
 \end{equation}
-where $\mathbf W_\tau\in\mathbb R^{D\times H}$,
-$\mathbf A_\tau\in\mathbb R^{H\times O}$,
-$\mathbf b_\tau\in\mathbb R^H$, $\mathbf d_\tau\in\mathbb R^O$, and
-$\rho$ is coordinatewise ReLU. Only $\mathbf W_\tau$ is structured;
-the biases and output layer are free.
+where $\mathbf W_{1,\tau}\in\mathbb R^{D\times H}$,
+$\mathbf W_{2,\tau}\in\mathbb R^{H\times O}$,
+$\mathbf b_{1,\tau}\in\mathbb R^H$, $\mathbf b_{2,\tau}\in\mathbb R^O$, and
+$\sigma$ is coordinatewise ReLU. We structure the $P=DH$ first-layer
+weights by reshaping the shared indexator into
+$\mathbf I\in\{0,\ldots,K\}^{D\times H}$ and applying the lookup
+$W_{1,\tau,dh}=C_{\tau,I_{dh}}$.
+The hidden biases and output layer remain task-specific and
+unconstrained.
 
-For synthetic regression, dense solutions are refined by Gauss--Newton
-steps and residual-based reinitialization of weak neurons. Normalized columns
-$\mathbf r_{\tau,h}:=\widetilde{\mathbf W}_{\tau,:,h}/
-\|\widetilde{\mathbf W}_{\tau,:,h}\|_2$ and adjustable column scales
-$\mathbf s_\tau\in\mathbb R^H$ define
+A permutation of hidden neurons reorders columns of $\mathbf W_{1,\tau}$,
+entries of $\mathbf b_{1,\tau}$ and rows of $\mathbf W_{2,\tau}$ together,
+preserving the predictor. These permutations supply the discrete
+alignments used in Section~\ref{sec:method-bank}.
+Multiplying a dense neuron's input weights and bias by a positive
+number and dividing its output weights by the same number leaves
+the network output unchanged.
+
+For fitted source weights $\widetilde{\mathbf W}_{1,\tau}$, we use the
+calibration variables $\mathbf a_\tau=\mathbf s_\tau\in\mathbb R^H$
+from Section~\ref{sec:method-source}, where each $s_{\tau,h}$ scales
+the normalized source column of hidden neuron $h$.
+Positive discrepancy scales are estimated from fitted source models
+(Appendix~\ref{app:relu-details}).
+Calibration equalities fix the common scale within each connected
+group of codes and neurons
+(Appendix~\ref{app:calibration-normalization}).
+The resulting affine descriptor is
 \begin{equation}
-    z_{\tau,dh}(\mathbf s_\tau)=s_{\tau,h}r_{\tau,dh},
-    \qquad
-    u_{\tau,dh}(\mathbf s_\tau)
-        =\max\{|s_{\tau,h}|,\varepsilon_s\}
-            \max\{\widehat u_{\tau,h},\varepsilon_u\},
+    z_{\tau,dh}(\mathbf s_\tau)
+        =s_{\tau,h}\frac{\widetilde W_{1,\tau,dh}}
+            {\|\widetilde{\mathbf W}_{1,\tau,:,h}\|_2}.
     \label{eq:method-relu-descriptor}
 \end{equation}
-with positive floors $\varepsilon_s,\varepsilon_u$.
-Reliability weights $\widehat u_{\tau,h}$ are estimated from residuals
-and the pseudoinverse of the empirical Jacobian Gram matrix, propagated
-through column normalization.
+The fraction is defined as zero for a zero source column.
 
-For the signed implementation, write $\mathbf c_\tau\in\mathbb R^m$
-for the independent code values and use
-\begin{equation}
-    \mathbf C_\tau
-        =(0,\mathbf c_\tau^{\mathsf T},-\mathbf c_\tau^{\mathsf T})^{\mathsf T},
-    \qquad K=2m.
-    \label{eq:method-paired-codebook}
-\end{equation}
-For this restricted numerical family, replace $\mathbf A_{\mathbf I}$
-by the signed lookup matrix with row $\sigma\mathbf e_j^{\mathsf T}$
-for code $\sigma c_{\tau,j}$, where $\mathbf e_j$ is the $j$th standard
-basis vector. Writing its signed labels as
-$J_{dh}\in\{0,\pm1,\ldots,\pm m\}$, each reference source $t$ yields
-the oriented proposal $J^{(t)}_{dh}=\sigma_{t,h}J_{dh}$, where
-$\sigma_{t,h}:=2\mathbf1\{s_{t,h}\ge0\}-1$.
-Reversing a ReLU active side is checked by functional fitting.
-Canonicalization permutes and changes signs of code pairs jointly.
-Empty independent groups are reseeded from groups containing several
-positions.
-
-Calibration sets one column scale to $1$ per connected component of the
-independent-code--neuron incidence graph. The anchor selection and
-resulting affine equalities are specified in
-\eqref{eq:appendix-relu-normalization}--\eqref{eq:appendix-relu-constraints}.
-The remaining column scales are fitted freely; fixing every scale to
-one would additionally constrain their relative values.
-
-For support inputs $\{\mathbf x_n\}$, define
-$\Phi_{nh}:=H^{-1/2}\rho(\mathbf x_n^{\mathsf T}\mathbf W_{\tau,:,h}+b_{\tau,h})$
-and let $\mathbf Y$ collect their targets. For squared-loss refinement,
-the free output layer is refitted at every iterate and line-search trial by
-\begin{equation}
-    \begin{pmatrix}\mathbf A_\tau\\\mathbf d_\tau^{\mathsf T}\end{pmatrix}
-    \in\operatorname*{arg\,min}_{\mathbf U}
-        \left\{\|[\boldsymbol\Phi,\mathbf1]\mathbf U-\mathbf Y\|_{\mathrm F}^2
-            +\varepsilon_{\mathrm{lin}}\|\mathbf U\|_{\mathrm F}^2\right\},
-    \label{eq:method-free-head}
-\end{equation}
-with a small stabilizer $\varepsilon_{\mathrm{lin}}>0$.
-Hidden biases and codes remain trainable. Gauge normalization uses
-$a=\|\mathbf c_\tau\|_2/\sqrt m$ and
-$(\mathbf c_\tau,\mathbf b_\tau,\mathbf A_\tau)
-\leftarrow(\mathbf c_\tau/a,\mathbf b_\tau/a,a\mathbf A_\tau)$
-for $a>0$.
-For the real-data experiments we use Adam numerical fitting and
-direction dispersion across independently fitted models as discrepancy
-scales. The two dense source solutions with lowest numerical-validation
-loss serve directly as alignment references, replacing the
-indexator-based anchor construction.
+Using this descriptor, we retain all initial source indexators,
+including the anchors, and add selected outputs of
+Algorithm~\ref{alg:joint-projection} under different neuron alignments
+and initializations (Section~\ref{sec:method-bank}).
+Algorithm~\ref{alg:structure-selection} fits each candidate's codebook,
+hidden biases and output layer on source support data and selects
+the shared indexator on independent structure-selection data.
+On a new task, we fix the selected indexator and train all these
+numerical parameters from fresh initial values.

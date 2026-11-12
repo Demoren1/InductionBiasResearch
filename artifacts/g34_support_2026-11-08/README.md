@@ -21,10 +21,14 @@ full-support контроль не входит в итоговые таблиц
 в audit_records.tar.gz. Общие reference-предсказания и ответы сохранены
 в [general-комплекте](../g34_general_2026-11-08/README.md).
 
-[Исходники](../../archive/experiments/g34_support_v1/README.md)
+[Исходники](https://github.com/Demoren1/InductionBiasResearch/tree/ba7384914dd7aaabe0ed627e812cbb2b11731a6f/archive/experiments/g34_support_v1)
 перенесены в архив. [Состав и границы восстановления](../../archive/2026-11-08/README.md)
 объясняют использование комплектов; они не заменяют полный raw-запуск.
 
 Архивы `audit_arrays.tar.gz` и `audit_records.tar.gz` сохранены локально
 на рабочем сервере и исключены из Git; в clone доступны сводки, рисунки
 и манифесты. Правила хранения — в [README артефактов](../README.md).
+
+## Уборка 12 ноября
+
+Тяжёлые локальные audit_arrays.tar.gz и audit_records.tar.gz удалены по запросу пользователя. Сводки, выбранные структуры, рисунки и исходные фиксации сохранены. Полный повтор требует заново получить исходные данные. Исследовательский код прежней ветки доступен в Git-ревизии ba7384914dd7aaabe0ed627e812cbb2b11731a6f. [Журнал уборки](../../archive/2026-11-12/README.md).

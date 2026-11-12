@@ -2,65 +2,71 @@
 
 Извлекаем общую связность и группы равных весов из решений нескольких
 задач. На новой задаче структура фиксируется, а кодбук, сдвиги и свободный
-выходной слой обучаются заново. Текущий метод — совместная калиброванная
-проекция с последующим функциональным выбором индексатора.
+выходной слой обучаются заново. Основной метод — совместная калиброванная
+проекция G34 с функциональным выбором индексатора.
 
-Состояние на 10 ноября 2026 года:
+Состояние на 12 ноября 2026 года:
 
-- [Рукопись](paper/main.tex) и [PDF](paper/main.pdf).
-- [Результаты четырёх наборов и ограничения](paper/BENCHMARK_REPORT.md).
-- [Рабочий код и команды](experiments/paper_structure_benchmark_v1/README.md).
-- [Компактные данные для независимого аудита](artifacts/benchmark_2026-11-07/README.md).
-- [Теория текущего метода](paper/theory/README.md).
-- [Дополнительные проверки G34](archive/reports/2026-11-08/README.md).
-- [Контроль одного запуска из каждого якоря](artifacts/anchor_start_2026-11-10/REPORT.md):
-  полный поиск восстановил 15/24 индексаторов, упрощённые варианты — 11/24.
-- [История исследований и очистки](archive/README.md).
+- [Статья](paper/main.tex) и [PDF](paper/main.pdf): метод, основные
+  теоретические результаты и доказательства в приложении.
+- [Основное сравнение](paper/BENCHMARK_REPORT.md) на Pattern 0110,
+  синтетическом DeepSets, Aug-Omniglot и парных суммах MNIST.
+- [Компактные данные основного сравнения](artifacts/benchmark_2026-11-07/README.md).
+- [Контроль упрощения G34](artifacts/anchor_start_2026-11-10/README.md):
+  полный поиск восстанавливает 15/24 индексаторов, упрощения — 11/24.
+- [Взвешенные сигнатуры и проверка предпосылок](artifacts/theorem_pair_recovery_weighted_2026-11-12/CAREFUL_CHECK.md).
+- [Сигнатуры на Omniglot](artifacts/omniglot_signature_2026-11-12/REVIEW.md)
+  и [общей синтетике](artifacts/general_signature_2026-11-12/REVIEW.md).
+  Эти исследования не подтвердили общую замену G34.
+- [Теория](paper/theory/README.md).
 
 ## Рабочие каталоги
 
 | Каталог | Назначение |
 |---|---|
-| `paper/` | Статья, итоговые таблицы, рисунки и выбранные индексаторы |
-| `experiments/paper_structure_benchmark_v1/` | Подготовка задач, методы, подгонка, запуск и отчёты |
-| `experiments/sharing_structure_research_v1/` | Зарегистрированное исходное ядро G34; сохранено без изменений |
-| `artifacts/benchmark_2026-11-07/` | Точные предсказания, ответы для аудита, выбранные структуры и протоколы |
-| `artifacts/anchor_start_2026-11-10/` | Итоговый контроль упрощения поиска и компактные данные для CPU-аудита |
-| `archive/` | Предыдущие эксперименты, заметки, отчёты и снимок исходников до уборки |
+| `paper/` | Статья, таблицы, рисунки и выбранные индексаторы |
+| `experiments/paper_structure_benchmark_v1/` | Данные, G34 и конкуренты, численная адаптация и аудит |
+| `experiments/sharing_structure_research_v1/` | Зарегистрированное ядро G34 с сохранёнными контрольными суммами |
+| `experiments/theorem_pair_recovery_v1/` | Сигнатуры пространства контрастов и диагностика теоремы |
+| `experiments/omniglot_signature_v1/` | Проверка первого геометрического кандидата на Omniglot |
+| `experiments/general_signature_v1/` | Перенос на новые численные задачи общей синтетики |
+| `artifacts/` | Компактные результаты, предсказания, ответы и выбранные состояния |
+| `archive/` | Исторические отчёты и журнал очистки |
 
-Сырые каталоги завершённых запусков, промежуточные численные состояния
-и старые журналы удалены при [уборке 8 ноября](archive/2026-11-08/README.md).
-Опубликованный компактный комплект позволяет пересчитать итоговые метрики
-и пересобрать все рисунки статьи. Для дополнительных проверок G34
-сохранены таблицы, рисунки и сжатые комплекты предсказаний и аудита.
-Повторное обучение требует заново подготовить данные.
-Для контроля от 10 ноября сохранены также полные численные состояния
-в локальном архиве; правила хранения и команда аудита приведены в
-[README комплекта](artifacts/anchor_start_2026-11-10/README.md).
-Большие локальные архивы состояний и аудита исключены из Git.
+Старые экспериментальные деревья, тяжёлые ансамбли, промежуточные
+кэши и резервные архивы удалены при [уборке 12 ноября](archive/2026-11-12/README.md).
+Точные результаты статьи и новых проверок сохранены. Границы воспроизведения
+описаны в [README артефактов](artifacts/README.md). Прежний исследовательский
+код доступен в истории Git; рабочие методы не зависят от архивных пакетов.
 
-## Пересчёт результатов без обучения
+## Аудит без обучения
 
-Использовано окружение Python 3.12. Для аудита нужны пакеты из
-`requirements-reporting.txt`:
+Python 3.12 и зависимости из `requirements-reporting.txt`:
 
 ```bash
 python -m pip install -r requirements-reporting.txt
 python -m experiments.paper_structure_benchmark_v1.reporting.evaluate \
   --base artifacts/benchmark_2026-11-07 --phase published-score
-MPLCONFIGDIR=/tmp/ibr-mpl-cache \
-  python -m experiments.paper_structure_benchmark_v1.reporting.render_report \
-  --base artifacts/benchmark_2026-11-07 --paper paper
-make -C paper
+python -m experiments.paper_structure_benchmark_v1.reporting.anchor_audit \
+  --base artifacts/anchor_start_2026-11-10 --output /tmp/ibr-anchor-audit
+python -m experiments.paper_structure_benchmark_v1.reporting.signature_audit \
+  --base artifacts/general_signature_2026-11-12 --dataset general \
+  --output /tmp/ibr-general-audit.json
+python -m experiments.paper_structure_benchmark_v1.reporting.signature_audit \
+  --base artifacts/omniglot_signature_2026-11-12 --dataset omniglot \
+  --output /tmp/ibr-omniglot-audit.json
 ```
 
-Для последней команды необходимы TeX и `latexmk`. GPU и повторное обучение
-для аудита и сборки статьи не нужны. Полные зависимости обучения приведены
-в `requirements.txt`; использованное CUDA-окружение описано в README кода.
+Аудит не обучает модели и не требует GPU. Зависимости обучения находятся
+в `requirements.txt`; команды запуска — в [README кода](experiments/README.md).
+Новый запуск создаёт отдельные каталоги, не перезаписывая завершённые серии.
 
-Для упаковки исходников статьи в Overleaf: `./pack_overleaf.sh`.
+## Сборка статьи
 
-Сравнение включает Pattern 0110, синтетический DeepSets, Aug-Omniglot и
-уменьшенную multitask-задачу сумм пар MNIST. Это общий полносвязный стенд;
-границы адаптаций Yeh, MSR и LUT-Q описаны в отчёте. Статья сохраняет
-пометки `in progress` для ещё не завершённой теоретической части.
+```bash
+make -C paper
+./pack_overleaf.sh
+```
+
+Нужны TeX и `latexmk`. Историческое сравнение конкурентов и новый
+Omniglot-прогон разделены в статье: итоговые эпизоды в них различаются.

@@ -1,3 +1,85 @@
+\section{ReLU implementation details}
+\label{app:relu-details}
+
+\subsection{Signed codebooks}
+\label{app:relu-signed-codebook}
+
+For the signed implementation of the network in
+Section~\ref{sec:method-relu-instance}, write
+$\mathbf c_\tau\in\mathbb R^m$ for the independent code values and use
+\begin{equation}
+    \mathbf C_\tau
+        =(0,\mathbf c_\tau^{\mathsf T},-\mathbf c_\tau^{\mathsf T})^{\mathsf T},
+    \qquad K=2m.
+    \label{eq:method-paired-codebook}
+\end{equation}
+For this restricted numerical family, replace $\mathbf A_{\mathbf I}$
+by the signed lookup matrix with row $\sigma\mathbf e_j^{\mathsf T}$
+for code $\sigma c_{\tau,j}$, where $\sigma\in\{-1,1\}$ and
+$\mathbf e_j\in\mathbb R^m$ is the $j$th standard basis vector;
+a zero label gives a zero row.
+Write the signed labels as $J_{dh}\in\{0,\pm1,\ldots,\pm m\}$.
+For each reference source $t$, its fitted column scales
+$\mathbf s_t$ yield the oriented proposal
+$J^{(t)}_{dh}=\sigma_{t,h}J_{dh}$, where
+$\sigma_{t,h}:=2\mathbf1\{s_{t,h}\ge0\}-1$.
+Reversing a ReLU active side is checked by functional fitting.
+Canonicalization permutes and changes signs of code pairs jointly.
+Empty independent groups are reseeded from groups containing several
+positions.
+
+\subsection{Discrepancy scales}
+\label{app:relu-discrepancy}
+
+Let $\widehat u_{\tau,h}\ge0$ estimate the uncertainty of the direction
+of source column $\widetilde{\mathbf W}_{1,\tau,:,h}$.
+For positive stabilizing floors
+$\varepsilon_s,\varepsilon_u$, the discrepancy scales are
+\begin{equation}
+    u_{\tau,dh}(\mathbf s_\tau)
+        =\max\{|s_{\tau,h}|,\varepsilon_s\}
+            \max\{\widehat u_{\tau,h},\varepsilon_u\}.
+    \label{eq:appendix-relu-scales}
+\end{equation}
+For synthetic regression, $\widehat u_{\tau,h}$ is estimated from
+residuals and the pseudoinverse of the empirical Jacobian Gram
+matrix, propagated through column normalization. For images,
+direction dispersion across independently fitted dense models
+supplies these estimates.
+
+\subsection{Numerical fitting refinements}
+\label{app:relu-numerical}
+
+For synthetic regression, dense solutions are refined by
+Gauss--Newton steps and residual-based reinitialization of weak neurons.
+The experimental implementation divides hidden activations by $\sqrt H$
+and stores the output weights in coordinates
+$\sqrt H\,\mathbf W_{2,\tau}$.
+These factors cancel in the predictor
+\eqref{eq:method-relu-model}; the fitting formulas below retain
+the experimental coordinates.
+For support inputs $\{\mathbf x_n\}$, define
+$\Phi_{nh}:=H^{-1/2}\sigma(\mathbf x_n^{\mathsf T}
+\mathbf W_{1,\tau,:,h}+b_{1,\tau,h})$,
+let $\mathbf Y$ collect their targets and let $\mathbf1$ be the
+all-ones column. With a small stabilizer
+$\varepsilon_{\mathrm{lin}}>0$, the free output layer is refitted
+at every squared-loss refinement iterate and line-search trial by
+\begin{equation}
+    \begin{pmatrix}
+        \sqrt H\,\mathbf W_{2,\tau}\\\mathbf b_{2,\tau}^{\mathsf T}
+    \end{pmatrix}
+    \in\operatorname*{arg\,min}_{\mathbf U}
+        \left\{\|[\boldsymbol\Phi,\mathbf1]\mathbf U-\mathbf Y\|_{\mathrm F}^2
+            +\varepsilon_{\mathrm{lin}}\|\mathbf U\|_{\mathrm F}^2\right\}.
+    \label{eq:method-free-head}
+\end{equation}
+Hidden biases and codes remain trainable. Gauge normalization uses
+$a=\|\mathbf c_\tau\|_2/\sqrt m$ and
+$(\mathbf c_\tau,\mathbf b_{1,\tau},\mathbf W_{2,\tau})
+\leftarrow(\mathbf c_\tau/a,\mathbf b_{1,\tau}/a,a\mathbf W_{2,\tau})$
+for $a>0$.
+
 \section{Calibration scale normalization}
 \label{app:calibration-normalization}
 
@@ -74,7 +156,7 @@ while leaving the codebook values free to fit the source direction.
 \label{app:relu-normalization}
 
 For the signed ReLU parameterization in
-Section~\ref{sec:method-relu-instance}, use the signed labels
+Appendix~\ref{app:relu-signed-codebook}, use the signed labels
 $J_{dh}\in\{0,\pm1,\ldots,\pm m\}$ of the current indexator
 $\mathbf I$. Construct a bipartite graph with one vertex for each
 independent code $j\in\{1,\ldots,m\}$ and one for each hidden neuron
@@ -89,7 +171,7 @@ component; an unused code introduces no column scale to normalize.
 Components are ordered by their smallest neuron index.
 
 Using the source uncertainty estimates $\widehat u_{\tau,h}$ from
-\eqref{eq:method-relu-descriptor}, choose the least uncertain neuron
+\eqref{eq:appendix-relu-scales}, choose the least uncertain neuron
 in each component and fix its scale:
 \begin{equation}
     h_{\tau,\ell}^{\star}
@@ -130,6 +212,49 @@ $\mathbf h_{\tau,\mathbf I}\in\mathbb R^{L(\mathbf I)}$ are given by
 Each row selects one column scale and sets it to $1$. These constraints
 are feasible by construction and use only the proposed indexator and
 uncertainty estimates from fitted source models.
+
+\section{Gauss--Newton numerical refitting}
+\label{app:gauss-newton}
+
+This section gives an alternative numerical update for
+Algorithm~\ref{alg:structure-selection}, used in the synthetic
+experiments. The indexator remains fixed throughout refitting.
+For the support objective $F_{\tau,\mathbf I}$ from
+Section~\ref{sec:method-selection}, let $n_\tau$ be the number of
+scalar prediction residuals and let $\mathbf r\in\mathbb R^{n_\tau}$
+stack them, so that
+$F_{\tau,\mathbf I}(\boldsymbol\eta)=
+\|\mathbf r(\boldsymbol\eta)\|_2^2/n_\tau$.
+The residual Jacobian and the positive semidefinite Gauss--Newton
+approximation to the loss Hessian are
+\begin{equation}
+    \mathbf J:=\frac{\partial\mathbf r}{\partial\boldsymbol\eta},
+    \qquad
+    \mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)
+        :=\frac{2}{n_\tau}\mathbf J^{\mathsf T}\mathbf J.
+    \label{eq:method-gn-matrix}
+\end{equation}
+Set $\mathbf H:=\mathbf H_{\tau,\mathbf I}(\boldsymbol\eta)$.
+With damping $\lambda>0$ and the identity matrix $\mathbf{Id}$
+of matching dimension, the update direction is
+\begin{equation}
+    \mathbf g:=\nabla F_{\tau,\mathbf I}(\boldsymbol\eta),
+    \qquad
+    \boldsymbol\Delta:=
+        -(\mathbf H+\lambda\mathbf{Id})^{-1}\mathbf g.
+    \label{eq:method-numerical-update}
+\end{equation}
+For a step reduction factor $0<\beta<1$ and a trial limit
+$N_{\mathrm{ls}}\ge1$, let
+$\mathcal S(\boldsymbol\eta,\boldsymbol\Delta)$ contain the lengths
+$\beta^l$, $l=0,\ldots,N_{\mathrm{ls}}-1$, for which
+$F_{\tau,\mathbf I}(\boldsymbol\eta+\beta^l\boldsymbol\Delta)
+<F_{\tau,\mathbf I}(\boldsymbol\eta)$.
+Choose $\alpha:=\max(\{0\}\cup
+\mathcal S(\boldsymbol\eta,\boldsymbol\Delta))$ and update
+$\boldsymbol\eta\leftarrow\boldsymbol\eta+\alpha\boldsymbol\Delta$.
+A zero step ends the fitting run. Numerical-validation checkpointing
+and structure selection follow Algorithm~\ref{alg:structure-selection}.
 
 \section{Preparation of the initial bank and anchors}
 \label{app:bank-preparation}
@@ -231,7 +356,8 @@ $\boldsymbol\eta_{\tau,r}^{(0)}(\mathbf I)$, $r=1,\ldots,R$,
 and at most $N_{\mathrm{fit}}\ge0$ updates per start. The vector
 $\boldsymbol\eta_\tau$ contains the codebook and all unconstrained
 trainable parameters, as in Section~\ref{sec:method-selection}.
-Starts may be derived from that task's fitted source solution.
+We include an initialization derived from the dense model fitted
+to the same source task.
 
 Let $b_\tau(\mathbf I)$ be the lowest loss on
 $V_\tau^{\mathrm{num}}$ among these numerical states, and let
@@ -247,12 +373,12 @@ With an anchor budget $N_{\mathrm A}\ge1$, define
     \label{eq:appendix-anchor-selection}
 \end{equation}
 Algorithm~\ref{alg:anchor-preparation} gives the numerical loop for
-the update rule \eqref{eq:method-numerical-update}.
-Here $v$ is the current numerical-validation loss, and
-$F_{\tau,\mathbf I}$, $\mathbf H_{\tau,\mathbf I}$,
-$\lambda$ and $\mathcal S$ are the support objective, curvature
-matrix, damping coefficient and line-search set defined in
-Section~\ref{sec:method-selection}.
+the Gauss--Newton update \eqref{eq:method-numerical-update}.
+Here $v$ is the current numerical-validation loss;
+the support objective $F_{\tau,\mathbf I}$ is defined in
+Section~\ref{sec:method-selection}, and the curvature matrix
+$\mathbf H_{\tau,\mathbf I}$, damping coefficient $\lambda$ and
+line-search set $\mathcal S$ in Appendix~\ref{app:gauss-newton}.
 
 \begin{algorithm}[htbp]
     \small
@@ -416,9 +542,10 @@ hidden neurons; descriptor quantities and masks are reordered together.
 
 Let $M_p^{\mathrm a}:=\mathbf1\{I_p^{\mathrm a}\ne0\}$ denote
 the anchor support. For ReLU matching, reshape the support and
-reference weights to $D\times H$, and let
-$\overline{\mathbf r}_{\tau,h}\in\mathbb R^D$ be the normalized
-reference column $h$, using zero for an empty column. Let
+reference weights to $D\times H$. Let
+$\overline{\mathbf r}_{\tau,h},\mathbf r_{\tau,h}\in\mathbb R^D$
+be the normalized reference and dense-source columns $h$,
+respectively, using zero for a zero column. Let
 $\widetilde{\mathbf M}_\tau:=
 \widetilde{\mathbf M}_\tau^{(\lambda_{\mathrm{align}})}$
 be the source mask at a prescribed threshold
@@ -502,7 +629,7 @@ is selected on $V_\tau^{\mathrm{num}}$.
 In Algorithm~\ref{alg:anchor-preparation}, this corresponds to using
 these fitted states as numerical starts with $N_{\mathrm{fit}}=0$.
 Later candidate evaluation performs the numerical refitting described
-in Section~\ref{sec:method-selection}.
+in Appendix~\ref{app:gauss-newton}.
 
 For images, the two dense source solutions with the lowest
 numerical-validation loss serve directly as alignment references.
@@ -513,6 +640,8 @@ $v\in\{1,3\}$. The floor remains $\varepsilon=0.002$, and projection
 uses 40 assignment updates. Only exact duplicate arrays are removed
 at large $m$. Numerical refitting uses Adam, with calibration
 implemented by code elimination and a column-scale Schur solve.
+For each source task, numerical refitting uses one initialization
+derived from its aligned dense model and 17 random starts.
 
 Allowing zero assignments during projection does not require
 removing threshold-based initialization. Complete removal of these

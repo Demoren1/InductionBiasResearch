@@ -89,7 +89,10 @@ updates. Dense receives the same budget, with its Adam checkpoint
 reported separately. On real data, development tasks select one global
 learning rate, quantile and update count; a target task uses a single
 fresh start and only its support responses. The selected update counts
-are 25/50 for Dense/ours on Omniglot and 225/250 on MNIST.
+are 25/50 for Dense/ours in the original Omniglot benchmark and
+225/250 on MNIST. In the separate Omniglot rerun
+(Table~\ref{tab:omniglot-signature}), they are 25 for Dense, 75 for
+G34, 100 for the signature structure and 25 for its shuffled control.
 
 A stronger Yeh source-only control on one separate DeepSets pilot uses
 100 rather than 20 following inner steps and an explicit spectrally

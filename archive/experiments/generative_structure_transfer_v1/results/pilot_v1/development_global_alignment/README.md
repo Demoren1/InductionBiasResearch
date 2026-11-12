@@ -1,1 +1,0 @@
-Development run rejected before target calibration: aligning unrelated families to one reference introduced inconsistent equivalent encodings. Source fits were unchanged. The corrected pipeline aligns within each source family using its training-only reference. No target outcomes were used.

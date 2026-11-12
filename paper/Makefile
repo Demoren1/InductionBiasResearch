@@ -1,8 +1,8 @@
 MAIN := main
 BUILD_DIR := build
 
-# Use the optional project-local TeX distribution when it is installed.
-LOCAL_TEX_BIN := $(wildcard $(abspath ../.tools/TinyTeX/bin)/*)
+# Use an existing project-local or user-local TeX distribution.
+LOCAL_TEX_BIN := $(firstword $(wildcard $(abspath ../.tools/TinyTeX/bin)/*) $(wildcard $(HOME)/.local/share/TinyTeX/bin/*))
 ifneq ($(LOCAL_TEX_BIN),)
 export PATH := $(LOCAL_TEX_BIN):$(PATH)
 endif

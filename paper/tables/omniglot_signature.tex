@@ -1,0 +1,25 @@
+% Source: artifacts/omniglot_signature_2026-11-12/summary.json.
+\begin{table}[htbp]
+\centering\small
+\caption{Aug-Omniglot rerun on 1000 new test episodes from the same
+    test-class split. Source dense models and G34 were refitted on the
+    original source panels; the four rows share these source models and
+    the new target episodes. Accuracy shows 95\% $t$ intervals conditional
+    on this source fit. Cross-entropy is the mean query loss; task
+    parameters include all freshly fitted numerical coordinates.
+    Weighted SVD retains the first geometrically ranked signature
+    candidate per budget; development tasks select the budget and
+    adaptation rule. External competitors from
+    Table~\ref{tab:benchmark-real} were not rerun on these episodes.}
+\label{tab:omniglot-signature}
+\begin{tabular}{lrrrrr}
+\toprule
+Method & Accuracy (\%) & Cross-entropy & $m$ & Task parameters & Active edges\\
+\midrule
+Dense Adam & 37.07 $\pm$ 0.50 & 1.5302 & -- & 12645 & 12544\\
+Ours (G34) & 41.02 $\pm$ 0.57 & 1.4288 & 64 & 165 & 4305\\
+Weighted SVD (geometric) & 34.62 $\pm$ 0.52 & 1.5040 & 16 & 117 & 475\\
+Shuffled signature I & 23.88 $\pm$ 0.36 & 1.5993 & 16 & 117 & 475\\
+\bottomrule
+\end{tabular}
+\end{table}
