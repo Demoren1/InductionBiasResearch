@@ -1,0 +1,29 @@
+\section{Conclusion}
+
+We extract a common connectivity and weight-sharing constraint by
+aligning source solutions, jointly projecting their task-specific
+weights and selecting a finite bank by prediction error after numerical
+refitting. New tasks receive only the selected constraint; their
+numerical parameters are learned afresh.
+
+For aligned source weights with fixed active connections, we characterize
+exact recovery through scale-invariant magnitudes and sign profiles.
+A condition on the graph of co-occurring codes gives uniqueness even
+when no pair of codes repeats across neurons.
+For partial observations, a completion criterion and a functional
+ReLU example show how several individually ambiguous tasks can
+determine the groups jointly. Recovery from erroneous pairwise
+relations additionally requires sufficient redundancy between
+the observed parts.
+
+Joint projection and direct pair recovery both identify the full signed
+structure in the two clean synthetic geometries. On the class-disjoint
+image tasks, both use 114 numerical parameters per new task instead of
+12,594 for Dense, with lower prediction accuracy at the tested code
+budgets. Direct pair recovery also trails G34 on both datasets.
+Both select the largest tested codebook, so these results do not
+establish an optimal sharing budget.
+Good source prediction alone therefore does not establish a useful
+sharing constraint for new classes. Candidate coverage, robustness to
+weight estimation error and the appropriate strength of sharing remain
+central practical questions.

@@ -1,0 +1,52 @@
+{
+  "dataset": "fc100",
+  "pilot_registration_sha256": "898c44501f07adc7824eb3d6200bcac2ba476b50a2f5a5be0558478138c5ec62",
+  "source_dense_sha256": "e2e677392966fe3c28a482392049c3e4b28e7603cce6f9a463a2968b0f5ef38c",
+  "layout": {
+    "sites": 16,
+    "fan_in": 48,
+    "channels": 8,
+    "outputs": 5
+  },
+  "codes": [
+    128,
+    256,
+    384,
+    512,
+    768,
+    1024,
+    1536,
+    2048,
+    3072,
+    4096,
+    5120
+  ],
+  "input_partitions": [
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "include_global_signed_ward": true,
+  "input_clustering": "Lloyd on normalized source input profiles in each consecutive neuron block",
+  "partition_seed": 7611189900,
+  "validation_episode_count": 512,
+  "validation_seed": 7611189802,
+  "validation_fit_seed": 7611189804,
+  "selection": "Highest validation accuracy, then lowest CE, fewer codes, fewer partitions",
+  "test_episode_count": 1024,
+  "test_fit_seed": 7611189806,
+  "target_steps": 200,
+  "shuffles": 4,
+  "gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}

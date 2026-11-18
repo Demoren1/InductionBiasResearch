@@ -1,0 +1,92 @@
+{
+  "source_inputs_sha256": {
+    "/home/udeneev-av/InductionBiasResearch/artifacts/local/omniglot_single_task_2026-11-14/study/source/dense/models.npz": "e14a76b02530e0e88669a2b96359de7ea93ab58f411944669a744e741a37dad5",
+    "/home/udeneev-av/InductionBiasResearch/artifacts/local/omniglot_single_task_2026-11-14/study/source/dense/registered.json": "a5e3b76e5a42286423dc839be7e8815cb3f9bbcf378bed661a474cfd1dcd9501",
+    "/home/udeneev-av/InductionBiasResearch/artifacts/local/omniglot_single_task_2026-11-14/study/public/support.npz": "2488cf7575256e0fc5e7dc828a050f39e429a5897b59a9a37069219a97e52d36"
+  },
+  "new_training": false,
+  "target_access": false,
+  "parameters_per_network": 12645,
+  "support_examples_per_task": 25,
+  "anchors": [
+    {
+      "source_task": 60,
+      "scenario": 3,
+      "settings": {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "restart": 1
+      },
+      "selected_step": 500,
+      "selected_support_ce": 0.010314498096704483,
+      "selected_support_accuracy": 1.0,
+      "selected_H_ce": 0.7085481882095337,
+      "selected_H_accuracy": 0.6800000071525574,
+      "final_step": 2500,
+      "final_support_ce": 0.0008448846638202667,
+      "final_H_ce": 0.7865868806838989,
+      "final_H_accuracy": 0.6399999856948853,
+      "top4_H_fit_first_layer_relative_distances": [
+        0.0,
+        1.1191835844941476,
+        1.0411463976394186,
+        0.955133921302046
+      ]
+    },
+    {
+      "source_task": 107,
+      "scenario": 9,
+      "settings": {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "restart": 1
+      },
+      "selected_step": 25,
+      "selected_support_ce": 0.009415723383426666,
+      "selected_support_accuracy": 1.0,
+      "selected_H_ce": 0.8073011040687561,
+      "selected_H_accuracy": 0.6800000071525574,
+      "final_step": 2500,
+      "final_support_ce": 7.152512807806488e-06,
+      "final_H_ce": 1.2566540241241455,
+      "final_H_accuracy": 0.6399999856948853,
+      "top4_H_fit_first_layer_relative_distances": [
+        0.0,
+        1.0833690438377257,
+        1.0540212943558334,
+        1.0785509824617217
+      ]
+    }
+  ],
+  "cohort_quantile_levels": [
+    0,
+    0.05,
+    0.5,
+    0.95,
+    1
+  ],
+  "cohort_selected_step_quantiles": [
+    25.0,
+    25.0,
+    50.0,
+    275.0,
+    725.0
+  ],
+  "cohort_selected_support_ce_quantiles": [
+    0.0009481448214501143,
+    0.012792154122143986,
+    0.18275798112154007,
+    0.7293763369321812,
+    1.072029948234558
+  ],
+  "cohort_final_support_ce_in_H_best_scenario_quantiles": [
+    5.12596670887433e-06,
+    2.0483738262555574e-05,
+    0.0005716228624805808,
+    0.0013075743569061148,
+    0.0026986736338585615
+  ],
+  "distance_definition": "Normalize each first-layer column to unit Euclidean norm; minimize squared Frobenius distance over neuron permutations using Hungarian matching; divide distance by sqrt(hidden). No sign flips. Top4 H-selected fits include the anchor itself. These are different fitted solutions, not a weight trajectory and not the theorem's log-error bound.",
+  "weight_trajectory_saved": false,
+  "final_iteration_parameters_saved": false
+}

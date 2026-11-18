@@ -28,11 +28,12 @@ the target collection $\mathcal{T}_{\mathrm{val}}$ are sampled
 independently from $p(\tau)$.
 We learn shared patterns from the source tasks and assess their transfer
 on the target tasks.
-For each task, a \emph{support sample} $S_\tau^{\mathrm{s}}$ is used to
-fit numerical parameters, and an independent \emph{query sample}
-$S_\tau^{\mathrm{q}}$ is used to compare the fitted predictors
+For each task, a \emph{training sample} $S_\tau^{\mathrm{train}}$ is used to
+fit numerical parameters, and an independent \emph{validation sample}
+$S_\tau^{\mathrm{valid}}$ is used to compare the fitted predictors
 \cite{finn2017model,zhou2021meta}. Conditional on $\tau$, both samples
 consist of independent draws from $P_\tau$.
+The train/valid split is defined within each source or target task.
 For a predictor $f$ and a sample $S$, the empirical loss is
 \begin{equation}
     \mathcal{L}_S(f)
@@ -51,10 +52,11 @@ A network structure specifies which connections are permitted and which
 weights share a trainable parameter. Let $P$ denote the number of weights
 subject to these constraints, and let $\mathbf{w}_\tau\in\mathbb{R}^{P}$
 collect them in a fixed order on task $\tau$, across any number of layers.
+We call $p\in\{1,\ldots,P\}$ a weight index.
 
 We encode the constraints using an \emph{indexator}, an integer vector
-$\mathbf{I}\in\{0,\ldots,K\}^{P}$, where $K$ is a prescribed upper bound
-on the number of groups with independently trainable values.
+$\mathbf{I}\in\{0,\ldots,K\}^{P}$, where $K$ is the number of available
+nonzero labels.
 Their task-specific values
 form a
 \emph{codebook}
@@ -92,7 +94,7 @@ defining $\mathcal{W}_{\mathbf{I}}$, while each task learns its own
 codebook and remaining numerical parameters. In every fitting attempt,
 the indexator is held fixed, and all trainable entries of
 $\mathbf{C}_\tau$ and $\boldsymbol{\theta}_\tau$ are initialized afresh
-and optimized on the task's support sample.
+and optimized on the task's training sample.
 
 \subsection{Problem formulation}
 \label{sec:problem-formulation}
@@ -127,7 +129,7 @@ $\mathbf{I}\in\mathcal{I}_K$, define the optimal task risk as
 \end{equation}
 The infimum optimizes task-specific numerical parameters with respect
 to the true task distribution, giving an ideal measure of the
-predictive capacity of $\mathbf{I}$. Generalization from finite support
+predictive capacity of $\mathbf{I}$. Generalization from finite training
 samples and numerical convergence also depend on the fitting procedure.
 Equivalent indexators have the same optimal task risk, so this
 criterion is independent of the representative within each class.
@@ -156,7 +158,7 @@ tasks. The resulting numerical adaptation problem is
             _{\tau\in\mathcal{T}_{\mathrm{val}}}}
         \frac{1}{|\mathcal{T}_{\mathrm{val}}|}
         \sum_{\tau\in\mathcal{T}_{\mathrm{val}}}
-        \mathcal{L}_{S_\tau^{\mathrm{s}}}
+        \mathcal{L}_{S_\tau^{\mathrm{train}}}
         \bigl(f_{\widehat{\mathbf{I}},\mathbf{C}_\tau,
             \boldsymbol{\theta}_\tau}\bigr)
         \\
@@ -166,13 +168,13 @@ tasks. The resulting numerical adaptation problem is
         \frac{1}{|\mathcal{T}_{\mathrm{tr}}|}
         \sum_{\tau\in\mathcal{T}_{\mathrm{tr}}}
         \inf_{\mathbf{C}_\tau,\boldsymbol{\theta}_\tau}
-        \mathcal{L}_{S_\tau^{\mathrm{s}}}
+        \mathcal{L}_{S_\tau^{\mathrm{train}}}
         \bigl(f_{\mathbf{I},\mathbf{C}_\tau,
             \boldsymbol{\theta}_\tau}\bigr).
     \end{aligned}
     \label{eq:structure-learning}
 \end{equation}
 
-Transfer performance is measured by the mean query loss across held-out
-tasks after their numerical parameters have been fitted on the support
+Transfer performance is measured by the mean validation loss across held-out
+tasks after their numerical parameters have been fitted on the training
 samples.

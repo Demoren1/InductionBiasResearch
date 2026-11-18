@@ -1,0 +1,41 @@
+{
+  "episodes": 1024,
+  "methods": {
+    "four_partitions": {
+      "accuracy": 0.8456250000000001,
+      "accuracy_ci95_halfwidth": 0.004871879579098868,
+      "mean_cross_entropy": 0.49599066842307965
+    },
+    "lloyd": {
+      "accuracy": 0.8403125,
+      "accuracy_ci95_halfwidth": 0.005048655525246291,
+      "mean_cross_entropy": 0.5101832910271213
+    },
+    "wsr": {
+      "accuracy": 0.8528906250000001,
+      "accuracy_ci95_halfwidth": 0.005046158993153244,
+      "mean_cross_entropy": 0.4673236419494658
+    }
+  },
+  "paired_differences": [
+    {
+      "method": "four_partitions",
+      "reference": "lloyd",
+      "accuracy_difference": 0.005312500000000001,
+      "ci95_halfwidth": 0.003028921490166499
+    },
+    {
+      "method": "four_partitions",
+      "reference": "wsr",
+      "accuracy_difference": -0.0072656249999999995,
+      "ci95_halfwidth": 0.003585756849686927
+    },
+    {
+      "method": "lloyd",
+      "reference": "wsr",
+      "accuracy_difference": -0.012578125,
+      "ci95_halfwidth": 0.0037560084237322254
+    }
+  ],
+  "conditional_on": "Fixed held-out characters"
+}

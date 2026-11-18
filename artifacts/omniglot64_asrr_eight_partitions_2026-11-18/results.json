@@ -1,0 +1,45 @@
+{
+  "episodes": 1024,
+  "methods": {
+    "eight_partitions": {
+      "codes": 4096,
+      "accuracy": 0.8455078125000002,
+      "accuracy_ci95_halfwidth": 0.004918635648999382,
+      "mean_cross_entropy": 0.4959131953417373
+    },
+    "four_partitions": {
+      "codes": 4096,
+      "accuracy": 0.8456250000000001,
+      "accuracy_ci95_halfwidth": 0.004871879579098868,
+      "mean_cross_entropy": 0.49599066842307965
+    },
+    "wsr": {
+      "codes": 4096,
+      "accuracy": 0.8528906250000001,
+      "accuracy_ci95_halfwidth": 0.005046158993153244,
+      "mean_cross_entropy": 0.4673236419494658
+    }
+  },
+  "paired_differences": [
+    {
+      "method": "eight_partitions",
+      "reference": "four_partitions",
+      "accuracy_difference": -0.00011718750000000021,
+      "ci95_halfwidth": 0.00244804635087144
+    },
+    {
+      "method": "eight_partitions",
+      "reference": "wsr",
+      "accuracy_difference": -0.0073828125000000005,
+      "ci95_halfwidth": 0.003384868860079163
+    },
+    {
+      "method": "four_partitions",
+      "reference": "wsr",
+      "accuracy_difference": -0.0072656249999999995,
+      "ci95_halfwidth": 0.003585756849686927
+    }
+  ],
+  "same_episodes_as": "artifacts/omniglot64_asrr_confirmation_2026-11-18",
+  "eight_partitions_source_seconds": 1.323071088641882
+}

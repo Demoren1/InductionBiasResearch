@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering\small
+\caption{Five-way Omniglot on 1024 common episodes. Accuracy gives 95\% intervals across episodes conditional on the held-out characters.}
+\label{tab:omniglot-wsr}
+\begin{tabular}{lrrrr}
+\toprule
+Method & Budget & Accuracy (\%) & CE & Source time (s) \\
+\midrule
+Dense & 12,544 & $80.97\pm0.58$ & 0.5815 & \textemdash \\
+G34 & 1,024 & $81.58\pm0.58$ & 0.5707 & 60.03 \\
+aSRR & 1,024 & $83.08\pm0.55$ & 0.5288 & 0.41 \\
+LUT-Q & 1,024 & $80.00\pm0.59$ & 0.6106 & 74.28 \\
+Yeh (MAP) & 1,024 & $81.38\pm0.58$ & 0.5710 & 2,277.3 \\
+Yeh (soft) & 1,024 & $83.79\pm0.54$ & 0.5186 & 2,277.3 \\
+MSR-FC & 1,024 & $80.59\pm0.59$ & 0.5941 & 153.5 \\
+WSR & 1,024 & $83.30\pm0.55$ & 0.5272 & 23.76 \\
+\bottomrule
+\end{tabular}
+\end{table}

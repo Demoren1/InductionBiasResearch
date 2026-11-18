@@ -7,6 +7,7 @@ import math
 import resource
 import shutil
 import time
+from contextlib import nullcontext
 from pathlib import Path
 
 import numpy as np
@@ -18,10 +19,11 @@ from experiments.sharing_structure_research_v1.blind_contract import digest, sav
 from experiments.sharing_structure_research_v1.shared_structure_bilevel_optimization import (
     ScenarioAdam,
 )
+
 from ..fitting.adaptation import losses
-from .bilevel import basis_for, predict
-from ..protocol.real_boundary import StudyBoundary
 from ..fitting.real_dense import predict as dense_predict
+from ..protocol.real_boundary import StudyBoundary
+from .bilevel import basis_for, predict
 
 
 @torch.no_grad()
@@ -83,7 +85,7 @@ def adapt(x, y, basis, initial, rates, h, o, kind, steps, higher):
     return parameter
 
 
-def initial_parameters(dense, codes, d, h, o, device, count):
+def initial_parameters(dense, codes, d, h, o, device, count, warm_start):
     generator = torch.Generator(device=device).manual_seed(767001 + codes)
     tasks = len(dense)
     parameter = torch.randn(
@@ -92,6 +94,8 @@ def initial_parameters(dense, codes, d, h, o, device, count):
     parameter[..., :codes] *= math.sqrt(2 / d)
     parameter[..., codes : codes + h] *= 0.1
     parameter[..., -o:] = 0
+    if not warm_start:
+        return parameter, None, None, None
     weight = torch.tensor(dense[:, : d * h], device=device)
     centers = torch.quantile(
         weight[:1].abs(), torch.linspace(0.1, 0.95, codes, device=device), dim=1
@@ -128,7 +132,9 @@ def regularizer(state, rows):
     return (weights[:, 0] * entropy + weights[:, 1] * nuclear).sum()
 
 
-def run(root, method, codes, device, steps):
+def run(
+    root, method, codes, device, steps, *, settings=None, basis_path=None, profile=True
+):
     torch.set_num_threads(2)
     boundary = StudyBoundary(root)
     boundary.install()
@@ -137,24 +143,32 @@ def run(root, method, codes, device, steps):
     protocol = json.loads((root / "protocol.json").read_text())
     d, h, o = [protocol[key] for key in ("inputs", "hidden", "outputs")]
     kind = protocol["loss"]
-    rows = [
-        {
-            "lr": lr,
-            "initialization": initial,
-            "entropy": extra[0] if method == "yeh" else 0.0,
-            "nuclear": extra[1] if method == "yeh" else 0.0,
-            "inner_lr": extra if method == "msr" else 0.01,
-        }
-        for lr, initial, extra in itertools.product(
-            (0.0003, 0.001, 0.003) if method == "msr" else (0.003, 0.01, 0.03),
-            ("cold", "dense_adam"),
-            ((0.0, 0.0), (0.025, 0.05))
-            if method == "yeh"
-            else (0.1, 0.4)
-            if method == "msr"
-            else (0, 1),
-        )
-    ]
+    rows = (
+        settings
+        if settings is not None
+        else [
+            {
+                "lr": lr,
+                "initialization": initial,
+                "entropy": extra[0] if method == "yeh" else 0.0,
+                "nuclear": extra[1] if method == "yeh" else 0.0,
+                "inner_lr": extra if method == "msr" else 0.01,
+            }
+            for lr, initial, extra in itertools.product(
+                (0.0003, 0.001, 0.003) if method == "msr" else (0.003, 0.01, 0.03),
+                ("cold", "dense_adam"),
+                ((0.0, 0.0), (0.025, 0.05))
+                if method == "yeh"
+                else (0.1, 0.4)
+                if method == "msr"
+                else (0, 1),
+            )
+        ]
+    )
+    if basis_path is not None and (len(rows) != 1 or method == "lutq"):
+        raise ValueError("A standalone basis requires one continuous candidate")
+    warm_start = any(row["initialization"] == "dense_adam" for row in rows)
+    use_regularizer = any(row["entropy"] or row["nuclear"] for row in rows)
     save_json(
         folder / "registered.json",
         {
@@ -201,7 +215,7 @@ def run(root, method, codes, device, steps):
         :, None
     ]
     numeric, signed, logits, warm = initial_parameters(
-        dense, codes, d, h, o, device, len(rows)
+        dense, codes, d, h, o, device, len(rows), warm_start
     )
     generator = torch.Generator(device=device).manual_seed(767003 + codes)
     if method == "lutq":
@@ -213,8 +227,8 @@ def run(root, method, codes, device, steps):
         state[..., : d * h] *= math.sqrt(2 / d)
         state[..., d * h : d * h + h] *= 0.1
         state[..., -o:] = 0
-        for row, settings in enumerate(rows):
-            if settings["initialization"] == "dense_adam":
+        for row, config in enumerate(rows):
+            if config["initialization"] == "dense_adam":
                 state[row] = torch.tensor(dense, device=device)
         centers = torch.quantile(
             state[..., : d * h].flatten(0, 1).abs(),
@@ -223,11 +237,10 @@ def run(root, method, codes, device, steps):
         ).T
     else:
         shape = (len(rows), d, h, codes if method == "msr" else 2 * codes + 1)
-        state = torch.randn(shape, generator=generator, device=device) * (
-            1 / math.sqrt(codes) if method == "msr" else 0.01
-        )
-        for row, settings in enumerate(rows):
-            if settings["initialization"] == "dense_adam":
+        state = torch.randn(shape, generator=generator, device=device)
+        state.mul_(1 / math.sqrt(codes) if method == "msr" else 0.01)
+        for row, config in enumerate(rows):
+            if config["initialization"] == "dense_adam":
                 state[row] = signed if method == "msr" else logits
                 numeric[row] = warm
     state.requires_grad_()
@@ -260,7 +273,7 @@ def run(root, method, codes, device, steps):
     torch.cuda.synchronize(device)
     torch.cuda.reset_peak_memory_stats(device)
     started = time.perf_counter()
-    counter = FlopCounterMode(display=False)
+    counter = FlopCounterMode(display=False) if profile else nullcontext()
     status = "failed"
     try:
         with counter:
@@ -338,9 +351,7 @@ def run(root, method, codes, device, steps):
                                 improved
                             ] = centers.reshape(len(rows), len(x), codes)[improved]
                         else:
-                            basis = basis_for(
-                                state, "yeh" if method == "yeh" else "msr", codes
-                            )
+                            basis = fixed if method == "yeh" else state
                             train = objective(x, y, basis, fitted, h, o, kind)
                             validation = objective(vx, vy, basis, fitted, h, o, kind)
                             score = validation.mean(1)
@@ -359,6 +370,7 @@ def run(root, method, codes, device, steps):
                                 saved_indices[improved] = torch.where(
                                     label > codes, codes - label, label
                                 )[improved].to(torch.int16)
+                            del basis
                         history["steps"].append(step)
                         history["train"].append(train.cpu().numpy())
                         history["validation"].append(validation.cpu().numpy())
@@ -374,6 +386,8 @@ def run(root, method, codes, device, steps):
                             ),
                             flush=True,
                         )
+                if method == "yeh":
+                    del fixed
                 if step == steps:
                     break
                 tasks = torch.randperm(len(x), device=device, generator=generator)[:32]
@@ -436,6 +450,7 @@ def run(root, method, codes, device, steps):
                     direct, vector = torch.autograd.grad(
                         upper, (state, numeric), retain_graph=True
                     )
+                    del upper
                     vector = vector.detach()
                     product = torch.autograd.grad(
                         train_gradient, numeric, grad_outputs=vector, retain_graph=True
@@ -477,13 +492,17 @@ def run(root, method, codes, device, steps):
                     mixed = torch.autograd.grad(
                         train_gradient, state, grad_outputs=inverse
                     )[0]
-                    extra = torch.autograd.grad(regularizer(state, rows), state)[0]
-                    gradient = direct - mixed + extra
-                    magnitude = gradient.flatten(1).norm(dim=1).clamp_min(1e-12)
-                    optimizer.step(
-                        state,
-                        gradient * (25 / magnitude).clamp_max(1)[:, None, None, None],
-                    )
+                    del lower, train_gradient, basis
+                    direct.sub_(mixed)
+                    del mixed
+                    if use_regularizer:
+                        extra = torch.autograd.grad(regularizer(state, rows), state)[0]
+                        direct.add_(extra)
+                        del extra
+                    magnitude = direct.flatten(1).norm(dim=1).clamp_min(1e-12)
+                    direct.mul_((25 / magnitude).clamp_max(1)[:, None, None, None])
+                    optimizer.step(state, direct)
+                    del direct
                     with torch.no_grad():
                         state -= state.mean(-1, keepdim=True)
         torch.cuda.synchronize(device)
@@ -502,10 +521,16 @@ def run(root, method, codes, device, steps):
                 codes=saved_centers.reshape(len(rows), len(x), codes).cpu().numpy(),
             )
         else:
-            arrays.update(
-                basis=basis_for(saved_state, "yeh" if method == "yeh" else "msr", codes)
+            selected_basis = (
+                basis_for(saved_state, "yeh" if method == "yeh" else "msr", codes)
                 .cpu()
-                .numpy(),
+                .numpy()
+            )
+            if basis_path is None:
+                arrays["basis"] = selected_basis
+            else:
+                np.savez(basis_path, basis=selected_basis[0])
+            arrays.update(
                 source_parameters=saved_numeric.cpu().numpy(),
                 native_initialization=saved_initial.cpu().numpy(),
                 native_rates=saved_rates.cpu().numpy(),
@@ -520,7 +545,7 @@ def run(root, method, codes, device, steps):
             {
                 "status": status,
                 "wall_seconds": time.perf_counter() - started,
-                "torch_operator_flops": counter.get_total_flops(),
+                "torch_operator_flops": counter.get_total_flops() if profile else None,
                 "cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated(device),
                 "cuda_peak_reserved_bytes": torch.cuda.max_memory_reserved(device),
                 "cpu_peak_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss

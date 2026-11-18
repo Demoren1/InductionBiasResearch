@@ -1,0 +1,81 @@
+\subsection{Wider experimental selection}
+\label{app:asrr-tuning-details}
+
+The wider comparison retains the source-only families from
+Appendix~\ref{app:asrr-experiments} at 16, 32, 64, 128, 256, 512,
+1024, 2048, 4096 and 8192 codes, where available. Family and budget
+selection use development episodes directly; source M does not first
+remove all but one candidate at a budget. The earlier successful
+indexators remain fixed reference candidates. Practical G34 uses
+retained banks and their source-only capacity refinements; this is not
+a new exhaustive structural search.
+
+An initial screen uses 48 development episodes and 200 Adam updates.
+With within-task numerical validation, three learning rates
+(0.003, 0.01 and 0.03) and two starts give six numerical fits. For
+support-only tasks, development also compares activity quantiles
+0.1, 0.5 and 0.9. It fixes a common numerical rule rather than selecting
+states on a target query. The best three candidates per family advance,
+ranked by development accuracy, then cross-entropy and fewer codes.
+The original successful aSRR candidate and Dense always remain eligible.
+
+The best screened seed in each of the five original aSRR families and
+in practical G34 also receives positive-scale source-weight projection.
+We use 12 updates through 1024 codes and four at larger budgets, retaining
+every unmodified seed. These refinements enter the final development
+comparison on 96 episodes.
+
+With numerical validation, this stage compares the original six-start
+200-update rule, a 24-start version, and a wider 24-start grid using
+rates 0.001/0.003/0.01/0.03 and quantiles 0.1/0.5/0.9 at horizons
+200, 500 and 1000. Numerical-validation loss chooses checkpoints and
+starts within each task. The query prediction uses either the best
+retained start or the average class probabilities of the best four;
+development chooses this rule. The original Omniglot six-start rule
+retains its original bias initialization.
+
+Without numerical validation, a 1000-update development trace supplies
+three learning-rate, quantile and fixed-update rules. Each trains a
+nested pool of 16 starts, and development compares probability averages
+over the first one, four or 16 members. Target fitting uses the frozen
+rule on support labels only. All 16 starts are charged to training even
+when fewer members form the inference ensemble.
+
+The primary policy maximizes development accuracy, with cross-entropy
+and fewer codes breaking ties. A second policy minimizes development
+cross-entropy and is reported separately. All choices are frozen before
+two fresh cohorts, with no intervening retuning. Both use the same
+class or subject splits as the preceding comparisons. The 100+50 image
+settings use 100 fitting and 50 numerical-selection examples per class;
+Omniglot uses five-way tasks with 10 fitting, five selection and five
+query images per class. The smaller image and HAR settings receive no
+additional numerical-selection labels. Numerical values are always
+fresh; only the fixed indexator transfers.
+
+Omniglot uses the retained disjoint character split with 1028 source,
+172 development and 423 target characters. Images are inverted,
+resized to $28\times28$ and divided by 255. Each episode chooses five
+characters and one multiple-of-90-degree rotation per character, then
+splits its 20 drawings into fitting, numerical-selection and query sets.
+The network is 784--16--5, with no supplied spatial structure.
+Its bank reuses the 16 Dense source tasks with lowest numerical-selection
+cross-entropy among 128 earlier five-way source episodes. Each source
+episode has five fitting, five numerical-selection and ten
+structure-selection drawings per class. Four retained numerical fits
+supply aligned profiles and their uncertainty. Source preparation uses
+the earlier augmented episodes; the new development and target draws
+use only the character rotation described above.
+
+\input{sections/asrr_tuning_resources.tex}
+\FloatBarrier
+
+Table~\ref{tab:asrr-tuned-ce} gives the separately frozen
+cross-entropy-selected policies. For MNIST 100+50, this rule selects a
+512-code projected global bank and reaches 96.25\% accuracy; the primary
+accuracy rule selects 8192 codes and reaches 96.21\%. Selection on finite
+development episodes therefore remains consequential even after expanding
+the search. On Fashion 16 the secondary policy reaches 96.34\%, while
+the primary reaches 96.21\%. These query results do not alter either
+frozen rule.
+\input{sections/asrr_tuning_ce_results.tex}
+\FloatBarrier

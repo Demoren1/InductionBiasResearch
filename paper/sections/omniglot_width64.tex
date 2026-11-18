@@ -1,0 +1,44 @@
+\begin{samepage}
+We also fit a network with 64 hidden units and 4096 codes, keeping
+the first-layer parameter reduction at $12.25\times$. We use the same
+16 source tasks and 1024 test episodes. aSRR and WSR start from the
+same saved Dense models, which took 38.81 seconds to fit. WSR selects one
+of its 16 groupings on 96 development episodes. Appendix~\ref{app:omniglot-clustering}
+compares Ward with five alternative clusterers for the aSRR input profiles.
+
+\begin{center}
+\begin{minipage}{\linewidth}
+\centering\small
+\captionof{table}{Omniglot with 64 hidden units on 1024 common test episodes.
+Accuracy gives 95\% intervals across episodes conditional on the held-out
+characters. Source times end at candidate construction. Target fitting
+times use the same 96 test episodes on one V100 and exclude query
+prediction. Memory values are peak host RSS and peak allocated GPU
+memory, in GiB. LUT-Q uses 4,095 of its 4,096 available codes.}
+\label{tab:omniglot-width64}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& & & \multicolumn{2}{c}{Source construction} & \multicolumn{2}{c}{Target fitting} \\
+\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Method & Budget & Accuracy (\%) & Time (s) & RAM / GPU & Time (s) & RAM / GPU \\
+\midrule
+Dense & 50,176 & $81.37\pm0.58$ & \textemdash & \textemdash & 18.35 & 0.97 / 1.04 \\
+aSRR (Ward) & 4,096 & $83.55\pm0.54$ & 0.58 & 0.46 / \textemdash & 34.11 & 1.02 / 0.44 \\
+aSRR (k-means) & 4,096 & $83.88\pm0.53$ & 0.66 & 0.60 / \textemdash & 33.97 & 1.02 / 0.44 \\
+LUT-Q & 4,096 & $80.08\pm0.59$ & 17.87 & 1.02 / 0.22 & 33.12 & 1.02 / 0.44 \\
+WSR & 4,096 & $84.96\pm0.54$ & 94.83 & 0.83 / 0.04 & 43.03 & 1.02 / 0.44 \\
+Yeh (soft) & 4,096 & $82.59\pm0.55$ & 125.17 & 1.65 / 14.57 & 13.58 & 1.48 / 2.66 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{center}
+
+WSR leads the k-means variant by $1.09$ percentage points
+(paired 95\% CI $[0.69,1.48]$), and Ward-based aSRR exceeds Dense by
+$2.18$ points ($[1.85,2.52]$). From the saved Dense models, WSR takes about
+$163\times$ as long to build its candidates as aSRR with Ward takes to
+build its grouping. Both aSRR variants and WSR use 57\% less peak GPU
+memory than Dense during target fitting and take longer on the same
+episodes. Yeh (soft) has the shortest target fitting time with cached
+basis features and the highest peak GPU memory in both stages.
+\end{samepage}

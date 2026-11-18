@@ -1,0 +1,1195 @@
+{
+  "dataset": "har",
+  "methods": {
+    "pair": {
+      "accuracy": {
+        "mean": 0.8394444444444445,
+        "ci95_half": 0.03545699788506331,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.4560996890068054,
+        "ci95_half": 0.09868862541080374,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "pair_k512",
+        "family": "pair",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/pair_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3338679075241089,
+        "numeric_updates": 1000,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 35.52652985975146
+      },
+      "representative": "pair",
+      "task_parameters": 630
+    },
+    "msr": {
+      "accuracy": {
+        "mean": 0.8092592592592592,
+        "ci95_half": 0.025862242810356827,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.5425885915756226,
+        "ci95_half": 0.07598542250535845,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "msr_k128",
+        "family": "msr",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/msr_k128.npz",
+        "codes": 128,
+        "task_first_layer_parameters": 128,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3319563865661621,
+        "numeric_updates": 175,
+        "global_setting": {
+          "lr": 0.01,
+          "quantile": 0.5,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 8.236014608293772
+      },
+      "representative": "msr",
+      "task_parameters": 246
+    },
+    "g34": {
+      "accuracy": {
+        "mean": 0.8435185185185186,
+        "ci95_half": 0.026078167539369316,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43322423100471497,
+        "ci95_half": 0.08389473938023007,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "g34_k512",
+        "family": "g34",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/g34_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2712353467941284,
+        "numeric_updates": 750,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.5,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 31.325738459825516
+      },
+      "representative": "g34",
+      "task_parameters": 630
+    },
+    "yeh_soft": {
+      "accuracy": {
+        "mean": 0.7975925925925925,
+        "ci95_half": 0.03881642084567511,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.5921854376792908,
+        "ci95_half": 0.12271562973402807,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "yeh_soft_k512",
+        "family": "yeh_soft",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/yeh_soft_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.44557762145996094,
+        "numeric_updates": 375,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 6.784573892131448
+      },
+      "representative": "yeh_soft",
+      "task_parameters": 630
+    },
+    "g35_full": {
+      "accuracy": {
+        "mean": 0.8583333333333333,
+        "ci95_half": 0.0347143912783019,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.4549638628959656,
+        "ci95_half": 0.14110616652638017,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "g35_full_d2_r0",
+        "family": "g35_full",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/g35_full_d2_r0.npz",
+        "dimension": 2,
+        "residual": 0.0,
+        "source_rank": 4,
+        "codes": 8976,
+        "active_groups": 8976,
+        "task_first_layer_parameters": 2,
+        "source_alignment": "Hungarian unit-column directions; no sign flips; original magnitudes retained",
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3028299808502197,
+        "numeric_updates": 125,
+        "global_setting": {
+          "lr": 0.03,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 7.838944064453244
+      },
+      "representative": "g35_full",
+      "task_parameters": 120
+    },
+    "yeh_map": {
+      "accuracy": {
+        "mean": 0.8381481481481482,
+        "ci95_half": 0.030407520540837032,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.4762132465839386,
+        "ci95_half": 0.08537301006835447,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "yeh_map_k512",
+        "family": "yeh_map",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/yeh_map_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3148840665817261,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 30.77483313344419
+      },
+      "representative": "yeh_map",
+      "task_parameters": 630
+    },
+    "mtsr": {
+      "accuracy": {
+        "mean": 0.8746296296296296,
+        "ci95_half": 0.02827009606739232,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.3789289593696594,
+        "ci95_half": 0.09827414928617685,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "mtsr_k512",
+        "family": "mtsr",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/mtsr_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "source_configuration": {
+          "status": "complete",
+          "codes": 512,
+          "outer_lr": 0.0003,
+          "initialization": "dense",
+          "seed": 1,
+          "selected_step": 1100,
+          "source_H_ce": 0.06506562232971191,
+          "source_M_ce": 0.1119154542684555,
+          "history": [
+            {
+              "step": 0,
+              "source_H_ce": 1.7617149353027344,
+              "seconds": 0.029471680521965027
+            },
+            {
+              "step": 100,
+              "source_H_ce": 0.14386102557182312,
+              "seconds": 0.5714529417455196
+            },
+            {
+              "step": 200,
+              "source_H_ce": 0.10313323140144348,
+              "seconds": 1.066054219380021
+            },
+            {
+              "step": 300,
+              "source_H_ce": 0.09249517321586609,
+              "seconds": 1.6544680465012789
+            },
+            {
+              "step": 400,
+              "source_H_ce": 0.08430413901805878,
+              "seconds": 2.23682514205575
+            },
+            {
+              "step": 500,
+              "source_H_ce": 0.07594159245491028,
+              "seconds": 2.793310659006238
+            },
+            {
+              "step": 600,
+              "source_H_ce": 0.07543021440505981,
+              "seconds": 3.375442162156105
+            },
+            {
+              "step": 700,
+              "source_H_ce": 0.06903383880853653,
+              "seconds": 3.9294932391494513
+            },
+            {
+              "step": 800,
+              "source_H_ce": 0.06935383379459381,
+              "seconds": 4.46580096706748
+            },
+            {
+              "step": 900,
+              "source_H_ce": 0.06628498435020447,
+              "seconds": 4.986016258597374
+            },
+            {
+              "step": 1000,
+              "source_H_ce": 0.06722726672887802,
+              "seconds": 5.53681955114007
+            },
+            {
+              "step": 1100,
+              "source_H_ce": 0.06506562232971191,
+              "seconds": 6.071821862831712
+            },
+            {
+              "step": 1200,
+              "source_H_ce": 0.06668967753648758,
+              "seconds": 6.546608870849013
+            },
+            {
+              "step": 1300,
+              "source_H_ce": 0.06563177704811096,
+              "seconds": 7.0626593343913555
+            },
+            {
+              "step": 1400,
+              "source_H_ce": 0.06529572606086731,
+              "seconds": 7.597142184153199
+            },
+            {
+              "step": 1500,
+              "source_H_ce": 0.0659591555595398,
+              "seconds": 8.105226818472147
+            },
+            {
+              "step": 1600,
+              "source_H_ce": 0.06623269617557526,
+              "seconds": 8.604701021686196
+            },
+            {
+              "step": 1700,
+              "source_H_ce": 0.06737487018108368,
+              "seconds": 9.157791394740343
+            },
+            {
+              "step": 1800,
+              "source_H_ce": 0.06756342947483063,
+              "seconds": 9.652472762390971
+            },
+            {
+              "step": 1900,
+              "source_H_ce": 0.06818843632936478,
+              "seconds": 10.231453308835626
+            },
+            {
+              "step": 2000,
+              "source_H_ce": 0.06616830825805664,
+              "seconds": 10.725252389907837
+            }
+          ],
+          "seconds": 11.846942907199264,
+          "target_data_read": false,
+          "method": "Nonlinear multitask representation learning, matched FC architecture; no meta-initialization transfer"
+        },
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.24251443147659302,
+        "numeric_updates": 650,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 8.182186022400856
+      },
+      "representative": "mtsr",
+      "task_parameters": 630
+    },
+    "g35_g34": {
+      "accuracy": {
+        "mean": 0.835185185185185,
+        "ci95_half": 0.026592319813038154,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.4625224769115448,
+        "ci95_half": 0.09514391302262616,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "g35_g34_k512_d2_r1",
+        "family": "g35_g34",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/g35_g34_k512_d2_r1.npz",
+        "dimension": 2,
+        "residual": 1.0,
+        "source_rank": 4,
+        "codes": 512,
+        "active_groups": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3237801194190979,
+        "numeric_updates": 525,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 31.128821175545454
+      },
+      "representative": "g35_g34",
+      "task_parameters": 630
+    },
+    "lutq": {
+      "accuracy": {
+        "mean": 0.85,
+        "ci95_half": 0.02424826536619615,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.4294595420360565,
+        "ci95_half": 0.07472036316476807,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "lutq_k512",
+        "family": "lutq",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/lutq_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2695297598838806,
+        "numeric_updates": 675,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 30.158968403935432
+      },
+      "representative": "lutq",
+      "task_parameters": 630
+    },
+    "dense": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "g35_pair": {
+      "accuracy": {
+        "mean": 0.8403703703703704,
+        "ci95_half": 0.03818049924028032,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.5391323566436768,
+        "ci95_half": 0.1711426966731617,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "g35_pair_k32_d4_r0",
+        "family": "g35_pair",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/g35_pair_k32_d4_r0.npz",
+        "dimension": 4,
+        "residual": 0.0,
+        "source_rank": 4,
+        "codes": 32,
+        "active_groups": 32,
+        "task_first_layer_parameters": 4,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3357246220111847,
+        "numeric_updates": 125,
+        "global_setting": {
+          "lr": 0.03,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 6.822226598858833
+      },
+      "representative": "g35_pair",
+      "task_parameters": 122
+    },
+    "g35_g34_with_base": {
+      "accuracy": {
+        "mean": 0.8435185185185186,
+        "ci95_half": 0.026078167539369316,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43322423100471497,
+        "ci95_half": 0.08389473938023007,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "g34_k512",
+        "family": "g34",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/g34_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2712353467941284,
+        "numeric_updates": 750,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.5,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 31.325738459825516
+      },
+      "representative": "g34",
+      "task_parameters": 630
+    },
+    "g35_g34_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "g35_pair_with_base": {
+      "accuracy": {
+        "mean": 0.8394444444444445,
+        "ci95_half": 0.03545699788506331,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.4560996890068054,
+        "ci95_half": 0.09868862541080374,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "pair_k512",
+        "family": "pair",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/pair_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.3338679075241089,
+        "numeric_updates": 1000,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 35.52652985975146
+      },
+      "representative": "pair",
+      "task_parameters": 630
+    },
+    "g35_pair_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "g34_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "pair_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "msr_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "mtsr_with_full": {
+      "accuracy": {
+        "mean": 0.8746296296296296,
+        "ci95_half": 0.02827009606739232,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.3789289593696594,
+        "ci95_half": 0.09827414928617685,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "mtsr_k512",
+        "family": "mtsr",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/mtsr_k512.npz",
+        "codes": 512,
+        "task_first_layer_parameters": 512,
+        "source_configuration": {
+          "status": "complete",
+          "codes": 512,
+          "outer_lr": 0.0003,
+          "initialization": "dense",
+          "seed": 1,
+          "selected_step": 1100,
+          "source_H_ce": 0.06506562232971191,
+          "source_M_ce": 0.1119154542684555,
+          "history": [
+            {
+              "step": 0,
+              "source_H_ce": 1.7617149353027344,
+              "seconds": 0.029471680521965027
+            },
+            {
+              "step": 100,
+              "source_H_ce": 0.14386102557182312,
+              "seconds": 0.5714529417455196
+            },
+            {
+              "step": 200,
+              "source_H_ce": 0.10313323140144348,
+              "seconds": 1.066054219380021
+            },
+            {
+              "step": 300,
+              "source_H_ce": 0.09249517321586609,
+              "seconds": 1.6544680465012789
+            },
+            {
+              "step": 400,
+              "source_H_ce": 0.08430413901805878,
+              "seconds": 2.23682514205575
+            },
+            {
+              "step": 500,
+              "source_H_ce": 0.07594159245491028,
+              "seconds": 2.793310659006238
+            },
+            {
+              "step": 600,
+              "source_H_ce": 0.07543021440505981,
+              "seconds": 3.375442162156105
+            },
+            {
+              "step": 700,
+              "source_H_ce": 0.06903383880853653,
+              "seconds": 3.9294932391494513
+            },
+            {
+              "step": 800,
+              "source_H_ce": 0.06935383379459381,
+              "seconds": 4.46580096706748
+            },
+            {
+              "step": 900,
+              "source_H_ce": 0.06628498435020447,
+              "seconds": 4.986016258597374
+            },
+            {
+              "step": 1000,
+              "source_H_ce": 0.06722726672887802,
+              "seconds": 5.53681955114007
+            },
+            {
+              "step": 1100,
+              "source_H_ce": 0.06506562232971191,
+              "seconds": 6.071821862831712
+            },
+            {
+              "step": 1200,
+              "source_H_ce": 0.06668967753648758,
+              "seconds": 6.546608870849013
+            },
+            {
+              "step": 1300,
+              "source_H_ce": 0.06563177704811096,
+              "seconds": 7.0626593343913555
+            },
+            {
+              "step": 1400,
+              "source_H_ce": 0.06529572606086731,
+              "seconds": 7.597142184153199
+            },
+            {
+              "step": 1500,
+              "source_H_ce": 0.0659591555595398,
+              "seconds": 8.105226818472147
+            },
+            {
+              "step": 1600,
+              "source_H_ce": 0.06623269617557526,
+              "seconds": 8.604701021686196
+            },
+            {
+              "step": 1700,
+              "source_H_ce": 0.06737487018108368,
+              "seconds": 9.157791394740343
+            },
+            {
+              "step": 1800,
+              "source_H_ce": 0.06756342947483063,
+              "seconds": 9.652472762390971
+            },
+            {
+              "step": 1900,
+              "source_H_ce": 0.06818843632936478,
+              "seconds": 10.231453308835626
+            },
+            {
+              "step": 2000,
+              "source_H_ce": 0.06616830825805664,
+              "seconds": 10.725252389907837
+            }
+          ],
+          "seconds": 11.846942907199264,
+          "target_data_read": false,
+          "method": "Nonlinear multitask representation learning, matched FC architecture; no meta-initialization transfer"
+        },
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.24251443147659302,
+        "numeric_updates": 650,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 8.182186022400856
+      },
+      "representative": "mtsr",
+      "task_parameters": 630
+    },
+    "lutq_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "yeh_map_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    },
+    "yeh_soft_with_full": {
+      "accuracy": {
+        "mean": 0.851111111111111,
+        "ci95_half": 0.026098264302446588,
+        "units": 9,
+        "status": "finite"
+      },
+      "cross_entropy": {
+        "mean": 0.43547260761260986,
+        "ci95_half": 0.08885875702543772,
+        "units": 9,
+        "status": "finite"
+      },
+      "choice": {
+        "name": "dense",
+        "family": "dense",
+        "model_path": "/home/udeneev-av/InductionBiasResearch/artifacts/local/g35_real_2026-11-14/har/models/dense.npz",
+        "codes": 8976,
+        "task_first_layer_parameters": 8976,
+        "phase": "refine",
+        "max_updates": 2000,
+        "validation_ce": 0.2635006904602051,
+        "numeric_updates": 625,
+        "global_setting": {
+          "lr": 0.003,
+          "quantile": 0.1,
+          "restart": 0
+        },
+        "support_count": 18,
+        "development_restarts_averaged": 2,
+        "nonfinite_global_choices": 0,
+        "target_query_used": false,
+        "seconds": 20.032441187649965
+      },
+      "representative": "dense",
+      "task_parameters": 9094
+    }
+  },
+  "paired_accuracy_differences": {
+    "g35_g34_minus_g34": {
+      "mean": -0.008333333333333338,
+      "ci95_half": 0.010870607742980572,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_minus_msr": {
+      "mean": 0.02592592592592593,
+      "ci95_half": 0.018905769454475658,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_minus_mtsr": {
+      "mean": -0.039444444444444456,
+      "ci95_half": 0.016090600809988472,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_minus_dense": {
+      "mean": -0.015925925925925934,
+      "ci95_half": 0.013176036708811664,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_pair_minus_g34": {
+      "mean": -0.0031481481481481573,
+      "ci95_half": 0.019380883799452558,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_pair_minus_msr": {
+      "mean": 0.03111111111111111,
+      "ci95_half": 0.022189535136875257,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_pair_minus_mtsr": {
+      "mean": -0.03425925925925927,
+      "ci95_half": 0.022909294583784018,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_pair_minus_dense": {
+      "mean": -0.01074074074074075,
+      "ci95_half": 0.020043500465960047,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_full_minus_g34": {
+      "mean": 0.014814814814814812,
+      "ci95_half": 0.025238620576850817,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_full_minus_msr": {
+      "mean": 0.04907407407407409,
+      "ci95_half": 0.0279073369932907,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_full_minus_mtsr": {
+      "mean": -0.016296296296296302,
+      "ci95_half": 0.011219397354333133,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_full_minus_dense": {
+      "mean": 0.007222222222222217,
+      "ci95_half": 0.02905897331888922,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_base_minus_g34": {
+      "mean": 0.0,
+      "ci95_half": 0.0,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_base_minus_msr": {
+      "mean": 0.03425925925925927,
+      "ci95_half": 0.01660650033246038,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_base_minus_mtsr": {
+      "mean": -0.03111111111111111,
+      "ci95_half": 0.018443139291044085,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_base_minus_dense": {
+      "mean": -0.007592592592592593,
+      "ci95_half": 0.00840353542440606,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_full_minus_g34": {
+      "mean": 0.007592592592592593,
+      "ci95_half": 0.00840353542440606,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_full_minus_msr": {
+      "mean": 0.04185185185185186,
+      "ci95_half": 0.01837007234483875,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_full_minus_mtsr": {
+      "mean": -0.023518518518518515,
+      "ci95_half": 0.022368589043809617,
+      "units": 9,
+      "status": "finite"
+    },
+    "g35_g34_with_full_minus_dense": {
+      "mean": 0.0,
+      "ci95_half": 0.0,
+      "units": 9,
+      "status": "finite"
+    }
+  },
+  "uncertainty_units": "target people"
+}

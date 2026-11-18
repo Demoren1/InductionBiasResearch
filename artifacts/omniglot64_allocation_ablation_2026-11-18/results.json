@@ -1,0 +1,113 @@
+{
+  "episodes": 1024,
+  "same_episodes_as": "artifacts/omniglot64_asrr_confirmation_2026-11-18",
+  "methods": {
+    "four_partitions": {
+      "codes": 4096,
+      "accuracy": 0.8456250000000001,
+      "accuracy_ci95_halfwidth": 0.004871879579098868,
+      "mean_cross_entropy": 0.49599066842307965
+    },
+    "wsr_step_0": {
+      "codes": 4096,
+      "accuracy": 0.8508984375,
+      "accuracy_ci95_halfwidth": 0.005052757784207787,
+      "mean_cross_entropy": 0.4691809779051317
+    },
+    "profile_exceptions": {
+      "codes": 4096,
+      "accuracy": 0.8145703125000001,
+      "accuracy_ci95_halfwidth": 0.005452562601958158,
+      "mean_cross_entropy": 0.5658409729306737
+    },
+    "random_exceptions": {
+      "codes": 4096,
+      "accuracy": 0.8508593750000001,
+      "accuracy_ci95_halfwidth": 0.005052492361124342,
+      "mean_cross_entropy": 0.46142052905139985
+    },
+    "wsr_step_75": {
+      "codes": 4096,
+      "accuracy": 0.8528906250000001,
+      "accuracy_ci95_halfwidth": 0.005046158993153244,
+      "mean_cross_entropy": 0.4673236419494658
+    }
+  },
+  "paired_differences": [
+    {
+      "method": "wsr_step_75",
+      "reference": "wsr_step_0",
+      "accuracy_difference": 0.0019921874999999983,
+      "ci95_halfwidth": 0.002560157315442804
+    },
+    {
+      "method": "profile_exceptions",
+      "reference": "random_exceptions",
+      "accuracy_difference": -0.0362890625,
+      "ci95_halfwidth": 0.00389999759745397
+    },
+    {
+      "method": "profile_exceptions",
+      "reference": "four_partitions",
+      "accuracy_difference": -0.031054687499999997,
+      "ci95_halfwidth": 0.004394626586477974
+    },
+    {
+      "method": "random_exceptions",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.0052343749999999994,
+      "ci95_halfwidth": 0.003740096308783388
+    },
+    {
+      "method": "wsr_step_0",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.0052734375,
+      "ci95_halfwidth": 0.0035519637833830433
+    },
+    {
+      "method": "wsr_step_75",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.0072656249999999995,
+      "ci95_halfwidth": 0.003585756849686927
+    },
+    {
+      "method": "profile_exceptions",
+      "reference": "wsr_step_0",
+      "accuracy_difference": -0.036328125,
+      "ci95_halfwidth": 0.00390842172650372
+    },
+    {
+      "method": "profile_exceptions",
+      "reference": "wsr_step_75",
+      "accuracy_difference": -0.038320312499999995,
+      "ci95_halfwidth": 0.0039813417672290765
+    },
+    {
+      "method": "random_exceptions",
+      "reference": "wsr_step_0",
+      "accuracy_difference": -3.906250000000155e-05,
+      "ci95_halfwidth": 0.002768257354916707
+    },
+    {
+      "method": "random_exceptions",
+      "reference": "wsr_step_75",
+      "accuracy_difference": -0.0020312499999999996,
+      "ci95_halfwidth": 0.0027171802701903944
+    }
+  ],
+  "new_source_times_cpu_seconds": {
+    "wsr_step_0": 0.059296611696481705,
+    "profile_exceptions": 0.3259851559996605,
+    "random_exceptions": 0.008060339838266373
+  },
+  "exception_coverage": {
+    "profile_exceptions": {
+      "pixels_with_any_exception": 389,
+      "max_neurons_with_exception_for_one_pixel": 38
+    },
+    "random_exceptions": {
+      "pixels_with_any_exception": 783,
+      "max_neurons_with_exception_for_one_pixel": 16
+    }
+  }
+}

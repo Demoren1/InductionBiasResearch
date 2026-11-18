@@ -1,0 +1,370 @@
+{
+  "quadratics": {
+    "two_inputs": [
+      {
+        "gamma": 0.0,
+        "predicted": 4.498624020554974,
+        "measured": 4.498624020555022
+      },
+      {
+        "gamma": 0.5,
+        "predicted": 2.254952805224296,
+        "measured": 2.254952805224315
+      },
+      {
+        "gamma": 0.95,
+        "predicted": 0.22470266954695772,
+        "measured": 0.22470266954695126
+      },
+      {
+        "gamma": 1.0,
+        "predicted": -3.8968828164342995e-14,
+        "measured": 1.741937413611283e-32
+      }
+    ],
+    "merge_max_absolute_error": {
+      "full_rank": 6.816769371198461e-14,
+      "singular": 2.19824158875781e-14
+    },
+    "merge_cases": {
+      "full_rank": 128,
+      "singular": 256
+    },
+    "signed_ward_max_absolute_error": 2.842170943040401e-14,
+    "common_sign_example": {
+      "common": 2.0,
+      "independent_per_task": 0.0
+    },
+    "relu": {
+      "tasks": 64,
+      "violations": 0,
+      "median_kl_over_bound": 0.010875081391548132
+    }
+  },
+  "known_groups": {
+    "clean": {
+      "max_absolute_gain_error": 7.105427357601002e-15,
+      "methods": {
+        "initial": {
+          "ari": {
+            "mean": 0.7175566837763543,
+            "ci95_halfwidth": 0.008024488670645289
+          },
+          "target_mse": {
+            "mean": 5.50330384658381,
+            "ci95_halfwidth": 0.25609096247761254
+          },
+          "exact_budget": {
+            "mean": 0.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "identity_exchange": {
+          "ari": {
+            "mean": 0.9983814461883408,
+            "ci95_halfwidth": 0.0033010622625950837
+          },
+          "target_mse": {
+            "mean": 0.06649211565146798,
+            "ci95_halfwidth": 0.07626110292823149
+          },
+          "exact_budget": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "covariance_equal": {
+          "ari": {
+            "mean": 0.7153521287063216,
+            "ci95_halfwidth": 0.008250017010716754
+          },
+          "target_mse": {
+            "mean": 5.503277607154437,
+            "ci95_halfwidth": 0.2560939081250908
+          },
+          "exact_budget": {
+            "mean": 0.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "covariance_exchange": {
+          "ari": {
+            "mean": 0.9983814461883408,
+            "ci95_halfwidth": 0.0033010622625950837
+          },
+          "target_mse": {
+            "mean": 0.06649211565146798,
+            "ci95_halfwidth": 0.07626110292823149
+          },
+          "exact_budget": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "covariance_rematch": {
+          "ari": {
+            "mean": 0.9983814461883408,
+            "ci95_halfwidth": 0.0033010622625950837
+          },
+          "target_mse": {
+            "mean": 0.06649211565146798,
+            "ci95_halfwidth": 0.07626110292823149
+          },
+          "exact_budget": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "oracle": {
+          "ari": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          },
+          "target_mse": {
+            "mean": 0.02904857094035977,
+            "ci95_halfwidth": 0.0006901806409992335
+          },
+          "exact_budget": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          }
+        }
+      },
+      "paired_against_initial": {
+        "identity_exchange": {
+          "ari": {
+            "mean": 0.2808247624119865,
+            "ci95_halfwidth": 0.008226633733271102
+          },
+          "target_mse": {
+            "mean": -5.436811730932343,
+            "ci95_halfwidth": 0.23708615402293007
+          }
+        },
+        "covariance_equal": {
+          "ari": {
+            "mean": -0.002204555070032671,
+            "ci95_halfwidth": 0.0029405987967082528
+          },
+          "target_mse": {
+            "mean": -2.6239429373214884e-05,
+            "ci95_halfwidth": 3.223114835579809e-05
+          }
+        },
+        "covariance_exchange": {
+          "ari": {
+            "mean": 0.2808247624119865,
+            "ci95_halfwidth": 0.008226633733271102
+          },
+          "target_mse": {
+            "mean": -5.436811730932343,
+            "ci95_halfwidth": 0.23708615402293007
+          }
+        },
+        "covariance_rematch": {
+          "ari": {
+            "mean": 0.2808247624119865,
+            "ci95_halfwidth": 0.008226633733271102
+          },
+          "target_mse": {
+            "mean": -5.436811730932343,
+            "ci95_halfwidth": 0.23708615402293007
+          }
+        }
+      }
+    },
+    "correlated_noisy_permuted": {
+      "max_absolute_gain_error": 2.786659791809143e-14,
+      "methods": {
+        "initial": {
+          "ari": {
+            "mean": 0.654290809986826,
+            "ci95_halfwidth": 0.017694249909050254
+          },
+          "target_mse": {
+            "mean": 1.8023440874126502,
+            "ci95_halfwidth": 0.20221926190411915
+          },
+          "exact_budget": {
+            "mean": 0.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "identity_exchange": {
+          "ari": {
+            "mean": 0.740473195919264,
+            "ci95_halfwidth": 0.026498820609050223
+          },
+          "target_mse": {
+            "mean": 1.4644491548166025,
+            "ci95_halfwidth": 0.2540765606355057
+          },
+          "exact_budget": {
+            "mean": 0.03125,
+            "ci95_halfwidth": 0.06373479519988776
+          }
+        },
+        "covariance_equal": {
+          "ari": {
+            "mean": 0.6484726302887698,
+            "ci95_halfwidth": 0.023630453716263333
+          },
+          "target_mse": {
+            "mean": 1.7405003952542661,
+            "ci95_halfwidth": 0.16954913998096777
+          },
+          "exact_budget": {
+            "mean": 0.0,
+            "ci95_halfwidth": 0.0
+          }
+        },
+        "covariance_exchange": {
+          "ari": {
+            "mean": 0.7152718496211607,
+            "ci95_halfwidth": 0.02298638355564371
+          },
+          "target_mse": {
+            "mean": 1.3457063680634072,
+            "ci95_halfwidth": 0.1518962773668231
+          },
+          "exact_budget": {
+            "mean": 0.03125,
+            "ci95_halfwidth": 0.06373479519988776
+          }
+        },
+        "covariance_rematch": {
+          "ari": {
+            "mean": 0.9013714219495894,
+            "ci95_halfwidth": 0.02711933971993163
+          },
+          "target_mse": {
+            "mean": 0.33032929784753806,
+            "ci95_halfwidth": 0.10414997199395447
+          },
+          "exact_budget": {
+            "mean": 0.875,
+            "ci95_halfwidth": 0.12114479490998112
+          }
+        },
+        "oracle": {
+          "ari": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          },
+          "target_mse": {
+            "mean": 0.02934336994034111,
+            "ci95_halfwidth": 0.0006936962878372056
+          },
+          "exact_budget": {
+            "mean": 1.0,
+            "ci95_halfwidth": 0.0
+          }
+        }
+      },
+      "paired_against_initial": {
+        "identity_exchange": {
+          "ari": {
+            "mean": 0.08618238593243802,
+            "ci95_halfwidth": 0.024264280086194797
+          },
+          "target_mse": {
+            "mean": -0.33789493259604764,
+            "ci95_halfwidth": 0.12605843055250762
+          }
+        },
+        "covariance_equal": {
+          "ari": {
+            "mean": -0.005818179698056257,
+            "ci95_halfwidth": 0.017447480435904644
+          },
+          "target_mse": {
+            "mean": -0.06184369215838391,
+            "ci95_halfwidth": 0.10680484755115591
+          }
+        },
+        "covariance_exchange": {
+          "ari": {
+            "mean": 0.06098103963433476,
+            "ci95_halfwidth": 0.020064331655594826
+          },
+          "target_mse": {
+            "mean": -0.45663771934924324,
+            "ci95_halfwidth": 0.1466180706823964
+          }
+        },
+        "covariance_rematch": {
+          "ari": {
+            "mean": 0.24708061196276349,
+            "ci95_halfwidth": 0.01959393770064711
+          },
+          "target_mse": {
+            "mean": -1.4720147895651121,
+            "ci95_halfwidth": 0.1468282431183828
+          }
+        }
+      }
+    }
+  },
+  "rank_rule": {
+    "base_rank": 4,
+    "full_rank": 8,
+    "per_class": 10,
+    "rows": [
+      {
+        "added_signal": 0.16,
+        "theoretical_mse_gain": -0.64,
+        "measured_mse_gain": {
+          "mean": -0.6367718061150144,
+          "ci95_halfwidth": 0.006116896779472285
+        },
+        "crossfit_added_signal": {
+          "mean": 0.16264840932280822,
+          "ci95_halfwidth": 0.005123149477167036
+        },
+        "bayes_error_base": 0.15865525393145707,
+        "bayes_error_full": 0.15391073595442134,
+        "plug_in_error_gain": {
+          "mean": -0.01423809891404405,
+          "ci95_halfwidth": 0.0001653672629986839
+        }
+      },
+      {
+        "added_signal": 0.8,
+        "theoretical_mse_gain": 0.0,
+        "measured_mse_gain": {
+          "mean": 0.0032281938849854632,
+          "ci95_halfwidth": 0.006116896779472285
+        },
+        "crossfit_added_signal": {
+          "mean": 0.8013664484844034,
+          "ci95_halfwidth": 0.007503030919479445
+        },
+        "bayes_error_base": 0.15865525393145707,
+        "bayes_error_full": 0.13666083914614907,
+        "plug_in_error_gain": {
+          "mean": 0.007477776174641198,
+          "ci95_halfwidth": 0.0001536844063175227
+        }
+      },
+      {
+        "added_signal": 1.6,
+        "theoretical_mse_gain": 0.8,
+        "measured_mse_gain": {
+          "mean": 0.8032281938849857,
+          "ci95_halfwidth": 0.006116896779472285
+        },
+        "crossfit_added_signal": {
+          "mean": 1.6004058503919474,
+          "ci95_halfwidth": 0.009688824683839374
+        },
+        "bayes_error_base": 0.15865525393145707,
+        "bayes_error_full": 0.11836178531892866,
+        "plug_in_error_gain": {
+          "mean": 0.03050929871190732,
+          "ci95_halfwidth": 0.00014330495037422156
+        }
+      }
+    ]
+  },
+  "seconds": 18.359057879999455
+}

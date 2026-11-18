@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering\small
+\caption{UCI HAR on 180 common episodes. Accuracy gives 95\% intervals over the nine subject means.}
+\label{tab:recovery-har}
+\begin{tabular}{lrrrr}
+\toprule
+Method & Budget & Accuracy (\%) & CE & Source time (s) \\
+\midrule
+Dense & 8,976 & $86.43\pm3.10$ & 0.3753 & \textemdash \\
+aSRR & 128 & $91.50\pm2.79$ & 0.2665 & 7.08 \\
+LUT-Q & 128 & $88.70\pm3.22$ & 0.3412 & 87.96 \\
+Yeh (MAP) & 128 & $88.93\pm2.93$ & 0.3376 & 569.2 \\
+Yeh (soft) & 128 & $90.87\pm3.88$ & 0.4106 & 569.2 \\
+MSR-FC & 128 & $89.43\pm3.05$ & 0.3358 & 150.9 \\
+WSR & 128 & $85.02\pm4.58$ & 1.1387 & 6.82 \\
+\bottomrule
+\end{tabular}
+\end{table}

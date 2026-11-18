@@ -1,0 +1,79 @@
+{
+  "dataset": "ninapro",
+  "split": {
+    "source": [
+      3,
+      19,
+      16,
+      5,
+      31,
+      38,
+      32,
+      1,
+      10,
+      23,
+      15,
+      11,
+      22,
+      37,
+      20,
+      26
+    ],
+    "development": [
+      39,
+      24,
+      9,
+      35,
+      28,
+      18,
+      13,
+      25
+    ],
+    "test": [
+      21,
+      33,
+      30,
+      40,
+      29,
+      2,
+      17,
+      27,
+      4,
+      14,
+      36,
+      8,
+      6,
+      12,
+      7,
+      34
+    ]
+  },
+  "layout": {
+    "sites": 1,
+    "fan_in": 48,
+    "channels": 32,
+    "outputs": 12
+  },
+  "codes": 128,
+  "seed": 7611189800,
+  "source_steps": {
+    "dense": 800,
+    "wsr": 500,
+    "lutq": 1200
+  },
+  "target_steps": 200,
+  "source_restarts": 3,
+  "shuffles": 4,
+  "gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "selection": "Development mean accuracy with mean cross-entropy tiebreak",
+  "target_size": 240
+}

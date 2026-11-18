@@ -1,0 +1,90 @@
+\section{Experiments}
+\label{sec:experiments}
+
+We compare G34 with direct recovery from within-neuron weight ratios
+(Pair recovery). Both receive the same fitted Dense models; neither
+observes a true indexator. A target task receives only the selected
+indexator. Its codebook, hidden biases, output matrix and offset are
+initialized and fitted afresh. Dense is the unstructured reference.
+
+On images, both extractors consider 8, 16, 32 and 64 independent codes
+and retain at most eight candidates per budget. Each candidate receives
+18 numerical starts and 2000 Adam updates. Separate source samples
+fit numerical parameters, select their checkpoints and select the
+indexator. Development episodes choose the code budget and one global
+learning rate, activation quantile and update count, averaging two
+fresh starts. Test episodes use this fixed rule and one fresh start;
+their query responses are opened after all predictions are frozen.
+G34 calibrates the aligned source models jointly; Pair recovery builds
+proposals separately from two source models ranked by validation loss.
+Tables count all fitted numerical parameters, including biases and
+the output layer. Image accuracy is reported with 95\% episode intervals,
+conditional on the fixed source cohort and class split; images and
+class pairs may repeat. Source validation assesses predictive fitting,
+while exact weight identification and global convergence are not established.
+
+\subsection{Synthetic recovery}
+
+We use two fixed random sharing geometries satisfying the pair-identification
+conditions, with 16 inputs, 16 hidden
+ReLU units and four independent codes, with one and two outputs,
+respectively. Each geometry supplies one new numerical source function
+and 4096 fitting, 512 numerical-selection and 1024 structure-selection
+examples. Dense preparation uses 12 Adam starts, 2500 updates,
+Gauss--Newton refinement and two repair rounds. G34 and Pair recovery
+use the same descriptors and at most 32 candidate indexators; each
+candidate receives four numerical starts and 48 Gauss--Newton updates.
+Only dimensions and the code budget are given to the learners.
+Table~\ref{tab:recovery-synthetic} reports the subsequent structural audit,
+allowing hidden-unit permutations and code-pair renaming and sign changes.
+Both methods recover the full signed indexator, including its zero entries.
+These are two geometric cases, not a statistical sample of all structures.
+
+\begin{table}[htbp]
+    \centering\small
+    \begin{tabular}{lrrcc}
+        \toprule
+        Geometry & Active weights & Dense error & G34 & Pair recovery\\
+        \midrule
+        A & 160 & $1.65\times10^{-7}$ & Exact & Exact\\
+        B & 135 & $9.99\times10^{-12}$ & Exact & Exact\\
+        \bottomrule
+    \end{tabular}
+    \caption{Recovery from one fitted source function per geometry.
+        Dense error is the maximum log-magnitude discrepancy after
+        alignment, measured against generating weights only in this
+        late audit. Pair recovery produces three and one complete
+        candidates; G34 numerically compares 32 in each case.}
+    \label{tab:recovery-synthetic}
+\end{table}
+
+\FloatBarrier
+\subsection{MNIST class-pair transfer}
+
+We use original $28\times28$ MNIST images~\cite{lecun1998gradient}
+and a 784--16--2 ReLU network. Classes 0--4 define ten source pairs,
+classes 5--6 define development episodes, and classes 7--9 define test
+pairs. Each source pair has 8000 fitting examples and two disjoint
+1000-example samples for numerical and structure selection. Dense
+preparation compares 12 Adam configurations over 2500 updates and
+continues four retained fits with up to 200 full-gradient L-BFGS iterations,
+selecting numerical states by the source validation loss.
+Sixteen development episodes and 96 test episodes use 16 training
+images and 100 query images per class. Test training images come
+from the official training split and query images from the official
+test split. This is a fully connected, class-disjoint 2-way 16-shot
+comparison; published standard MNIST scores are not matched baselines.
+\input{sections/recovery_mnist_results.tex}
+
+\FloatBarrier
+\subsection{Fashion-MNIST class-pair transfer}
+
+Fashion-MNIST~\cite{xiao2017fashion} supplies a second recognition task
+with the same image size, architecture, class split, sample counts and
+selection budget. Source classes are T-shirts, trousers, pullovers,
+dresses and coats; development uses sandals and shirts; test pairs
+use sneakers, bags and ankle boots. Thus this comparison transfers
+constraints across held-out clothing classes, with all numerical
+parameters learned anew. The two datasets use separately fitted
+Dense models and separately selected structures and learning rules.
+\input{sections/recovery_fashion_results.tex}

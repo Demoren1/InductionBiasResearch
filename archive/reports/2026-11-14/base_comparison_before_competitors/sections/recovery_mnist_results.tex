@@ -1,0 +1,15 @@
+The shared source Dense preparation reaches 99.67\% mean numerical-validation accuracy across the ten class pairs (minimum 99.30\%), with mean cross-entropy 0.0109.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Method & Codes & Parameters & Updates & Accuracy (\%) & CE\\
+\midrule
+Dense & --- & 12594 & 50 & $92.60\pm0.74$ & 0.208\\
+G34 & 64 & 114 & 175 & $89.49\pm0.78$ & 0.284\\
+Pair recovery & 64 & 114 & 100 & $86.51\pm1.24$ & 0.341\\
+\bottomrule\end{tabular}
+\caption{MNIST: query prediction after fresh numerical fitting on 96 held-out class-pair episodes. Pair recovery minus G34: -2.98 percentage points, paired 95\% interval [-4.21, -1.76].}
+\label{tab:recovery-mnist}
+\end{table}

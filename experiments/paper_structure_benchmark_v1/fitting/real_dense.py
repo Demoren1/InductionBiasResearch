@@ -39,7 +39,7 @@ def cross_entropy(value, target):
     return -(value.log_softmax(-1) * target[None]).sum(-1).mean(-1)
 
 
-def run(root, device, steps):
+def run(root, device, steps, *, initial_hidden=None):
     torch.set_num_threads(2)
     boundary = StudyBoundary(root)
     boundary.install()
@@ -89,6 +89,13 @@ def run(root, device, steps):
     parameter[..., : d * h] *= math.sqrt(2 / d)
     parameter[..., d * h : d * h + h] *= 0.1
     parameter[..., -o:] = 0
+    if initial_hidden is not None:
+        initial = torch.as_tensor(
+            initial_hidden, device=device, dtype=parameter.dtype
+        )
+        if initial.shape != (d * h + h,):
+            raise ValueError("Expected one first layer, including its biases")
+        parameter[..., : d * h + h] = initial
     parameter.requires_grad_()
     optimizer = ScenarioAdam(parameter, [row["lr"] for row in rows])
     decay = parameter.new_tensor([row["weight_decay"] for row in rows])[:, None, None]

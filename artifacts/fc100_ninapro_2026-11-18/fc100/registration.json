@@ -1,0 +1,59 @@
+{
+  "dataset": "fc100",
+  "split": {
+    "source": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      9,
+      10,
+      15,
+      17,
+      18,
+      19
+    ],
+    "development": [
+      8,
+      11,
+      13,
+      16
+    ],
+    "test": [
+      0,
+      7,
+      12,
+      14
+    ]
+  },
+  "layout": {
+    "sites": 16,
+    "fan_in": 48,
+    "channels": 8,
+    "outputs": 5
+  },
+  "codes": 384,
+  "seed": 7611189800,
+  "source_steps": {
+    "dense": 800,
+    "wsr": 500,
+    "lutq": 1200
+  },
+  "target_steps": 200,
+  "source_restarts": 3,
+  "shuffles": 4,
+  "gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "selection": "Development mean accuracy with mean cross-entropy tiebreak",
+  "target_size": 1024
+}

@@ -1,0 +1,58 @@
+{
+  "unix_time": 1794683452.5904963,
+  "prior_test_results_seen": true,
+  "datasets": [
+    "har",
+    "fashion",
+    "mnist"
+  ],
+  "code_grid": [
+    8,
+    16,
+    32,
+    64,
+    128,
+    512,
+    "full N"
+  ],
+  "dimensions": [
+    2,
+    4,
+    8,
+    "full source SVD rank"
+  ],
+  "residual_scales": [
+    0.0,
+    0.1,
+    1.0
+  ],
+  "new_development_seed": 35111401,
+  "new_test_seed": 35111402,
+  "test_tasks": {
+    "har": 180,
+    "fashion": 192,
+    "mnist": 192
+  },
+  "test_generation": "Only after all choices freeze",
+  "teacher_access": false,
+  "method": "Provisional G35: recovered signed index plus source code covariance, hard and residual variants",
+  "source_calibration": "Existing source-selected index, 18 starts and2000 updates; F fit/H numeric selection; save code vectors",
+  "mtsr_grid": {
+    "rates": [
+      0.0003,
+      0.001,
+      0.003
+    ],
+    "initialization": [
+      "cold",
+      "dense"
+    ],
+    "seeds": [
+      0,
+      1
+    ],
+    "steps": 2000
+  },
+  "target_solver": "Shared fresh Adam; lr .003/.01/.03, quantile .1/.5/.9, two validation restarts, max2000 updates, checkpoint25",
+  "paper_changes": false
+}

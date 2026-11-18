@@ -1,0 +1,143 @@
+{
+  "prediction_freeze_utc": "2026-11-14T02:01:44.852243+00:00",
+  "answers_first_opened_for_new_scoring_utc": "2026-11-14T02:01:46.477105+00:00",
+  "target_episodes": 1000,
+  "queries_per_episode": 75,
+  "comparison": "Retrospective matched-cohort extension",
+  "methods": [
+    {
+      "method": "ratio",
+      "accuracy": {
+        "mean": 0.373,
+        "lower": 0.36709530882305813,
+        "upper": 0.37890469117694187
+      },
+      "cross_entropy": {
+        "mean": 1.4969514608383179,
+        "lower": 1.483749096975571,
+        "upper": 1.5101538247010649
+      },
+      "independent_first_weights": 16,
+      "task_parameters": 117,
+      "active_edges": 6272,
+      "numeric_updates": 50,
+      "global_setting": {
+        "lr": 0.01,
+        "quantile": 0.5,
+        "restart": 0
+      },
+      "development_ce": 1.5139528512954712
+    },
+    {
+      "method": "current",
+      "accuracy": {
+        "mean": 0.41017333333333333,
+        "lower": 0.4044453421410882,
+        "upper": 0.4159013245255785
+      },
+      "cross_entropy": {
+        "mean": 1.4287736415863037,
+        "lower": 1.4170399366170652,
+        "upper": 1.4405073465555422
+      },
+      "independent_first_weights": 64,
+      "task_parameters": 165,
+      "active_edges": 4305,
+      "numeric_updates": 75,
+      "global_setting": {
+        "lr": 0.003,
+        "quantile": 0.1,
+        "restart": 0
+      },
+      "development_ce": 1.4500038623809814
+    },
+    {
+      "method": "dense",
+      "accuracy": {
+        "mean": 0.37073333333333336,
+        "lower": 0.36571520955718856,
+        "upper": 0.37575145710947816
+      },
+      "cross_entropy": {
+        "mean": 1.530186414718628,
+        "lower": 1.519716243504358,
+        "upper": 1.5406565859328978
+      },
+      "independent_first_weights": 12544,
+      "task_parameters": 12645,
+      "active_edges": 12544,
+      "numeric_updates": 25,
+      "global_setting": {
+        "lr": 0.003,
+        "quantile": 0.9,
+        "restart": 0
+      },
+      "development_ce": 1.5725921392440796
+    },
+    {
+      "method": "signature",
+      "accuracy": {
+        "mean": 0.34624,
+        "lower": 0.34102828295117044,
+        "upper": 0.35145171704882955
+      },
+      "cross_entropy": {
+        "mean": 1.5039646625518799,
+        "lower": 1.4951566751728294,
+        "upper": 1.5127726499309304
+      },
+      "independent_first_weights": 16,
+      "task_parameters": 117,
+      "active_edges": 475,
+      "numeric_updates": 100,
+      "global_setting": {
+        "lr": 0.003,
+        "quantile": 0.5,
+        "restart": 0
+      },
+      "development_ce": 1.5256657600402832
+    }
+  ],
+  "paired": {
+    "ratio_minus_current": {
+      "accuracy": {
+        "mean": -0.03717333333333333,
+        "lower": -0.0441398856625886,
+        "upper": -0.030206781004078063
+      },
+      "cross_entropy": {
+        "mean": 0.0681777223944664,
+        "lower": 0.052996531396319504,
+        "upper": 0.0833589133926133
+      }
+    },
+    "ratio_minus_dense": {
+      "accuracy": {
+        "mean": 0.0022666666666666694,
+        "lower": -0.004391472069433252,
+        "upper": 0.008924805402766592
+      },
+      "cross_entropy": {
+        "mean": -0.033235013484954834,
+        "lower": -0.04780270248308781,
+        "upper": -0.01866732448682186
+      }
+    },
+    "ratio_minus_signature": {
+      "accuracy": {
+        "mean": 0.026760000000000003,
+        "lower": 0.019662094331563983,
+        "upper": 0.03385790566843602
+      },
+      "cross_entropy": {
+        "mean": -0.007013268303126097,
+        "lower": -0.02144467602514402,
+        "upper": 0.007418139418891828
+      }
+    }
+  },
+  "access_receipts": 8,
+  "access_violations": [],
+  "ci_scope": "95% episode t intervals conditional on one source cohort",
+  "true_sharing_index_observed": false
+}

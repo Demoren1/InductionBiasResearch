@@ -1,0 +1,26 @@
+The shared source Dense preparation reaches 97.21\% mean numerical-validation accuracy across the ten class pairs (minimum 89.00\%), with mean cross-entropy 0.0744.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Method & Codes & Parameters & Updates & Accuracy (\%) & CE\\
+\midrule
+Dense & --- & 12594 & 100 & $96.40\pm0.73$ & 0.135\\
+G34 & 64 & 114 & 50 & $94.45\pm0.73$ & 0.200\\
+Pair recovery & 64 & 114 & 225 & $92.74\pm1.00$ & 0.211\\
+\bottomrule\end{tabular}
+\caption{Fashion-MNIST: query prediction after fresh numerical fitting on 96 held-out class-pair episodes. Pair recovery minus G34: -1.70 percentage points, paired 95\% interval [-2.53, -0.88].}
+\label{tab:recovery-fashion}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{recovery_dense_quality.pdf}
+    \caption{Source Dense fitting on the two image tasks. Each curve
+        averages the ten class pairs using each pair's best Adam
+        configuration by source validation. Both extractors subsequently
+        receive the same validation-retained full-gradient continuations.
+        These are source losses, not test results.}
+    \label{fig:recovery-dense-quality}
+\end{figure}

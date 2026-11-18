@@ -1,0 +1,138 @@
+{
+  "episodes": 768,
+  "query_examples_per_episode": 25,
+  "methods": {
+    "four_partitions": {
+      "accuracy": 0.8424479166666666,
+      "accuracy_ci95_halfwidth": 0.0060129084932305215,
+      "mean_cross_entropy": 0.5031033974542023,
+      "codes": 4096
+    },
+    "wsr_step_75": {
+      "accuracy": 0.8472916666666667,
+      "accuracy_ci95_halfwidth": 0.006138974121433047,
+      "mean_cross_entropy": 0.4750457961455814,
+      "codes": 4096
+    },
+    "balanced_random_mask_7611189541": {
+      "accuracy": 0.8493749999999999,
+      "accuracy_ci95_halfwidth": 0.005986467623476497,
+      "mean_cross_entropy": 0.4730768415151822,
+      "codes": 4096
+    },
+    "balanced_random_mask_7611189542": {
+      "accuracy": 0.8465625,
+      "accuracy_ci95_halfwidth": 0.0059912876629894295,
+      "mean_cross_entropy": 0.4735310256874823,
+      "codes": 4096
+    },
+    "balanced_random_mask_7611189543": {
+      "accuracy": 0.8478645833333335,
+      "accuracy_ci95_halfwidth": 0.006045189678373635,
+      "mean_cross_entropy": 0.4717119651161677,
+      "codes": 4096
+    },
+    "balanced_random_mask_7611189544": {
+      "accuracy": 0.8471875000000001,
+      "accuracy_ci95_halfwidth": 0.00600513904579414,
+      "mean_cross_entropy": 0.4719218934136256,
+      "codes": 4096
+    },
+    "asrr_gradient_input_ward": {
+      "accuracy": 0.8360416666666666,
+      "accuracy_ci95_halfwidth": 0.006092764023643579,
+      "mean_cross_entropy": 0.5242275823518653,
+      "codes": 4096
+    },
+    "weight_ward": {
+      "accuracy": 0.8360937499999999,
+      "accuracy_ci95_halfwidth": 0.006080034800352609,
+      "mean_cross_entropy": 0.5234719324002486,
+      "codes": 4096
+    },
+    "mean_balanced": {
+      "accuracy": 0.8477473958333333,
+      "accuracy_ci95_halfwidth": 0.0056915239618881164,
+      "mean_cross_entropy": 0.47256043143311444,
+      "codes": 4096
+    }
+  },
+  "rank_of_joint_pixel_group_sums": {
+    "asrr_gradient_input_ward": 64,
+    "weight_ward": 64,
+    "four_partitions": 253
+  },
+  "gradient_minus_reference": {
+    "four_partitions": {
+      "accuracy_pp": -0.6406250000000002,
+      "accuracy_ci95_pp": [
+        -0.9798391184703146,
+        -0.30141088152968604
+      ],
+      "ce": 0.021124184897663063,
+      "ce_ci95": [
+        0.013742597760471882,
+        0.028505772034854243
+      ],
+      "accuracy_simultaneous_ci95_pp": [
+        -1.05521061584186,
+        -0.22603938415814046
+      ]
+    },
+    "mean_balanced": {
+      "accuracy_pp": -1.1705729166666667,
+      "accuracy_ci95_pp": [
+        -1.5673819685397912,
+        -0.7737638647935421
+      ],
+      "ce": 0.051667150918750876,
+      "ce_ci95": [
+        0.04097142110294598,
+        0.06236288073455577
+      ],
+      "accuracy_simultaneous_ci95_pp": [
+        -1.6555507409515386,
+        -0.6855950923817945
+      ]
+    },
+    "wsr_step_75": {
+      "accuracy_pp": -1.1250000000000002,
+      "accuracy_ci95_pp": [
+        -1.567096305409917,
+        -0.6829036945900835
+      ],
+      "ce": 0.049181786206283905,
+      "ce_ci95": [
+        0.03849518602417204,
+        0.05986838638839577
+      ],
+      "accuracy_simultaneous_ci95_pp": [
+        -1.665327654598555,
+        -0.5846723454014453
+      ]
+    },
+    "weight_ward": {
+      "accuracy_pp": -0.00520833333333354,
+      "accuracy_ci95_pp": [
+        -0.33115638846554013,
+        0.32073972179887306
+      ],
+      "ce": 0.0007556499516167253,
+      "ce_ci95": [
+        -0.006773174408157756,
+        0.008284474311391206
+      ]
+    }
+  },
+  "intervals": "Episode-level paired t intervals, conditional on fixed characters and masks. Also report simultaneous 95% Bonferroni intervals over the three primary accuracy differences.",
+  "per_episode_columns": [
+    "accuracy",
+    "cross_entropy"
+  ],
+  "curves": [
+    "train_ce",
+    "train_recall_at_1",
+    "validation_ce",
+    "validation_recall_at_1"
+  ]
+}

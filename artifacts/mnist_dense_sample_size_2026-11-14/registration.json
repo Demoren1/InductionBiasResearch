@@ -1,0 +1,151 @@
+{
+  "created_utc": "2026-11-14T03:04:47.447712+00:00",
+  "dataset": "MNIST, official training split only",
+  "source_class_sets": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    [
+      0,
+      2,
+      4,
+      6,
+      8
+    ]
+  ],
+  "training_examples_per_class": [
+    5,
+    50,
+    500,
+    4000
+  ],
+  "H_examples_per_class": 500,
+  "inputs": 784,
+  "hidden": 16,
+  "outputs": 5,
+  "settings": [
+    {
+      "lr": 0.001,
+      "weight_decay": 0.0,
+      "restart": 0
+    },
+    {
+      "lr": 0.001,
+      "weight_decay": 0.0,
+      "restart": 1
+    },
+    {
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "restart": 0
+    },
+    {
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "restart": 1
+    },
+    {
+      "lr": 0.003,
+      "weight_decay": 0.0,
+      "restart": 0
+    },
+    {
+      "lr": 0.003,
+      "weight_decay": 0.0,
+      "restart": 1
+    },
+    {
+      "lr": 0.003,
+      "weight_decay": 0.0001,
+      "restart": 0
+    },
+    {
+      "lr": 0.003,
+      "weight_decay": 0.0001,
+      "restart": 1
+    },
+    {
+      "lr": 0.01,
+      "weight_decay": 0.0,
+      "restart": 0
+    },
+    {
+      "lr": 0.01,
+      "weight_decay": 0.0,
+      "restart": 1
+    },
+    {
+      "lr": 0.01,
+      "weight_decay": 0.0001,
+      "restart": 0
+    },
+    {
+      "lr": 0.01,
+      "weight_decay": 0.0001,
+      "restart": 1
+    }
+  ],
+  "steps": 2500,
+  "checkpoint_every": 25,
+  "snapshots": [
+    0,
+    25,
+    100,
+    500,
+    1000,
+    1500,
+    2000,
+    2250,
+    2500
+  ],
+  "initialization_seed": 753001,
+  "masks": [
+    "full",
+    "variable_pixels",
+    "variable_top50"
+  ],
+  "variable_pixel_H_std_threshold": 0.02,
+  "budgets": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "target_access": false,
+  "new_transfer_evaluation": false,
+  "code_sha256": {
+    "/home/udeneev-av/InductionBiasResearch/experiments/mnist_dense_sample_size_v1/README.md": "dfa7221a3169508f07033d8e0eb03f66a37b259a63d23d8dde4ccfec63b48143",
+    "/home/udeneev-av/InductionBiasResearch/experiments/mnist_dense_sample_size_v1/prepare.py": "df81d0a709b13ca72e36d6c58348244c2fa5d079425c00db7fd4c40f8faa8932",
+    "/home/udeneev-av/InductionBiasResearch/experiments/mnist_dense_sample_size_v1/__init__.py": "aa7c21c33cdaec225d7433b7a41f1f8484c3bbfefdb530b4c03dbc108137225b",
+    "/home/udeneev-av/InductionBiasResearch/experiments/mnist_dense_sample_size_v1/analyze.py": "5fd1f4498875087eebb5a5d865af5bb07f47ea02b381d6c50ca066a8da753c77",
+    "/home/udeneev-av/InductionBiasResearch/experiments/mnist_dense_sample_size_v1/fit.py": "5d2ed5cd42b5b9f4687fcceb411ea9a104cf83a000b513d15ff6fae6edc339ba",
+    "/home/udeneev-av/InductionBiasResearch/experiments/mnist_dense_sample_size_v1/PROTOCOL.md": "938c5c7fb20c473350332b1e4b7006fecf8f90ed7d9ddde3e0cd2503f056be20"
+  },
+  "external_code_sha256": {
+    "experiments/constructive_dense_recovery_v1/recovery.py": "a419ee429c704539347e985ce708dff29b3097e4911d09aae0adf17aa5c2e67f",
+    "experiments/omniglot_constructive_v1/run.py": "722aa42d31e8f637d9f5d0c76821e988e5d27f651b79aa379eb85be2c481322d",
+    "experiments/paper_structure_benchmark_v1/fitting/real_dense.py": "4c437fe7540ca00852ac22a9c68674780bdb24596e5f1a230171deb356b08b96"
+  },
+  "source_data_sha256": {
+    "public/H.npz": "e17262de8718187c621adbf6e43d88576496f9d3c3334bb45cbb06d0fec84fc6",
+    "public/support_4000.npz": "fdeed9b5f94510cdfd71c55859b66e43c0483898b207aa01f99fa1a27b510a47",
+    "public/support_5.npz": "66abfba69783af7b07c0233de6d385527ffc22152973cf36e884e1dd1f434fc0",
+    "public/support_50.npz": "12eb60dc135944b8b5ad7e708d6c17b785037318b369df7485f11a13e49461ce",
+    "public/support_500.npz": "491ac73f52bba3a95cb8e13955aa806ac31a4198550eafa3f63de863dc630660"
+  },
+  "raw_training_sha256": {
+    "train-images-idx3-ubyte": "ba891046e6505d7aadcbbe25680a0738ad16aec93bde7f9b65e87a2fc25776db",
+    "train-labels-idx1-ubyte": "65a50cbbf4e906d70832878ad85ccda5333a97f0f4c3dd2ef09a8a9eef7101c5"
+  }
+}

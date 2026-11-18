@@ -1,0 +1,139 @@
+{
+  "episodes": 768,
+  "new_mask_seeds": [
+    7611188601,
+    7611188602,
+    7611188603,
+    7611188604
+  ],
+  "methods": {
+    "four_partitions": {
+      "accuracy": 0.8424479166666666,
+      "accuracy_ci95_halfwidth": 0.0060129084932305215,
+      "mean_cross_entropy": 0.5031033974542023,
+      "codes": 4096
+    },
+    "wsr_step_75": {
+      "accuracy": 0.8472916666666667,
+      "accuracy_ci95_halfwidth": 0.006138974121433047,
+      "mean_cross_entropy": 0.4750457961455814,
+      "codes": 4096
+    },
+    "original_random": {
+      "accuracy": 0.84515625,
+      "accuracy_ci95_halfwidth": 0.006172776572638813,
+      "mean_cross_entropy": 0.4748093751671096,
+      "codes": 4096
+    },
+    "random_7611188601": {
+      "accuracy": 0.8494270833333334,
+      "accuracy_ci95_halfwidth": 0.006030481127431548,
+      "mean_cross_entropy": 0.4705528121888201,
+      "codes": 4096
+    },
+    "random_7611188602": {
+      "accuracy": 0.8478645833333333,
+      "accuracy_ci95_halfwidth": 0.006192308122427959,
+      "mean_cross_entropy": 0.4713187425577036,
+      "codes": 4096
+    },
+    "random_7611188603": {
+      "accuracy": 0.8491666666666667,
+      "accuracy_ci95_halfwidth": 0.006033365391996535,
+      "mean_cross_entropy": 0.47000515972005924,
+      "codes": 4096
+    },
+    "random_7611188604": {
+      "accuracy": 0.8467708333333333,
+      "accuracy_ci95_halfwidth": 0.006107791198731345,
+      "mean_cross_entropy": 0.4734641201495857,
+      "codes": 4096
+    },
+    "mean_new_masks": {
+      "accuracy": 0.8483072916666666,
+      "accuracy_ci95_halfwidth": 0.005785007514054047,
+      "mean_cross_entropy": 0.47133520865404216,
+      "codes": 4096
+    }
+  },
+  "new_mask_accuracy_range": [
+    0.8467708333333333,
+    0.8494270833333334
+  ],
+  "new_mask_accuracy_sd": 0.0012314156684935026,
+  "paired_differences": [
+    {
+      "method": "original_random",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.002708333333333334,
+      "ci95_halfwidth": 0.004186542706427488
+    },
+    {
+      "method": "original_random",
+      "reference": "wsr_step_75",
+      "accuracy_difference": -0.0021354166666666652,
+      "ci95_halfwidth": 0.0034646679125181906
+    },
+    {
+      "method": "random_7611188601",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.006979166666666667,
+      "ci95_halfwidth": 0.004118662643330648
+    },
+    {
+      "method": "random_7611188601",
+      "reference": "wsr_step_75",
+      "accuracy_difference": 0.002135416666666667,
+      "ci95_halfwidth": 0.0033227909373564697
+    },
+    {
+      "method": "random_7611188602",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.005416666666666666,
+      "ci95_halfwidth": 0.0040820264672855235
+    },
+    {
+      "method": "random_7611188602",
+      "reference": "wsr_step_75",
+      "accuracy_difference": 0.000572916666666667,
+      "ci95_halfwidth": 0.0032528001915675116
+    },
+    {
+      "method": "random_7611188603",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.00671875,
+      "ci95_halfwidth": 0.004180103304953444
+    },
+    {
+      "method": "random_7611188603",
+      "reference": "wsr_step_75",
+      "accuracy_difference": 0.0018750000000000006,
+      "ci95_halfwidth": 0.0033564860266379727
+    },
+    {
+      "method": "random_7611188604",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.004322916666666667,
+      "ci95_halfwidth": 0.0043091947789508575
+    },
+    {
+      "method": "random_7611188604",
+      "reference": "wsr_step_75",
+      "accuracy_difference": -0.0005208333333333322,
+      "ci95_halfwidth": 0.003327604931991615
+    },
+    {
+      "method": "mean_new_masks",
+      "reference": "four_partitions",
+      "accuracy_difference": 0.005859375,
+      "ci95_halfwidth": 0.003712007519214407
+    },
+    {
+      "method": "mean_new_masks",
+      "reference": "wsr_step_75",
+      "accuracy_difference": 0.001015625,
+      "ci95_halfwidth": 0.002711450519956111
+    }
+  ],
+  "intervals": "Paired over episodes, conditional on the fixed masks and held-out characters"
+}

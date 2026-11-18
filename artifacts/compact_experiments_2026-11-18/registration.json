@@ -1,0 +1,56 @@
+{
+  "datasets": [
+    "synthetic case 04",
+    "Omniglot",
+    "UCI HAR"
+  ],
+  "methods": [
+    "dense",
+    "g34",
+    "asrr",
+    "lutq",
+    "yeh_map",
+    "yeh_soft",
+    "msr",
+    "wsr"
+  ],
+  "budgets": {
+    "synthetic": 4,
+    "omniglot10": 1024,
+    "har3": 128
+  },
+  "omniglot_source_tasks": [
+    60,
+    107,
+    72,
+    108,
+    12,
+    22,
+    121,
+    10,
+    75,
+    116,
+    105,
+    74,
+    109,
+    104,
+    97,
+    27
+  ],
+  "omniglot_source_sha256": {
+    "support": "bce8138c7dd37c581098025de057fa0217bccd607d1645d29b9599393ab9bc0d",
+    "numerical": "4043645bf4d787f4357f0a68b2db53f451f8b4d21dea4d615dcae5eb70d12e84",
+    "structure": "45b08b000c88122c1609ffe204ce3098c42e6b28145168895ef9b6864fa31ac6"
+  },
+  "omniglot_native_steps": {
+    "lutq": 2500,
+    "yeh": 400,
+    "msr": 2000
+  },
+  "omniglot_native_selection": "At most eight H-ranked candidates, selected on development",
+  "omniglot_target_episodes": "Same 1024 paired episodes as initial WSR comparison",
+  "har_target_episodes": "Two fresh cohorts of 90, paired by subject",
+  "synthetic_cases": [
+    4
+  ]
+}

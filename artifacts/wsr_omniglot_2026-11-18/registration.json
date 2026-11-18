@@ -1,0 +1,65 @@
+{
+  "source_tasks": [
+    60,
+    107,
+    72,
+    108,
+    12,
+    22,
+    121,
+    10,
+    75,
+    116,
+    105,
+    74,
+    109,
+    104,
+    97,
+    27
+  ],
+  "parent_registration_sha256": "461fb19e971627cc528de446521ec8bc377e1aa2f23c17a85bbf14dc3aa0c31b",
+  "source_panel_sha256": {
+    "anchors": "9e8da02331b360b01133eadd2955d7911e755a44db20eae48715f88ddc27ad0d",
+    "numerical": "4043645bf4d787f4357f0a68b2db53f451f8b4d21dea4d615dcae5eb70d12e84",
+    "support": "bce8138c7dd37c581098025de057fa0217bccd607d1645d29b9599393ab9bc0d"
+  },
+  "initialization": "Own source task's retained Dense fit",
+  "source_training": {
+    "codes": 1024,
+    "steps": 500,
+    "checkpoint_every": 25,
+    "adam_lr": 0.003,
+    "rewinding": 0.98,
+    "first_layer_penalty": "Scalar WSR, full support",
+    "strength_selection": "Match code count at each update"
+  },
+  "asrr": {
+    "name": "asrr_input_m1024",
+    "family": "asrr",
+    "codes": 1024,
+    "key": "wide24_500_top4",
+    "rule": {
+      "variant": "wide24_500",
+      "ensemble": 4,
+      "numeric_starts": 24,
+      "steps": 500
+    },
+    "metrics": {
+      "accuracy": 0.8608333333333335,
+      "ce": 0.4340066909790039
+    },
+    "fit_metadata_sha256": "a68662d27a2c08734b420fdafbce96ff1ae6352adc14de9a4afe2240cdc8054f",
+    "model_sha256": "6b53b1a78e0c6b2737f2b6909408eef22a8ce3349316a028c4a95b56e1365b82"
+  },
+  "development": {
+    "count": 96,
+    "seed": 7611186200
+  },
+  "targets": {
+    "count": 512,
+    "seeds": [
+      7611186300,
+      7611186301
+    ]
+  }
+}

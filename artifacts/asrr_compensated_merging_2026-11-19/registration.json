@@ -1,0 +1,69 @@
+{
+  "dataset": "Omniglot",
+  "inputs": 784,
+  "hidden": 64,
+  "codes": 4096,
+  "choices_sha256": "4983c3aebe8dd2107a55eaaaf0d630df0e341399a8e26239af326a0a2c8c2532",
+  "source_sha256": "6bea7ceb9fa6ddf5d4f4034babf45cc0cce37a16c5677e0b681711e57d96be8c",
+  "source_tasks": [
+    60,
+    107,
+    72,
+    108,
+    12,
+    22,
+    121,
+    10,
+    75,
+    116,
+    105,
+    74,
+    109,
+    104,
+    97,
+    27
+  ],
+  "source_images_per_task": 50,
+  "metric": "half task covariance + half pooled within-task covariance + ridge",
+  "ridge_fraction": 0.05,
+  "ridge": 0.0016511789856383727,
+  "source_importance": "norm of the centered head after absorbing input weight scale",
+  "options": {
+    "identity_exchange": [
+      "identity",
+      true,
+      false
+    ],
+    "covariance_equal": [
+      "covariance",
+      false,
+      false
+    ],
+    "covariance_exchange": [
+      "covariance",
+      true,
+      false
+    ],
+    "covariance_rematch": [
+      "covariance",
+      true,
+      true
+    ]
+  },
+  "maximum_moves": 32,
+  "panel_seeds": [
+    7611193750,
+    7611193751,
+    7611193752,
+    7611193753,
+    7611193754,
+    7611193755,
+    7611193756,
+    7611193757
+  ],
+  "episodes_per_panel": 128,
+  "fit_seed_base": 7611193950,
+  "primary": "covariance_rematch minus four_partitions",
+  "synthetic_results_sha256": "b1860e7ebab0917e0a760a2a694c2b14b9243eee804259fdff2aa942ab2a4131",
+  "implementation_sha256": "ae9118318413919fa5d5a307a3ebf539035304c4533a35217c13f4300e498af2"
+}

@@ -1,0 +1,123 @@
+{
+  "policies": {
+    "mnist16": {
+      "independent": {
+        "origin": "independent",
+        "name": "input_m2048",
+        "codes": 2048,
+        "setting": "mnist16",
+        "cohort": "development",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "accuracy": 0.94984375,
+        "ce": 0.1386008858680725,
+        "model": "independent__input_m2048"
+      },
+      "warm": {
+        "origin": "anchor_06",
+        "name": "input_m2048",
+        "codes": 2048,
+        "setting": "mnist16",
+        "cohort": "development",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "accuracy": 0.95265625,
+        "ce": 0.12786078453063965,
+        "model": "anchor_06__input_m2048"
+      },
+      "single_anchor": {
+        "origin": "anchor_00",
+        "name": "input_m2048",
+        "codes": 2048,
+        "setting": "mnist16",
+        "cohort": "development",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "accuracy": 0.94875,
+        "ce": 0.13619418442249298,
+        "model": "anchor_00__input_m2048"
+      }
+    },
+    "mnist100": {
+      "independent": {
+        "origin": "independent",
+        "name": "global_m8192",
+        "codes": 8192,
+        "setting": "mnist100",
+        "cohort": "development",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "accuracy": 0.96828125,
+        "ce": 0.09979865700006485,
+        "model": "independent__global_m8192"
+      },
+      "warm": {
+        "origin": "anchor_05",
+        "name": "global_m8192",
+        "codes": 8192,
+        "setting": "mnist100",
+        "cohort": "development",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "accuracy": 0.96953125,
+        "ce": 0.09732901304960251,
+        "model": "anchor_05__global_m8192"
+      },
+      "single_anchor": {
+        "origin": "anchor_00",
+        "name": "global_m8192",
+        "codes": 8192,
+        "setting": "mnist100",
+        "cohort": "development",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "accuracy": 0.96796875,
+        "ce": 0.09805145114660263,
+        "model": "anchor_00__global_m8192"
+      }
+    }
+  },
+  "single_anchor": "anchor_00",
+  "indexators_sha256": "f8543f06620864da03a2d31eb1c2b2c340d4a85d31efb8e923b32cd5bd9e169e",
+  "development_jobs_sha256": "3661edd1693a3364fe65bb7d8c760df15d82b3b0f9dc51d55447b9507ebb0581",
+  "selection": "Development accuracy, CE, anchor number"
+}

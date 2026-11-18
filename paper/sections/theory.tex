@@ -1,364 +1,352 @@
 \section{Theoretical analysis}
 \label{sec:theory}
 
-Each source predictor can admit different numerical representations.
-We first characterize
-the information about sharing that survives positive neuron rescaling.
-We then give conditions for recovering the groups, describe the
-remaining ambiguities and relate candidate selection to transfer.
-All proofs and additional results are in
-Appendix~\ref{app:theory-proofs}.
+We study when source observations determine their shared groups.
+Section~\ref{sec:theory-observations} separates the information in
+magnitudes and signs that is preserved by neuron rescaling.
+Section~\ref{sec:theory-recovery} gives an exact identification
+criterion and shows when a single source task suffices for recovery.
+Section~\ref{sec:theory-graph} gives a graph condition for uniqueness
+and explains the role of a neuron containing three or more codes.
+Section~\ref{sec:theory-complementarity} shows how partial information
+from individually ambiguous tasks can determine the groups jointly.
+Proofs and constructive recovery rules are in
+Appendix~\ref{app:theory-proofs}; stability and selection on new tasks
+are treated in Appendix~\ref{app:theory-additional}.
 
-\subsection{Sharing information after removing neuron scales}
+\subsection{Information preserved by neuron rescaling}
 \label{sec:theory-observations}
 
-Consider the ReLU layer of Section~\ref{sec:method-relu-instance}.
-Throughout the structural analysis, fix a common set of active
-positions $\mathcal E\subseteq\{1,\ldots,D\}\times\{1,\ldots,H\}$
-and a correct correspondence of hidden neurons across tasks.
-Write $E:=|\mathcal E|$, enumerate these positions by $p=1,\ldots,E$,
-and let $h(p)$ denote the neuron containing position $p$.
-Every one of the $H$ neurons is assumed to contain an active position.
+Consider the ReLU layer of Section~\ref{sec:method-relu-instance},
+with the source neurons already correctly aligned across tasks.
+Fix the active connections
+$\mathcal E\subseteq\{1,\ldots,D\}\times\{1,\ldots,H\}$.
+Without loss of generality for this structural analysis, retain
+only neurons with at least one active incoming connection, relabel
+them, and let $H$ denote their number. Write $E:=|\mathcal E|$, enumerate the active
+weight indices by $p=1,\ldots,E$, and let $h(p)$ be the receiving neuron.
 
-To include the paired codebook used in the experiments, let $m$ count
-the used independent code values, with every group nonempty.
-Describe an indexator $\mathbf I$ on $\mathcal E$ by a group assignment
-$j_{\mathbf I}(p)\in\{1,\ldots,m\}$ and a fixed sign
-$\sigma_{\mathbf I,p}\in\{-1,1\}$.
-Ordinary equality sharing is the case
-$\sigma_{\mathbf I,p}=1$.
-Enumerate the $T$ source tasks by $\tau=1,\ldots,T$.
-For each task, let
-$\mathbf c_\tau\in(\mathbb R\setminus\{0\})^m$ be its code values
-and let $\mathbf s_\tau\in(0,\infty)^H$ be its neuron scales.
-Let $\mathbf r_\tau=(r_{\tau,p})_{p=1}^E$ collect the active entries
-of the aligned source directions.
-In the exact model, these entries satisfy
+For each of the $T\ge1$ source tasks, write
+$\mathbf w_\tau\in(\mathbb R\setminus\{0\})^E$ for the observed
+weights at these active indices after alignment. These are the
+active first-layer entries of the fitted source weights
+$\widetilde{\mathbf w}_\tau$ from Section~\ref{sec:method-source}.
+
+Let $\mathbf I$ denote the fixed but unknown true indexator.
+It assigns each active index $p$ to one of $m$ nonempty groups,
+denoted $j_{\mathbf I}(p)$, with fixed sign
+$\sigma_{\mathbf I,p}\in\{-1,1\}$. Our observation model assumes
+that on each task there exist code values
+$\mathbf c_\tau\in(\mathbb R\setminus\{0\})^m$ and positive
+neuron scales $\mathbf s_\tau\in(0,\infty)^H$ such that
 \begin{equation}
-    r_{\tau,p}
+    w_{\tau,p}
     =\frac{\sigma_{\mathbf I,p}c_{\tau,j_{\mathbf I}(p)}}
-           {s_{\tau,h(p)}},
-    \qquad p\in\{1,\ldots,E\}.
+           {s_{\tau,h(p)}}.
     \label{eq:theory-observation}
 \end{equation}
-Positive scales express the ReLU symmetry described in
-Section~\ref{sec:method-relu-instance}
-\cite{stock2022embedding}. The assumptions here concern an exact
-representation of the source solutions; errors in these directions
-are considered in Appendix~\ref{app:theory-noise}.
+Groups and fixed signs are shared across tasks; code values and
+scales vary with the task. Without a restriction on $m$, any such
+source weights admit this representation: take one code per active
+index ($m=E$), all assignment signs and neuron scales equal to $1$,
+and $c_{\tau,p}=w_{\tau,p}$. The structural assumption is that a
+common grouping explains all tasks within a prescribed code budget.
+Positive scales are the ReLU symmetry
+used in Section~\ref{sec:method-relu-instance}~\cite{stock2022embedding}.
+Normalizing an aligned source column changes only its neuron scale
+in this observation model.
 
-Define the group-membership matrix
-$\mathbf U_{\mathbf I}\in\{0,1\}^{E\times m}$ and the
-neuron-membership matrix $\mathbf N\in\{0,1\}^{E\times H}$ by
+For $\mathbf x\in\mathbb R^E$, define the centering operator
+$\boldsymbol\Pi:\mathbb R^E\to\mathbb R^E$ by
+\begin{equation*}
+    (\boldsymbol\Pi\mathbf x)_p
+        :=x_p-
+        \frac{1}{\bigl|\{q:\,h(q)=h(p)\}\bigr|}
+        \sum_{q:\,h(q)=h(p)}x_q,
+    \qquad p=1,\ldots,E,
+\end{equation*}
+where $q$ ranges over active weight indices.
+Applied to log magnitudes, it removes the unknown neuron scales.
+The centered observations are
 \begin{equation}
-    (\mathbf U_{\mathbf I})_{pj}
-        :=\mathbf1\{j_{\mathbf I}(p)=j\},
-    \qquad
-    N_{ph}:=\mathbf1\{h(p)=h\}.
-    \label{eq:theory-membership}
-\end{equation}
-Let $\boldsymbol\ell_\tau:=\log|\mathbf r_\tau|$,
-$\mathbf q_\tau:=\log|\mathbf c_\tau|$ and
-$\boldsymbol\alpha_\tau:=\log\mathbf s_\tau$,
-with logarithms and absolute values applied coordinatewise.
-Equation~\eqref{eq:theory-observation} gives
-$\boldsymbol\ell_\tau=\mathbf U_{\mathbf I}\mathbf q_\tau
--\mathbf N\boldsymbol\alpha_\tau$.
-The matrix
-\begin{equation}
-    \boldsymbol\Pi
-    :=\mathbf{Id}_E-\mathbf N
-        (\mathbf N^{\mathsf T}\mathbf N)^{-1}\mathbf N^{\mathsf T}
-    \label{eq:theory-centering}
-\end{equation}
-subtracts the mean within each neuron.
-Define the centered membership matrix
-$\mathbf M_{\mathbf I}:=\boldsymbol\Pi\mathbf U_{\mathbf I}$
-and the centered observations
-$\mathbf y_\tau:=\boldsymbol\Pi\boldsymbol\ell_\tau$.
-Since $\boldsymbol\Pi\mathbf N=\mathbf0$, they satisfy
-\begin{equation}
-    \mathbf y_\tau=\mathbf M_{\mathbf I}\mathbf q_\tau.
+    \mathbf y_\tau:=\boldsymbol\Pi\log|\mathbf w_\tau|
+        \in\mathbb R^E.
     \label{eq:theory-contrasts}
 \end{equation}
+The logarithms and absolute values act coordinatewise.
 
-\begin{definition}[Contrast space]
-    The contrast space of $\mathbf I$ is
-    $\mathcal S_{\mathbf I}:=\operatorname{range}(\mathbf M_{\mathbf I})$.
-    It contains all centered log-magnitude observations obtainable by
-    varying the nonzero code values and positive neuron scales.
-\end{definition}
+Let $\mathbf u\in\mathbb R^m$ contain one log magnitude per code.
+Repeating each entry at the active indices of its group gives a
+vector $\mathbf x\in\mathbb R^E$. The \emph{contrast space} is
+\begin{equation}
+    \mathcal S_{\mathbf I}
+    :=\left\{\boldsymbol\Pi\mathbf x:
+        \mathbf x=(u_{j_{\mathbf I}(p)})_{p=1}^E,\quad
+        \mathbf u\in\mathbb R^m\right\}
+       \subseteq\mathbb R^E.
+    \label{eq:theory-contrast-space}
+\end{equation}
+This space contains all possible centered log magnitudes for the
+fixed grouping $\mathbf I$. Each observed $\mathbf y_\tau$ belongs
+to it, with
+$u_j=\log|c_{\tau,j}|$.
 
-Thus the contrast space records the observable variation of weight
-magnitudes after neuron scales have been removed.
-To describe its dimension, define the \emph{calibration graph}
-$G_{\mathbf I}$: its vertices are the $m$ codes and $H$ neurons,
-and each active position $p$ is an edge joining
-$j_{\mathbf I}(p)$ to $h(p)$. Repeated occurrences of a code in
-one neuron give parallel edges. Let $g_{\mathbf I}$ be the number
-of connected components of this graph.
+Signs carry additional information. For each index $p$, define
+its normalized sign profile across tasks by
+\begin{equation}
+    \overline b_{\tau,p}:=\operatorname{sign}(w_{\tau,p}w_{1,p}),
+    \qquad
+    \overline{\mathbf b}_p
+      :=(\overline b_{\tau,p})_{\tau=1}^T\in\{-1,1\}^T.
+    \label{eq:theory-sign-profile}
+\end{equation}
+Multiplication by the first sign cancels the fixed assignment sign.
+Thus indices in the same group have the same normalized profile.
 
-\begin{proposition}[Observable dimension and scale freedom]
-    \label{prop:theory-dimension}
-    Under \eqref{eq:theory-observation},
-    \begin{equation}
-        \dim\mathcal S_{\mathbf I}=m-g_{\mathbf I},
-        \qquad
-        \operatorname{rank}[\mathbf U_{\mathbf I},-\mathbf N]
-            =m+H-g_{\mathbf I}.
-        \label{eq:theory-dimension}
-    \end{equation}
-    Each component permits one common positive rescaling of its
-    code values and neuron scales. Fixing one neuron scale in each
-    component removes this freedom in an exact calibration.
-\end{proposition}
-
-This explains the component-wise normalization in
-Appendix~\ref{app:relu-normalization}.
-The graph has $E-m-H+g_{\mathbf I}$ independent cycles.
-They supply the consistency relations between observed magnitudes:
-products along alternating sides of a cycle agree. These are the
-classical rank-one cycle relations, which become linear after taking
-logarithms \cite[Theorem~34 and Remark~35]{kiraly2015algebraic}.
-On a forest, any positive edge magnitudes admit such a factorization.
-Repeated tasks then provide additional magnitude constraints when the
-shared grouping creates cycles.
-
-\subsection{When the sharing groups can be recovered}
+\subsection{Exact and generic identification}
 \label{sec:theory-recovery}
 
-The next question is whether the contrast space determines the group
-assignment itself. Suppose this space is known, and write
-$r:=\dim\mathcal S_{\mathbf I}$.
-Choose an orthonormal basis
-$\mathbf Q\in\mathbb R^{E\times r}$ for it.
-For two positions $p,q$ in the same neuron, let
-$\mathbf e_p,\mathbf e_q\in\mathbb R^E$ be their standard basis
-vectors and define the ordered-pair signature
-\begin{equation}
-    \boldsymbol\delta_{pq}
-        :=(\mathbf e_p-\mathbf e_q)^{\mathsf T}\mathbf Q,
-    \qquad h(p)=h(q).
-    \label{eq:theory-signature}
-\end{equation}
-A zero signature identifies equal codes within a neuron.
-Equal nonzero signatures for pairs $(p,q)$ and $(u,v)$ identify the
-same ordered pair of codes: the first positions have one common code,
-and the second positions have another.
-The resulting recovery rule merges these positions and takes the
-transitive closure of the merges.
+Let $\mathcal C$ be a finite family of partitions of the fixed active
+weight indices, containing the true grouping defined by $\mathbf I$.
+Each partition is a
+\emph{candidate grouping}: it specifies which indices share a code.
+For a candidate $\mathbf J\in\mathcal C$, let $j_{\mathbf J}(p)$
+denote the group containing index $p$, and let
+$\mathcal S_{\mathbf J}$ be the contrast space
+\eqref{eq:theory-contrast-space} formed using its groups.
 
-For each code $j$, define a graph $W_{\mathbf I}(j)$ whose vertices
-are the neurons containing $j$. Two vertices are adjacent when the
-neurons share another code distinct from $j$.
-A one-vertex graph is considered connected.
-These graphs describe whether repeated pairs link all occurrences
-of a code.
+\begin{definition}[Compatibility with source weights]
+    \label{def:theory-compatible-grouping}
+    Given the aligned source weight vectors
+    $\mathbf w_1,\ldots,\mathbf w_T$,
+    a candidate grouping $\mathbf J$ is \emph{compatible} with these
+    weights if every observed entry can be reproduced by choosing
+    its own assignment signs $\sigma_p\in\{-1,1\}$ for the active indices
+    and, on each task $\tau$, one nonzero real code value $c_{\tau,j}$
+    for each group $j$ and one positive scale $s_{\tau,h}$ for each
+    neuron $h$, so that
+    \begin{equation*}
+        w_{\tau,p}
+            =\frac{\sigma_p c_{\tau,j_{\mathbf J}(p)}}{s_{\tau,h(p)}},
+        \qquad \tau=1,\ldots,T,\quad p=1,\ldots,E.
+    \end{equation*}
+    The observed weights and the candidate grouping are held fixed
+    in this check. The assignment signs are chosen once for all tasks;
+    code values and neuron scales may be chosen separately on each task.
+\end{definition}
 
-\begin{theorem}[Recovery from repeated code pairs]
-    \label{thm:theory-pair-recovery}
-    If every $W_{\mathbf I}(j)$ is connected, the signature rule
-    recovers all groups of $\mathbf I$.
-    Consequently, any grouping $\mathbf J$ on the same active
-    positions and fixed neurons, with $m$ used codes and
-    $\mathcal S_{\mathbf J}=\mathcal S_{\mathbf I}$, has the same
-    groups up to renaming.
+For example, two indices in the same group that enter the same neuron
+must have equal weight magnitudes on every task.
+
+\begin{theorem}[Identification from finite observations]
+    \label{thm:theory-finite-identification}
+    A grouping $\mathbf J\in\mathcal C$ is compatible if and only if
+    \begin{equation}
+        \begin{aligned}
+            \mathbf y_\tau&\in\mathcal S_{\mathbf J}
+                &&\text{for every task }\tau,\\
+            \overline{\mathbf b}_p&=\overline{\mathbf b}_q
+                &&\text{whenever }j_{\mathbf J}(p)=j_{\mathbf J}(q).
+        \end{aligned}
+        \label{eq:theory-compatibility}
+    \end{equation}
+    Thus the groups are uniquely determined within $\mathcal C$
+    if and only if exactly one grouping satisfies both conditions.
+
 \end{theorem}
 
-For example, the condition holds if one neuron contains every code
-and each other neuron contains at least two distinct codes.
-If some $W_{\mathbf I}(j)$ is disconnected, the same rule recovers
-correct partial groups, with one part for each component of that graph.
-Longer cycles can determine how such parts join;
-Appendix~\ref{app:theory-long-cycles} gives an alternative
-uniqueness condition using all cycles.
+The first condition in~\eqref{eq:theory-compatibility} means that
+all observed magnitudes can be reproduced using one magnitude per
+group and one positive scale per neuron on each task. The second
+requires the relative sign of any two weights in a group to remain
+fixed across tasks.
 
-To relate this result to multiple source tasks, let
-$\mathbf Z:=[\mathbf y_1,\ldots,\mathbf y_T]\in\mathbb R^{E\times T}$
-collect their centered observations.
-
-\begin{corollary}[Identification from a sufficiently diverse source set]
-    \label{cor:theory-task-diversity}
-    Let $\mathcal C$ be a finite set of candidate groupings on the
-    fixed active positions and neurons, containing $\mathbf I$.
-    Suppose each candidate uses $m$ codes and has contrast dimension
-    $r$, every $W_{\mathbf I}(j)$ is connected, and
-    $\operatorname{rank}\mathbf Z=r$.
-    Every candidate in $\mathcal C$ that explains all observed
-    magnitudes has the same groups as $\mathbf I$, up to renaming.
+\begin{corollary}[Compatibility for generic code magnitudes]
+    \label{cor:theory-generic-identification}
+    Fix a representation~\eqref{eq:theory-observation} with true
+    indexator $\mathbf I$. Vary only the log code magnitudes on
+    one source task. For almost every choice, a candidate grouping
+    $\mathbf J\in\mathcal C$ is compatible with the resulting weights
+    if and only if
+    \begin{equation*}
+        \begin{aligned}
+            \mathcal S_{\mathbf I}&\subseteq\mathcal S_{\mathbf J},\\
+            \overline{\mathbf b}_p&=\overline{\mathbf b}_q
+                \qquad\text{whenever }j_{\mathbf J}(p)=j_{\mathbf J}(q).
+        \end{aligned}
+    \end{equation*}
 \end{corollary}
 
-The rank condition means that the source tasks reveal every direction
-of variation in the true contrast space. It is sufficient for learning
-the entire space; a finite set of different candidate spaces can also
-be separated by fewer observations.
-Under perturbations, recovery additionally depends on the error in
-the estimated space. Appendix~\ref{app:theory-noise} gives an explicit
-error threshold and its dependence on small weights and task diversity.
+Candidates can be checked from the observed weights using
+\eqref{eq:theory-compatibility}, without knowing the true indexator
+$\mathbf I$. Corollary~\ref{cor:theory-generic-identification}
+shows that one task with generic code magnitudes rules out
+candidates that fit only through accidental relations between
+code magnitudes. Any remaining candidate can reproduce every
+magnitude pattern generated by the true grouping.
+If structural conditions exclude these alternatives within
+$\mathcal C$, one source task suffices for recovery without
+first estimating $\mathcal S_{\mathbf I}$.
 
-\subsection{Remaining ambiguities and the information in signs}
-\label{sec:theory-ambiguity}
+For a grouping $\mathbf I$, define its bipartite
+\emph{calibration graph} $G_{\mathbf I}$ as follows.
+One part has a vertex for each code group $j=1,\ldots,m$;
+the other has a vertex for each neuron $h=1,\ldots,H$.
+Each active weight index $p$ gives an edge joining its code vertex
+$j_{\mathbf I}(p)$ to its neuron vertex $h(p)$.
+Distinct weight indices give separate edges even when their endpoints
+coincide.
 
-The repeated-pair condition is sufficient for uniqueness.
-For a general calibration graph, the remaining candidates can be
-characterized by its cycle constraints.
-Orient every edge of $G_{\mathbf I}$ from its code to its neuron,
-choose a spanning forest, and consider the cycle formed by each
-edge outside that forest.
-Let $b_{\mathbf I}:=E-m-H+g_{\mathbf I}$.
-Define the cycle matrix
-$\mathbf R_{\mathbf I}\in\{-1,0,1\}^{b_{\mathbf I}\times E}$
-by giving each cycle one row: its edge coefficient is $+1$ or $-1$
-according to agreement with the traversal direction, and zero
-outside the cycle. These coefficients specify edge orientation;
-the weight signs remain the separate quantities
-$\sigma_{\mathbf I,p}$.
+The magnitude condition in Theorem~\ref{thm:theory-finite-identification}
+can be checked by cycles in $G_{\mathbf J}$.
+Products of magnitudes along alternating sides of every cycle must
+agree. These rank-one cycle relations become linear
+after taking logarithms~\cite[Theorem~34 and Remark~35]{kiraly2015algebraic}.
+Appendix~\ref{app:theory-cycles} gives the matrix criterion.
 
-For another grouping $\mathbf J$, let $m_{\mathbf J}$ be its number
-of used codes and $g_{\mathbf J}$ the number of components of
-$G_{\mathbf J}$. Its membership matrix
-$\mathbf U_{\mathbf J}$ is defined as in
-\eqref{eq:theory-membership}.
+If $G_{\mathbf I}$ is connected, then
+$\dim\mathcal S_{\mathbf I}=m-1$.
+For any candidate $\mathbf J$ using at most $m$ codes,
+$\dim\mathcal S_{\mathbf J}\le m-1$
+(Appendix~\ref{app:theory-dimension}). This gives the following consequence.
 
-\begin{theorem}[Exact criterion for magnitude equivalence]
-    \label{thm:theory-cycle-equivalence}
-    On the fixed active positions and neurons,
-    \begin{equation}
-        \mathcal S_{\mathbf J}=\mathcal S_{\mathbf I}
-        \quad\Longleftrightarrow\quad
-        \left\{
-        \begin{aligned}
-            \mathbf R_{\mathbf I}\mathbf U_{\mathbf J}&=\mathbf0,\\
-            m_{\mathbf J}-g_{\mathbf J}&=m-g_{\mathbf I}.
-        \end{aligned}
-        \right.
-        \label{eq:theory-cycle-equivalence}
-    \end{equation}
+\begin{corollary}[One generic task]
+    \label{cor:theory-one-task}
+    Suppose $G_{\mathbf I}$ is connected, every candidate uses
+    at most $m$ codes, and $\mathcal S_{\mathbf I}$ determines a
+    unique grouping among candidates using $m$ codes.
+    Almost every choice of log code magnitudes on one source task
+    identifies the groups.
+\end{corollary}
+
+Thus recovering a grouping can require fewer tasks than learning
+its entire contrast space.
+
+Signs can identify the groups even when magnitudes are ambiguous.
+If the $m$ true groups have distinct normalized sign profiles and
+candidates use at most $m$ codes, the profile classes are exactly
+the groups. Once a group is known, the relative fixed signs of
+two of its indices $p,q$ are given by
+$\operatorname{sign}(w_{1,p}w_{1,q})$.
+Appendix~\ref{app:theory-sign-details} quantifies sign diversity and errors.
+
+\subsection{A structural condition for uniqueness}
+\label{sec:theory-graph}
+
+We now give a condition under which magnitudes determine the groups.
+Define the simple \emph{code co-occurrence graph} $K_{\mathbf I}$:
+its vertices are the $m$ codes, and two codes are adjacent when
+they occur together in a neuron. A graph is 3-vertex-connected
+if it has at least four vertices and stays connected after deletion
+of any two or fewer vertices.
+
+\begin{theorem}[Uniqueness from code co-occurrence]
+    \label{thm:theory-cooccurrence}
+    Suppose every neuron contains at least two distinct codes and
+    $K_{\mathbf I}$ is 3-vertex-connected.
+    The contrast space $\mathcal S_{\mathbf I}$ uniquely determines
+    the groups among groupings with $m$ used codes if and only if
+    at least one neuron contains three or more distinct codes.
 \end{theorem}
 
-The first condition requires each new group to occur equally often
-on the positive and negative sides of every fundamental cycle.
-The second preserves the dimension of observable variation.
-Together they describe all partitions with the same contrast space.
-Their enumeration can be exponential in the number of positions.
-Appendix~\ref{app:theory-counterexample} gives distinct groupings with
-the same number of codes and the same contrast space.
+The proof uses Whitney's theorem for the graph of codes
+\cite{fomin2020whitney}, together with the orientation information
+in the real contrast space. A neuron containing three codes fixes
+the remaining common orientation.
 
-Signs provide complementary information because positive neuron
-rescaling preserves them. For each code $j$, define its sign profile
-$\boldsymbol\epsilon_j:=(\operatorname{sign}c_{1j},\ldots,
-\operatorname{sign}c_{Tj})\in\{-1,1\}^T$.
-The observed profile of position $p$ is
-$\mathbf b_p:=(\operatorname{sign}r_{1p},\ldots,
-\operatorname{sign}r_{Tp})$.
-Equation~\eqref{eq:theory-observation} gives
-$\mathbf b_p=\sigma_{\mathbf I,p}
-\boldsymbol\epsilon_{j_{\mathbf I}(p)}$.
+The necessity has an explicit explanation. If every neuron uses
+exactly two codes, swapping their local groups and replacing code
+magnitudes by their reciprocals preserves all within-neuron ratios.
+For positive codes $a,b$, the ratio after this change is
+$(1/b)/(1/a)=a/b$. In a connected structure with at least three
+codes, this gives a different grouping with the same contrast space.
+The ambiguity survives any number of positive-code tasks.
 
-\begin{proposition}[Recovery by sign profiles]
-    \label{prop:theory-signs}
-    If the code profiles are pairwise distinct up to a common sign,
-    grouping the observed profiles up to sign recovers the groups.
-    Comparisons with one representative per group also recover the
-    relative signs of its positions.
-    Among representations with $m$ used codes, the signed indexator
-    is determined up to code renaming and a sign change of each code
-    together with its assignments.
+For a small identifiable example, take four neurons whose code
+sets are
+$$
+    \{1,2,3\},\qquad\{1,4\},\qquad
+    \{2,4\},\qquad\{3,4\}.
+$$
+Their co-occurrence graph is the complete graph on four codes,
+so Theorem~\ref{thm:theory-cooccurrence} applies. No pair of codes
+appears in two neurons, and the calibration graph has vertices
+of degree two. Nevertheless, its longer cycles determine all groups.
+The constructive rule based on repeated pairs is given separately
+in Appendix~\ref{app:theory-pairs}; it can recover partial groups
+before these longer-cycle constraints are considered.
+
+Theorem~\ref{thm:theory-cooccurrence} gives a sharp condition within
+its graph class. For general graphs, Theorem~\ref{thm:theory-finite-identification}
+remains the exact criterion. Further ambiguities and the complete
+connected cases with two or three codes are in
+Appendix~\ref{app:theory-obstructions}.
+
+\subsection{Complementary information across tasks}
+\label{sec:theory-complementarity}
+
+The one-task result assumes an informative weight representation.
+A task may instead reveal only some connections, or leave several
+groupings consistent with its function on the available inputs.
+In that case, retain the group relations implied by its observations:
+which pairs of indices must share a code and which must use different
+codes. Unobserved relations remain unspecified.
+The indices are assumed to have a correct correspondence across tasks.
+
+Collect these relations from all tasks. Join indices whose groups
+must be equal and contract each connected component into one block.
+Define the \emph{conflict graph} $F$ on these blocks: an edge means
+that a reported difference forbids merging the two blocks.
+This is a constrained partitioning problem~\cite{davidson2007complexity}.
+
+\begin{proposition}[Completing partial sharing information]
+    \label{prop:theory-partial-completion}
+    Suppose every reported relation is correct.
+    The groupings using at most $m$ codes and satisfying these
+    relations correspond exactly to the proper colourings of $F$
+    with at most $m$ colours, up to renaming.
+    Thus the relations determine the groups exactly when this
+    colouring is unique. For $m=2$ and at least two blocks,
+    uniqueness is equivalent to connectedness of $F$.
 \end{proposition}
 
-This result applies independently of graph connectivity and magnitude
-calibration. Its usefulness depends on sign variation across tasks;
-codes that keep the same sign can have identical profiles.
-Finite-task collision bounds and a noisy version are given in
-Appendix~\ref{app:theory-sign-details}.
+For a functional example, consider
+$f_\tau(\mathbf x)=\operatorname{ReLU}
+    (\mathbf w_\tau^{\mathsf T}\mathbf x)$
+on four input coordinates, with at most two positive weight codes.
+Let $\mathbf e_p$ denote the $p$th coordinate vector.
+Task $\tau\in\{1,2,3\}$ has input support
+$\{\mathbf e_\tau,\mathbf e_{\tau+1}\}$, and its function is known
+there with values
+$$
+    f_\tau(\mathbf e_\tau)=1,\qquad
+    f_\tau(\mathbf e_{\tau+1})=2.
+$$
+Each task establishes only that two neighbouring indices use
+different codes. Together they form a path, whose unique
+two-colour partition gives the groups $\{1,3\}$ and $\{2,4\}$.
+No individual task identifies these groups. Without the middle
+task, the correspondence between the groups on the two remaining
+edges is ambiguous. The numerical code values are fitted separately
+for each task.
 
-These results characterize aligned weight representations.
-Connecting them to the predictor classes of
-Section~\ref{sec:problem-formulation} requires the corresponding
-network identifiability assumptions \cite{stock2022embedding}.
-The example in Appendix~\ref{app:theory-counterexample} shows
-explicitly how magnitude-equivalent groupings can define different
-signed ReLU function classes. Accordingly, a candidate bank can
-retain several groupings within one contrast space and use
-functional evaluation to distinguish them.
+Appendix~\ref{app:theory-partial} proves the criterion and example,
+treats coincident task-specific code values, and extends the
+scale-invariant observation model to different sets of observed
+indices. Correct relations require appropriate extraction:
+coincident numerical values alone do not certify a common group.
+For erroneous pairwise relations, Appendix~\ref{app:theory-partial-noise}
+gives a necessary and sufficient redundancy condition for two groups.
 
-\subsection{Candidate selection and transfer to new tasks}
-\label{sec:theory-transfer}
-
-Structural identifiability concerns which constraints the source
-representations reveal. Their usefulness on new tasks also depends
-on numerical fitting. To express this dependence, fix a support size
-$n$, a training budget $b$ and a numerical adaptation rule
-$\mathcal A_{\mathbf I,b}$ for each admissible indexator.
-Given a support sample $S$ of $n$ examples and independent
-initialization randomness $\zeta$, the rule returns a predictor
-$\mathcal A_{\mathbf I,b}(S,\zeta)$ after fitting all numbers anew.
-Define its adaptation risk by
-\begin{equation}
-    \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
-    :=\mathbb E_{\tau,S,\zeta}
-        \mathbb E_{(\mathbf x,y)\sim P_\tau}
-        \ell\bigl(\mathcal A_{\mathbf I,b}(S,\zeta)(\mathbf x),y\bigr),
-    \label{eq:theory-adaptation-risk}
-\end{equation}
-where $\tau\sim p(\tau)$ and $S$ is sampled conditionally on $\tau$
-as in Section~\ref{sec:tasks}.
-
-Consider selection on independent tasks after fixing a nonempty
-finite bank $\mathcal B$ and all adaptation rules.
-Let $\mathcal H$ contain $T_{\mathcal H}$ independent tasks drawn
-from $p(\tau)$, independently of bank construction.
-For each $\tau\in\mathcal H$, draw its support sample of size $n$,
-an independent query sample
-and an independent initialization $\zeta_\tau$.
-The empirical selection risk is
-\begin{equation}
-    \widehat{\mathcal R}_{\mathcal H}(\mathbf I)
-    :=\frac1{T_{\mathcal H}}\sum_{\tau\in\mathcal H}
-        \mathcal L_{S_\tau^{\mathrm q}}
-        \bigl(\mathcal A_{\mathbf I,b}
-            (S_\tau^{\mathrm s},\zeta_\tau)\bigr).
-    \label{eq:theory-meta-selection}
-\end{equation}
-Let $\widehat{\mathbf I}_{\mathcal H}$ minimize this quantity over
-$\mathcal B$, and let $\delta\in(0,1)$ be a failure probability.
-
-\begin{theorem}[Selection on independent tasks]
-    \label{thm:theory-transfer}
-    Suppose the loss lies in $[0,L]$ for a fixed $L>0$.
-    With probability at least $1-\delta$,
-    \begin{equation}
-        \mathcal R_{n,b}^{\mathrm{adapt}}
-            (\widehat{\mathbf I}_{\mathcal H})
-        \le
-        \min_{\mathbf I\in\mathcal B}
-            \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
-        +2L\sqrt{\frac{\log(2|\mathcal B|/\delta)}
-                         {2T_{\mathcal H}}}.
-        \label{eq:theory-transfer-bound}
-    \end{equation}
-    This is a finite-family consequence of Hoeffding's inequality
-    \cite{hoeffding1963probability} applied at the task level.
-\end{theorem}
-
-The first term measures the quality of the best candidate after
-the prescribed numerical adaptation. The second measures the cost
-of selecting it from independent tasks.
-Coverage of the bank is a separate requirement: a missing useful
-structure contributes an approximation error even with arbitrarily
-accurate selection.
-For squared error and cross-entropy, applying this bounded-loss
-statement requires a prespecified bounded loss or an appropriate
-tail analysis.
-
-The source structure-selection samples in
-Section~\ref{sec:method-selection} provide new examples of tasks
-already used to construct the bank.
-Their conditional guarantee concerns those source tasks
-(Appendix~\ref{app:theory-selection}).
-Theorem~\ref{thm:theory-transfer} describes the additional
-task-independence condition for a transfer guarantee.
-Appendix~\ref{app:theory-adaptation} further separates approximation
-error, estimation variance and numerical conditioning in simple
-models. Together, these distinctions explain why exact recovery,
-prediction error and training time are evaluated separately.
+The weight-based results assume aligned source representations.
+Applying them to fitted source predictors requires an error bound
+for their directions and the appropriate network-identifiability
+assumptions~\cite{stock2022embedding}.
+With noisy directions, recovery depends on separation from competing
+explanations; Appendix~\ref{app:theory-noise} gives a direct residual
+condition and bounds for the pair rule.
+After extraction, prediction on new tasks also depends on bank
+coverage and fresh numerical fitting. The corresponding selection
+guarantee is stated in Appendix~\ref{app:theory-transfer}; its
+independent-task assumption separates transfer from selection on
+new examples of the original source tasks.

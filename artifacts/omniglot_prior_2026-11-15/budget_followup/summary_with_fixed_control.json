@@ -1,0 +1,255 @@
+{
+  "methods": [
+    {
+      "method": "dense",
+      "label": "Dense",
+      "codes": 12544,
+      "accuracy": {
+        "mean": 0.8043750000000001,
+        "lower": 0.788324081493737,
+        "upper": 0.8204259185062631
+      },
+      "ce": {
+        "mean": 0.6318774223327637,
+        "lower": 0.5865949601718877,
+        "upper": 0.6771598844936396
+      },
+      "train_accuracy": 0.9996875,
+      "valid_accuracy": 0.8053125
+    },
+    {
+      "method": "old_fixed_m256",
+      "label": "Fixed G34, 256 codes",
+      "codes": 256,
+      "accuracy": {
+        "mean": 0.6928124999999999,
+        "lower": 0.6729866806464534,
+        "upper": 0.7126383193535465
+      },
+      "ce": {
+        "mean": 0.917506992816925,
+        "lower": 0.8620221740637952,
+        "upper": 0.9729918115700549
+      },
+      "train_accuracy": 0.97578125,
+      "valid_accuracy": 0.755625
+    },
+    {
+      "method": "old_adapt_m256",
+      "label": "Adapted G34, 256 codes",
+      "codes": 256,
+      "accuracy": {
+        "mean": 0.74125,
+        "lower": 0.7208303695686218,
+        "upper": 0.7616696304313781
+      },
+      "ce": {
+        "mean": 0.8342631459236145,
+        "lower": 0.7660744772574288,
+        "upper": 0.9024518145898002
+      },
+      "train_accuracy": 0.9965625,
+      "valid_accuracy": 0.784375
+    },
+    {
+      "method": "shared",
+      "label": "Refined G34, 4096 codes",
+      "codes": 4096,
+      "accuracy": {
+        "mean": 0.7990625,
+        "lower": 0.7833456854334773,
+        "upper": 0.8147793145665227
+      },
+      "ce": {
+        "mean": 0.6293125152587891,
+        "lower": 0.5833731242147693,
+        "upper": 0.6752519063028088
+      },
+      "train_accuracy": 0.99984375,
+      "valid_accuracy": 0.8071875
+    },
+    {
+      "method": "single",
+      "label": "Single-task Lloyd, 4096 codes",
+      "codes": 4096,
+      "accuracy": {
+        "mean": 0.7906250000000001,
+        "lower": 0.7744723550960531,
+        "upper": 0.8067776449039472
+      },
+      "ce": {
+        "mean": 0.6782509088516235,
+        "lower": 0.6219646116322537,
+        "upper": 0.7345372060709934
+      },
+      "train_accuracy": 0.99953125,
+      "valid_accuracy": 0.7928125
+    }
+  ],
+  "paired_accuracy": {
+    "dense-old_fixed_m256": {
+      "mean": 0.11156250000000002,
+      "lower": 0.09290401116467953,
+      "upper": 0.13022098883532052
+    },
+    "dense-old_adapt_m256": {
+      "mean": 0.063125,
+      "lower": 0.04826155334033158,
+      "upper": 0.07798844665966842
+    },
+    "dense-shared": {
+      "mean": 0.005312500000000003,
+      "lower": -0.0043996136039882675,
+      "upper": 0.015024613603988273
+    },
+    "dense-single": {
+      "mean": 0.01375,
+      "lower": 0.004114922796911646,
+      "upper": 0.023385077203088356
+    },
+    "old_fixed_m256-old_adapt_m256": {
+      "mean": -0.0484375,
+      "lower": -0.07086677748455239,
+      "upper": -0.026008222515447613
+    },
+    "old_fixed_m256-shared": {
+      "mean": -0.10625,
+      "lower": -0.12423075655026831,
+      "upper": -0.08826924344973168
+    },
+    "old_fixed_m256-single": {
+      "mean": -0.0978125,
+      "lower": -0.11616181769193913,
+      "upper": -0.07946318230806086
+    },
+    "old_adapt_m256-shared": {
+      "mean": -0.05781249999999999,
+      "lower": -0.07382914681183839,
+      "upper": -0.041795853188161584
+    },
+    "old_adapt_m256-single": {
+      "mean": -0.049375,
+      "lower": -0.06574097838706569,
+      "upper": -0.033009021612934314
+    },
+    "shared-single": {
+      "mean": 0.008437499999999997,
+      "lower": -0.0008809665104023822,
+      "upper": 0.017755966510402378
+    }
+  },
+  "choices": {
+    "shared": {
+      "family": "shared",
+      "codes": 4096,
+      "ce": 0.6569756269454956,
+      "accuracy": 0.7933333333333333
+    },
+    "single": {
+      "family": "single",
+      "codes": 4096,
+      "ce": 0.6601463556289673,
+      "accuracy": 0.7766666666666666
+    },
+    "including_unshared": {
+      "shared": {
+        "family": "shared",
+        "codes": 4096,
+        "ce": 0.6569756269454956,
+        "accuracy": 0.7933333333333333
+      },
+      "single": {
+        "family": "single",
+        "codes": 4096,
+        "ce": 0.6601463556289673,
+        "accuracy": 0.7766666666666666
+      }
+    },
+    "development": [
+      {
+        "family": "shared",
+        "codes": 256,
+        "ce": 0.9086543917655945,
+        "accuracy": 0.6975
+      },
+      {
+        "family": "shared",
+        "codes": 512,
+        "ce": 0.7779274582862854,
+        "accuracy": 0.7425
+      },
+      {
+        "family": "shared",
+        "codes": 1024,
+        "ce": 0.7087728977203369,
+        "accuracy": 0.7641666666666667
+      },
+      {
+        "family": "shared",
+        "codes": 2048,
+        "ce": 0.7588701248168945,
+        "accuracy": 0.78
+      },
+      {
+        "family": "shared",
+        "codes": 4096,
+        "ce": 0.6569756269454956,
+        "accuracy": 0.7933333333333333
+      },
+      {
+        "family": "shared",
+        "codes": 8192,
+        "ce": 0.6685990691184998,
+        "accuracy": 0.7958333333333333
+      },
+      {
+        "family": "single",
+        "codes": 64,
+        "ce": 0.8344458937644958,
+        "accuracy": 0.7275
+      },
+      {
+        "family": "single",
+        "codes": 256,
+        "ce": 0.8605286478996277,
+        "accuracy": 0.7241666666666666
+      },
+      {
+        "family": "single",
+        "codes": 512,
+        "ce": 0.8127899169921875,
+        "accuracy": 0.75
+      },
+      {
+        "family": "single",
+        "codes": 1024,
+        "ce": 0.7588552832603455,
+        "accuracy": 0.7616666666666667
+      },
+      {
+        "family": "single",
+        "codes": 2048,
+        "ce": 0.6823721528053284,
+        "accuracy": 0.7808333333333334
+      },
+      {
+        "family": "single",
+        "codes": 4096,
+        "ce": 0.6601463556289673,
+        "accuracy": 0.7766666666666666
+      },
+      {
+        "family": "single",
+        "codes": 8192,
+        "ce": 0.7155497074127197,
+        "accuracy": 0.7958333333333333
+      }
+    ],
+    "dense_development": {
+      "family": "dense",
+      "codes": 12544,
+      "ce": 0.6668822169303894,
+      "accuracy": 0.7941666666666667
+    }
+  }
+}

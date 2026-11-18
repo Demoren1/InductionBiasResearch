@@ -1,0 +1,56 @@
+{
+  "reason": "Give MTSR the same latent-dimension grid as MSR, in addition to outer-rate tuning",
+  "prior_test_results_seen": true,
+  "previous_study_unchanged": true,
+  "source_root": "/home/udeneev-av/InductionBiasResearch/artifacts/local/msr_source_samples_2026-11-14",
+  "source_evidence": "/home/udeneev-av/InductionBiasResearch/artifacts/msr_source_samples_2026-11-14",
+  "source_examples": [
+    20,
+    80,
+    200
+  ],
+  "latent_grid": [
+    3,
+    6,
+    15,
+    30,
+    70,
+    204
+  ],
+  "mtsr_latent_grid": [
+    3,
+    6,
+    15,
+    30,
+    70,
+    204
+  ],
+  "mtsr_outer_lr_grid": [
+    0.0003,
+    0.001,
+    0.003
+  ],
+  "fixed_mtsr": {
+    "latent": 70,
+    "outer_lr": 0.001
+  },
+  "all_source_data_and_validation_tasks_reused": true,
+  "other_methods": "Keep source-seed-0 validation choices; no source retraining or bank changes",
+  "native_training_seeds": [
+    0,
+    1,
+    2
+  ],
+  "fresh": "Separately select representation and ridge; source numerical initialization and rates discarded",
+  "target_support": 1,
+  "target_queries": 19,
+  "new_test_panel_seed": 14119601,
+  "new_test_tasks": {
+    "rank1": 100,
+    "rank2": 200,
+    "rank5": 200
+  },
+  "common_target_tasks_across_source_counts": true,
+  "test_creation": "Only after native and fresh choices are frozen; teacher is read only for generation",
+  "new_test_panels_unopened": true
+}

@@ -1,0 +1,49 @@
+{
+  "methods": [
+    {
+      "method": "dense",
+      "accuracy": 0.9259895833333333,
+      "accuracy_half_ci": 0.007365351560730467,
+      "cross_entropy": 0.2080097794532776,
+      "codes": 12544,
+      "task_parameters": 12594,
+      "numeric_updates": 50,
+      "development_ce": 0.1535697877407074
+    },
+    {
+      "method": "g34",
+      "accuracy": 0.8949479166666666,
+      "accuracy_half_ci": 0.007805283025997346,
+      "cross_entropy": 0.28355810046195984,
+      "codes": 64,
+      "task_parameters": 114,
+      "numeric_updates": 175,
+      "development_ce": 0.2516840994358063
+    },
+    {
+      "method": "pair",
+      "accuracy": 0.8651041666666668,
+      "accuracy_half_ci": 0.012412153495268299,
+      "cross_entropy": 0.3414291441440582,
+      "codes": 64,
+      "task_parameters": 114,
+      "numeric_updates": 100,
+      "development_ce": 0.2695167660713196
+    }
+  ],
+  "paired": {
+    "pair_minus_g34": {
+      "mean": -0.029843750000000006,
+      "half_ci": 0.01224960353095955
+    },
+    "pair_minus_dense": {
+      "mean": -0.06088541666666666,
+      "half_ci": 0.010828859267068282
+    }
+  },
+  "target_episodes": 96,
+  "query_answers_opened_utc": "2026-11-14T03:45:22.374683+00:00",
+  "access_violations": [],
+  "ci_scope": "Episode variability conditional on class split and source cohort; images/classes may repeat",
+  "true_neural_indexator_available": false
+}

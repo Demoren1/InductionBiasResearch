@@ -21,11 +21,8 @@ transfer of learned numerical initial values.
 Weight tying and quantization also learn equality groups.
 Soft weight tying~\cite{nowlan1991adaptive}, trained quantization
 \cite{han2016deep}, LUT-Q~\cite{cardinaux2018iteratively} and
-weight-sharing regularization~\cite{shakerinava2024weight} establish
-that learning a dictionary and assignments is not itself new.
-Our experimental question is whether a common assignment extracted
-from several source solutions remains useful after replacing every
-task-specific numerical value. The proposed component is joint
-calibrated projection of aligned solutions, followed by functional
-comparison of a finite bank; the dictionary representation and the
-general principle of learning structure across tasks are prior art.
+weight-sharing regularization~\cite{shakerinava2024weight} learn these
+groups during numerical training. aSRR starts from already fitted
+source models and proposes a shared assignment by clustering their
+aligned weight profiles. We evaluate these assignments by fitting
+fresh numerical parameters on new tasks.

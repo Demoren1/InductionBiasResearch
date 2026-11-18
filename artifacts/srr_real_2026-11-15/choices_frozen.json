@@ -1,0 +1,544 @@
+{
+  "omniglot": {
+    "selected": {
+      "dense": {
+        "dataset": "omniglot",
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "model_sha256": null,
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/dense/fit.npz",
+          "sha256": "ebf74f20f6a678ff9426a6163ee1f129fe6c125f9e05fd9eee4314946ca5ee23"
+        },
+        "ce": 0.6668822169303894,
+        "accuracy": 0.7941666666666667,
+        "development_predictions_sha256": "8c66bb11c4fd405781d7c2752757a2cb9f1de933ec7564233603a157f877e9ed"
+      },
+      "g34": {
+        "dataset": "omniglot",
+        "name": "g34_refined_m4096",
+        "family": "g34",
+        "codes": 4096,
+        "model_sha256": "b2ecdff1ec1b780335f720062a1e3dbb53e4706bd6d26a4313cc1486fd9eaeca",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m4096/fit.npz",
+          "sha256": "d8cce1938bd6d575a3831da775c5f91d29c430b51c95f30d2380ef5f60ba7143"
+        },
+        "ce": 0.6569756269454956,
+        "accuracy": 0.7933333333333333,
+        "development_predictions_sha256": "17f647ee13523a6a0ac66d876eacbab32d1195b2ce7cb1305fcfaac545c92611"
+      },
+      "srr": {
+        "dataset": "omniglot",
+        "name": "srr_point_m2",
+        "family": "srr",
+        "codes": 2,
+        "model_sha256": "706dcda28472776c8a6760adf5473757a6029a62d2500ef0ba74b8f2f49e8516",
+        "ce": 1.1786692142486572,
+        "accuracy": 0.5775,
+        "development_predictions_sha256": "88fc5d31fa3269ad0e4643666ca49cfa001897b6e34f1b831b0a9ed0ef718126"
+      },
+      "msr": {
+        "dataset": "omniglot",
+        "name": "msr_retained_m64",
+        "family": "msr",
+        "codes": 64,
+        "model_sha256": "cb46095ea3bf869702597be01bacec22450e743e1e9c3a5cf8e31cb7f9b8e390",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/msr_structure/fit.npz",
+          "sha256": "b95ff887a8cef60839f8debd3b21a604311c65946d98be0da4776cd1b4835054"
+        },
+        "ce": 1.120627999305725,
+        "accuracy": 0.6525,
+        "development_predictions_sha256": "ab11400709a7cf34e31be92c4a4d296500de47aa3990600522aff6f0416573a6"
+      }
+    },
+    "development": [
+      {
+        "dataset": "omniglot",
+        "name": "g34_retained_pruned_m64",
+        "family": "g34",
+        "codes": 64,
+        "model_sha256": "3fdaaead676c45f2e356c4bfd6539e83951849461993dfef4c674ae57bdc194b",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/retained_pruned_m64/fit.npz",
+          "sha256": "3868be78286901ac7ba767e731d7b365430a5f13fdbb70e4c041b52ec85cc35b"
+        },
+        "ce": 0.9488420486450195,
+        "accuracy": 0.6583333333333333,
+        "development_predictions_sha256": "92d8e5522819ff98bbab82d518d9092f01d2f3efaaa54b7a4bc66ea1cc7f8df9"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_retained_full_m64",
+        "family": "g34",
+        "codes": 64,
+        "model_sha256": "95cf25621b15dc0a4e7023c41e8363564894a326a5787cef580c778d82e4b9ec",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/retained_full_m64/fit.npz",
+          "sha256": "ee4e3a2480b56f3d0106e3d9c524f102153c766b818aff6f3e421d67eff974db"
+        },
+        "ce": 1.0205236673355103,
+        "accuracy": 0.6483333333333333,
+        "development_predictions_sha256": "e3dfcb01d06f01e08d846c2e5c00472dcabe7f7f844f34f9b6c20f80473967fd"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_source_full_m16",
+        "family": "g34",
+        "codes": 16,
+        "model_sha256": "7b5f651bc20fc799b8cb78076f285a336ade550576fafc8c1a4ce3fe0b9d0879",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/source_full_m16/fit.npz",
+          "sha256": "c7f0004266fe56e20b5056be826eef812ae88a062b21e55af91fc59678dad8e3"
+        },
+        "ce": 1.1027636528015137,
+        "accuracy": 0.6308333333333334,
+        "development_predictions_sha256": "3de547b47a5f5c237268e6a621b2264cce41a82f9622fab09ba38e6932f06d97"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_source_pruned_m16",
+        "family": "g34",
+        "codes": 16,
+        "model_sha256": "287887c04cb831fbfa0d162f128f92baf3860e80f0fbb25db1518d46e05466dd",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/source_pruned_m16/fit.npz",
+          "sha256": "93a49493f457cc6417680abcb2ef700cf288b7f709297766bb992aeef2495e88"
+        },
+        "ce": 1.066819667816162,
+        "accuracy": 0.645,
+        "development_predictions_sha256": "db49902fa7ed4c4595058bb79441f4231cafc89d25f6ff962ad8219983a8fc79"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_source_full_m256",
+        "family": "g34",
+        "codes": 256,
+        "model_sha256": "72ef23532aae5afbcf212399820db03c5be787eb12d37b006257ff959604019d",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/source_full_m256/fit.npz",
+          "sha256": "7b9fe2ab93cd6ce9f30cc2d1579d3904c2996738610a288327d266080d4e58b4"
+        },
+        "ce": 0.9086804389953613,
+        "accuracy": 0.6975,
+        "development_predictions_sha256": "cd095437825589b603e305600bfacb48376503b4868a6e5a5eb52db2f05d9334"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_source_pruned_m256",
+        "family": "g34",
+        "codes": 256,
+        "model_sha256": "e439b39e5fe01cd877df4a5f707f4a272423f17aedafa54496afc869ffaff39f",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/source_pruned_m256/fit.npz",
+          "sha256": "0f89ee56521954fda5e1029161e32bfffb4bd3ca5f5277bcf0748959326e22ef"
+        },
+        "ce": 0.9535388350486755,
+        "accuracy": 0.69,
+        "development_predictions_sha256": "bd686b1c0a2f701f26cb372ccd8760aca6ffe8f3ea121028e9846b0ad5a3e78e"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_refined_m256",
+        "family": "g34",
+        "codes": 256,
+        "model_sha256": "72ef23532aae5afbcf212399820db03c5be787eb12d37b006257ff959604019d",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m256/fit.npz",
+          "sha256": "0062e847dee0e43377f2996acdb18341d6ed16303db73c1211d42577ce6b3138"
+        },
+        "ce": 0.9086543917655945,
+        "accuracy": 0.6975,
+        "development_predictions_sha256": "d8992f0c5986dc3865b3733d934e6790db1ab550a43f694297c5a580f318ba0a"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_refined_m512",
+        "family": "g34",
+        "codes": 512,
+        "model_sha256": "c242375dfe4c96196381c36102d8cce04c9cb470e415797f42f73e5c6cfeb96e",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m512/fit.npz",
+          "sha256": "debe587776a7aba13cd057ab9c62112b19473747488180845ab33d6c012fd0f3"
+        },
+        "ce": 0.7779274582862854,
+        "accuracy": 0.7425,
+        "development_predictions_sha256": "777c80f3a6d374ec7e38cab3a077300d9062b14edbc74faa4a388ba119c2ce88"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_refined_m1024",
+        "family": "g34",
+        "codes": 1024,
+        "model_sha256": "8014cad6b6cafd84eaa794c59d99a12521da6750ea55ab7caf3c5814d747116a",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m1024/fit.npz",
+          "sha256": "2c3e732df96ac84ecf1caede419e9d0b67650b077da74fa42f78792a9528e263"
+        },
+        "ce": 0.7087728977203369,
+        "accuracy": 0.7641666666666667,
+        "development_predictions_sha256": "ef8b4b3c1f0d584f1b8b493cd026c93a32cf460b0fd1f514c7fded1a7a948e1f"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_refined_m2048",
+        "family": "g34",
+        "codes": 2048,
+        "model_sha256": "5d426265d9cc0a1d5209fb56c3d7812b7172d3343597d88f21872fe9b0b4839e",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m2048/fit.npz",
+          "sha256": "756b1f49879bc2b83fcf028f7cef9f75f7571c426d16a6762907baa4cfc28788"
+        },
+        "ce": 0.7588701248168945,
+        "accuracy": 0.78,
+        "development_predictions_sha256": "4b2cca5fe1f3a13030b472716e79bea540833c80fbd5cd5c4e3253567653f512"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_refined_m4096",
+        "family": "g34",
+        "codes": 4096,
+        "model_sha256": "b2ecdff1ec1b780335f720062a1e3dbb53e4706bd6d26a4313cc1486fd9eaeca",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m4096/fit.npz",
+          "sha256": "d8cce1938bd6d575a3831da775c5f91d29c430b51c95f30d2380ef5f60ba7143"
+        },
+        "ce": 0.6569756269454956,
+        "accuracy": 0.7933333333333333,
+        "development_predictions_sha256": "17f647ee13523a6a0ac66d876eacbab32d1195b2ce7cb1305fcfaac545c92611"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "model_sha256": "957ea6488b30bcde8ca9091b5c092f8671c607d77c118b6a7884770c83ed5e66",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/budget_followup/development/shared_m8192/fit.npz",
+          "sha256": "415532cd024c68989a45b5817f60b5b4bbe21de36e8c6060d20e1df891469567"
+        },
+        "ce": 0.6685990691184998,
+        "accuracy": 0.7958333333333333,
+        "development_predictions_sha256": "e6de3e99842a6fef5e8779f9e271dc67f0b8b38fbd92b1d79dce4a6a96a6556e"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "srr_point_m2",
+        "family": "srr",
+        "codes": 2,
+        "model_sha256": "706dcda28472776c8a6760adf5473757a6029a62d2500ef0ba74b8f2f49e8516",
+        "ce": 1.1786692142486572,
+        "accuracy": 0.5775,
+        "development_predictions_sha256": "88fc5d31fa3269ad0e4643666ca49cfa001897b6e34f1b831b0a9ed0ef718126"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "srr_point_m4",
+        "family": "srr",
+        "codes": 4,
+        "model_sha256": "0d3411494c631eeb07f9570e56165f7c7dc5be2f0d2fb9e706ade7258f9ee891",
+        "ce": 1.2210205793380737,
+        "accuracy": 0.5683333333333334,
+        "development_predictions_sha256": "3f80b17a8eb5af2be4401ffd7317172c50348fbf59cc9a456401982e0e467a67"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "srr_point_m8",
+        "family": "srr",
+        "codes": 8,
+        "model_sha256": "46e6d7d3431111126353bc732eae1a3d3e6bcaa50ac62497ef53dd109b6c48b4",
+        "ce": 1.2582207918167114,
+        "accuracy": 0.5633333333333334,
+        "development_predictions_sha256": "d9e33b16950249a28299f420bb54e2770ef4760dec999e4bfac93bfb15986f4f"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "srr_point_m16",
+        "family": "srr",
+        "codes": 16,
+        "model_sha256": "bee5f4df85c7c6f2ca960796e456af033b7df83ac5701f9d1551c59401a46ff7",
+        "ce": 1.273929238319397,
+        "accuracy": 0.5625,
+        "development_predictions_sha256": "fba8180965fba5917e6ad1038f43ae7320cd51a0fbb8ed5a28577d4fbd224a74"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "model_sha256": null,
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/dense/fit.npz",
+          "sha256": "ebf74f20f6a678ff9426a6163ee1f129fe6c125f9e05fd9eee4314946ca5ee23"
+        },
+        "ce": 0.6668822169303894,
+        "accuracy": 0.7941666666666667,
+        "development_predictions_sha256": "8c66bb11c4fd405781d7c2752757a2cb9f1de933ec7564233603a157f877e9ed"
+      },
+      {
+        "dataset": "omniglot",
+        "name": "msr_retained_m64",
+        "family": "msr",
+        "codes": 64,
+        "model_sha256": "cb46095ea3bf869702597be01bacec22450e743e1e9c3a5cf8e31cb7f9b8e390",
+        "reused_development": {
+          "path": "artifacts/local/omniglot_prior_2026-11-15/development/msr_structure/fit.npz",
+          "sha256": "b95ff887a8cef60839f8debd3b21a604311c65946d98be0da4776cd1b4835054"
+        },
+        "ce": 1.120627999305725,
+        "accuracy": 0.6525,
+        "development_predictions_sha256": "ab11400709a7cf34e31be92c4a4d296500de47aa3990600522aff6f0416573a6"
+      }
+    ],
+    "test_query_labels_opened": false
+  },
+  "mnist": {
+    "selected": {
+      "dense": {
+        "dataset": "mnist",
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "model_sha256": null,
+        "ce": 0.10322052240371704,
+        "accuracy": 0.9702083333333333,
+        "development_predictions_sha256": "a2fb7f2de04bc64ec030b1bd1ca1c84397a36cea959b5932f1c5e3b80c438954"
+      },
+      "g34": {
+        "dataset": "mnist",
+        "name": "g34_refined_m1024",
+        "family": "g34",
+        "codes": 1024,
+        "model_sha256": "a3b0ae34543ba9d495d0c836b9c655087378f2e770b0634f5f3529061002c3a9",
+        "ce": 0.09244759380817413,
+        "accuracy": 0.9672916666666667,
+        "development_predictions_sha256": "376b0355465cdb3dc9a0e454a0cdfbd0a5073f118957053049c093fef94ac875"
+      },
+      "srr": {
+        "dataset": "mnist",
+        "name": "srr_point_m16",
+        "family": "srr",
+        "codes": 16,
+        "model_sha256": "50834cdc92e2907087e9bb8fa07be6dc372e1db7c7180c15e6dc3048a2465de5",
+        "ce": 0.20666170120239258,
+        "accuracy": 0.9233333333333333,
+        "development_predictions_sha256": "be6e49bdd48f0e4643596e9e8e64539d5f74f384af31d7e5f41bfc9e6c674beb"
+      },
+      "msr": {
+        "dataset": "mnist",
+        "name": "msr_m512",
+        "family": "msr",
+        "codes": 512,
+        "model_sha256": "1640511999ad3530a87c926f6b62879eaaba026bf8ce134ea5f880596cd4e292",
+        "ce": 0.11941607296466827,
+        "accuracy": 0.9614583333333333,
+        "development_predictions_sha256": "21f71770df79dcf72d78dc80be424d458eff35a78c5bdf6ec4055cc875926d55"
+      }
+    },
+    "development": [
+      {
+        "dataset": "mnist",
+        "name": "g34_m8",
+        "family": "g34",
+        "codes": 8,
+        "model_sha256": "b9ab19bb8a610ca1c04efe053be937077fd784365fd11102389d62bfeb845945",
+        "ce": 0.21451564133167267,
+        "accuracy": 0.925,
+        "development_predictions_sha256": "fd506ab57fbb6665499ae6984542483fbb29fcabcb8bc6e8e45262266735bc23"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_m16",
+        "family": "g34",
+        "codes": 16,
+        "model_sha256": "861593654bfb9676fe6e2a5a2f48cd0cbbe0ddaee6f11183055a6431fa62dd68",
+        "ce": 0.24270111322402954,
+        "accuracy": 0.9122916666666666,
+        "development_predictions_sha256": "7ab891e7c697f80abf5153445fa81a15261137ff77223c69bb0f938a4970616b"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_m32",
+        "family": "g34",
+        "codes": 32,
+        "model_sha256": "2b14aae693326da67a6c8979b431e297923562be8180f0790561e155dfcaed25",
+        "ce": 0.17945127189159393,
+        "accuracy": 0.943125,
+        "development_predictions_sha256": "fd7ced089ddbd3620bcae66c45ca5598dfe26df2dde653de74b7e9a004b05c07"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_m64",
+        "family": "g34",
+        "codes": 64,
+        "model_sha256": "c64685f8be681761fd07f043aa12a9330066228a78a97908d9850d1510a29c88",
+        "ce": 0.1947278529405594,
+        "accuracy": 0.9354166666666667,
+        "development_predictions_sha256": "acb4e212d3e7914e85973bda706191220cecf184993cc80aa129197501b5dc05"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_m128",
+        "family": "g34",
+        "codes": 128,
+        "model_sha256": "9682d4ad5d5786769edc2dd9c1ad3967649e9d8ca9ca07cdfd28e1422281e4e0",
+        "ce": 0.16817383468151093,
+        "accuracy": 0.94625,
+        "development_predictions_sha256": "3cda47f3ad3b0a6b57e15bc12e97257b259e856707a012069d1a09a78a0b8c6b"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_m512",
+        "family": "g34",
+        "codes": 512,
+        "model_sha256": "b406a91156ddfea1a187b21da3d705f76cedb2fb4af788ef5e60fa5ba3ff61f1",
+        "ce": 0.11350906640291214,
+        "accuracy": 0.9635416666666666,
+        "development_predictions_sha256": "022e5b33b7f51b4c61c56a839e3e3910f6e59a277da49f176a82da8b0fe3c93a"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_refined_m1024",
+        "family": "g34",
+        "codes": 1024,
+        "model_sha256": "a3b0ae34543ba9d495d0c836b9c655087378f2e770b0634f5f3529061002c3a9",
+        "ce": 0.09244759380817413,
+        "accuracy": 0.9672916666666667,
+        "development_predictions_sha256": "376b0355465cdb3dc9a0e454a0cdfbd0a5073f118957053049c093fef94ac875"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_refined_m2048",
+        "family": "g34",
+        "codes": 2048,
+        "model_sha256": "aa914429e9ebefc90c6c60bf633836ac038082377222ca219774592926084e06",
+        "ce": 0.10452061891555786,
+        "accuracy": 0.965,
+        "development_predictions_sha256": "c6c7021704ccec1b65e854146cc096afe03529a18dd0531ced6392b3e8218c26"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_refined_m4096",
+        "family": "g34",
+        "codes": 4096,
+        "model_sha256": "f1929eb55723488e36115b7c00af294440590b0a4340627842ae5c004d1f626b",
+        "ce": 0.10470106452703476,
+        "accuracy": 0.9691666666666666,
+        "development_predictions_sha256": "faf97c155dde82c5a14f6fd8c38bfb7f3e5261276527a9bdd2f66fc4492b4e73"
+      },
+      {
+        "dataset": "mnist",
+        "name": "g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "model_sha256": "e676e7a70c0f56a95a8d58249bc2d0e5951090f9f3a3da4b0599ce4936de57ac",
+        "ce": 0.10172000527381897,
+        "accuracy": 0.9679166666666666,
+        "development_predictions_sha256": "cec2d557b445a336e161aabcf23539b2ae23cca80588ddbc77cb9aa96e1e2c02"
+      },
+      {
+        "dataset": "mnist",
+        "name": "srr_point_m4",
+        "family": "srr",
+        "codes": 4,
+        "model_sha256": "15d6c641353cceb1ac95a810f090806cad48e4d3f8a4b19783f7c0b4216d0d47",
+        "ce": 0.27627503871917725,
+        "accuracy": 0.8979166666666667,
+        "development_predictions_sha256": "fb0ffa5f5c6742cf0a8f6b0c2d0f30398d4a26b4350eeefc6e9bc49b99287eca"
+      },
+      {
+        "dataset": "mnist",
+        "name": "srr_point_m8",
+        "family": "srr",
+        "codes": 8,
+        "model_sha256": "1a3b39b30eb130cb1b0db6da266fdc7457809f412caab37b9824ef21ffb15378",
+        "ce": 0.25999876856803894,
+        "accuracy": 0.9016666666666666,
+        "development_predictions_sha256": "3f62e5820b06c8bdccb3bf0da00d7ae873d7a418d6065b85145d57e3e9b45bce"
+      },
+      {
+        "dataset": "mnist",
+        "name": "srr_point_m16",
+        "family": "srr",
+        "codes": 16,
+        "model_sha256": "50834cdc92e2907087e9bb8fa07be6dc372e1db7c7180c15e6dc3048a2465de5",
+        "ce": 0.20666170120239258,
+        "accuracy": 0.9233333333333333,
+        "development_predictions_sha256": "be6e49bdd48f0e4643596e9e8e64539d5f74f384af31d7e5f41bfc9e6c674beb"
+      },
+      {
+        "dataset": "mnist",
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "model_sha256": null,
+        "ce": 0.10322052240371704,
+        "accuracy": 0.9702083333333333,
+        "development_predictions_sha256": "a2fb7f2de04bc64ec030b1bd1ca1c84397a36cea959b5932f1c5e3b80c438954"
+      },
+      {
+        "dataset": "mnist",
+        "name": "msr_m8",
+        "family": "msr",
+        "codes": 8,
+        "model_sha256": "6461a82ea65fa9fe88ac0e5634ac286a0694e1aeb70a55c606ef260fc25a313d",
+        "ce": 0.22937987744808197,
+        "accuracy": 0.916875,
+        "development_predictions_sha256": "26bdb3d4ce28d3f3e5b98e774f16b8ba091f992d85e7d684d6e9ef63ec9d8822"
+      },
+      {
+        "dataset": "mnist",
+        "name": "msr_m16",
+        "family": "msr",
+        "codes": 16,
+        "model_sha256": "cf81b61c3bbda143e620a82d0630d84882ad3251022e22166cc31d53577f5265",
+        "ce": 0.20181547105312347,
+        "accuracy": 0.9266666666666666,
+        "development_predictions_sha256": "7b2dcb61f7b5667cfd4c0b8c680b2f2c9aff4583bcfb97baf016a8a3cf1e267c"
+      },
+      {
+        "dataset": "mnist",
+        "name": "msr_m32",
+        "family": "msr",
+        "codes": 32,
+        "model_sha256": "d068fc5936eb7bd2e265cbc981670f2313dac3aa41139d54399c54dcb76b39b6",
+        "ce": 0.16857074201107025,
+        "accuracy": 0.9364583333333333,
+        "development_predictions_sha256": "afc646d536492f261336eea3544085f7ecfd4dc37affa2980270e9b6917f4e5c"
+      },
+      {
+        "dataset": "mnist",
+        "name": "msr_m64",
+        "family": "msr",
+        "codes": 64,
+        "model_sha256": "3bedd7979b57b2ab458786c4c494abc6e4aaf52190d64f6d1d8408abfa144a70",
+        "ce": 0.14757241308689117,
+        "accuracy": 0.9510416666666667,
+        "development_predictions_sha256": "767ec17f5465c8e5b27ea5b9c0f5ec7c9a5a200c72d62c8439e0038735a1a7a8"
+      },
+      {
+        "dataset": "mnist",
+        "name": "msr_m128",
+        "family": "msr",
+        "codes": 128,
+        "model_sha256": "789cd8106b2e19ca575afb96f5f81bc7c0660cd1d8388ed8eb2144809aa31214",
+        "ce": 0.13612815737724304,
+        "accuracy": 0.9566666666666667,
+        "development_predictions_sha256": "c5c84ed280deb79cb15f4c9955621da57f749bd595b8412770e30574dfafe695"
+      },
+      {
+        "dataset": "mnist",
+        "name": "msr_m512",
+        "family": "msr",
+        "codes": 512,
+        "model_sha256": "1640511999ad3530a87c926f6b62879eaaba026bf8ce134ea5f880596cd4e292",
+        "ce": 0.11941607296466827,
+        "accuracy": 0.9614583333333333,
+        "development_predictions_sha256": "21f71770df79dcf72d78dc80be424d458eff35a78c5bdf6ec4055cc875926d55"
+      }
+    ],
+    "test_query_labels_opened": false
+  }
+}

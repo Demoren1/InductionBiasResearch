@@ -16,21 +16,20 @@ Learning groups of similar weights has also been studied through soft weight tyi
 
 More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
 \citet{baxter2000model} provides a theoretical framework for learning a shared hypothesis space across tasks, with generalization bounds for new tasks from the same environment under suitable capacity and sampling assumptions.
-Our focus is on discovering connectivity and weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
+Our focus is on discovering weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
 
-In this paper, we study multi-task structure learning through the extraction of shared constraints from solutions to related tasks.
-We represent a structure by an indexator that specifies which connections are present and which weights share a numerical value.
-The corresponding codebook contains the task-specific trainable values, while all remaining numerical parameters can adapt freely to each task.
-We assess candidate structures by their validation performance after fresh numerical training on source tasks, and examine whether the selected constraints remain useful on held-out tasks.
+We represent the structure by an indexator that specifies which
+connections share a trainable value and how their signs are tied.
+Approximate Sign--Ratio Recovery (aSRR) proposes indexators by
+clustering profiles of aligned, normalized source weights. We assess
+the proposed constraints by fitting their numerical parameters afresh.
+On a held-out task, the selected assignments stay fixed and the
+codebook and remaining parameters start from fresh initial values.
 
-Our central hypothesis is that structural regularities shared across source solutions can improve both generalization and the progress of numerical optimization on related tasks.
-Once a structure has been selected, its connectivity and sharing constraints are held fixed while its codebook and remaining numerical parameters are initialized and learned anew on each target task.
-This allows us to assess prediction quality at a fixed training budget and the amount of training needed to reach a prescribed error level.
-The cost of extracting a structure from source tasks is reported separately from the cost of learning numerical parameters on target tasks.
-
-Our contributions are as follows:
+\begin{samepage}
 \begin{itemize}
-    \item We investigate the identifiability of common connectivity and parameter-sharing constraints across related tasks, accounting for task-specific numerical parameters and functional equivalences. (in progress)
-    \item We study methods for extracting transferable indexators by combining structural information from source-task solutions. (in progress)
-    \item We evaluate the effect of extracted structures on prediction quality and numerical convergence on new tasks after fresh parameter initialization, comparing with baselines under common data and numerical adaptation protocols. (in progress)
+    \item We characterize when aligned ReLU weights with fixed active connections identify their sharing groups, combining magnitude and sign information and giving explicit graph conditions for uniqueness. We also show how complementary partial information from several tasks can determine groups that no individual task identifies.
+    \item We develop aSRR to extract shared assignments from fitted Dense models. It clusters weight profiles at a prescribed budget and compares candidate assignments by prediction after numerical refitting.
+    \item We evaluate aSRR on a controlled recovery problem, new characters on Omniglot and new subjects on UCI HAR. We compare sharing methods at matched numerical budgets and measure the cost of constructing their source candidates.
 \end{itemize}
+\end{samepage}

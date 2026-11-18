@@ -51,8 +51,9 @@ def candidates(root, method, codes):
                 break
         return result
     key = "indices" if method == "yeh_map" else "basis"
+    arrays = native[key]
     ordered = [
-        (f"r{scenario}", native[key][scenario], 0) for scenario in score.argsort()
+        (f"r{scenario}", arrays[scenario], 0) for scenario in score.argsort()
     ]
     if method != "yeh_map":
         return ordered

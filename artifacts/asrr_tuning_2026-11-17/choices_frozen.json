@@ -1,0 +1,756 @@
+{
+  "policies": {
+    "mnist100": {
+      "asrr_accuracy": {
+        "name": "asrr_global_m8192",
+        "family": "asrr",
+        "codes": 8192,
+        "key": "wide24_1000_top4",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "metrics": {
+          "accuracy": 0.9697395833333333,
+          "ce": 0.10685193538665771
+        },
+        "fit_metadata_sha256": "b2e1244e6face5bcf8d71bd2b8340c3c015cb263f0db4ebabaaa72f3693cfef0",
+        "model_sha256": "0ade174db072398cc2d170d78e19f9eda219cb97e52a2f9fd555c6b0307fc736"
+      },
+      "g34_accuracy": {
+        "name": "g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.9690104166666668,
+          "ce": 0.10377830266952515
+        },
+        "fit_metadata_sha256": "c2faa7c70bd53031bc0669c16215340d365f9c27ca68cf6e9f1955b881e8e7f1",
+        "model_sha256": "1c7097cacd61325605f96874ce392fd1af13fcc034664a4f0a0128b4d03bc674"
+      },
+      "dense_accuracy": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "legacy6_200_top4",
+        "rule": {
+          "variant": "legacy6_200",
+          "ensemble": 4,
+          "numeric_starts": 6,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.9682291666666666,
+          "ce": 0.10359468311071396
+        },
+        "fit_metadata_sha256": "d9be0cbc2cdc1f2dec36f54855fe825ef7c2dac45d0daef42a5b00fa48bd113f",
+        "model_sha256": null
+      },
+      "asrr_ce": {
+        "name": "asrr_global_projected_mnist100_m512",
+        "family": "asrr",
+        "codes": 512,
+        "key": "wide24_200_top4",
+        "rule": {
+          "variant": "wide24_200",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.9661458333333334,
+          "ce": 0.09813058376312256
+        },
+        "fit_metadata_sha256": "fe27a7b1972d3502987bf99afb5e1a11d31219f9f98e9a99186fc3cdcb96b33e",
+        "model_sha256": "ac5eb677da10bf89d96613db57661d74ce441298bd55e42be80d0656bfe465b7"
+      },
+      "g34_ce": {
+        "name": "g34_m512",
+        "family": "g34",
+        "codes": 512,
+        "key": "wide24_200_top4",
+        "rule": {
+          "variant": "wide24_200",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.9667708333333334,
+          "ce": 0.09813644737005234
+        },
+        "fit_metadata_sha256": "7162fed925c4fc702110428f4c95d07a52cde956d6d508786d31381f85d7e055",
+        "model_sha256": "913a4db4088f986a7d58afd169f5cd75a10c360c8d4e0347269fe8e1b43da45c"
+      },
+      "dense_ce": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "wide24_200_top4",
+        "rule": {
+          "variant": "wide24_200",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.968125,
+          "ce": 0.10287348181009293
+        },
+        "fit_metadata_sha256": "caf3cf8592f37ba8631db63e449efec74450cedd9be3d288f6a43ce924d7e8a9",
+        "model_sha256": null
+      }
+    },
+    "mnist16": {
+      "asrr_accuracy": {
+        "name": "asrr_input_m2048",
+        "family": "asrr",
+        "codes": 2048,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9502083333333333,
+          "ce": 0.13796520233154297
+        },
+        "fit_metadata_sha256": "58dd6a9ead7c88e2a16de94d07725a06881677457f7431d342973f24cc386671",
+        "model_sha256": "a9c5c3a5b7b50481d4ae09482e5b4e4a9269f602f259ef58d1babe60000bd08c"
+      },
+      "g34_accuracy": {
+        "name": "a1_g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.94921875,
+          "ce": 0.13996325433254242
+        },
+        "fit_metadata_sha256": "977892b739520a39b89bdfd70c27b3f495c4884341c03ecdfe4c4522ed9cba68",
+        "model_sha256": "1b91fc8c6301dd020cb2532ee33c370303cf35068430f30fbbc45f953417db93"
+      },
+      "dense_accuracy": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "rule2_ensemble4",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 4,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9487500000000001,
+          "ce": 0.14538568258285522
+        },
+        "fit_metadata_sha256": "10db985a545a609cf719e94a49501b92575cd44e6fdcde19f8cd2b471d2aefe6",
+        "model_sha256": null
+      },
+      "asrr_ce": {
+        "name": "asrr_local_m2048",
+        "family": "asrr",
+        "codes": 2048,
+        "key": "rule0_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9493229166666666,
+          "ce": 0.13774128258228302
+        },
+        "fit_metadata_sha256": "22f6f5b61a9f499c6a2f275833054a3dc4496e59b339aa83f39152ce5061e4c8",
+        "model_sha256": "74a5a97933993f930a895edb13a260fbc14299322e32a084e72b9019e541a5e4"
+      },
+      "g34_ce": {
+        "name": "a1_g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.94921875,
+          "ce": 0.13996325433254242
+        },
+        "fit_metadata_sha256": "977892b739520a39b89bdfd70c27b3f495c4884341c03ecdfe4c4522ed9cba68",
+        "model_sha256": "1b91fc8c6301dd020cb2532ee33c370303cf35068430f30fbbc45f953417db93"
+      },
+      "dense_ce": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "rule2_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 50,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.94875,
+          "ce": 0.14344574511051178
+        },
+        "fit_metadata_sha256": "10db985a545a609cf719e94a49501b92575cd44e6fdcde19f8cd2b471d2aefe6",
+        "model_sha256": null
+      }
+    },
+    "fashion100": {
+      "asrr_accuracy": {
+        "name": "asrr_sync_m2048",
+        "family": "asrr",
+        "codes": 2048,
+        "key": "legacy24_200_top4",
+        "rule": {
+          "variant": "legacy24_200",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.9961458333333333,
+          "ce": 0.01169379148632288
+        },
+        "fit_metadata_sha256": "b1e8e809987d17e2f60079165c440336a76e16486fe29277885c8482204eecb6",
+        "model_sha256": "8ce2d6ec7c2de46c5400a22bf7b1ea77249cfe7e13e8769a64c6ac347cf3fc62"
+      },
+      "g34_accuracy": {
+        "name": "g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "key": "wide24_1000_top1",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 1,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "metrics": {
+          "accuracy": 0.99609375,
+          "ce": 0.016325049102306366
+        },
+        "fit_metadata_sha256": "39593f4c6db6205bedeea0a2f7efc03946ca8d5558f14595644782b5c98bc42e",
+        "model_sha256": "4b425bcbb2afd10b5ec2a41ee488f14242bbd42ed6d5ed4c386e2afd6666fc4e"
+      },
+      "dense_accuracy": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.9962499999999999,
+          "ce": 0.01178668811917305
+        },
+        "fit_metadata_sha256": "9cd6e155f64d3f4e6f865a3b9e27cfa99de7f9de512ccab85791feae16c43413",
+        "model_sha256": null
+      },
+      "asrr_ce": {
+        "name": "asrr_sync_m2048",
+        "family": "asrr",
+        "codes": 2048,
+        "key": "legacy24_200_top4",
+        "rule": {
+          "variant": "legacy24_200",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.9961458333333333,
+          "ce": 0.01169379148632288
+        },
+        "fit_metadata_sha256": "b1e8e809987d17e2f60079165c440336a76e16486fe29277885c8482204eecb6",
+        "model_sha256": "8ce2d6ec7c2de46c5400a22bf7b1ea77249cfe7e13e8769a64c6ac347cf3fc62"
+      },
+      "g34_ce": {
+        "name": "g34_refined_m8192",
+        "family": "g34",
+        "codes": 8192,
+        "key": "wide24_1000_top4",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "metrics": {
+          "accuracy": 0.9958854166666667,
+          "ce": 0.013137207366526127
+        },
+        "fit_metadata_sha256": "39593f4c6db6205bedeea0a2f7efc03946ca8d5558f14595644782b5c98bc42e",
+        "model_sha256": "4b425bcbb2afd10b5ec2a41ee488f14242bbd42ed6d5ed4c386e2afd6666fc4e"
+      },
+      "dense_ce": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.9962499999999999,
+          "ce": 0.01178668811917305
+        },
+        "fit_metadata_sha256": "9cd6e155f64d3f4e6f865a3b9e27cfa99de7f9de512ccab85791feae16c43413",
+        "model_sha256": null
+      }
+    },
+    "fashion16": {
+      "asrr_accuracy": {
+        "name": "asrr_sync_m1024",
+        "family": "asrr",
+        "codes": 1024,
+        "key": "rule0_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.5,
+            "restart": 0
+          },
+          "steps": 425,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9851041666666666,
+          "ce": 0.049392759799957275
+        },
+        "fit_metadata_sha256": "78ac001629139ba091eb571829eaefe7bba9e18c2a0cfca9ad7b17fcfb397bd4",
+        "model_sha256": "142ca00a9f03b8286166e8dd76d588d741fa54768c5b1aebba51b462a4531d31"
+      },
+      "g34_accuracy": {
+        "name": "g34_refined_m4096",
+        "family": "g34",
+        "codes": 4096,
+        "key": "rule0_ensemble4",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 125,
+          "ensemble": 4,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9853645833333333,
+          "ce": 0.05092550441622734
+        },
+        "fit_metadata_sha256": "4e60935f0eda31e4000061e4f80362f793ef6b9cda92629bf6226a05ca3e25e7",
+        "model_sha256": "9cdaadaf172aba3936c336d843f96f28f82aeee9c1ddbb24f8b0aba06948f222"
+      },
+      "dense_accuracy": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "rule0_ensemble4",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 75,
+          "ensemble": 4,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9847916666666666,
+          "ce": 0.05357174947857857
+        },
+        "fit_metadata_sha256": "a0878fd189d875270248e77971a46e597f0fd834579ff49238278612471874df",
+        "model_sha256": null
+      },
+      "asrr_ce": {
+        "name": "asrr_sync_m2048",
+        "family": "asrr",
+        "codes": 2048,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.5,
+            "restart": 0
+          },
+          "steps": 400,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9847395833333333,
+          "ce": 0.047736216336488724
+        },
+        "fit_metadata_sha256": "554d83cb63f88c84fb9a8929a4fb6fec0e16b996090551b49a27dc31f0eacbee",
+        "model_sha256": "8ce2d6ec7c2de46c5400a22bf7b1ea77249cfe7e13e8769a64c6ac347cf3fc62"
+      },
+      "g34_ce": {
+        "name": "g34_refined_m2048",
+        "family": "g34",
+        "codes": 2048,
+        "key": "rule2_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.1,
+            "restart": 0
+          },
+          "steps": 300,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9851041666666666,
+          "ce": 0.04838939383625984
+        },
+        "fit_metadata_sha256": "0344469047cbd4d1ce13a96c0a8898b7af67c3d9442bbb07c3eda82ee1b3866a",
+        "model_sha256": "db4377acadf1e0937cdbef6a79adbd19a1e462b7b3e0d70e695e241061b1b0b4"
+      },
+      "dense_ce": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.001,
+            "quantile": 0.9,
+            "restart": 0
+          },
+          "steps": 300,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9846875,
+          "ce": 0.05142258107662201
+        },
+        "fit_metadata_sha256": "a0878fd189d875270248e77971a46e597f0fd834579ff49238278612471874df",
+        "model_sha256": null
+      }
+    },
+    "har3": {
+      "asrr_accuracy": {
+        "name": "asrr_global_m128",
+        "family": "asrr",
+        "codes": 128,
+        "key": "rule2_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.01,
+            "quantile": 0.1,
+            "restart": 0
+          },
+          "steps": 250,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9434027777777779,
+          "ce": 0.19282382726669312
+        },
+        "fit_metadata_sha256": "002f4c7b5c77b8183b4f2ab4a172ef68791e1b928075cef5cc6b234999c377b4",
+        "model_sha256": "f3de518ae6ad00555a9cc7767379c9df15afdfd0ac3e5fd4a4ce9b7542c80f5c"
+      },
+      "g34_accuracy": {
+        "name": "g34_m64",
+        "family": "g34",
+        "codes": 64,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.1,
+            "restart": 0
+          },
+          "steps": 1000,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9479166666666666,
+          "ce": 0.21752238273620605
+        },
+        "fit_metadata_sha256": "83d7cbe50debbe2f826bc26dddfa3f3b2f9a538d58d50a01ddbfa933c1ee71e3",
+        "model_sha256": "48600da61f26709b08267ecfcd181b3a133a9c6f39088d61674f194e99af2770"
+      },
+      "dense_accuracy": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 8976,
+        "key": "rule0_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.001,
+            "quantile": 0.1,
+            "restart": 0
+          },
+          "steps": 1000,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9024305555555557,
+          "ce": 0.27063214778900146
+        },
+        "fit_metadata_sha256": "823c2f5b3b1d63ede81bf3a14b236979102249c099b725ce556bc6f039c770f6",
+        "model_sha256": null
+      },
+      "asrr_ce": {
+        "name": "asrr_sync_m256",
+        "family": "asrr",
+        "codes": 256,
+        "key": "rule0_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.01,
+            "quantile": 0.5,
+            "restart": 0
+          },
+          "steps": 225,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9402777777777779,
+          "ce": 0.18907685577869415
+        },
+        "fit_metadata_sha256": "88fa450ef2db0db05acd36ed611270051357aa0e5ee880d0a4a2d140edf49357",
+        "model_sha256": "ef4992d764d18bbc254ea8aa6ebd886426853ee7e7e534e2bba9aa7792d00fd9"
+      },
+      "g34_ce": {
+        "name": "g34_m64",
+        "family": "g34",
+        "codes": 64,
+        "key": "rule1_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.003,
+            "quantile": 0.1,
+            "restart": 0
+          },
+          "steps": 1000,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9479166666666666,
+          "ce": 0.21752238273620605
+        },
+        "fit_metadata_sha256": "83d7cbe50debbe2f826bc26dddfa3f3b2f9a538d58d50a01ddbfa933c1ee71e3",
+        "model_sha256": "48600da61f26709b08267ecfcd181b3a133a9c6f39088d61674f194e99af2770"
+      },
+      "dense_ce": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 8976,
+        "key": "rule0_ensemble16",
+        "rule": {
+          "variant": "support",
+          "global_setting": {
+            "lr": 0.001,
+            "quantile": 0.1,
+            "restart": 0
+          },
+          "steps": 1000,
+          "ensemble": 16,
+          "numeric_starts": 16
+        },
+        "metrics": {
+          "accuracy": 0.9024305555555557,
+          "ce": 0.27063214778900146
+        },
+        "fit_metadata_sha256": "823c2f5b3b1d63ede81bf3a14b236979102249c099b725ce556bc6f039c770f6",
+        "model_sha256": null
+      }
+    },
+    "omniglot10": {
+      "asrr_accuracy": {
+        "name": "asrr_input_m1024",
+        "family": "asrr",
+        "codes": 1024,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.8608333333333335,
+          "ce": 0.4340066909790039
+        },
+        "fit_metadata_sha256": "a68662d27a2c08734b420fdafbce96ff1ae6352adc14de9a4afe2240cdc8054f",
+        "model_sha256": "6b53b1a78e0c6b2737f2b6909408eef22a8ce3349316a028c4a95b56e1365b82"
+      },
+      "g34_accuracy": {
+        "name": "a1_g34_refined_m4096",
+        "family": "g34",
+        "codes": 4096,
+        "key": "wide24_1000_top4",
+        "rule": {
+          "variant": "wide24_1000",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 1000
+        },
+        "metrics": {
+          "accuracy": 0.8408333333333333,
+          "ce": 0.47409144043922424
+        },
+        "fit_metadata_sha256": "f2e1bd1dd64934cf71cc913cdbfb9a5342d1eea5790b1d82703a690ee1bdc559",
+        "model_sha256": "a21f96e7a4e2c36c1fa0ff6ea8fdabb462e863d1cd250553df83577c3c7752d1"
+      },
+      "dense_accuracy": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.8333333333333334,
+          "ce": 0.4826505184173584
+        },
+        "fit_metadata_sha256": "6632e0fea6079abd0cca23d675a89ac81b0f1fc0f4be277c66832928eab7f4ce",
+        "model_sha256": null
+      },
+      "asrr_ce": {
+        "name": "asrr_local_m1024",
+        "family": "asrr",
+        "codes": 1024,
+        "key": "legacy24_200_top4",
+        "rule": {
+          "variant": "legacy24_200",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 200
+        },
+        "metrics": {
+          "accuracy": 0.8516666666666669,
+          "ce": 0.42740997672080994
+        },
+        "fit_metadata_sha256": "c3ea0ae5306d241560b069c5c9b62fb2009318622bd179559912d9a51b1ff5a6",
+        "model_sha256": "ace21fad83051a580563b6de0b4b0709e6881e1b2b96ab3538a1a4a0dba134bf"
+      },
+      "g34_ce": {
+        "name": "g34_refined_m4096",
+        "family": "g34",
+        "codes": 4096,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.8308333333333332,
+          "ce": 0.4704556465148926
+        },
+        "fit_metadata_sha256": "00e7bee01910be94eea4e245702d8282e27f570e95f2f7bb4d066859b01bc5ad",
+        "model_sha256": "f7b20084413f7ed4c666d7b072b8d3b789a3de48170a5c5f9b595dd349b6063f"
+      },
+      "dense_ce": {
+        "name": "dense",
+        "family": "dense",
+        "codes": 12544,
+        "key": "wide24_500_top4",
+        "rule": {
+          "variant": "wide24_500",
+          "ensemble": 4,
+          "numeric_starts": 24,
+          "steps": 500
+        },
+        "metrics": {
+          "accuracy": 0.8333333333333334,
+          "ce": 0.4826505184173584
+        },
+        "fit_metadata_sha256": "6632e0fea6079abd0cca23d675a89ac81b0f1fc0f4be277c66832928eab7f4ce",
+        "model_sha256": null
+      }
+    }
+  },
+  "query_answers_generated": false,
+  "primary_criterion": "Development accuracy; CE and fewer codes break ties"
+}

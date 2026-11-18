@@ -1,0 +1,62 @@
+\FloatBarrier
+\subsection{Broader selection of aSRR banks}
+\label{sec:asrr-broader}
+
+The preceding comparison limits compressed banks to 512 codes. We also
+evaluate a wider search over 16--8192 codes and retain all aSRR families
+for direct development selection. Each retained aSRR, practical G34 and
+Dense candidate receives the same applicable numerical search; the
+methods have different numbers of structural candidates. G34 includes
+source-only refinements. This comparison evaluates these three procedures
+separately from the other structural methods in the preceding tables.
+
+First, the previously fixed successful procedures were repeated on
+512 fresh episodes per dataset. With 100 fitting and 50 additional
+numerical-selection images per class, MNIST aSRR with 1024 codes reaches 96.27\%,
+compared with 96.02\% for Dense24 and 96.09\% for G34. In five-way
+Omniglot~\cite{lake2015human} with 10 fitting and five numerical-selection
+images per class,
+the corresponding accuracies are 81.75\%, 81.16\% and 79.95\%,
+using 2048 aSRR codes.
+These replications use the original indexators and numerical procedures.
+
+The wider search then screens candidates on 48 development episodes
+and trains finalists on 96 development episodes. It compares numerical
+learning rules with up to 1000 updates and 24 starts. Without separate
+within-task validation, development fixes a single numerical rule and
+the size of a probability ensemble; no extra target labels are used.
+Otherwise, within-task validation selects numerical checkpoints and
+starts. Development accuracy selects the primary procedure, with
+cross-entropy and fewer codes breaking ties. A separate cross-entropy
+choice is retained for analysis. Appendix~\ref{app:asrr-tuning-details}
+specifies the search and its numerical costs.
+
+All choices are frozen before two fresh cohorts, with no retuning between
+them. Each cohort contains 512 episodes per image setting and 90 HAR
+episodes. Tables~\ref{tab:asrr-tuned-small} and
+\ref{tab:asrr-tuned-validated} pool the unchanged procedures across
+these cohorts. The class and subject environments were studied before;
+intervals remain conditional on them.
+\input{sections/asrr_tuning_results.tex}
+\FloatBarrier
+
+The largest paired gains over Dense are on Omniglot,
+$2.25\pm0.34$ percentage points, and HAR, $5.31\pm1.69$ percentage
+points. Both gains are positive in each cohort separately. On Omniglot,
+aSRR also improves over G34 by $1.73\pm0.35$ percentage points; on HAR,
+the difference from G34 is not established by the subject-level interval.
+All intervals here are paired 95\% intervals.
+
+On MNIST with 16 fitting images, aSRR improves over both controls;
+with 100+50 images it improves over Dense without establishing a
+difference from G34. On Fashion 100+50 the difference from Dense is
+not established, while the primary Fashion 16 policy loses
+$0.11\pm0.05$ percentage points. The separately frozen cross-entropy
+policies are reported in Appendix~\ref{app:asrr-tuning-details}.
+
+These gains retain a smaller numerical representation after accounting
+for ensembles. Omniglot uses 4500 aSRR parameters versus 50\,580 for
+Dense; HAR uses 3936 versus 145\,504. The fixed indexator is excluded
+from these counts. Thus wider candidate coverage and numerical selection
+can change the conclusion of a restricted-budget comparison, while the
+benefit of sharing remains dependent on the task setting.

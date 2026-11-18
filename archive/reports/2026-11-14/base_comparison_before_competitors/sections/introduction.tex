@@ -1,0 +1,40 @@
+\section{Introduction}
+
+Choosing an appropriate inductive bias is crucial for generalization \cite{baxter2000model}.
+By constraining the hypothesis space to reflect task structure, it can enable effective learning from limited data.
+Examples include local connectivity and spatial weight sharing in convolutional networks \cite{lecun1998gradient}, and recurrent state updates with parameters shared across time \cite{elman1990finding}.
+Suitable parameter-sharing patterns also enforce equivariance to task-relevant transformations \cite{ravanbakhsh2017equivariance}.
+
+Selecting suitable structural biases by hand requires domain expertise, particularly when the relevant properties of a new task are not known in advance \cite{yeh2022equivariance}.
+This motivates learning such biases from data.
+\citet{yeh2022equivariance} optimize parameter-sharing schemes to discover equivariances, while \citet{zhou2021meta} meta-learn sharing patterns across related tasks.
+Learning groups of similar weights has also been studied through soft weight tying \cite{nowlan1991adaptive} and weight-sharing regularization \cite{shakerinava2024weight}.
+\citet{atanov2019deep} learn generative priors from convolutional filters of previously trained networks and use them to guide learning on new datasets.
+\citet{schurholt2022hyper} learn generative representations of trained networks to sample new numerical weights.
+\citet{sun2020sparse} extract task-specific subnetworks by iterative pruning and share parameters where these subnetworks overlap.
+\citet{ando2005framework} learn a shared predictive structure across tasks while allowing task-specific predictors.
+
+More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
+\citet{baxter2000model} provides a theoretical framework for learning a shared hypothesis space across tasks, with generalization bounds for new tasks from the same environment under suitable capacity and sampling assumptions.
+Our focus is on discovering connectivity and weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
+
+In this paper, we study multi-task structure learning through the extraction of shared constraints from solutions to related tasks.
+We represent a structure by an indexator that specifies which connections are present and which weights share a numerical value.
+The corresponding codebook contains the task-specific trainable values, while all remaining numerical parameters can adapt freely to each task.
+We assess candidate structures by their validation performance after fresh numerical training on source tasks, and examine whether the selected constraints remain useful on held-out tasks.
+
+We examine whether regularities shared across source solutions remain
+useful when the numerical values change. Once a structure has been
+selected, its connectivity and sharing constraints are held fixed while
+its codebook and remaining numerical parameters are initialized and
+learned anew on each target task. We assess exact structural recovery
+in a controlled setting separately from prediction on new image classes,
+using the same source preparation and numerical selection rules for
+the competing extractors.
+
+Our contributions are as follows:
+\begin{itemize}
+    \item We characterize when aligned ReLU weights with fixed active connections identify their sharing groups, combining magnitude and sign information and giving explicit graph conditions for uniqueness. We also show how complementary partial information from several tasks can determine groups that no individual task identifies.
+    \item We compare joint calibrated projection with direct pair-based bank construction, using independent functional selection to evaluate the resulting indexators.
+    \item We evaluate exact recovery on a controlled synthetic benchmark and class-disjoint transfer on MNIST and Fashion-MNIST, sharing Dense preparation and numerical adaptation protocols between the extractors.
+\end{itemize}

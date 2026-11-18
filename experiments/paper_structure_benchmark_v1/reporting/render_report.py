@@ -432,7 +432,7 @@ def table_quality(paper, summary):
             )
     lines += [
         r"\bottomrule\end{tabular}",
-        r"\caption{Mean target MSE over three families, each with eight new numerical tasks. Parentheses in headings give source noise; target data are clean. All models use 1024 fitting and 256 numerical-selection observations. Family-level spreads and all smaller support budgets are in the accompanying CSV.}",
+        r"\caption{Mean target MSE over three families, each with eight new numerical tasks. Parentheses in headings give source noise; target data are clean. All models use 1024 fitting and 256 numerical-selection observations. Family-level spreads and all smaller training budgets are in the accompanying CSV.}",
         r"\label{tab:benchmark-synthetic}",
         r"\end{table}",
         "",
@@ -519,7 +519,7 @@ def table_costs(paper, costs):
             )
         lines += [
             r"\bottomrule\end{tabular}",
-            f"\\caption{{{dataset}: measured computation. Target timing excludes the FLOP profiler and uses one process per GPU. $^*$Search seconds include profiling overhead and shared scheduling. $^\\dagger$Target GFLOPs are per task: the complete 64/256/1024 sweep on synthetic data, one prescribed support budget on real data; synthetic time covers only 1024. These are incomplete Torch operation counts, not FLOP/s. A dash indicates unavailable measurement.}}",
+            f"\\caption{{{dataset}: measured computation. Target timing excludes the FLOP profiler and uses one process per GPU. $^*$Search seconds include profiling overhead and shared scheduling. $^\\dagger$Target GFLOPs are per task: the complete 64/256/1024 sweep on synthetic data, one prescribed training budget on real data; synthetic time covers only 1024. These are incomplete Torch operation counts, not FLOP/s. A dash indicates unavailable measurement.}}",
             r"\end{table}",
         ]
     (paper / "tables" / "benchmark_costs.tex").write_text("\n".join(lines) + "\n")
@@ -631,8 +631,8 @@ def plots(base, paper, summary):
             xscale="log",
             yscale="log",
             title=dataset,
-            xlabel="Fitting observations (plus N/4 selection)",
-            ylabel="New-task query MSE (floor 1e-16)",
+            xlabel="Train observations (plus N/4 selection)",
+            ylabel="New-task valid MSE (floor 1e-16)",
         )
         ax.set_xticks((64, 256, 1024), ("64", "256", "1024"))
         ax.grid(alpha=0.25)
@@ -792,9 +792,9 @@ def real_plots(base, paper, summary):
         ax.invert_yaxis()
         ax.set(
             title=dataset,
-            xlabel="Query accuracy (%) — higher is better"
+            xlabel="Valid accuracy (%) — higher is better"
             if multiplier == 100
-            else "Query MSE — lower is better",
+            else "Valid MSE — lower is better",
         )
         ax.set_xlim(0, max(multiplier * (r["mean"] + r["spread"]) for r in rows) * 1.15)
         ax.grid(axis="x", alpha=0.25)
@@ -928,7 +928,7 @@ def binary_table(paper, binary):
         )
     lines += [
         r"\bottomrule\end{tabular}",
-        r"\caption{Binary Pattern follow-up: mean query accuracy (\%) over three families, with 512 support, 128 numerical-selection and 1408 held-out binary inputs. All numerical parameters are trained afresh by binary cross entropy. These structures were extracted from real-valued source functions, so this is not extraction from binary supervision alone.}",
+        r"\caption{Binary Pattern follow-up: mean validation accuracy (\%) over three families, with 512 training, 128 numerical-selection and 1408 held-out binary inputs. All numerical parameters are trained afresh by binary cross entropy. These structures were extracted from real-valued source functions, so this is not extraction from binary supervision alone.}",
         r"\label{tab:benchmark-binary}\end{table}",
     ]
     (paper / "tables/benchmark_binary_pattern.tex").write_text("\n".join(lines) + "\n")

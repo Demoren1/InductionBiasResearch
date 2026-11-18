@@ -1,0 +1,56 @@
+{
+  "hidden": 64,
+  "codes": 4096,
+  "dense_weights": 50176,
+  "source_tasks": [
+    60,
+    107,
+    72,
+    108,
+    12,
+    22,
+    121,
+    10,
+    75,
+    116,
+    105,
+    74,
+    109,
+    104,
+    97,
+    27
+  ],
+  "source_panel_sha256": {
+    "support": "bce8138c7dd37c581098025de057fa0217bccd607d1645d29b9599393ab9bc0d",
+    "numerical": "4043645bf4d787f4357f0a68b2db53f451f8b4d21dea4d615dcae5eb70d12e84"
+  },
+  "dense_source_steps": 2500,
+  "wsr_options": {
+    "codes": 4096,
+    "steps": 500,
+    "checkpoint_every": 25,
+    "adam_lr": 0.003,
+    "rewinding": 0.98,
+    "first_layer_penalty": "Scalar WSR, full support",
+    "strength_selection": "Match code count at each update"
+  },
+  "yeh_settings": {
+    "lr": 0.03,
+    "initialization": "cold",
+    "entropy": 0.0,
+    "nuclear": 0.0,
+    "inner_lr": 0.01
+  },
+  "yeh_outer_steps": 400,
+  "yeh_selection": "Configuration of the 16-hidden-neuron development winner",
+  "validation_and_targets": "artifacts/wsr_omniglot_2026-11-18",
+  "numeric_rule": {
+    "variant": "wide24_500",
+    "ensemble": 4,
+    "numeric_starts": 24,
+    "steps": 500
+  },
+  "numeric_shard": 24,
+  "timing_episodes": 96,
+  "timing_scope": "Fresh fitting and within-task checkpoint selection, excluding query prediction"
+}

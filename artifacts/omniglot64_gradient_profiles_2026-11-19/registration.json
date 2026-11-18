@@ -1,0 +1,54 @@
+{
+  "source": "Gradient of the arithmetic mean of the four retained Dense softmax predictions per source task, temperature 1",
+  "source_tasks": [
+    60,
+    107,
+    72,
+    108,
+    12,
+    22,
+    121,
+    10,
+    75,
+    116,
+    105,
+    74,
+    109,
+    104,
+    97,
+    27
+  ],
+  "source_dense_sha256": "6bea7ceb9fa6ddf5d4f4034babf45cc0cce37a16c5677e0b681711e57d96be8c",
+  "source_panel_sha256": {
+    "support": "bce8138c7dd37c581098025de057fa0217bccd607d1645d29b9599393ab9bc0d",
+    "numerical": "4043645bf4d787f4357f0a68b2db53f451f8b4d21dea4d615dcae5eb70d12e84"
+  },
+  "pixels": "Brightness in [0,1]. All source tasks, examples and class coordinates weighted equally, without rescaling.",
+  "clustering": "One Euclidean Ward tree, cut at 64 pixel groups; one independent code per group and hidden neuron.",
+  "numeric_rule": {
+    "variant": "wide24_500",
+    "ensemble": 4,
+    "numeric_starts": 24,
+    "steps": 500
+  },
+  "budget": 4096,
+  "hidden": 64,
+  "comparison": "artifacts/omniglot64_balanced_mask_comparison_2026-11-18",
+  "reference_choices_sha256": "5537c8f32e87f45e2387edcd0c700f291c9312bebe9b2e481d235c2314e155ce",
+  "reference_jobs_sha256": "726a3d4afe5e6e3676523ef47149622bc2b5b129f8c0ca8902e449be403a32e4",
+  "reference_panels_sha256": "ed2d2ca893b25aafd10fbb61c20ae014bbe9367ffe7ab3ed4f3fc96653d9fce6",
+  "primary_accuracy_comparisons": [
+    "four_partitions",
+    "mean_balanced",
+    "wsr_step_75"
+  ],
+  "balanced_masks": [
+    "balanced_random_mask_7611189541",
+    "balanced_random_mask_7611189542",
+    "balanced_random_mask_7611189543",
+    "balanced_random_mask_7611189544"
+  ],
+  "secondary": "One common weight-Ward partition at the same budget",
+  "intervals": "Episode-level paired t intervals, conditional on fixed characters and masks. Also report simultaneous 95% Bonferroni intervals over the three primary accuracy differences.",
+  "mask_aggregation": "Equal weight to each fixed mask within each episode, for both accuracy and cross-entropy."
+}

@@ -7,10 +7,12 @@ __pycache__/
 .codex/
 .aws/
 
-# Local observations, checkpoints and full execution records are not source.
+# Runtime data and experimental outputs are local by default. Publish only
+# selected reports, metric summaries and audit bundles (see artifacts/README.md).
 /experiments/**/results/
 /experiments/**/runs/
-/artifacts/local/
+/artifacts/**
+!/artifacts/README.md
 *.npz
 *.npy
 *.pt
@@ -18,29 +20,9 @@ __pycache__/
 *.ckpt
 *.pkl
 *.pickle
-
-# Full numerical states and historical audit archives stay local.
-/artifacts/g34_*_2026-11-08/audit_*.tar.gz
-/artifacts/anchor_start_2026-11-10/numerical_state.tar.gz
-/paper-overleaf.zip
-
-# Explicitly curated, compact scientific evidence.
-!artifacts/benchmark_2026-11-07/**/*.npz
-!artifacts/anchor_start_2026-11-10/**/*.npz
-!artifacts/theorem_pair_recovery_2026-11-12/**/candidates.npz
-!artifacts/theorem_pair_recovery_2026-11-12/**/selection.npz
-!artifacts/theorem_pair_recovery_2026-11-12/selected_structures.npz
-!artifacts/theorem_pair_recovery_weighted_2026-11-12/**/candidates.npz
-!artifacts/theorem_pair_recovery_weighted_2026-11-12/**/selection.npz
-!artifacts/theorem_pair_recovery_weighted_2026-11-12/selected_structures.npz
-!artifacts/omniglot_signature_2026-11-12/first_candidates.npz
-!artifacts/omniglot_signature_2026-11-12/per_episode.npz
-!artifacts/omniglot_signature_2026-11-12/k8_per_episode.npz
-!artifacts/omniglot_signature_2026-11-12/scoring_answers.npz
-!artifacts/omniglot_signature_2026-11-12/ranks/**/*.npz
-!artifacts/omniglot_signature_2026-11-12/models/**/*.npz
-!artifacts/general_signature_2026-11-12/**/*.npz
 !archive/reports/**/*.npz
+
+/paper-overleaf.zip
 
 # Regenerable LaTeX build artifacts; manuscript PDFs remain versioned.
 *.aux

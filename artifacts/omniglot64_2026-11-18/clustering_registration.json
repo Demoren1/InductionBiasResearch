@@ -1,0 +1,73 @@
+{
+  "methods": {
+    "asrr_lloyd": "lloyd",
+    "asrr_emeans": "emeans",
+    "asrr_average": "average",
+    "asrr_complete": "complete",
+    "asrr_single": "single"
+  },
+  "reference": {
+    "name": "asrr",
+    "model_sha256": "68096988ce6b3ec6faec17e9aeb4c33373933928b8c532ceb79330fbc96515df"
+  },
+  "source_tasks": [
+    60,
+    107,
+    72,
+    108,
+    12,
+    22,
+    121,
+    10,
+    75,
+    116,
+    105,
+    74,
+    109,
+    104,
+    97,
+    27
+  ],
+  "source_archive_sha256": "6bea7ceb9fa6ddf5d4f4034babf45cc0cce37a16c5677e0b681711e57d96be8c",
+  "input_profiles": "Aligned average over retained Dense fits",
+  "profile_shape": [
+    784,
+    1024
+  ],
+  "input_clusters": 64,
+  "hidden": 64,
+  "codes": 4096,
+  "centroid_seed": 3511159150,
+  "centroid_selection": "Archived source-only SSE rule, including empty-group repair",
+  "lloyd": {
+    "initializations": 4,
+    "max_updates": 25
+  },
+  "emeans_recipes": [
+    [
+      "auto",
+      5
+    ],
+    [
+      "quality",
+      5
+    ],
+    [
+      "quality",
+      25
+    ]
+  ],
+  "emeans_vendor_sha256": {
+    "__init__.py": "ad196786de8eb8ab7a229908b86ad8548a72459ade95e9e9c3275943dd50bb78",
+    "e_means_quantized.py": "139bca86d17e1dcdbeca68930059f35c9240f5a6374a9baac645442476f62d63",
+    "e_means_torch.py": "cddc5ed1f1121c96406055fe6f50e93c049d0e09be27dc07dbe03e5c8e7ef4d3"
+  },
+  "signed_lloyd": "Aliases Lloyd for the unsigned shared-input scope",
+  "numeric_rule": {
+    "variant": "wide24_500",
+    "ensemble": 4,
+    "numeric_starts": 24,
+    "steps": 500
+  },
+  "target_plan_sha256": "8e6ce549703246c43069f9666a5e20aa8b4fd3b7aaa13dc7527d836e93b62e43"
+}

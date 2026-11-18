@@ -1,0 +1,52 @@
+{
+  "dataset": "ninapro",
+  "pilot_registration_sha256": "38a3fabc8b045afabd449dcfbd4736edbe2eacccd92e7c50feeb30b2e820c14c",
+  "source_dense_sha256": "0ed3aa189d749ced4bd4ce3c1207de71a650df1f0ac438aff213e75838f491d9",
+  "layout": {
+    "sites": 1,
+    "fan_in": 48,
+    "channels": 32,
+    "outputs": 12
+  },
+  "codes": [
+    32,
+    64,
+    96,
+    128,
+    192,
+    256,
+    384,
+    512,
+    768,
+    1024,
+    1280
+  ],
+  "input_partitions": [
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "include_global_signed_ward": true,
+  "input_clustering": "Lloyd on normalized source input profiles in each consecutive neuron block",
+  "partition_seed": 7611189900,
+  "validation_episode_count": 120,
+  "validation_seed": 7611189802,
+  "validation_fit_seed": 7611189804,
+  "selection": "Highest validation accuracy, then lowest CE, fewer codes, fewer partitions",
+  "test_episode_count": 240,
+  "test_fit_seed": 7611189806,
+  "target_steps": 200,
+  "shuffles": 4,
+  "gpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}
