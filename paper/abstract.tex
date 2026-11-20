@@ -1,12 +1,15 @@
-We study how fitted solutions to related tasks can reveal weight-sharing
-groups for learning new tasks from limited data. We characterize when
-aligned ReLU weights identify these groups and how partial information
-from several tasks can resolve individual ambiguities. We propose
-Approximate Sign--Ratio Recovery (aSRR), which clusters profiles of
-normalized source weights. We reuse the assignments and learn fresh
-code values on each new task. In the synthetic experiment, full-support
-assignments miss the sparse teacher's indexator. On UCI HAR and
-Omniglot, aSRR improves over Dense by 5.07 and 2.11--2.18
-percentage points, respectively. On Omniglot, aSRR constructs groups
-faster than WSR from saved Dense fits at both tested widths. Their
-accuracies are similar at 1024 codes, and WSR leads at 4096.
+The connectivity and parameter-sharing structure of a neural network
+influences how well it generalizes from limited data. We study how
+solutions to related tasks can reveal structural constraints that
+remain useful when numerical parameters are learned afresh. We
+represent these constraints by an indexator specifying active
+connections and signed groups of shared weights, with task-specific
+values supplied by a trainable codebook. For aligned ReLU weights
+with known active connections, we characterize when the observations
+uniquely determine the groups and give sufficient conditions for exact
+recovery by Sign--Ratio Recovery (SRR). For fitted dense networks,
+we propose Approximate Sign--Ratio Recovery (aSRR), which clusters
+normalized weight profiles across source tasks. We transfer the resulting
+indexator and train the numerical parameters from scratch on each
+new task. On Omniglot and UCI HAR, aSRR improves accuracy over Dense
+with fewer trainable first-layer coefficients.

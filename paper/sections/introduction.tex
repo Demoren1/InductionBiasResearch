@@ -16,20 +16,45 @@ Learning groups of similar weights has also been studied through soft weight tyi
 
 More generally, a single task may admit multiple near-optimal structures, and its data alone need not identify which constraints will transfer to other tasks.
 \citet{baxter2000model} provides a theoretical framework for learning a shared hypothesis space across tasks, with generalization bounds for new tasks from the same environment under suitable capacity and sampling assumptions.
-Our focus is on discovering weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
+Our focus is on discovering connectivity and weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
 
-We represent the structure by an indexator that specifies which
-connections share a trainable value and how their signs are tied.
-Approximate Sign--Ratio Recovery (aSRR) proposes indexators by
-clustering profiles of aligned, normalized source weights. We assess
-the proposed constraints by fitting their numerical parameters afresh.
-On a held-out task, the selected assignments stay fixed and the
-codebook and remaining parameters start from fresh initial values.
+In this paper, we study multi-task structure learning by extracting
+shared constraints from solutions to related tasks. We represent a
+structure by an indexator that specifies which connections are active
+and which weights share a code value, with a fixed sign at each active
+position. The codebook supplies the task-specific values, while the
+remaining numerical parameters can adapt freely to each task.
 
+Our central hypothesis is that structural regularities shared across
+source solutions can improve learning from limited data on new tasks.
+Once a structure has been selected, its connectivity and sharing
+constraints are held fixed while its codebook and remaining numerical
+parameters are initialized and learned anew on each target task.
+We assess prediction on held-out data and report the cost of extracting
+the structure separately from the cost of training on new tasks.
+
+Our contributions are as follows:
 \begin{samepage}
 \begin{itemize}
-    \item We characterize when aligned ReLU weights with fixed active connections identify their sharing groups, combining magnitude and sign information and giving explicit graph conditions for uniqueness. We also show how complementary partial information from several tasks can determine groups that no individual task identifies.
-    \item We develop aSRR to extract shared assignments from fitted Dense models. It clusters weight profiles at a prescribed budget and compares candidate assignments by prediction after numerical refitting.
-    \item We evaluate aSRR on a controlled recovery problem, new characters on Omniglot and new subjects on UCI HAR. We compare sharing methods at matched numerical budgets and measure the cost of constructing their source candidates.
+    \item We characterize when exact, aligned ReLU weights on known
+        active connections uniquely determine their sharing groups.
+        Sign--Ratio Recovery (SRR) uses within-neuron ratios to cancel
+        unknown neuron scales and checks relative signs. We prove that
+        it recovers the groups and their relative signs when the ratios
+        distinguish ordered code pairs and repeated pairs link the
+        occurrences of each code across neurons. We also show how
+        partial observations from several tasks can identify groups
+        that no individual task identifies.
+    \item We propose Approximate Sign--Ratio Recovery (aSRR,
+        Algorithm~\ref{alg:asrr}) for fitted dense networks. It
+        aligns the hidden neurons, normalizes their weights and
+        clusters profiles across tasks at a prescribed code budget.
+        We compare candidate indexators by validation performance after
+        fitting their numerical parameters afresh.
+    \item We evaluate aSRR on a controlled synthetic problem and
+        test transfer to new characters on Omniglot and new
+        subjects on UCI HAR. We compare sharing methods at matched
+        numerical budgets and measure the time to construct their
+        source candidates.
 \end{itemize}
 \end{samepage}

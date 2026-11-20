@@ -1,104 +1,230 @@
 \section{Method}
 \label{sec:method}
 
-Approximate Sign--Ratio Recovery (aSRR) builds shared weight groups
-from fitted Dense networks. It aligns and normalizes the source
-weights, then clusters their profiles at a prescribed code budget.
-Each resulting indexator fixes a set of sharing constraints. We
-assess those constraints by fitting their numerical parameters
-afresh.
+Sign--Ratio Recovery (SRR) uses within-neuron weight ratios to
+recover sharing groups from exact source observations. Approximate
+Sign--Ratio Recovery (aSRR, Algorithm~\ref{alg:asrr}) builds candidate
+indexators from fitted Dense networks at prescribed code budgets.
+We assess each candidate by prediction after fitting its numerical
+parameters afresh.
 
 \subsection{ReLU model and signed groups}
 \label{sec:method-relu-instance}
 
-We use a one-hidden-layer network with $D$ inputs, $H$ hidden
-neurons and $O$ outputs. With $\rho(t):=\max\{t,0\}$ applied
-coordinatewise, the predictor on task $\tau$ is
+We use a one-hidden-layer network with $D$ inputs and $H$ hidden
+neurons. Let $\mathbf W_1,\mathbf W_2$ be its input and output
+weight matrices and $\mathbf b_1,\mathbf b_2$ its bias vectors.
+With $\rho(t):=\max\{t,0\}$ applied coordinatewise, its predictor is
 \begin{equation}
-    f_\tau(\mathbf x)
-    =\mathbf W_{2,\tau}^{\mathsf T}
-        \rho(\mathbf W_{1,\tau}^{\mathsf T}\mathbf x+\mathbf b_{1,\tau})
-        +\mathbf b_{2,\tau}.
+    f(\mathbf x)=\mathbf W_2^{\mathsf T}
+        \rho(\mathbf W_1^{\mathsf T}\mathbf x+\mathbf b_1)+\mathbf b_2.
     \label{eq:method-relu-model}
 \end{equation}
-The indexator constrains the $DH$ weights of $\mathbf W_{1,\tau}$.
+The indexator constrains the $DH$ weights of $\mathbf W_1$.
 Both bias vectors and the output weights remain free. To allow
 weights in one group to use a shared value with either sign, we use
-$m$ independent codes $\mathbf c_\tau\in\mathbb R^m$ and the lookup
+$m$ independent code values $\mathbf c\in\mathbb R^m$ and the lookup
 codebook
 \begin{equation}
-    \mathbf C_\tau=(0,\mathbf c_\tau^{\mathsf T},
-        -\mathbf c_\tau^{\mathsf T})^{\mathsf T},
+    \mathbf C=(0,\mathbf c^{\mathsf T},-\mathbf c^{\mathsf T})^{\mathsf T},
     \qquad K=2m.
     \label{eq:method-paired-codebook}
 \end{equation}
-An indexator assigns a code and a fixed sign to each active
-connection. The zero label removes a connection. We use full
-first-layer support in the aSRR experiments.
+For an active position $p$, write $g(p)$ for its group label and
+$\sigma_p\in\{-1,1\}$ for its fixed sign. A group with label $j$
+uses lookup index $j$ at positive assignments and $m+j$ at negative
+assignments. Thus $w_p=C_{I_p}=\sigma_p c_{g(p)}$. The zero label
+removes a connection. The grouping $g$ and the signs are shared
+across tasks. Each task learns its own $\mathbf c$.
+We use full first-layer support in the aSRR experiments.
 
-\subsection{Aligned source weights}
-\label{sec:method-source}
+\subsection{Sign--Ratio Recovery (SRR)}
+\label{sec:method-srr}
 
-On each source task, we train Dense networks and retain the
-weights $\widetilde{\mathbf w}_\tau$ of the fit with the lowest
-numerical-validation loss. We normalize each nonzero first-layer
-column by its Euclidean norm, which removes positive neuron
-rescaling. A hidden-neuron permutation preserves the
-predictor when its input weights, bias and output weights are
-permuted together~\cite[Sec.~2.1]{zhou2023permutation}. We match
-the normalized columns to those of a reference source by
-maximizing the sum of their inner products.
-
-With several retained fits for one task, we first match their
-columns to its best fit and average the matched directions. We
-apply the same across-task permutation to the average as to the
-best fit. Appendix~\ref{app:asrr-experiments} gives the details.
-
-\subsection{Clustering weight profiles}
-\label{sec:method-bank}
-
-At a weight index $p$, collect its normalized aligned values
-across $T$ source tasks in a profile $\mathbf z_p\in\mathbb R^T$.
-Under the observation model of Section~\ref{sec:theory-observations},
-two weights using the same code in the same neuron have equal
-profiles up to their fixed relative sign. Weights in different
-neurons can have different task-dependent scale factors. aSRR uses
-profile similarity to propose groups from fitted weights.
-
-For global sharing, we map each profile to a matrix
+Suppose the active weight positions are known and the source neurons
+are correctly aligned. Let $w_{\tau,p}$ be the nonzero weight observed
+at position $p$ in the source network on task $\tau=1,\ldots,T$.
+The model of Section~\ref{sec:theory-observations} allows the observed
+weights of each neuron to differ from the codebook weights by a
+common positive scale. For each
+ordered pair of distinct positions $p,q$ entering the same neuron,
+form the row vector of log ratios
 \begin{equation}
-    \mathbf z_p\mathbf z_p^{\mathsf T}/\|\mathbf z_p\|_2,
-    \qquad\text{with the zero profile mapped to zero}.
+    \mathbf r_{pq}
+    :=\bigl(\log|w_{\tau,p}/w_{\tau,q}|\bigr)_{\tau=1}^T .
+    \label{eq:method-srr-ratio}
+\end{equation}
+On a task where the two positions use code values $c_j,c_k$,
+the common scale cancels and the entry is $\log|c_j/c_k|$.
+Thus two neurons that use the same ordered pair of codes give the same vector.
+
+Start with one block per active position. A zero vector $\mathbf r_{pq}$
+proposes joining $p$ and $q$. A common nonzero vector for two ordered
+pairs $(p,q)$ and $(u,v)$ proposes joining $p$ with $u$ and $q$ with
+$v$. Accept a match if the relative sign
+$\operatorname{sign}(w_{\tau,a}w_{\tau,b})$ is constant across tasks
+for each proposed join $(a,b)$. Take the transitive closure of the
+accepted joins. In each resulting block choose a representative $p_0$
+and assign each member $p$ the relative sign
+$\sigma_p=\operatorname{sign}(w_{1,p}w_{1,p_0})$.
+Theorem~\ref{thm:theory-pair-recovery} gives conditions under which
+the procedure recovers every group.
+
+\subsection{Approximate Sign--Ratio Recovery (aSRR)}
+\label{sec:method-asrr}
+
+Ratios estimated from fitted networks can differ even for repeated
+code pairs. aSRR uses the variation of fitted weights across tasks
+to propose groups at a specified budget. Let $\mathbf W_{\tau r}$ and
+$\ell_{\tau r}$ be the first-layer matrix and numerical-validation loss
+of retained Dense fit $r$ on source task $\tau$. After normalizing the
+columns, we use the Hungarian algorithm to find the permutation matrix
+$P(X,Y)$ that puts the columns of $X$ in the order of $Y$.
+A permutation of the hidden neurons preserves the predictor when
+applied jointly to the incoming columns, hidden biases and outgoing
+rows~\cite[Sec.~2.1]{zhou2023permutation}. Algorithm~\ref{alg:asrr}
+averages the aligned fits of each task, then permutes the average into
+the common neuron order. Write $\bar w_{\tau,ih}$ for entry $(i,h)$ of
+the resulting matrix $\overline{\mathbf W}_\tau$.
+Appendix~\ref{app:asrr-experiments} gives the numbers of retained fits.
+
+For global sharing, the profile at $p=(i,h)$ is
+$\mathbf z_p=(\bar w_{\tau,ih})_{\tau=1}^T\in\mathbb R^T$. Two positions using the
+same code in one neuron have equal exact profiles up to sign. Across
+neurons, their normalized profiles can still have different scale
+factors on each task. To group approximately equal or opposite
+profiles, we use the sign-invariant map
+\begin{equation}
+    \Phi(\mathbf z)=\mathbf z\mathbf z^{\mathsf T}/\|\mathbf z\|_2
+        \quad(\mathbf z\ne\mathbf0),\qquad \Phi(\mathbf0)=\mathbf0 .
     \label{eq:asrr-profile-map}
 \end{equation}
-The map retains the profile magnitude and gives the same point to
-opposite profiles. Ward clustering compares these matrices by the
-Euclidean distance between their vectorized entries. A cut at $m$
-clusters assigns one code to each cluster. We infer the relative signs
-by orienting the profiles to their cluster mean.
+We apply Ward's minimum-variance criterion to the vectorized
+matrices~\cite{ward1963hierarchical}. For a tree $\mathcal T$,
+$\operatorname{cut}_m(\mathcal T)$ denotes its $m$ labeled clusters
+$G_1,\ldots,G_m$. We determine signs from the original profiles within
+each cluster. Reversing all signs in a cluster can be absorbed by
+reversing the sign of its code. We store each candidate $\mathbf I$
+with its budget $m$, which gives the offset for its negative assignments.
 
-For the input-sharing variant, concatenate the normalized weights
-leaving each input across neurons and tasks. Apply ordinary Ward
-clustering to these $D$ input profiles and cut at $m/H$ clusters,
-for a budget divisible by $H$. Inputs in the same cluster share
-one value within each neuron. Each neuron has its own code values.
-This variant uses only the fitted weights.
+For input sharing, collect the weight profiles leaving input $i$ into
+a $T\times H$ matrix $\mathbf Z_i$ whose column $h$ is
+$\mathbf z_{(i,h)}$. Ward compares the vectorized matrices.
+A partition into $k$ input groups gives each neuron its own $k$
+code values, for a total budget $m=Hk$, with $1\le k\le D$ and all
+assignment signs positive. Permuting the neurons of one task after
+averaging its fits reorders the same row coordinates of every
+$\mathbf Z_i$, preserving all distances. Lemma~\ref{lem:theory-input-ward}
+gives a sufficient condition for exact recovery.
+
+\begin{algorithm}[H]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \caption{Approximate Sign--Ratio Recovery (aSRR)}
+    \label{alg:asrr}
+    \KwIn{Retained fits $(\mathbf W_{\tau r},\ell_{\tau r})$, global and input budgets
+        $\mathcal M_{\rm g},\mathcal M_{\rm in}$, and data for comparing candidates if needed
+        (Section~\ref{sec:method-selection}).}
+    \KwOut{A fixed indexator $\widehat{\mathbf I}$ with its code budget.}
+    \lForEach{column $\mathbf w$ of every $\mathbf W_{\tau r}$}{
+        $\mathbf w\gets\mathbf w/\max(\|\mathbf w\|_2,10^{-12})$}
+    $r_\tau\in\operatorname*{arg\,min}_r\ell_{\tau r},\quad
+        \mathbf U_\tau\gets\mathbf W_{\tau r_\tau}\quad(\tau=1,\ldots,T)$\;
+    $\tau_*\in\operatorname*{arg\,min}_\tau\ell_{\tau r_\tau}$\;
+    $P(X,Y)\in\operatorname*{arg\,max}_{\Pi}\langle X\Pi,Y\rangle_F
+        \quad(\Pi\text{ a permutation matrix})$\;
+    \For{$\tau=1,\ldots,T$}{
+        $\overline{\mathbf W}_\tau\gets
+            \operatorname{mean}_r\bigl[\mathbf W_{\tau r}P(\mathbf W_{\tau r},\mathbf U_\tau)\bigr]$
+            \tcp*[r]{within task}
+        $\overline{\mathbf W}_\tau\gets
+            \overline{\mathbf W}_\tau P(\mathbf U_\tau,\mathbf U_{\tau_*})$
+            \tcp*[r]{across tasks}
+    }
+    $\mathcal B\gets\varnothing$\;
+    \If{$\mathcal M_{\rm g}\ne\varnothing$}{
+        $\mathbf z_{(i,h)}\gets(\bar w_{\tau,ih})_\tau$\;
+        $\mathcal T\gets\operatorname{Ward}\bigl(\{\Phi(\mathbf z_p)\}_p\bigr),\quad
+            \Phi(\mathbf z)=\mathbf z\mathbf z^{\mathsf T}/\|\mathbf z\|_2
+            \quad(\mathbf z\ne\mathbf0),\quad \Phi(\mathbf0)=\mathbf0$\;
+        \ForEach{$m\in\mathcal M_{\rm g}$}{
+            \ForEach{$G_j\in\operatorname{cut}_m(\mathcal T)$}{
+                $p_0\in\operatorname*{arg\,max}_{p\in G_j}\|\mathbf z_p\|_2,\quad
+                    \boldsymbol\mu\gets\mathbf z_{p_0}$\;
+                \For{$t=1,\ldots,4$}{
+                    $\sigma_p\gets\operatorname{sign}(\mathbf z_p^{\mathsf T}\boldsymbol\mu)
+                        \quad(p\in G_j)$ \tcp*[r]{$\operatorname{sign}(0)=+1$}
+                    $\boldsymbol\mu\gets |G_j|^{-1}\sum_{p\in G_j}\sigma_p\mathbf z_p$\;
+                }
+                $I_p\gets j+m\,\mathbf 1_{\{\sigma_p=-1\}}\quad(p\in G_j)$\;
+            }
+            $\mathcal B\gets\mathcal B\cup\{\mathbf I\}$\;
+        }
+    }
+    \If{$\mathcal M_{\rm in}\ne\varnothing$}{
+        $\mathbf Z_i\gets(\bar w_{\tau,ih})_{\tau,h},\quad
+            \mathcal T\gets\operatorname{Ward}\bigl(\{\mathbf Z_i\}_i\bigr)$\;
+        \ForEach{$m\in\mathcal M_{\rm in}$}{
+            \lForEach{$G_j\in\operatorname{cut}_{m/H}(\mathcal T)$}{
+                $I_{ih}\gets(j-1)H+h\quad(i\in G_j,\ 1\le h\le H)$}
+            $\mathcal B\gets\mathcal B\cup\{\mathbf I\}$\;
+        }
+    }
+    \If{$|\mathcal B|>1$}{
+        \lForEach{$\mathbf I\in\mathcal B$}{
+            $L_{\rm sel}(\mathbf I)\gets
+                \operatorname{HeldOutLoss}\bigl(\operatorname{Refit}(\mathbf I)\bigr)$}
+        $\mathcal B\gets\operatorname*{arg\,min}_{\mathbf I\in\mathcal B}L_{\rm sel}(\mathbf I)$\;
+    }
+    \Return any $\widehat{\mathbf I}\in\mathcal B$\;
+\end{algorithm}
+
+Several indexators can fit a source task comparably well while tying
+different weights. To identify shared relations, consider a bank
+$\mathcal B$ at a fixed budget and in a common hidden-neuron order.
+Let $V_\tau$ contain the candidates whose held-out loss $L_\tau(\mathbf I)$
+after refitting is within $\varepsilon$ of the best loss on task $\tau$
+(Section~\ref{sec:method-selection}).
+Write $\mathcal R(\mathbf I)$ for the signed equalities $w_p=\pm w_q$ between
+distinct positions and the fixed zeros $w_p=0$ that $\mathbf I$
+imposes for every choice of code values. A set $A$ of such relations
+is compatible across the source tasks when
+\begin{equation}
+    \forall\,\tau\in\{1,\ldots,T\},\quad
+    \exists\,\mathbf I\in V_\tau\quad\text{such that}\quad
+    A\subseteq\mathcal R(\mathbf I).
+    \label{eq:method-joint-relations}
+\end{equation}
+Each task must admit a candidate that enforces all relations in $A$.
+The candidate can vary across tasks. Appendix~\ref{app:asrr-compatibility}
+gives Algorithm~\ref{alg:asrr-compatible} for finding maximal compatible
+sets and evaluates it on Pattern.
 
 \subsection{Refitting and selecting indexators}
 \label{sec:method-selection}
 
-For each fixed candidate, we fit its code values, biases and output
-weights on a task's fitting examples. Numerical validation selects
-the fitted predictor, denoted $f_{\tau,\mathbf I}^{\mathrm{fit}}$.
-When comparing a bank $\mathcal B$ on the source tasks, we evaluate
-these predictors on disjoint structure-selection samples
-$V_\tau^{\mathrm{str}}$ and choose
+For a fixed indexator $\mathbf I$, $\operatorname{Refit}(\mathbf I)$
+fits fresh code values, biases and output weights on the fitting
+examples of each selection task. Numerical validation selects the
+predictor $\widehat f_{\tau,\mathbf I}\in\mathcal F_{\mathbf I}$.
+
+In a group-normalized refit, we optimize $\widetilde c_j$ with
+$c_j=\widetilde c_j/\sqrt{|G_j|}$ for each nonempty weight group $G_j$.
+This gives each group a unit-norm weight direction. The scaling is
+invertible, so it preserves $\mathcal F_{\mathbf I}$. The main comparisons
+fit the original codes directly. Appendix~\ref{app:asrr-gradient}
+evaluates group-size normalization.
+
+The selection loss $L_{\rm sel}(\mathbf I)$ evaluates the refitted
+predictors on held-out examples. On the source tasks, we average their
+losses on the disjoint structure-selection samples $S_\tau^{\mathrm{str}}$
+and choose
 \begin{equation}
     \widehat{\mathbf I}
     \in\operatorname*{arg\,min}_{\mathbf I\in\mathcal B}
-        \frac1T\sum_\tau
-        \mathcal L_{V_\tau^{\mathrm{str}}}
-        (f_{\tau,\mathbf I}^{\mathrm{fit}}).
+        \frac1T\sum_{\tau=1}^T
+        \mathcal L_{S_\tau^{\mathrm{str}}}(\widehat f_{\tau,\mathbf I}).
     \label{eq:method-structure-selection}
 \end{equation}
 A bank can also be compared on separate development tasks after

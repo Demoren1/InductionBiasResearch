@@ -15,29 +15,23 @@ judged after the numerical parameters have been learned anew.
 \subsection{Multi-task learning}
 \label{sec:tasks}
 
-Multi-task learning uses regularities shared by related tasks to improve
-learning. Here, each task $\tau$ is a supervised prediction problem with
-its own distribution $P_\tau$ over input--target pairs $(\mathbf{x},y)$. Tasks
-belong to a family $\mathcal{T}$, share input and target spaces
-$\mathcal{X}$ and $\mathcal{Y}$, and occur according to a distribution
-$p(\tau)$ \cite{baxter2000model}. We consider task families in which
-structural patterns useful for solving one task may also help solve others.
-
-All tasks in the source collection $\mathcal{T}_{\mathrm{tr}}$ and
-the target collection $\mathcal{T}_{\mathrm{val}}$ are sampled
-independently from $p(\tau)$.
-We learn shared patterns from the source tasks and assess their transfer
-on the target tasks.
+Each task $\tau$ has a distribution $P_\tau$ over input--target
+pairs $(\mathbf x,y)$. Source and target tasks share input and output
+spaces and are drawn independently from a common task environment
+\cite{baxter2000model}. We learn sharing constraints on the source
+tasks and assess their transfer on the target tasks.
 For each task, a \emph{training sample} $S_\tau^{\mathrm{train}}$ is used to
 fit numerical parameters, and an independent \emph{validation sample}
 $S_\tau^{\mathrm{valid}}$ is used to compare the fitted predictors
 \cite{finn2017model,zhou2021meta}. Conditional on $\tau$, both samples
 consist of independent draws from $P_\tau$.
-The train/valid split is defined within each source or target task.
-For a predictor $f$ and a sample $S$, the empirical loss is
+For a predictor $f$ and a loss $\ell$, the population risk
+$R_\tau(f)$ and empirical loss $\mathcal L_S(f)$ average that loss
+over the task distribution and a sample $S$, respectively.
 \begin{equation}
-    \mathcal{L}_S(f)
-    :=\frac{1}{|S|}\sum_{(\mathbf{x},y)\in S}\ell(f(\mathbf{x}),y).
+    R_\tau(f):=\mathbb E_{(\mathbf x,y)\sim P_\tau}\ell(f(\mathbf x),y),
+    \qquad
+    \mathcal L_S(f):=\frac{1}{|S|}\sum_{(\mathbf x,y)\in S}\ell(f(\mathbf x),y).
     \label{eq:task-loss}
 \end{equation}
 Here, $\ell$ measures prediction error on one example, such as squared
@@ -49,61 +43,39 @@ error for regression or cross-entropy for classification.
 We distinguish structural constraints shared across tasks from
 task-specific numerical values.
 A network structure specifies which connections are permitted and which
-weights share a trainable parameter. Let $P$ denote the number of weights
-subject to these constraints, and let $\mathbf{w}_\tau\in\mathbb{R}^{P}$
-collect them in a fixed order on task $\tau$, across any number of layers.
-We call $p\in\{1,\ldots,P\}$ a weight index.
+weights share a trainable parameter. Let $P$ be the number of constrained
+positions, indexed by $p=1,\ldots,P$ across any number of layers.
+When describing a single task, we omit its index $\tau$ from its
+weights, code values and predictor. We restore it when comparing tasks.
 
 We encode the constraints using an \emph{indexator}, an integer vector
-$\mathbf{I}\in\{0,\ldots,K\}^{P}$, where $K$ is the number of available
-nonzero labels.
-Their task-specific values
-form a
-\emph{codebook}
-$\mathbf{C}_\tau=(C_{\tau,0},\ldots,C_{\tau,K})\in\mathbb{R}^{K+1}$
-\cite{han2016deep,yeh2022equivariance}.
-The weights are obtained by the lookup rule
+$\mathbf I=(I_p)_{p=1}^P$ whose entries are labels in $\{0,\ldots,K\}$.
+The label at each position selects a weight from the task's
+\emph{codebook} $\mathbf C=(C_0,\ldots,C_K)^{\mathsf T}$. We use
+the index and centroid notation of \citet[Sec.~3.3]{han2016deep},
+with label zero reserved for an inactive connection. This is the
+dictionary lookup used in LUT-Q~\cite{cardinaux2018iteratively}.
 \begin{equation}
-    w_{\tau,p}=C_{\tau,I_p},\qquad p=1,\ldots,P,
-    \qquad C_{\tau,0}=0.
+    w_p=C_{I_p},\qquad C_0=0.
     \label{eq:indexator-weights}
 \end{equation}
 Under this rule, $I_p=0$ removes a connection, while $I_p=I_q>0$
-requires the corresponding weights to remain equal throughout training.
-The indexator therefore determines both connectivity and the partition
-of permitted connections into parameter-sharing groups. Allowing the
-codebook values to vary defines the associated space of admissible
-weights,
-\begin{equation}
-    \mathcal{W}_{\mathbf{I}}
-    :=\left\{
-        (C_{I_1},\ldots,C_{I_P})^{\mathsf T}
-        :\mathbf{C}\in\mathbb{R}^{K+1},\ C_0=0
-    \right\}.
-    \label{eq:structural-weight-space}
-\end{equation}
-Positive labels merely name the groups, so consistently renaming them
-leaves this space unchanged. Distinct groups have independent
-parameters even if their learned values happen to coincide on a task.
+requires the corresponding weights to remain equal throughout
+training~\cite{yeh2022equivariance}.
+Varying the code values in~\eqref{eq:indexator-weights} gives all
+admissible weights. Positive labels name the groups, so they can be
+renamed together with their codes. Distinct groups have independent
+parameters even if their fitted values coincide on a task.
 
-We collect all remaining unconstrained trainable parameters in
-$\boldsymbol{\theta}_\tau$ and write
-$f_{\mathbf{I},\mathbf{C}_\tau,\boldsymbol{\theta}_\tau}$ for the resulting
-predictor. Reusing $\mathbf{I}$ across tasks preserves the constraints
-defining $\mathcal{W}_{\mathbf{I}}$, while each task learns its own
-codebook and remaining numerical parameters. In every fitting attempt,
-the indexator is held fixed, and all trainable entries of
-$\mathbf{C}_\tau$ and $\boldsymbol{\theta}_\tau$ are initialized afresh
-and optimized on the task's training sample.
+Write $\mathcal F_{\mathbf I}$ for the class of predictors obtained
+by varying the codebook and all unconstrained parameters while holding
+$\mathbf I$ fixed. Each fitting attempt initializes these numerical
+parameters afresh and optimizes them on the task's training sample.
 
 \subsection{Problem formulation}
 \label{sec:problem-formulation}
 
-Let $\mathcal{I}_K:=\{0,\ldots,K\}^{P}$ denote the set of admissible
-indexators. For each $\mathbf{I}\in\mathcal{I}_K$, let
-$\mathcal{F}_{\mathbf{I}}$ denote the set of predictors
-$f_{\mathbf{I},\mathbf{C},\boldsymbol{\theta}}$ obtained as the admissible
-numerical parameters $\mathbf{C}$ and $\boldsymbol{\theta}$ vary.
+Let $\mathcal{I}_K:=\{0,\ldots,K\}^{P}$ denote the set of indexators.
 
 \begin{definition}[Functional equivalence of indexators]
     Two indexators $\mathbf{I},\mathbf{J}\in\mathcal{I}_K$ are
@@ -113,18 +85,11 @@ numerical parameters $\mathbf{C}$ and $\boldsymbol{\theta}$ vary.
     and $\mathcal{I}_K/{\sim}$ for the set of these classes.
 \end{definition}
 
-For a task $\tau$ and a fixed indexator
-$\mathbf{I}\in\mathcal{I}_K$, define the optimal task risk as
+Following the hypothesis-space formulation of
+\citet[Eq.~(6)]{baxter2000model}, the optimal risk on task $\tau$
+for a fixed indexator $\mathbf I$ is
 \begin{equation}
-    \mathcal{R}_\tau^\star(\mathbf{I})
-    :=\inf_{\substack{
-        \mathbf{C}_\tau,\boldsymbol{\theta}_\tau
-    }}
-    \mathbb{E}_{(\mathbf{x},y)\sim P_\tau}
-    \left[
-        \ell\bigl(f_{\mathbf{I},\mathbf{C}_\tau,
-        \boldsymbol{\theta}_\tau}(\mathbf{x}),y\bigr)
-    \right].
+    R_\tau^\star(\mathbf I):=\inf_{f\in\mathcal F_{\mathbf I}}R_\tau(f).
     \label{eq:optimal-task-risk}
 \end{equation}
 The infimum optimizes task-specific numerical parameters with respect
@@ -133,13 +98,12 @@ predictive capacity of $\mathbf{I}$. Generalization from finite training
 samples and numerical convergence also depend on the fitting procedure.
 Equivalent indexators have the same optimal task risk, so this
 criterion is independent of the representative within each class.
-The population problem can therefore be written as a search over
-equivalence classes:
+The population objective minimizes the expected optimal task risk
+over equivalence classes.
 \begin{equation}
     [\mathbf{I}^\star]
     \in\operatorname*{arg\,min}_{[\mathbf{I}]\in\mathcal{I}_K/{\sim}}
-    \mathbb{E}_{\tau\sim p(\tau)}
-    \left[\mathcal{R}_\tau^\star(\mathbf{I})\right].
+    \mathbb E_\tau R_\tau^\star(\mathbf I).
     \label{eq:optimal-structure}
 \end{equation}
 The expectation concerns a new task drawn from the same task
@@ -149,32 +113,18 @@ functional equivalence. Distinct equivalence classes may still attain
 the same optimum; identifying a unique optimal class requires suitable
 assumptions on the task family and network parameterization.
 
-For the empirical problem, the indexator is selected on source tasks
-and then held fixed when fitting numerical parameters on held-out
-tasks. The resulting numerical adaptation problem is
+With $T$ source tasks, the corresponding ideal empirical objective
+averages the best training loss in the same class on each task.
 \begin{equation}
-    \begin{aligned}
-        &\inf_{\{\mathbf{C}_\tau,\boldsymbol{\theta}_\tau\}
-            _{\tau\in\mathcal{T}_{\mathrm{val}}}}
-        \frac{1}{|\mathcal{T}_{\mathrm{val}}|}
-        \sum_{\tau\in\mathcal{T}_{\mathrm{val}}}
-        \mathcal{L}_{S_\tau^{\mathrm{train}}}
-        \bigl(f_{\widehat{\mathbf{I}},\mathbf{C}_\tau,
-            \boldsymbol{\theta}_\tau}\bigr)
-        \\
-        &\text{subject to}\quad
-        \widehat{\mathbf{I}}
-        \in\operatorname*{arg\,min}_{\mathbf{I}\in\mathcal{I}_K}
-        \frac{1}{|\mathcal{T}_{\mathrm{tr}}|}
-        \sum_{\tau\in\mathcal{T}_{\mathrm{tr}}}
-        \inf_{\mathbf{C}_\tau,\boldsymbol{\theta}_\tau}
-        \mathcal{L}_{S_\tau^{\mathrm{train}}}
-        \bigl(f_{\mathbf{I},\mathbf{C}_\tau,
-            \boldsymbol{\theta}_\tau}\bigr).
-    \end{aligned}
+    \widehat{\mathbf I}\in\operatorname*{arg\,min}_{\mathbf I\in\mathcal I_K}
+        \frac1T\sum_{\tau=1}^T
+        \inf_{f\in\mathcal F_{\mathbf I}}\mathcal L_{S_\tau^{\mathrm{train}}}(f).
     \label{eq:structure-learning}
 \end{equation}
 
-Transfer performance is measured by the mean validation loss across held-out
-tasks after their numerical parameters have been fitted on the training
-samples.
+On each target task the corresponding fitting objective is
+$\inf_{f\in\mathcal F_{\widehat{\mathbf I}}}\mathcal L_{S^{\mathrm{train}}}(f)$.
+Each task has its own numerical parameters, so these optima can be
+averaged over target tasks. We measure transfer by the mean validation
+loss of the predictors obtained after fitting. Section~\ref{sec:method-selection}
+gives the selection rule used with a finite bank and a numerical solver.

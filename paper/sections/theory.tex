@@ -5,65 +5,55 @@ We study when source observations determine their shared groups.
 Section~\ref{sec:theory-observations} separates the information in
 magnitudes and signs that is preserved by neuron rescaling.
 Section~\ref{sec:theory-recovery} gives an exact identification
-criterion and shows when a single source task suffices for recovery.
+criterion, conditions for recovery by SRR and a guarantee for the
+input-sharing variant of aSRR.
 Section~\ref{sec:theory-graph} gives a graph condition for uniqueness
 and explains the role of a neuron containing three or more codes.
 Section~\ref{sec:theory-complementarity} shows how partial information
 from individually ambiguous tasks can determine the groups jointly.
-Proofs and constructive recovery rules are in
-Appendix~\ref{app:theory-proofs}; stability and selection on new tasks
-are treated in Appendix~\ref{app:theory-additional}.
+Appendix~\ref{app:theory-proofs} gives the proofs and additional
+recovery results. Appendix~\ref{app:theory-additional} treats
+stability and selection on new tasks.
 
 \subsection{Information preserved by neuron rescaling}
 \label{sec:theory-observations}
 
 Consider the ReLU layer of Section~\ref{sec:method-relu-instance},
 with the source neurons already correctly aligned across tasks.
-Fix the active connections
-$\mathcal E\subseteq\{1,\ldots,D\}\times\{1,\ldots,H\}$.
-Without loss of generality for this structural analysis, retain
-only neurons with at least one active incoming connection, relabel
-them, and let $H$ denote their number. Write $E:=|\mathcal E|$, enumerate the active
-weight indices by $p=1,\ldots,E$, and let $h(p)$ be the receiving neuron.
+Fix the set $\mathcal E$ of active input--neuron connections and
+give its $E=|\mathcal E|$ positions a fixed ordering. A position
+$p=(i,h)$ connects input $i$ to neuron $h$. We write $h(p)$ for
+its neuron when comparing positions. We retain only neurons with an
+active incoming connection and number them $1,\ldots,H$.
 
 For each of the $T\ge1$ source tasks, write
 $\mathbf w_\tau\in(\mathbb R\setminus\{0\})^E$ for the observed
 weights at these active indices after alignment. These are the
-active first-layer entries of the fitted source weights
-$\widetilde{\mathbf w}_\tau$ from Section~\ref{sec:method-source}.
+source observations used by SRR in Section~\ref{sec:method-srr}.
 
-Let $\mathbf I$ denote the fixed but unknown true indexator.
-It assigns each active index $p$ to one of $m$ nonempty groups,
-denoted $j_{\mathbf I}(p)$, with fixed sign
-$\sigma_{\mathbf I,p}\in\{-1,1\}$. Our observation model assumes
-that on each task there exist code values
-$\mathbf c_\tau\in(\mathbb R\setminus\{0\})^m$ and positive
-neuron scales $\mathbf s_\tau\in(0,\infty)^H$ such that
+The unknown indexator has grouping $g$ and signs $\sigma_p$ as in
+Section~\ref{sec:method-relu-instance}. Each of the $m$ groups is
+nonempty. On any one task, let $c_j\ne0$ be the value of code $j$
+and $s_h>0$ the scale of neuron $h$. At a position $p=(i,h)$ in
+group $j=g(p)$, the observed weight satisfies
 \begin{equation}
-    w_{\tau,p}
-    =\frac{\sigma_{\mathbf I,p}c_{\tau,j_{\mathbf I}(p)}}
-           {s_{\tau,h(p)}}.
+    w_p=\frac{C_{I_p}}{s_h}=\frac{\sigma_p c_j}{s_h}.
     \label{eq:theory-observation}
 \end{equation}
-Groups and fixed signs are shared across tasks; code values and
-scales vary with the task. Without a restriction on $m$, any such
-source weights admit this representation: take one code per active
-index ($m=E$), all assignment signs and neuron scales equal to $1$,
-and $c_{\tau,p}=w_{\tau,p}$. The structural assumption is that a
-common grouping explains all tasks within a prescribed code budget.
-Positive scales are the ReLU symmetry
-used in Section~\ref{sec:method-relu-instance}~\cite{stock2022embedding}.
-Normalizing an aligned source column changes only its neuron scale
-in this observation model.
+Each task has its own code values and scales. The scale accounts for
+the positive rescaling of a ReLU neuron's incoming weights and bias
+with reciprocal rescaling of its outgoing weights
+\cite[Sec.~2.3]{stock2022embedding}. Column normalization changes
+only this scale. With one code per active position ($m=E$), setting
+all signs and scales to $1$ and taking $c_p=w_p$ fits any observations.
+The structural assumption is that one grouping explains every task
+within the prescribed code budget.
 
 For $\mathbf x\in\mathbb R^E$, define the centering operator
 $\boldsymbol\Pi:\mathbb R^E\to\mathbb R^E$ by
 \begin{equation*}
     (\boldsymbol\Pi\mathbf x)_p
-        :=x_p-
-        \frac{1}{\bigl|\{q:\,h(q)=h(p)\}\bigr|}
-        \sum_{q:\,h(q)=h(p)}x_q,
-    \qquad p=1,\ldots,E,
+        :=x_p-\operatorname{mean}_{q:\,h(q)=h(p)}x_q ,
 \end{equation*}
 where $q$ ranges over active weight indices.
 Applied to log magnitudes, it removes the unknown neuron scales.
@@ -76,28 +66,27 @@ The centered observations are
 The logarithms and absolute values act coordinatewise.
 
 Let $\mathbf u\in\mathbb R^m$ contain one log magnitude per code.
-Repeating each entry at the active indices of its group gives a
-vector $\mathbf x\in\mathbb R^E$. The \emph{contrast space} is
+The \emph{contrast space} of $g$ consists of the vectors obtained
+by repeating each $u_j$ at its group's positions and centering within neurons.
 \begin{equation}
-    \mathcal S_{\mathbf I}
-    :=\left\{\boldsymbol\Pi\mathbf x:
-        \mathbf x=(u_{j_{\mathbf I}(p)})_{p=1}^E,\quad
+    \mathcal S
+    :=\left\{\boldsymbol\Pi (u_{g(p)})_{p=1}^E :
         \mathbf u\in\mathbb R^m\right\}
        \subseteq\mathbb R^E.
     \label{eq:theory-contrast-space}
 \end{equation}
 This space contains all possible centered log magnitudes for the
-fixed grouping $\mathbf I$. Each observed $\mathbf y_\tau$ belongs
+fixed grouping $g$. Each observed $\mathbf y_\tau$ belongs
 to it, with
 $u_j=\log|c_{\tau,j}|$.
 
 Signs carry additional information. For each index $p$, define
 its normalized sign profile across tasks by
 \begin{equation}
-    \overline b_{\tau,p}:=\operatorname{sign}(w_{\tau,p}w_{1,p}),
+    b_{\tau,p}:=\operatorname{sign}(w_{\tau,p}w_{1,p}),
     \qquad
-    \overline{\mathbf b}_p
-      :=(\overline b_{\tau,p})_{\tau=1}^T\in\{-1,1\}^T.
+    \mathbf b_p
+      :=(b_{\tau,p})_{\tau=1}^T\in\{-1,1\}^T.
     \label{eq:theory-sign-profile}
 \end{equation}
 Multiplication by the first sign cancels the fixed assignment sign.
@@ -106,33 +95,24 @@ Thus indices in the same group have the same normalized profile.
 \subsection{Exact and generic identification}
 \label{sec:theory-recovery}
 
-Let $\mathcal C$ be a finite family of partitions of the fixed active
-weight indices, containing the true grouping defined by $\mathbf I$.
-Each partition is a
-\emph{candidate grouping}: it specifies which indices share a code.
-For a candidate $\mathbf J\in\mathcal C$, let $j_{\mathbf J}(p)$
-denote the group containing index $p$, and let
-$\mathcal S_{\mathbf J}$ be the contrast space
-\eqref{eq:theory-contrast-space} formed using its groups.
+Let $\mathcal G$ be a finite family of candidate groupings of the
+active positions, including the true grouping $g$. Group labels are
+arbitrary. We compare partitions up to renaming. For a candidate
+$g'$, we use primes on quantities built from that grouping. Thus
+$m'$ is its number of groups and $\mathcal S'$ is the space
+in~\eqref{eq:theory-contrast-space} with $g'$ in place of $g$.
 
 \begin{definition}[Compatibility with source weights]
     \label{def:theory-compatible-grouping}
-    Given the aligned source weight vectors
-    $\mathbf w_1,\ldots,\mathbf w_T$,
-    a candidate grouping $\mathbf J$ is \emph{compatible} with these
-    weights if every observed entry can be reproduced by choosing
-    its own assignment signs $\sigma_p\in\{-1,1\}$ for the active indices
-    and, on each task $\tau$, one nonzero real code value $c_{\tau,j}$
-    for each group $j$ and one positive scale $s_{\tau,h}$ for each
-    neuron $h$, so that
+    A candidate grouping $g'$ is \emph{compatible} with the observed
+    weights if there is one choice of signs $\sigma'_p\in\{-1,1\}$
+    for all tasks such that, on every task $\tau$, some code values
+    $c_{\tau,j}\ne0$ and neuron scales $s_{\tau,h}>0$ satisfy
     \begin{equation*}
-        w_{\tau,p}
-            =\frac{\sigma_p c_{\tau,j_{\mathbf J}(p)}}{s_{\tau,h(p)}},
-        \qquad \tau=1,\ldots,T,\quad p=1,\ldots,E.
+        w_{\tau,p}=\frac{\sigma'_p c_{\tau,j}}{s_{\tau,h}}
     \end{equation*}
-    The observed weights and the candidate grouping are held fixed
-    in this check. The assignment signs are chosen once for all tasks;
-    code values and neuron scales may be chosen separately on each task.
+    at every active position $p=(i,h)$ with candidate label $j=g'(p)$.
+    Code values and scales are fitted separately on each task for this partition.
 \end{definition}
 
 For example, two indices in the same group that enter the same neuron
@@ -140,17 +120,17 @@ must have equal weight magnitudes on every task.
 
 \begin{theorem}[Identification from finite observations]
     \label{thm:theory-finite-identification}
-    A grouping $\mathbf J\in\mathcal C$ is compatible if and only if
+    A grouping $g'\in\mathcal G$ is compatible if and only if
     \begin{equation}
         \begin{aligned}
-            \mathbf y_\tau&\in\mathcal S_{\mathbf J}
+            \mathbf y_\tau&\in\mathcal S'
                 &&\text{for every task }\tau,\\
-            \overline{\mathbf b}_p&=\overline{\mathbf b}_q
-                &&\text{whenever }j_{\mathbf J}(p)=j_{\mathbf J}(q).
+            \mathbf b_p&=\mathbf b_q
+                &&\text{whenever }g'(p)=g'(q).
         \end{aligned}
         \label{eq:theory-compatibility}
     \end{equation}
-    Thus the groups are uniquely determined within $\mathcal C$
+    Thus the groups are uniquely determined within $\mathcal G$
     if and only if exactly one grouping satisfies both conditions.
 
 \end{theorem}
@@ -164,56 +144,55 @@ fixed across tasks.
 \begin{corollary}[Compatibility for generic code magnitudes]
     \label{cor:theory-generic-identification}
     Fix a representation~\eqref{eq:theory-observation} with true
-    indexator $\mathbf I$. Vary only the log code magnitudes on
+    grouping $g$. Vary only the log code magnitudes on
     one source task. For almost every choice, a candidate grouping
-    $\mathbf J\in\mathcal C$ is compatible with the resulting weights
+    $g'\in\mathcal G$ is compatible with the resulting weights
     if and only if
     \begin{equation*}
         \begin{aligned}
-            \mathcal S_{\mathbf I}&\subseteq\mathcal S_{\mathbf J},\\
-            \overline{\mathbf b}_p&=\overline{\mathbf b}_q
-                \qquad\text{whenever }j_{\mathbf J}(p)=j_{\mathbf J}(q).
+            \mathcal S&\subseteq\mathcal S',\\
+            \mathbf b_p&=\mathbf b_q
+                \qquad\text{whenever }g'(p)=g'(q).
         \end{aligned}
     \end{equation*}
 \end{corollary}
 
 Candidates can be checked from the observed weights using
-\eqref{eq:theory-compatibility}, without knowing the true indexator
-$\mathbf I$. Corollary~\ref{cor:theory-generic-identification}
+\eqref{eq:theory-compatibility}, without knowing the true grouping
+$g$. Corollary~\ref{cor:theory-generic-identification}
 shows that one task with generic code magnitudes rules out
 candidates that fit only through accidental relations between
 code magnitudes. Any remaining candidate can reproduce every
 magnitude pattern generated by the true grouping.
 If structural conditions exclude these alternatives within
-$\mathcal C$, one source task suffices for recovery without
-first estimating $\mathcal S_{\mathbf I}$.
+$\mathcal G$, one source task suffices for recovery without
+first estimating $\mathcal S$.
 
-For a grouping $\mathbf I$, define its bipartite
-\emph{calibration graph} $G_{\mathbf I}$ as follows.
-One part has a vertex for each code group $j=1,\ldots,m$;
-the other has a vertex for each neuron $h=1,\ldots,H$.
+For a grouping $g$, define its bipartite
+\emph{calibration graph} $G$ as follows.
+Its parts are the $m$ code groups and the $H$ neurons.
 Each active weight index $p$ gives an edge joining its code vertex
-$j_{\mathbf I}(p)$ to its neuron vertex $h(p)$.
+$g(p)$ to its neuron vertex $h(p)$.
 Distinct weight indices give separate edges even when their endpoints
 coincide.
 
 The magnitude condition in Theorem~\ref{thm:theory-finite-identification}
-can be checked by cycles in $G_{\mathbf J}$.
+can be checked by cycles in $G'$.
 Products of magnitudes along alternating sides of every cycle must
 agree. These rank-one cycle relations become linear
 after taking logarithms~\cite[Theorem~34 and Remark~35]{kiraly2015algebraic}.
 Appendix~\ref{app:theory-cycles} gives the matrix criterion.
 
-If $G_{\mathbf I}$ is connected, then
-$\dim\mathcal S_{\mathbf I}=m-1$.
-For any candidate $\mathbf J$ using at most $m$ codes,
-$\dim\mathcal S_{\mathbf J}\le m-1$
+If $G$ is connected, then
+$\dim\mathcal S=m-1$.
+For any candidate $g'$ using at most $m$ codes,
+$\dim\mathcal S'\le m-1$
 (Appendix~\ref{app:theory-dimension}). This gives the following consequence.
 
 \begin{corollary}[One generic task]
     \label{cor:theory-one-task}
-    Suppose $G_{\mathbf I}$ is connected, every candidate uses
-    at most $m$ codes, and $\mathcal S_{\mathbf I}$ determines a
+    Suppose $G$ is connected, every candidate uses
+    at most $m$ codes, and $\mathcal S$ determines a
     unique grouping among candidates using $m$ codes.
     Almost every choice of log code magnitudes on one source task
     identifies the groups.
@@ -230,11 +209,67 @@ two of its indices $p,q$ are given by
 $\operatorname{sign}(w_{1,p}w_{1,q})$.
 Appendix~\ref{app:theory-sign-details} quantifies sign diversity and errors.
 
+We now ask which groups SRR recovers by comparing the observed
+ratios in~\eqref{eq:method-srr-ratio}. For each code $j$, form a
+graph $G_j$ on the neurons that use $j$. Join two
+neurons if they also share a second code. A graph with one vertex
+is connected.
+
+\begin{theorem}[Recovery by SRR from repeated code pairs]
+    \label{thm:theory-pair-recovery}
+    Suppose the centered observations $\mathbf y_1,\ldots,\mathbf y_T$
+    span $\mathcal S$. The blocks returned by SRR are
+    exactly the occurrences of each code $j$ in each connected
+    component of $G_j$. If all these graphs are connected,
+    SRR recovers the indexator up to code renaming and a choice of
+    sign for each group. Under this connectivity condition the
+    contrast space alone determines the groups among groupings of
+    the same active positions and neurons with $m$ used codes.
+\end{theorem}
+
+Full span rules out accidental coincidences between log ratios of
+different ordered pairs of distinct codes. Under the same connectivity
+condition, one task with generic log code magnitudes also suffices
+for SRR. Any accidental zero or equality of distinct ordered
+log-code differences imposes one of finitely many proper hyperplane
+constraints. Appendix~\ref{app:theory-pairs} proves both claims.
+
+For the input-sharing variant of aSRR, the relevant observations
+are the input profiles $\mathbf Z_i$ of Section~\ref{sec:method-asrr}.
+With one exact source fit per task and positive assignment signs,
+two input groups have distinct profiles as soon as their code
+values differ in one neuron on one task. Both values in that
+column are divided by the same positive scale.
+
+\begin{lemma}[Exact input recovery by aSRR]
+    \label{lem:theory-input-ward}
+    Suppose the inputs have $k$ nonempty groups, with a separate
+    code for each group in each neuron and all assignment signs
+    positive. If the observed profiles $\mathbf Z_i$ are identical
+    within each group and any two groups differ for at least one
+    neuron on one task, the input branch of
+    Algorithm~\ref{alg:asrr} at budget $m=Hk$ recovers the indexator
+    up to code renaming.
+\end{lemma}
+
+\begin{proof}
+    For two clusters of sizes $a,b$ and vectorized profile means
+    $\boldsymbol\mu,\boldsymbol\nu$, Ward's increase in the
+    within-cluster sum of squares is
+    $\frac{ab}{a+b}\|\boldsymbol\mu-\boldsymbol\nu\|_2^2$.
+    Starting from singletons, a merge within a true group costs
+    zero, and a merge between pure clusters from distinct groups
+    costs strictly more. While more than $k$ clusters remain, some
+    true group is split and hence admits a zero-cost merge. The cut
+    at $k$ therefore gives the true input groups. Assigning one
+    code per group and neuron gives the stated indexator.
+\end{proof}
+
 \subsection{A structural condition for uniqueness}
 \label{sec:theory-graph}
 
 We now give a condition under which magnitudes determine the groups.
-Define the simple \emph{code co-occurrence graph} $K_{\mathbf I}$:
+Define the simple \emph{code co-occurrence graph} $G_{\mathrm{code}}$:
 its vertices are the $m$ codes, and two codes are adjacent when
 they occur together in a neuron. A graph is 3-vertex-connected
 if it has at least four vertices and stays connected after deletion
@@ -243,8 +278,8 @@ of any two or fewer vertices.
 \begin{theorem}[Uniqueness from code co-occurrence]
     \label{thm:theory-cooccurrence}
     Suppose every neuron contains at least two distinct codes and
-    $K_{\mathbf I}$ is 3-vertex-connected.
-    The contrast space $\mathcal S_{\mathbf I}$ uniquely determines
+    $G_{\mathrm{code}}$ is 3-vertex-connected.
+    The contrast space $\mathcal S$ uniquely determines
     the groups among groupings with $m$ used codes if and only if
     at least one neuron contains three or more distinct codes.
 \end{theorem}
@@ -272,9 +307,10 @@ Their co-occurrence graph is the complete graph on four codes,
 so Theorem~\ref{thm:theory-cooccurrence} applies. No pair of codes
 appears in two neurons, and the calibration graph has vertices
 of degree two. Nevertheless, its longer cycles determine all groups.
-The constructive rule based on repeated pairs is given separately
-in Appendix~\ref{app:theory-pairs}; it can recover partial groups
-before these longer-cycle constraints are considered.
+Given the contrast space, SRR identifies the local groups within each
+neuron in this example. Linking them across neurons requires the
+longer cycles covered by
+Theorem~\ref{thm:theory-cooccurrence}.
 
 Theorem~\ref{thm:theory-cooccurrence} gives a sharp condition within
 its graph class. For general graphs, Theorem~\ref{thm:theory-finite-identification}
@@ -311,7 +347,7 @@ This is a constrained partitioning problem~\cite{davidson2007complexity}.
 \end{proposition}
 
 For a functional example, consider
-$f_\tau(\mathbf x)=\operatorname{ReLU}
+$f_\tau(\mathbf x)=\rho
     (\mathbf w_\tau^{\mathsf T}\mathbf x)$
 on four input coordinates, with at most two positive weight codes.
 Let $\mathbf e_p$ denote the $p$th coordinate vector.
@@ -337,6 +373,51 @@ indices. Correct relations require appropriate extraction:
 coincident numerical values alone do not certify a common group.
 For erroneous pairwise relations, Appendix~\ref{app:theory-partial-noise}
 gives a necessary and sufficient redundancy condition for two groups.
+
+A Dense fit can exhibit a signed relation even when its task leaves
+the sign undetermined. Consider three tasks with target
+$f(\mathbf x)=\rho(x_1+x_2)$, one hidden neuron and a budget of one
+code. On the first two tasks $x_2=0$, so incoming weights $(1,1)$ and
+$(1,-1)$ give the same predictions. On the third task all four inputs
+in $\{0,1\}^2$ have positive probability. Suppose the retained Dense
+fits use $(1,-1)$ on the first two tasks and $(1,1)$ on the third.
+All three fits are exact. After column normalization, the two
+coordinate profiles in Algorithm~\ref{alg:asrr} are
+\[
+    \mathbf z_1=(1,1,1)^{\mathsf T}/\sqrt{2},\qquad
+    \mathbf z_2=(-1,-1,1)^{\mathsf T}/\sqrt{2}.
+\]
+Their inner product is $-1/2$, so the global branch assigns opposite
+signs to the two weights that share the code. The resulting network
+depends on $x_1-x_2$ alone and gives the same prediction at $(0,0)$
+and $(1,1)$, where the
+targets are $0$ and $2$. With both signs in the bank and $\varepsilon=0$,
+both assignments attain zero population squared loss on the first two
+tasks, and only $w_1=w_2$ does so on the third. Thus
+Algorithm~\ref{alg:asrr-compatible} recovers the shared sign even
+though two of the three Dense fits use the other sign.
+
+\begin{proposition}[When a task rules out a proposed relation]
+    \label{prop:theory-distinguishing-task}
+    Fix the candidate bank, the tolerance and a proposed set of
+    relations $A$ before drawing $T$ independent tasks from the same
+    distribution. Form each $V_\tau$ using the optimal task risks
+    $R_\tau^\star(\mathbf I)$ from~\eqref{eq:optimal-task-risk}.
+    If a task has probability $p$ of admitting no candidate in $V_\tau$
+    that enforces all of $A$, then the probability that $A$ remains
+    compatible after $T$ tasks is $(1-p)^T$.
+\end{proposition}
+
+\begin{proof}
+    By~\eqref{eq:method-joint-relations}, $A$ remains compatible
+    exactly when each task admits at least one candidate enforcing
+    the whole set. These events are independent and each has
+    probability $1-p$.
+\end{proof}
+
+A false relation is therefore ruled out eventually with probability
+one if $p>0$. When $p=0$, further tasks drawn from the same
+distribution leave the ambiguity unresolved.
 
 The weight-based results assume aligned source representations.
 Applying them to fitted source predictors requires an error bound

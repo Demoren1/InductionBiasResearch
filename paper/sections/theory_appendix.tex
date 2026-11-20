@@ -4,50 +4,53 @@
 The analysis uses the active weight indices and neuron correspondence
 of Section~\ref{sec:theory-observations}. Active code values are
 nonzero, scales are positive, and every used code has a nonempty group.
-We first give the matrix representation needed in the proofs.
+We use $g$ for the true grouping and $g'$ for a candidate as in
+Section~\ref{sec:theory-recovery}. On a single task write
+$u_j=\log|c_j|$ and $v_h=\log s_h$ for log code magnitudes and
+log neuron scales. Across tasks these entries are $u_{\tau,j}$
+and $v_{\tau,h}$.
 
 \subsection{Matrices and calibration scales}
 \label{app:theory-dimension}
 
 Define the group-membership matrix
-$\mathbf U_{\mathbf I}\in\{0,1\}^{E\times m}$ and the
+$\mathbf U\in\{0,1\}^{E\times m}$ and the
 neuron-membership matrix $\mathbf N\in\{0,1\}^{E\times H}$ by
 \begin{equation}
-    (\mathbf U_{\mathbf I})_{pj}
-        :=\mathbf1\{j_{\mathbf I}(p)=j\},
+    U_{pj}
+        :=\mathbf1\{g(p)=j\},
     \qquad
     N_{ph}:=\mathbf1\{h(p)=h\}.
     \label{eq:theory-membership}
 \end{equation}
-The centering matrix
+Multiplying $\mathbf U$ by a vector of code values repeats each
+value at the positions in its group. This is a discrete instance of
+the sharing-matrix parameterization of \citet[Eq.~(2)]{zhou2021meta}.
+With $\mathrm{Id}$ the identity on $\mathbb R^E$, the centering matrix
 \begin{equation}
     \boldsymbol\Pi
-    :=\mathbf I_E-\mathbf N
+    :=\mathrm{Id}-\mathbf N
         (\mathbf N^{\mathsf T}\mathbf N)^{-1}\mathbf N^{\mathsf T}
     \label{eq:theory-centering}
 \end{equation}
 subtracts from each entry the mean of all entries associated with
 active incoming connections of the same neuron.
-Define the centered membership matrix
-$\mathbf M_{\mathbf I}:=\boldsymbol\Pi\mathbf U_{\mathbf I}$.
-
-These matrices give
-$\mathcal S_{\mathbf I}=\operatorname{Im}\mathbf M_{\mathbf I}$.
-Let $g_{\mathbf I}$ be the number of connected components of
-the calibration graph $G_{\mathbf I}$ defined in
-Section~\ref{sec:theory-recovery}.
-For a candidate $\mathbf J$, let $m_{\mathbf J}$ be its number
-of used codes; define its corresponding matrices and component
-count in the same way.
+Define $\mathbf M:=\boldsymbol\Pi\mathbf U$, so
+$\mathcal S=\operatorname{Im}\mathbf M$. Before centering, the space
+of log magnitudes is $\mathcal V:=\operatorname{Im}[\mathbf U,-\mathbf N]$.
+Let $\kappa$ count the connected components of the calibration graph $G$.
+A candidate $g'$ gives its own $\mathbf U'$, $\mathbf M'$, $\mathcal V'$
+and component count $\kappa'$. Both groupings use the same neuron matrix
+$\mathbf N$ and centering operator $\boldsymbol\Pi$.
 
 \begin{proposition}[Observable dimension and scale freedom]
     \label{prop:theory-dimension}
     Under \eqref{eq:theory-observation},
     \begin{equation}
-        \dim\mathcal S_{\mathbf I}=m-g_{\mathbf I},
+        \dim\mathcal S=m-\kappa,
         \qquad
-        \operatorname{rank}[\mathbf U_{\mathbf I},-\mathbf N]
-            =m+H-g_{\mathbf I}.
+        \operatorname{rank}[\mathbf U,-\mathbf N]
+            =m+H-\kappa.
         \label{eq:theory-dimension}
     \end{equation}
     Each component permits one common positive rescaling of its
@@ -56,76 +59,59 @@ count in the same way.
 \end{proposition}
 
 \begin{proof}[Proof of Proposition~\ref{prop:theory-dimension}]
-    Set
-    $\mathcal V_{\mathbf I}
-    :=\operatorname{Im}[\mathbf U_{\mathbf I},-\mathbf N]$.
-    For vectors $\mathbf a\in\mathbb R^m$ and
-    $\mathbf v\in\mathbb R^H$, the equation
-    $\mathbf U_{\mathbf I}\mathbf a-\mathbf N\mathbf v=\mathbf0$
-    holds exactly when $a_{j_{\mathbf I}(p)}=v_{h(p)}$ for every
-    edge $p$ of $G_{\mathbf I}$.
+    The equation $\mathbf U\mathbf u-\mathbf N\mathbf v=\mathbf0$
+    holds exactly when $u_j=v_h$ on every edge joining a code $j$
+    to a neuron $h$.
+
     Hence the coordinates are constant on each connected component
-    of $G_{\mathbf I}$. Conversely, choosing one arbitrary constant
+    of $G$. Conversely, choosing one arbitrary constant
     independently for each component gives a solution. Thus
     $$
-        \dim\ker[\mathbf U_{\mathbf I},-\mathbf N]=g_{\mathbf I}.
+        \dim\ker[\mathbf U,-\mathbf N]=\kappa.
     $$
     Since the matrix has $m+H$ columns, rank--nullity gives
     $$
-        \dim\mathcal V_{\mathbf I}
-        =\dim\operatorname{Im}[\mathbf U_{\mathbf I},-\mathbf N]
-        =m+H-\dim\ker[\mathbf U_{\mathbf I},-\mathbf N]
-        =m+H-g_{\mathbf I}.
+        \dim\mathcal V
+        =\dim\operatorname{Im}[\mathbf U,-\mathbf N]
+        =m+H-\dim\ker[\mathbf U,-\mathbf N]
+        =m+H-\kappa.
     $$
 
     The centering matrix $\boldsymbol\Pi$ is the orthogonal projector
     onto the complement of $\operatorname{Im}(\mathbf N)$.
-    Since this image is contained in $\mathcal V_{\mathbf I}$,
+    Since this image is contained in $\mathcal V$,
     \begin{equation}
-        \mathcal V_{\mathbf I}
-        = \operatorname{Im}(\mathbf M_{\mathbf I}) \mathbin{\oplus} \operatorname{Im}(\mathbf N)
-        =\mathcal S_{\mathbf I}
+        \mathcal V
+        = \operatorname{Im}(\mathbf M) \mathbin{\oplus} \operatorname{Im}(\mathbf N)
+        =\mathcal S
             \mathbin{\oplus}\operatorname{Im}(\mathbf N).
         \label{eq:appendix-theory-space-decomposition}
     \end{equation}
-    The subspaces $\mathcal S_{\mathbf I}$ and
+    The subspaces $\mathcal S$ and
     $\operatorname{Im}(\mathbf N)$ are orthogonal, and
     $\dim\operatorname{Im}(\mathbf N)=H$.
-    Hence $\dim\mathcal S_{\mathbf I}
-    =\dim\mathcal V_{\mathbf I}-H=m-g_{\mathbf I}$.
+    Hence $\dim\mathcal S
+    =\dim\mathcal V-H=m-\kappa$.
 
-    For fixed $\mathbf I$ and $\mathbf w$, let
-    $(\mathbf c,\mathbf s)$ and
-    $(\mathbf c+\Delta\mathbf c,\mathbf s+\Delta\mathbf s)$
-    be two exact calibrations with positive neuron scales, satisfying
-    $\sigma_{\mathbf I,p}c_{j_{\mathbf I}(p)}=s_{h(p)}w_p$.
-    Subtracting their equations and dividing by the nonzero exact
-    weights gives
+    With the grouping, signs and weights fixed, consider two exact
+    calibrations $(\mathbf c,\mathbf s)$ and
+    $(\widetilde{\mathbf c},\widetilde{\mathbf s})$. On an edge
+    joining code $j$ to neuron $h$, dividing their
+    equations~\eqref{eq:theory-observation} gives
     \begin{equation*}
-        \sigma_{\mathbf I,p}\Delta c_{j_{\mathbf I}(p)}
-        =w_p\Delta s_{h(p)}
-        \quad\Longrightarrow\quad
-        \frac{\Delta c_{j_{\mathbf I}(p)}}{c_{j_{\mathbf I}(p)}}
-        =\frac{\Delta s_{h(p)}}{s_{h(p)}}.
+        \frac{\widetilde c_j}{c_j}=\frac{\widetilde s_h}{s_h}>0.
     \end{equation*}
-    These relative changes agree along every edge, hence throughout
-    each connected component $C$ of $G_{\mathbf I}$.
-    Thus there is one factor $\lambda_C>0$ per component such that
-    \begin{equation*}
-        c_j+\Delta c_j=\lambda_Cc_j,
-        \qquad
-        s_h+\Delta s_h=\lambda_Cs_h
-    \end{equation*}
-    for all code vertices $j$ and neuron vertices $h$ in $C$.
-    Conversely, every such rescaling preserves the calibration
-    equations. Fixing one neuron scale in each component forces
-    $\lambda_C=1$ between any two solutions, proving uniqueness.
+    These ratios agree along every edge and hence throughout each
+    component. Conversely, multiplying all codes and neuron scales
+    in one component by the same positive factor preserves every
+    weight. Fixing one neuron scale in each component fixes its factor.
+
 \end{proof}
 
-The rows of $[\mathbf U_{\mathbf I},-\mathbf N]$ are the transposes
-of the oriented incidence columns of $G_{\mathbf I}$.
+The rows of $[\mathbf U,-\mathbf N]$ are the transposes
+of the oriented incidence columns of $G$.
 Its left nullspace is the cycle space, of dimension
-$E-m-H+g_{\mathbf I}$. A fundamental cycle gives the alternating
+$E-m-H+\kappa$. A fundamental cycle gives the alternating
 logarithmic sum, or equivalently the product relation, described
 in Section~\ref{sec:theory-recovery}.
 For a forest this dimension is zero, so the logarithmic incidence
@@ -136,231 +122,84 @@ magnitudes can therefore be fitted.
 \label{app:theory-identification}
 
 \begin{proof}[Proof of Theorem~\ref{thm:theory-finite-identification}]
-    Suppose $\mathbf J$ is compatible and choose a representation
-    from Definition~\ref{def:theory-compatible-grouping}.
-    Since $|\sigma_p|=1$, taking log magnitudes gives
+    Suppose $g'$ is compatible and choose its signs $\sigma'_p$,
+    code values and scales as in Definition~\ref{def:theory-compatible-grouping}.
+    On any one task, taking log magnitudes and centering gives
     \begin{equation*}
-        \log|w_{\tau,p}|
-        =\log|c_{\tau,j_{\mathbf J}(p)}|
-            -\log s_{\tau,h(p)}.
-    \end{equation*}
-    For each neuron, the scale term is constant over its active
-    incoming weight indices, so centering removes it. Hence
-    \begin{equation*}
-        \begin{aligned}
-            \mathbf y_\tau
-            &=\boldsymbol\Pi\log|\mathbf w_\tau|\\
-            &=\boldsymbol\Pi
-                \bigl(\log|c_{\tau,j_{\mathbf J}(p)}|
-                    -\log s_{\tau,h(p)}\bigr)_{p=1}^E\\
-            &=\boldsymbol\Pi
-                \bigl(\log|c_{\tau,j_{\mathbf J}(p)}|\bigr)_{p=1}^E
-            \in\mathcal S_{\mathbf J}.
-        \end{aligned}
-    \end{equation*}
-    The vector inside the centering operator has one log code
-    magnitude per group, repeated at the indices in that group,
-    as required by the definition of $\mathcal S_{\mathbf J}$.
-    This proves the magnitude condition for every task.
-
-    For signs, let $j=j_{\mathbf J}(p)$. Positive neuron scales
-    do not affect signs, and therefore
-    \begin{equation*}
-        \begin{aligned}
-            \overline b_{\tau,p}
-            &=\operatorname{sign}(w_{\tau,p}w_{1,p})\\
-            &=\operatorname{sign}(\sigma_p^2 c_{\tau,j}c_{1,j})\\
-            &=\operatorname{sign}(c_{\tau,j}c_{1,j}).
-        \end{aligned}
-    \end{equation*}
-    The assignment sign $\sigma_p$ is shared across tasks and
-    satisfies $\sigma_p^2=1$. The last expression depends on the
-    index $p$ only through its group $j$. Thus two indices in the
-    same group have equal normalized signs on every task, giving
-    $\overline{\mathbf b}_p=\overline{\mathbf b}_q$ whenever
-    $j_{\mathbf J}(p)=j_{\mathbf J}(q)$.
-    Both conditions are therefore necessary.
-
-    Conversely, fix a candidate grouping $\mathbf J$ satisfying
-    \eqref{eq:theory-compatibility}. We will construct code values,
-    positive neuron scales and fixed assignment signs that reproduce
-    all observed weights for this grouping.
-
-    By the definition of $\mathcal S_{\mathbf J}$, the magnitude
-    condition gives, for each task, a vector
-    $\mathbf a_\tau\in\mathbb R^{m_{\mathbf J}}$ such that
-    $\boldsymbol\Pi\mathbf U_{\mathbf J}\mathbf a_\tau
-      =\mathbf y_\tau$. Since
-    $\mathbf y_\tau=\boldsymbol\Pi\log|\mathbf w_\tau|$,
-    \begin{equation*}
-        \boldsymbol\Pi
-            (\log|\mathbf w_\tau|-\mathbf U_{\mathbf J}\mathbf a_\tau)
-        =\mathbf y_\tau-\mathbf y_\tau=\mathbf0.
-    \end{equation*}
-    The difference therefore lies in
-    $\ker\boldsymbol\Pi=\operatorname{Im}\mathbf N$, the vectors
-    that are constant within each neuron. Write these constants as
-    $-v_{\tau,h}$ to obtain
-    \begin{equation*}
-        \log|\mathbf w_\tau|
-          =\mathbf U_{\mathbf J}\mathbf a_\tau-\mathbf N\mathbf v_\tau.
-    \end{equation*}
-
-    It remains to choose signs that work with one shared indexator
-    across all tasks. For each nonempty group $j$ of the given
-    candidate $\mathbf J$, choose an index $p_j$ assigned to it.
-    Define
-    \begin{equation*}
-        \sigma_p:=\operatorname{sign}(w_{1,p}),
+        \log|\mathbf w|=\mathbf U'\mathbf u-\mathbf N\mathbf v,
         \qquad
-        c_{\tau,j}:=\overline b_{\tau,p_j}\exp(a_{\tau,j}),
-        \qquad
-        s_{\tau,h}:=\exp(v_{\tau,h}).
+        \mathbf y=\boldsymbol\Pi\log|\mathbf w|
+                  =\mathbf M'\mathbf u\in\mathcal S'.
     \end{equation*}
-    The assignment signs match the observed signs on the first
-    task. The normalized profile $\overline b_{\tau,p_j}$ supplies
-    the change in the sign of code $j$ from the first task to task
-    $\tau$. All code values are nonzero, all neuron scales are
-    positive, and the assignment signs are shared across tasks.
+    For signs, fix a position $p$ in candidate group $j=g'(p)$.
+    The scales are positive and $(\sigma'_p)^2=1$, so
+    \begin{equation*}
+        b_{\tau,p}=\operatorname{sign}(w_{\tau,p}w_{1,p})
+                  =\operatorname{sign}(c_{\tau,j}c_{1,j}).
+    \end{equation*}
+    Thus the relative sign profile is the same throughout that group.
 
-    The grouping $\mathbf J$ together with these fixed signs
-    specifies a signed indexator. For any active index $p$, let
-    $j=j_{\mathbf J}(p)$. The sign condition gives
+    Conversely, fix $g'$ satisfying~\eqref{eq:theory-compatibility}.
+    On each task $\tau$ the magnitude condition gives a vector
+    $\mathbf u_\tau\in\mathbb R^{m'}$ with
+    $\mathbf M'\mathbf u_\tau=\mathbf y_\tau$. Therefore
+    $\boldsymbol\Pi(\log|\mathbf w_\tau|-\mathbf U'\mathbf u_\tau)=\mathbf0$.
+    Since $\ker\boldsymbol\Pi=\operatorname{Im}\mathbf N$, there is a
+    vector $\mathbf v_\tau\in\mathbb R^H$ such that
     \begin{equation*}
-        \overline b_{\tau,p_j}
-        =\overline b_{\tau,p}
-        =\operatorname{sign}(w_{\tau,p}w_{1,p}).
+        \log|\mathbf w_\tau|=\mathbf U'\mathbf u_\tau-\mathbf N\mathbf v_\tau .
     \end{equation*}
-    After accounting for the neuron scale, the weight specified
-    by this indexator is
+    Choose a representative $p_j$ in each group $j$ and set
     \begin{equation*}
-        \begin{aligned}
-            \frac{\sigma_p c_{\tau,j_{\mathbf J}(p)}}{s_{\tau,h(p)}}
-            &=\operatorname{sign}(w_{1,p})\,
-                \overline b_{\tau,p_j}
-                \exp(a_{\tau,j}-v_{\tau,h(p)})\\
-            &=\operatorname{sign}(w_{1,p})\,
-                \operatorname{sign}(w_{\tau,p}w_{1,p})
-                |w_{\tau,p}|\\
-            &=\operatorname{sign}(w_{\tau,p})|w_{\tau,p}|\\
-            &=w_{\tau,p}.
-        \end{aligned}
+        \sigma'_p=\operatorname{sign}(w_{1,p}),\qquad
+        c_{\tau,j}=b_{\tau,p_j}\exp(u_{\tau,j}),\qquad
+        s_{\tau,h}=\exp(v_{\tau,h}).
     \end{equation*}
-    Thus the constructed codebooks, scales and shared signed
-    indexator reproduce every observed active weight, proving
-    compatibility.
+    These signs are fixed across tasks, the codes are nonzero and
+    the scales are positive. At a position $p$ in group $j$ and
+    neuron $h$, the sign condition gives $b_{\tau,p_j}=b_{\tau,p}$.
+    Substitution yields
+    \begin{equation*}
+        \frac{\sigma'_p c_{\tau,j}}{s_{\tau,h}}
+        =\operatorname{sign}(w_{1,p})\,b_{\tau,p}\,|w_{\tau,p}|
+        =w_{\tau,p}.
+    \end{equation*}
+    This constructs a compatible representation on every task.
+
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:theory-generic-identification}]
-    We first prove sufficiency. Suppose a candidate $\mathbf J$
-    satisfies $\mathcal S_{\mathbf I}\subseteq\mathcal S_{\mathbf J}$ and
-    \begin{equation*}
-        \overline{\mathbf b}_p=\overline{\mathbf b}_q
-        \qquad\text{whenever }j_{\mathbf J}(p)=j_{\mathbf J}(q).
-    \end{equation*}
-    Varying only code magnitudes leaves all weight signs, and hence
-    these profiles, unchanged.
-    For the chosen task, write
-    $\mathbf u:=(\log|c_{\tau,j}|)_{j=1}^m$.
-    Then $\mathbf y_\tau=\mathbf M_{\mathbf I}\mathbf u$ and
-    $\operatorname{Im}\mathbf M_{\mathbf I}=\mathcal S_{\mathbf I}$.
-    On every source task $t$, representation~\eqref{eq:theory-observation}
-    gives
-    \begin{equation*}
-        \mathbf y_t
-        =\mathbf M_{\mathbf I}(\log|c_{t,j}|)_{j=1}^m
-        \in\mathcal S_{\mathbf I}
-            \subseteq\mathcal S_{\mathbf J}.
-    \end{equation*}
-    This proves the magnitude condition in~\eqref{eq:theory-compatibility}
-    for every choice of $\mathbf u$; the sign condition holds by
-    assumption. Both conditions are therefore satisfied, and
-    Theorem~\ref{thm:theory-finite-identification} gives compatibility.
+    If $\mathcal S\subseteq\mathcal S'$, then
+    $\mathbf y_\tau\in\mathcal S'$ on every task. Varying only
+    code magnitudes preserves the observed signs. Hence a candidate
+    satisfying the stated sign condition remains compatible for
+    every choice of magnitudes by Theorem~\ref{thm:theory-finite-identification}.
 
-    Conversely, compatibility implies the stated sign condition by
-    Theorem~\ref{thm:theory-finite-identification}.
-    To prove that the inclusion is necessary for almost every
-    $\mathbf u$, fix a candidate with
-    $\mathcal S_{\mathbf I}\nsubseteq\mathcal S_{\mathbf J}$.
-    The log code magnitudes $\mathbf u$ for which
-    $\mathbf y_\tau\in\mathcal S_{\mathbf J}$ on the chosen task
-    form the set
+    Conversely, the same theorem makes the sign condition necessary.
+    Fix a candidate with $\mathcal S\nsubseteq\mathcal S'$, and vary
+    the log code magnitudes $\mathbf u\in\mathbb R^m$ on the chosen task.
+    Its observation is $\mathbf y=\mathbf M\mathbf u$. The choices
+    that fit this candidate form the linear subspace
     \begin{equation*}
-        \mathcal B_{\mathbf J}
-        :=\{\mathbf u\in\mathbb R^m:
-            \mathbf M_{\mathbf I}\mathbf u\in\mathcal S_{\mathbf J}\}.
+        \{\mathbf u\in\mathbb R^m:\mathbf M\mathbf u\in\mathcal S'\}.
     \end{equation*}
-    This set contains $\mathbf0$ and is closed under linear
-    combinations: for $\mathbf u,\mathbf v\in\mathcal B_{\mathbf J}$
-    and $\alpha,\beta\in\mathbb R$,
-    \begin{equation*}
-        \mathbf M_{\mathbf I}(\alpha\mathbf u+\beta\mathbf v)
-        =\alpha\mathbf M_{\mathbf I}\mathbf u
-            +\beta\mathbf M_{\mathbf I}\mathbf v
-        \in\mathcal S_{\mathbf J}.
-    \end{equation*}
-    Hence $\mathcal B_{\mathbf J}$ is a linear subspace.
-    Since $\mathcal S_{\mathbf I}
-      =\operatorname{Im}\mathbf M_{\mathbf I}$, the failed inclusion
-    also gives
-    \begin{equation*}
-        \exists\,\mathbf u_0\in\mathbb R^m:
-        \quad \mathbf M_{\mathbf I}\mathbf u_0\notin\mathcal S_{\mathbf J}
-        \quad\Longrightarrow\quad
-        \mathbf u_0\notin\mathcal B_{\mathbf J}.
-    \end{equation*}
-    Thus $\mathcal B_{\mathbf J}\ne\mathbb R^m$ and
-    $\dim\mathcal B_{\mathbf J}\le m-1$.
+    This is the inverse image of a subspace under a linear map.
+    It is proper because $\operatorname{Im}\mathbf M=\mathcal S$
+    contains a vector outside $\mathcal S'$. A proper subspace of
+    $\mathbb R^m$ lies in a rotated coordinate hyperplane, which
+    has Lebesgue measure zero by Fubini's theorem. Taking the union
+    over the finitely many candidates still gives a null set.
+    Outside it, every failed inclusion is detected on the chosen task.
+    The exceptional set depends only on $\mathbf M$ and the candidate
+    spaces, independently of the signs, scales and other tasks.
 
-    Let $\lambda_m$ denote $m$-dimensional Lebesgue measure.
-    Any proper linear subspace can be rotated into
-    $\mathbb R^{m-1}\times\{0\}$. This hyperplane has zero
-    $m$-dimensional measure, since Fubini's theorem gives
-    \begin{equation*}
-        \lambda_m(\mathbb R^{m-1}\times\{0\})
-        =\int_{\mathbb R^{m-1}}\lambda_1(\{0\})\,d\mathbf v
-        =0.
-    \end{equation*}
-    Rotations preserve Lebesgue measure, so
-    $\lambda_m(\mathcal B_{\mathbf J})=0$.
-    Define the full exceptional set by
-    \begin{equation*}
-        \mathcal B
-        :=\bigcup_{\substack{\mathbf J\in\mathcal C\\
-            \mathcal S_{\mathbf I}\nsubseteq\mathcal S_{\mathbf J}}}
-            \mathcal B_{\mathbf J}.
-    \end{equation*}
-    The family $\mathcal C$ is finite, and therefore
-    \begin{equation*}
-        \lambda_m(\mathcal B)
-        \le\sum_{\substack{\mathbf J\in\mathcal C\\
-            \mathcal S_{\mathbf I}\nsubseteq\mathcal S_{\mathbf J}}}
-            \lambda_m(\mathcal B_{\mathbf J})
-        =0.
-    \end{equation*}
-    For $\mathbf u\notin\mathcal B$, every candidate with a failed
-    inclusion is rejected by the chosen task:
-    \begin{equation*}
-        \mathcal S_{\mathbf I}\nsubseteq\mathcal S_{\mathbf J}
-        \quad\Longrightarrow\quad
-        \mathbf u\notin\mathcal B_{\mathbf J}
-        \quad\Longrightarrow\quad
-        \mathbf y_\tau=\mathbf M_{\mathbf I}\mathbf u
-            \notin\mathcal S_{\mathbf J}.
-    \end{equation*}
-    By Theorem~\ref{thm:theory-finite-identification}, such a
-    candidate is incompatible. Together with the first part,
-    this proves the equivalence outside $\mathcal B$, a set of
-    measure zero. Its definition uses only $\mathbf M_{\mathbf I}$
-    and the candidate spaces, so the exceptional set is independent
-    of code signs, neuron scales and observations on the other tasks.
 \end{proof}
 
 A probabilistic version follows by drawing the log code magnitudes
 on the chosen task from any joint density on $\mathbb R^m$:
 the exceptional set then has probability zero. More generally,
 the same conclusion holds with probability one if the centered
-observation $\mathbf y_\tau$ has a density on $\mathcal S_{\mathbf I}$.
+observation $\mathbf y_\tau$ has a density on $\mathcal S$.
 This means that its coordinates in an orthonormal basis of that
 space have an ordinary joint density. Each failed inclusion confines
 the observation to a proper linear subspace, which has probability
@@ -374,15 +213,15 @@ to $+1$, the sign condition uses the unnormalized profiles
 $(\operatorname{sign}w_{\tau,p})_{\tau=1}^T$.
 
 \begin{proof}[Proof of Corollary~\ref{cor:theory-one-task}]
-    Since $G_{\mathbf I}$ is connected,
+    Since $G$ is connected,
     Proposition~\ref{prop:theory-dimension} gives
-    $\dim\mathcal S_{\mathbf I}=m-1$.
-    A candidate with $m_{\mathbf J}\le m$ used codes has dimension
-    $m_{\mathbf J}-g_{\mathbf J}\le m-1$.
+    $\dim\mathcal S=m-1$.
+    A candidate with $m'\le m$ used codes has dimension
+    $m'-\kappa'\le m-1$.
     Consequently,
-    $\mathcal S_{\mathbf I}\subseteq\mathcal S_{\mathbf J}$
-    implies $m_{\mathbf J}=m$, $g_{\mathbf J}=1$ and
-    $\mathcal S_{\mathbf I}=\mathcal S_{\mathbf J}$.
+    $\mathcal S\subseteq\mathcal S'$
+    implies $m'=m$, $\kappa'=1$ and
+    $\mathcal S=\mathcal S'$.
     Uniqueness for that space and
     Corollary~\ref{cor:theory-generic-identification} prove the result.
 \end{proof}
@@ -390,19 +229,18 @@ $(\operatorname{sign}w_{\tau,p})_{\tau=1}^T$.
 \subsection{Recovery from repeated code pairs}
 \label{app:theory-pairs}
 
-Suppose this space is known, and write
-$r:=\dim\mathcal S_{\mathbf I}$.
+To prove Theorem~\ref{thm:theory-pair-recovery}, first suppose the
+contrast space $\mathcal S$ is known, and write
+$r:=\dim\mathcal S$.
 Choose an orthonormal basis
 $\mathbf Q\in\mathbb R^{E\times r}$ for it.
-For two weight indices $p,q$ associated with the same neuron, let
-$\mathbf e_p,\mathbf e_q\in\mathbb R^E$ be their standard basis
-vectors and define the ordered-pair signature
+Write $Q_{p,:}$ for row $p$ of $\mathbf Q$. The signature of
+an ordered pair entering the same neuron is the row difference
 \begin{equation}
-    \boldsymbol\delta_{pq}
-        :=(\mathbf e_p-\mathbf e_q)^{\mathsf T}\mathbf Q,
-    \qquad h(p)=h(q).
+    \boldsymbol\delta_{pq}:=Q_{p,:}-Q_{q,:},\qquad h(p)=h(q).
     \label{eq:theory-signature}
 \end{equation}
+
 A zero signature identifies equal codes within a neuron.
 Equal nonzero signatures for pairs $(p,q)$ and $(u,v)$ identify the
 same ordered pair of codes: weight indices $p,u$ belong to one group,
@@ -410,43 +248,31 @@ and $q,v$ belong to another.
 The resulting recovery rule merges the corresponding weight indices
 and takes the transitive closure of the merges.
 
-For each code $j$, define a graph $W_{\mathbf I}(j)$ whose vertices
-are the neurons containing $j$. Two vertices are adjacent when the
-neurons share another code distinct from $j$.
-A one-vertex graph is considered connected.
-These graphs describe whether repeated pairs link all occurrences
-of a code.
-
 \begin{lemma}[Information in an ordered-pair signature]
     \label{lem:theory-signatures}
-    For the basis and signatures of \eqref{eq:theory-signature},
-    with each pair taken within one neuron,
+    For within-neuron pairs, $\boldsymbol\delta_{pq}=\mathbf0$
+    if and only if $g(p)=g(q)$. For two pairs with nonzero
+    signatures,
     \begin{equation}
-        \begin{aligned}
-            \boldsymbol\delta_{pq}=\mathbf0
-            &\ \Longleftrightarrow\
-                j_{\mathbf I}(p)=j_{\mathbf I}(q),\\
-            \boldsymbol\delta_{pq}=\boldsymbol\delta_{uv}
-                \ne\mathbf0
-            &\ \Longleftrightarrow\
-                (j_{\mathbf I}(p),j_{\mathbf I}(q))
-                =(j_{\mathbf I}(u),j_{\mathbf I}(v)).
-        \end{aligned}
+        \boldsymbol\delta_{pq}=\boldsymbol\delta_{uv}
+        \quad\Longleftrightarrow\quad
+        g(p)=g(u)\ \text{ and }\ g(q)=g(v).
         \label{eq:appendix-theory-signature-information}
     \end{equation}
+
 \end{lemma}
 
 \begin{proof}
     There is a full-row-rank matrix
     $\mathbf T\in\mathbb R^{r\times m}$ such that
-    $\mathbf M_{\mathbf I}=\mathbf Q\mathbf T$.
-    Write $\mathbf e_j^{(m)}$ for the $j$th standard basis vector
+    $\mathbf M=\mathbf Q\mathbf T$.
+    Write $\mathbf e_j$ for the $j$th standard basis vector
     of $\mathbb R^m$. Centering subtracts the same row within a
     neuron, so
     \begin{equation*}
         \boldsymbol\delta_{pq}\mathbf T
-        =(\mathbf e_{j_{\mathbf I}(p)}^{(m)})^{\mathsf T}
-            -(\mathbf e_{j_{\mathbf I}(q)}^{(m)})^{\mathsf T}.
+        =(\mathbf e_{g(p)})^{\mathsf T}
+            -(\mathbf e_{g(q)})^{\mathsf T}.
     \end{equation*}
     Multiplication of a row by $\mathbf T$ is injective.
     A difference of two standard basis vectors is zero exactly
@@ -455,25 +281,34 @@ of a code.
     These observations prove both statements.
 \end{proof}
 
-\begin{theorem}[Recovery from repeated code pairs]
-    \label{thm:theory-pair-recovery}
-    If every $W_{\mathbf I}(j)$ is connected, the signature rule
-    recovers all groups of $\mathbf I$.
-    Consequently, any grouping $\mathbf J$ on the same active
-    weight indices and fixed neurons, with $m$ used codes and
-    $\mathcal S_{\mathbf J}=\mathcal S_{\mathbf I}$, has the same
-    groups up to renaming.
-\end{theorem}
+Collect the centered observations as the columns of
+$\mathbf Y=[\mathbf y_1,\ldots,\mathbf y_T]\in\mathbb R^{E\times T}$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:theory-pair-recovery}]
-    By Lemma~\ref{lem:theory-signatures}, every merge made by the
-    rule joins weight indices assigned to the same true code.
+    When the centered observations span $\mathcal S$,
+    write $\mathbf Y=\mathbf Q\mathbf A$ with $\mathbf A$ of full
+    row rank. Centering cancels in a within-neuron row difference,
+    so the observed row vector in~\eqref{eq:method-srr-ratio} satisfies
+    $\mathbf r_{pq}=\boldsymbol\delta_{pq}\mathbf A$.
+    Right multiplication by $\mathbf A$ is injective on row vectors.
+    The zero and equality comparisons made by SRR therefore agree
+    with those on the basis signatures.
+
+    By Lemma~\ref{lem:theory-signatures}, each proposed join is
+    between indices assigned to the same true code. Their relative
+    sign is constant by~\eqref{eq:theory-observation}, so every
+    proposed join passes the sign check in Section~\ref{sec:method-srr}.
     Within one neuron all occurrences of a code are merged.
     Between two neurons, direct merging of occurrences of code $j$
     occurs exactly when the neurons share another code.
     Consequently, the transitive closure joins exactly the
-    occurrences in each connected component of $W_{\mathbf I}(j)$.
-    The assumed connectivity recovers every entire group.
+    occurrences in each connected component of $G_j$.
+    If every such graph is connected, this recovers all groups.
+    For a representative $p_0$ and a member $p$ of its group,
+    \eqref{eq:theory-observation} gives
+    $\operatorname{sign}(w_{1,p}w_{1,p_0})
+       =\sigma_p\sigma_{p_0}$.
+    This proves the claim about relative signs.
 
     A candidate with the same contrast space has the same
     signatures and must satisfy all these merges.
@@ -482,30 +317,33 @@ of a code.
     agree up to their group names.
 \end{proof}
 
-If some $W_{\mathbf I}(j)$ is disconnected, the rule recovers
-one correct partial group per component of that graph.
+The same comparisons are valid on a single generic task.
+For a log code magnitude vector $\mathbf u\in\mathbb R^m$, each
+within-neuron log ratio is a linear form $u_j-u_\ell$.
+The nonzero forms indexed by distinct ordered pairs $j\ne\ell$
+have distinct coefficient vectors. An accidental zero or an equality
+of two distinct forms therefore restricts $\mathbf u$ to one of
+finitely many proper hyperplanes. Outside their union the observed
+ratios make exactly the joins in Lemma~\ref{lem:theory-signatures}.
+
 For example, all groups are recovered when one neuron contains
 every code and every other neuron contains at least two distinct codes.
 Theorem~\ref{thm:theory-cooccurrence} also covers structures with
 no repeated code pairs.
 
-To relate this result to multiple source tasks, let
-$\mathbf Z:=[\mathbf y_1,\ldots,\mathbf y_T]\in\mathbb R^{E\times T}$
-collect their centered observations.
-
 \begin{corollary}[Identification from a sufficiently diverse source set]
     \label{cor:theory-task-diversity}
-    Let $\mathcal C$ be a finite set of candidate groupings on the
-    fixed active weight indices and neurons, containing $\mathbf I$.
+    Let $\mathcal G$ be a finite set of candidate groupings on the
+    fixed active weight indices and neurons, containing $g$.
     Suppose each candidate uses $m$ codes and has contrast dimension
-    $r$, every $W_{\mathbf I}(j)$ is connected, and
-    $\operatorname{rank}\mathbf Z=r$.
-    Every candidate in $\mathcal C$ that explains all observed
-    magnitudes has the same groups as $\mathbf I$, up to renaming.
+    $r$, every $G_j$ is connected, and
+    $\operatorname{rank}\mathbf Y=r$.
+    Every candidate in $\mathcal G$ that explains all observed
+    magnitudes has the same groups as $g$, up to renaming.
 \end{corollary}
 
 \begin{proof}
-    The columns of $\mathbf Z$ span $\mathcal S_{\mathbf I}$.
+    The columns of $\mathbf Y$ span $\mathcal S$.
     Every candidate explaining the magnitudes contains this span.
     Equal dimensions
     make the spaces equal; Theorem~\ref{thm:theory-pair-recovery}
@@ -524,17 +362,16 @@ collect their centered observations.
 \end{lemma}
 
 \begin{proof}
-    On one task write $q_j:=\log|c_j|$ and $v_h:=\log s_h$.
     If neuron $h$ contains codes $a_h,b_h$, interchange their
     assignments and set
     $$
-        q'_j=-q_j,\qquad v'_h=v_h-q_{a_h}-q_{b_h}.
+        u'_j=-u_j,\qquad v'_h=v_h-u_{a_h}-u_{b_h}.
     $$
     At an index formerly assigned to $a_h$ the new log magnitude is
     $$
-        q'_{b_h}-v'_h
-          =-q_{b_h}-(v_h-q_{a_h}-q_{b_h})
-          =q_{a_h}-v_h.
+        u'_{b_h}-v'_h
+          =-u_{b_h}-(v_h-u_{a_h}-u_{b_h})
+          =u_{a_h}-v_h.
     $$
     The other local group satisfies the symmetric identity.
     The transformation is invertible, so the two full log-magnitude
@@ -544,27 +381,27 @@ collect their centered observations.
     permutation $\phi$, each co-occurring pair $a,b$ would force
     $\phi(a)=b$ and $\phi(b)=a$.
     Each code would then have only one neighbour in
-    $K_{\mathbf I}$. This contradicts connectedness of that graph
+    $G_{\mathrm{code}}$. This contradicts connectedness of that graph
     on $m\ge3$ vertices.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:theory-cooccurrence}]
     Necessity follows from Lemma~\ref{lem:theory-reciprocal}.
-    For sufficiency, let $\mathbf J$ use $m$ codes and satisfy
-    $\mathcal S_{\mathbf J}=\mathcal S_{\mathbf I}$.
-    Since $K_{\mathbf I}$ is connected,
-    $r:=\dim\mathcal S_{\mathbf I}=m-1$.
+    For sufficiency, let $g'$ use $m$ codes and satisfy
+    $\mathcal S'=\mathcal S$.
+    Since $G_{\mathrm{code}}$ is connected,
+    $r:=\dim\mathcal S=m-1$.
     Use an orthonormal basis $\mathbf Q$ of this space and the pair
     signatures of Appendix~\ref{app:theory-pairs}.
     Lemma~\ref{lem:theory-signatures} determines the same local
-    groups for $\mathbf I$ and $\mathbf J$.
+    groups for $g$ and $g'$.
 
     Nonzero signatures up to a common minus sign correspond to
     unordered pairs of codes. Choose one oriented representative
     per such class and form a matrix $\mathbf D$ with those
     signatures as rows.
-    For each grouping, let $\mathbf B_{\mathbf I}$ or
-    $\mathbf B_{\mathbf J}$ have one row per class, equal to the
+    For each grouping, let $\mathbf B$ or
+    $\mathbf B'$ have one row per class, equal to the
     difference of the standard basis vectors at its ordered code
     endpoints. Thus these are the edge-by-vertex incidence
     matrices of the simple co-occurrence graphs.
@@ -572,30 +409,30 @@ collect their centered observations.
     has at least two local groups.
 
     There are full-row-rank matrices
-    $\mathbf T_{\mathbf I},\mathbf T_{\mathbf J}\in\mathbb R^{r\times m}$
-    with $\mathbf M_{\mathbf I}=\mathbf Q\mathbf T_{\mathbf I}$ and
-    $\mathbf M_{\mathbf J}=\mathbf Q\mathbf T_{\mathbf J}$.
+    $\mathbf T,\mathbf T'\in\mathbb R^{r\times m}$
+    with $\mathbf M=\mathbf Q\mathbf T$ and
+    $\mathbf M'=\mathbf Q\mathbf T'$.
     The signature identity gives
     $$
-        \mathbf D\mathbf T_{\mathbf I}=\mathbf B_{\mathbf I},
+        \mathbf D\mathbf T=\mathbf B,
         \qquad
-        \mathbf D\mathbf T_{\mathbf J}=\mathbf B_{\mathbf J}.
+        \mathbf D\mathbf T'=\mathbf B'.
     $$
-    Connectedness of $K_{\mathbf I}$ gives
-    $\operatorname{rank}\mathbf B_{\mathbf I}=m-1=r$.
+    Connectedness of $G_{\mathrm{code}}$ gives
+    $\operatorname{rank}\mathbf B=m-1=r$.
     Therefore $\mathbf D$ has rank $r$, both incidence matrices
-    have the same image as $\mathbf D$, and $K_{\mathbf J}$ is
+    have the same image as $\mathbf D$, and $G'_{\mathrm{code}}$ is
     connected. Their real cycle spaces on the labelled edges agree.
 
     Minimal nonempty supports in a real cycle space are the simple
     cycles. Hence the edge correspondence preserves cycles.
-    The shared cycles place all edges of $K_{\mathbf J}$ in one
+    The shared cycles place all edges of $G'_{\mathrm{code}}$ in one
     2-connected block, and every vertex is used.
     Whitney's theorem for a 3-connected graph makes this
     correspondence arise from a vertex isomorphism
     \cite{fomin2020whitney}. After renaming codes, the incidence
     matrices therefore differ only by row signs:
-    $\mathbf B_{\mathbf J}=\mathbf F\mathbf B_{\mathbf I}$,
+    $\mathbf B'=\mathbf F\mathbf B$,
     where $\mathbf F$ is diagonal with entries in $\{-1,1\}$.
 
     Equality of incidence images makes the cycle space invariant
@@ -631,13 +468,13 @@ collect their centered observations.
     Code $a$ remains used outside $B$, as does $b$, so the
     number of used codes is unchanged.
 
-    On one task write $q_j=\log|c_j|$, $v_h=\log s_h$ and
-    $d:=q_b-q_a$. Add $d$ to the log values of all internal
+    On one task set
+    $d:=u_b-u_a$. Add $d$ to the log values of all internal
     codes of $B$ and all neuron scales in $B$; keep the other
     values unchanged. Internal edge differences are preserved.
     On a replaced boundary edge,
     $$
-        q_b-(v_h+d)=q_a-v_h.
+        u_b-(v_h+d)=u_a-v_h.
     $$
     The transformation is invertible, giving equal contrast spaces
     for the different groupings.
@@ -652,20 +489,16 @@ insufficient in general. Consider the following ordered code lists
 for three neurons:
 $$
     \begin{aligned}
-        \mathbf I &: (1,2,3),\ (1,4),\ (4,2),\\
-        \mathbf J &: (1,2,3),\ (4,2),\ (1,4).
+        g &: (1,2,3),\ (1,4),\ (4,2),\\
+        g' &: (1,2,3),\ (4,2),\ (1,4).
     \end{aligned}
 $$
 The lists refer to the same active weight indices in each neuron.
-Writing $q_j=\log|c_j|$ and $v_h=\log s_h$ for neurons $h=0,1,2$,
-keep $q_1,q_2,q_3,v_0$ and set
-$$
-    \begin{aligned}
-        q'_4&=q_1+q_2-q_4,\\
-        v'_1&=v_1+q_2-q_4,\qquad
-        v'_2=v_2+q_1-q_4.
-    \end{aligned}
-$$
+Number the neurons $1,2,3$. Keep $u_1,u_2,u_3,v_1$ and set
+\[
+    u'_4=u_1+u_2-u_4,\qquad
+    v'_2=v_2+u_2-u_4,\qquad v'_3=v_3+u_1-u_4 .
+\]
 This invertible transformation preserves every observed log magnitude.
 The original calibration graph has no code cut vertex.
 Its two-code branch between codes 1 and 2 can be reflected while
@@ -693,55 +526,46 @@ preserving the triple in the first neuron.
     Lemma~\ref{lem:theory-reciprocal}.
     If a triple is present, its neuron shares a second code with
     every other occurrence of each code. Thus all graphs
-    $W_{\mathbf I}(j)$ are connected, and
+    $G_j$ are connected, and
     Theorem~\ref{thm:theory-pair-recovery} again proves uniqueness.
 \end{proof}
 
 \subsection{Cycle tests and equivalent contrast spaces}
 \label{app:theory-cycles}
 
-Orient every edge of $G_{\mathbf I}$ from its code to its neuron,
+Orient every edge of $G$ from its code to its neuron,
 choose a spanning forest, and consider the cycle formed by each
 edge outside that forest.
-Let $b_{\mathbf I}:=E-m-H+g_{\mathbf I}$.
-Define the cycle matrix
-$\mathbf R_{\mathbf I}\in\{-1,0,1\}^{b_{\mathbf I}\times E}$
-by giving each cycle one row: its edge coefficient is $+1$ or $-1$
-according to agreement with the traversal direction, and zero
-outside the cycle. These coefficients specify edge orientation;
-the weight signs remain the separate quantities
-$\sigma_{\mathbf I,p}$.
+The cycle matrix $\mathbf R$ has $E-m-H+\kappa$ rows, one per
+fundamental cycle, and one column per active position. Each row
+has coefficient $+1$ or $-1$ on its cycle according to the edge
+orientation and zero elsewhere. These signs record traversal
+direction. The assignment sign at a position is $\sigma_p$.
 
-For another grouping $\mathbf J$, let $m_{\mathbf J}$ be its number
-of used codes and $g_{\mathbf J}$ the number of components of
-$G_{\mathbf J}$. Its membership matrix
-$\mathbf U_{\mathbf J}$ is defined as in
-\eqref{eq:theory-membership}.
-
-A candidate $\mathbf J$ explains all observed magnitudes if and
-only if $\mathbf R_{\mathbf J}\log|\mathbf w_\tau|=\mathbf0$
+A candidate $g'$ explains all observed magnitudes if and
+only if $\mathbf R'\log|\mathbf w_\tau|=\mathbf0$
 for every task. The corresponding structural inclusion test is
 $$
-    \mathcal S_{\mathbf I}\subseteq\mathcal S_{\mathbf J}
+    \mathcal S\subseteq\mathcal S'
        \quad\Longleftrightarrow\quad
-       \mathbf R_{\mathbf J}\mathbf U_{\mathbf I}=\mathbf0.
+       \mathbf R'\mathbf U=\mathbf0.
 $$
-Indeed, $\mathbf R_{\mathbf J}$ annihilates the common neuron
+Indeed, $\mathbf R'$ annihilates the common neuron
 space $\operatorname{Im}\mathbf N$, and its kernel is
-$\mathcal V_{\mathbf J}$. Thus inclusion requires exactly that
-it also annihilate every column of $\mathbf U_{\mathbf I}$.
+$\mathcal V'$. Thus inclusion requires exactly that
+it also annihilate every column of $\mathbf U$.
 Equality can be tested in the reverse direction with a rank check:
 
 \begin{theorem}[Exact criterion for magnitude equivalence]
     \label{thm:theory-cycle-equivalence}
     On the fixed active weight indices and neurons,
     \begin{equation}
-        \mathcal S_{\mathbf J}=\mathcal S_{\mathbf I}
+        \mathcal S'=\mathcal S
         \quad\Longleftrightarrow\quad
         \left\{
         \begin{aligned}
-            \mathbf R_{\mathbf I}\mathbf U_{\mathbf J}&=\mathbf0,\\
-            m_{\mathbf J}-g_{\mathbf J}&=m-g_{\mathbf I}.
+            \mathbf R\mathbf U'&=\mathbf0,\\
+            m'-\kappa'&=m-\kappa.
         \end{aligned}
         \right.
         \label{eq:theory-cycle-equivalence}
@@ -750,43 +574,43 @@ Equality can be tested in the reverse direction with a rank check:
 
 \begin{proof}[Proof of Theorem~\ref{thm:theory-cycle-equivalence}]
     Fundamental cycles form a basis of the left nullspace of
-    $[\mathbf U_{\mathbf I},-\mathbf N]$. Therefore
+    $[\mathbf U,-\mathbf N]$. Therefore
     \begin{equation}
-        \mathbf R_{\mathbf I}\mathbf U_{\mathbf I}=\mathbf0,
+        \mathbf R\mathbf U=\mathbf0,
         \qquad
-        \mathbf R_{\mathbf I}\mathbf N=\mathbf0,
+        \mathbf R\mathbf N=\mathbf0,
         \qquad
-        \ker\mathbf R_{\mathbf I}=\mathcal V_{\mathbf I},
+        \ker\mathbf R=\mathcal V,
         \label{eq:appendix-theory-cycle-kernel}
     \end{equation}
-    where $\mathcal V_{\mathbf I}$ is defined in
+    where $\mathcal V$ is defined in
     Appendix~\ref{app:theory-dimension}.
     Parallel edges contribute cycles of length two.
 
     If the contrast spaces agree, their orthogonal decompositions
     in \eqref{eq:appendix-theory-space-decomposition} give
-    $\mathcal V_{\mathbf J}=\mathcal V_{\mathbf I}$.
-    Every column of $\mathbf U_{\mathbf J}$ then belongs to
-    $\ker\mathbf R_{\mathbf I}$, and the dimensions in
+    $\mathcal V'=\mathcal V$.
+    Every column of $\mathbf U'$ then belongs to
+    $\ker\mathbf R$, and the dimensions in
     \eqref{eq:theory-cycle-equivalence} agree.
 
-    Conversely, $\mathbf R_{\mathbf I}\mathbf U_{\mathbf J}
-    =\mathbf0$ places every column of $\mathbf U_{\mathbf J}$
-    in $\mathcal V_{\mathbf I}$.
+    Conversely, $\mathbf R\mathbf U'
+    =\mathbf0$ places every column of $\mathbf U'$
+    in $\mathcal V$.
     Together with the columns of $\mathbf N$, this gives
-    $\mathcal V_{\mathbf J}\subseteq\mathcal V_{\mathbf I}$,
+    $\mathcal V'\subseteq\mathcal V$,
     and centering gives
-    $\mathcal S_{\mathbf J}\subseteq\mathcal S_{\mathbf I}$.
+    $\mathcal S'\subseteq\mathcal S$.
     The dimension condition makes this inclusion an equality.
 \end{proof}
 
 The criterion also describes a complete finite enumeration.
 For a nonempty subset $A\subseteq\mathcal E$, let
 $\mathbf x_A\in\{0,1\}^E$ be its indicator vector.
-Call $A$ admissible if $\mathbf R_{\mathbf I}\mathbf x_A=\mathbf0$.
+Call $A$ admissible if $\mathbf R\mathbf x_A=\mathbf0$.
 Partition the weight index set into admissible groups and retain the
 partitions for which the number of groups minus the number of
-calibration components equals $\dim\mathcal S_{\mathbf I}$.
+calibration components equals $\dim\mathcal S$.
 Each column of a membership matrix is exactly one such indicator.
 Theorem~\ref{thm:theory-cycle-equivalence} thus proves that this
 construction enumerates precisely the magnitude-equivalent
@@ -852,11 +676,8 @@ uses these values in the opposite order.
 Even with all indices observed, one task may fail to separate
 different groups if their code values coincide.
 Consider calibrated weights with ordinary equality sharing,
-$w_{\tau,p}=c_{\tau,j_{\mathbf I}(p)}$, and define the profile
-of index $p$ by
-$$
-    \mathbf a_p:=(w_{1,p},\ldots,w_{T,p}).
-$$
+$w_p=c_{g(p)}$ on each task. Compare the profiles
+$(w_{\tau,p})_{\tau=1}^T$ at the different positions.
 A candidate explains all these weights exactly when every one
 of its groups is contained in a class of equal profiles.
 Necessity follows because one code gives identical profiles.
@@ -882,52 +703,54 @@ The scale-invariant model also admits partial observations.
 For task $\tau$, let
 $\mathcal O_\tau\subseteq\{1,\ldots,E\}$ be a known set of observed,
 nonzero weight indices. Model~\eqref{eq:theory-observation} is
-required only on this set. Let
-$\mathbf w_{\tau,\mathcal O_\tau}$ collect these observations.
+required only on this set. In this subsection $\mathbf w_\tau$
+collects just the entries with $p\in\mathcal O_\tau$.
 Define $\boldsymbol\Pi_\tau$ to subtract the mean over observed
 indices of each neuron. A neuron with one observed index gives
-zero contrast. For each candidate $\mathbf J$, set
+zero contrast. For each candidate $g'$, set
 \begin{equation}
     \begin{aligned}
-        \mathbf y_\tau^{\mathrm{obs}}
+        \mathbf y_\tau
             &:=\boldsymbol\Pi_\tau
-                   \log|\mathbf w_{\tau,\mathcal O_\tau}|,\\
-        \mathcal S_{\tau,\mathbf J}
+                   \log|\mathbf w_\tau|,\\
+        \mathcal S'_\tau
             &:=\left\{
                  \boldsymbol\Pi_\tau
-                    (u_{j_{\mathbf J}(p)})_{p\in\mathcal O_\tau}:
-                 \mathbf u\in\mathbb R^{m_{\mathbf J}}
+                    (u_{g'(p)})_{p\in\mathcal O_\tau}:
+                 \mathbf u\in\mathbb R^{m'}
                  \right\}.
     \end{aligned}
     \label{eq:appendix-theory-partial-spaces}
 \end{equation}
+The true space $\mathcal S_\tau$ uses $g$ and its $m$ groups in
+the same construction.
 
 \begin{proposition}[Magnitude information with partial observations]
     \label{prop:theory-observed-masks}
     A candidate reproduces all observed magnitudes exactly when
-    $\mathbf y_\tau^{\mathrm{obs}}\in\mathcal S_{\tau,\mathbf J}$
+    $\mathbf y_\tau\in\mathcal S'_\tau$
     for every task.
     For fixed observation masks, suppose the code values are random
-    and every $\mathbf y_\tau^{\mathrm{obs}}$ has a density on
-    $\mathcal S_{\tau,\mathbf I}$.
+    and every $\mathbf y_\tau$ has a density on
+    $\mathcal S_\tau$.
     With probability one, these candidates are precisely those with
-    $\mathcal S_{\tau,\mathbf I}
-        \subseteq\mathcal S_{\tau,\mathbf J}$ for every task.
+    $\mathcal S_\tau
+        \subseteq\mathcal S'_\tau$ for every task.
 \end{proposition}
 
 \begin{proof}
     In log magnitudes, fitting a candidate requires
-    $\log|w_{\tau,p}|=u_{j_{\mathbf J}(p)}-v_{h(p)}$
-    on $\mathcal O_\tau$. Centering removes the neuron terms.
+    $\log|w_p|=u_j-v_h$ at each observed position $p=(i,h)$
+    in candidate group $j=g'(p)$. Centering removes the neuron terms.
     Conversely, membership in the centered space makes the
     difference between the observed logs and the selected code
     logs constant within each observed neuron. Those constants
     supply the required log scales.
 
     If an inclusion fails for a candidate and task, the intersection
-    $\mathcal S_{\tau,\mathbf I}
-        \cap\mathcal S_{\tau,\mathbf J}$ is a proper subspace
-    of $\mathcal S_{\tau,\mathbf I}$ and has probability zero.
+    $\mathcal S_\tau
+        \cap\mathcal S'_\tau$ is a proper subspace
+    of $\mathcal S_\tau$ and has probability zero.
     A finite union over candidates and tasks remains null.
     Candidates satisfying all inclusions fit every true magnitude
     observation. Independence between tasks is not required.
@@ -942,17 +765,17 @@ constraints; it is not assigned a zero weight.
 \subsubsection{Sign information across overlapping observations}
 \label{app:theory-partial-signs}
 
-For a group $j$ of candidate $\mathbf J$, form a bipartite graph
-$B_{\mathbf J,j}$ whose vertices are its weight indices and the
-tasks observing at least one of them. Join $p$ to $\tau$ when
-$p\in\mathcal O_\tau$, and label the edge by
-$b_{\tau,p}:=\operatorname{sign}(w_{\tau,p})$.
-The observed signs admit fixed assignment signs and task-specific
-code signs exactly when the product of edge labels on every
-cycle of every $B_{\mathbf J,j}$ equals $+1$.
+For each group of the candidate $g'$, form a bipartite graph on its
+weight positions and the tasks observing them. Join $p$ to $\tau$
+when $p\in\mathcal O_\tau$ and label that edge by
+$\operatorname{sign}(w_{\tau,p})$. Compatibility of the observed
+signs is equivalent to the edge labels having product $+1$ on every
+cycle of every group graph.
 
-Indeed, a factorization $b_{\tau,p}=\sigma_p a_{\tau,j}$
-contributes each vertex sign twice to a cycle product.
+Indeed, on an edge in group $j$ the sign factors as
+$\operatorname{sign}(w_{\tau,p})=\sigma'_p\operatorname{sign}(c_{\tau,j})$.
+Each vertex sign occurs twice in a cycle product.
+
 Conversely, fix one vertex sign in each component and propagate
 the signs along a spanning tree. Every remaining edge closes
 a cycle; its product condition guarantees the same assignment.
@@ -976,35 +799,34 @@ a fitted predictor has the required representation or observed mask.
 
 \subsubsection{Perturbations of source weights}
 
-Let $\mathbf Z:=[\mathbf y_1,\ldots,\mathbf y_T]$ collect the exact
-centered observations. Restrict the finite candidate family to
+Return to fully observed weights and the matrix $\mathbf Y$ of
+centered observations from Appendix~\ref{app:theory-pairs}. Restrict the finite candidate family to
 groupings satisfying the observed sign condition, assumed correct.
-For each candidate $\mathbf J$, let $\mathbf P_{\mathbf J}$ be the
-orthogonal projector onto $\mathcal S_{\mathbf J}$.
+For each candidate $g'$, let $\mathbf P'$ be the
+orthogonal projector onto $\mathcal S'$.
 Suppose the observed matrix is
-$\widetilde{\mathbf Z}=\mathbf Z+\mathbf E_Z$, with
-$\|\mathbf E_Z\|_{\mathrm F}\le\varepsilon$.
+$\widetilde{\mathbf Y}=\mathbf Y+\Delta\mathbf Y$, with
+$\|\Delta\mathbf Y\|_{\mathrm F}\le\varepsilon$.
 Define the distance to the nearest different grouping by
 $
-    \Delta:=\min_{\mathbf J\ne\mathbf I}
-         \|(\mathbf I_E-\mathbf P_{\mathbf J})\mathbf Z\|_{\mathrm F},
+    \gamma:=\min_{g'\ne g}
+         \|\mathbf Y-\mathbf P'\mathbf Y\|_{\mathrm F},
 $
 taking an empty minimum to be infinity.
 
 \begin{proposition}[Residual separation]
     \label{prop:theory-residual-separation}
     Minimizing
-    $\|(\mathbf I_E-\mathbf P_{\mathbf J})
-        \widetilde{\mathbf Z}\|_{\mathrm F}$
-    identifies the true grouping if $\Delta>2\varepsilon$.
+    $\|\widetilde{\mathbf Y}-\mathbf P'\widetilde{\mathbf Y}\|_{\mathrm F}$
+    identifies the true grouping if $\gamma>2\varepsilon$.
 \end{proposition}
 
 \begin{proof}
     The true residual is at most $\varepsilon$.
-    Every other residual is at least $\Delta-\varepsilon$
+    Every other residual is at least $\gamma-\varepsilon$
     by the triangle inequality.
     If instead the distance to another model is at most
-    $2\varepsilon$, the midpoint between $\mathbf Z$ and its
+    $2\varepsilon$, the midpoint between $\mathbf Y$ and its
     projection onto that model is within $\varepsilon$ of both.
     One measurement can then have two different true explanations
     at the allowed error level. This shows why a uniform guarantee
@@ -1015,11 +837,11 @@ For the pair-signature rule, an error bound on the estimated
 contrast space gives a more explicit sufficient condition.
 
 
-Let $r=\dim\mathcal S_{\mathbf I}>0$ and define the largest group
+Let $r=\dim\mathcal S>0$ and define the largest group
 size by
-$n_{\max}:=\max_j|\{p:j_{\mathbf I}(p)=j\}|$.
-Let $\mathbf P_{\mathbf I}$ be the orthogonal projector onto
-$\mathcal S_{\mathbf I}$.
+$n_{\max}:=\max_j|\{p:g(p)=j\}|$.
+Let $\mathbf P$ be the orthogonal projector onto
+$\mathcal S$.
 Suppose an estimated space $\widehat{\mathcal S}$ also has rank $r$,
 with projector $\widehat{\mathbf P}$.
 Let $\eta\ge0$ bound their operator-norm difference.
@@ -1028,7 +850,7 @@ Let $\eta\ge0$ bound their operator-norm difference.
     \label{prop:theory-stable-pairs}
     Suppose
     \begin{equation}
-        \|\widehat{\mathbf P}-\mathbf P_{\mathbf I}\|_{\mathrm{op}}
+        \|\widehat{\mathbf P}-\mathbf P\|_{\mathrm{op}}
         \le\eta<\frac1{8\sqrt{n_{\max}}}.
         \label{eq:appendix-theory-space-error}
     \end{equation}
@@ -1037,18 +859,18 @@ Let $\eta\ge0$ bound their operator-norm difference.
     Using $2\sqrt2\eta$ as the threshold for a zero signature and
     $4\sqrt2\eta$ as the threshold for equal signatures recovers
     exactly the merges of the noiseless rule.
-    Under the assumptions of
-    Theorem~\ref{thm:theory-pair-recovery}, this recovers all groups.
+    If every $G_j$ is connected, these merges recover all groups by
+    Theorem~\ref{thm:theory-pair-recovery}.
 \end{proposition}
 
 \begin{proof}
-    Write $\mathbf M_{\mathbf I}=\mathbf Q\mathbf T$ as in
+    Write $\mathbf M=\mathbf Q\mathbf T$ as in
     Lemma~\ref{lem:theory-signatures}.
     Since centering is an orthogonal projection,
     \begin{equation*}
         \|\mathbf T\|_{\mathrm{op}}
-        =\|\mathbf M_{\mathbf I}\|_{\mathrm{op}}
-        \le\|\mathbf U_{\mathbf I}\|_{\mathrm{op}}
+        =\|\mathbf M\|_{\mathrm{op}}
+        \le\|\mathbf U\|_{\mathrm{op}}
         =\sqrt{n_{\max}}.
     \end{equation*}
     The image under $\mathbf T$ of a nonzero signature has norm
@@ -1060,55 +882,52 @@ Let $\eta\ge0$ bound their operator-norm difference.
 
     The estimated orthonormal basis can be rotated to differ from
     $\mathbf Q$ in operator norm by at most
-    $\varepsilon:=\sqrt2\eta$, by the principal-angle relation
+    $\sqrt2\eta$, by the principal-angle relation
     between equal-dimensional spaces.
     This rotation preserves signature distances.
-    Each row has error at most $\varepsilon$, each signature
-    at most $2\varepsilon$, and each difference of two signatures
-    at most $4\varepsilon$.
+    Each row has error at most $\sqrt2\eta$, each signature at most
+    $2\sqrt2\eta$, and each difference of two signatures at most $4\sqrt2\eta$.
     Condition~\eqref{eq:appendix-theory-space-error} makes the true
-    separation strictly larger than $8\varepsilon$.
+    separation strictly larger than $8\sqrt2\eta$.
     The two stated thresholds therefore separate all required cases.
 \end{proof}
 
 This error criterion can be related to the observed weights.
-Let the noiseless matrix $\mathbf Z$ of source contrasts have rank
-$r$, let $\sigma_r(\mathbf Z)>0$ be its smallest nonzero singular
-value, and write the observed matrix as
-$\widetilde{\mathbf Z}=\mathbf Z+\mathbf E_Z$, where
-$\mathbf E_Z\in\mathbb R^{E\times T}$ is its error.
-Estimating the space by the first $r$ left singular vectors gives
+Let the noiseless matrix $\mathbf Y$ of source contrasts have rank
+$r$, and let $\sigma_r(\mathbf Y)>0$ be its smallest nonzero singular value.
+Estimating the space by the first $r$ left singular vectors of
+$\widetilde{\mathbf Y}$ gives
 \begin{equation}
-    \|\widehat{\mathbf P}-\mathbf P_{\mathbf I}\|_{\mathrm{op}}
-    \le\frac{2\|\mathbf E_Z\|_{\mathrm{op}}}
-             {\sigma_r(\mathbf Z)}.
+    \|\widehat{\mathbf P}-\mathbf P\|_{\mathrm{op}}
+    \le\frac{2\|\Delta\mathbf Y\|_{\mathrm{op}}}
+             {\sigma_r(\mathbf Y)}.
     \label{eq:appendix-theory-subspace-perturbation}
 \end{equation}
-Indeed, the residual of $\widetilde{\mathbf Z}$ outside its
-estimated rank-$r$ space is at most $\|\mathbf E_Z\|_{\mathrm{op}}$.
-The residual of $\mathbf Z$ is at most twice that amount.
+Indeed, the residual of $\widetilde{\mathbf Y}$ outside its
+estimated rank-$r$ space is at most $\|\Delta\mathbf Y\|_{\mathrm{op}}$.
+The residual of $\mathbf Y$ is at most twice that amount.
 Multiplying by its pseudoinverse proves the displayed bound.
 For spaces of equal rank, the residual projector norm equals
 the norm of the difference of projectors.
 
 To control the logarithmic error, let $a>0$ satisfy
 $|w_{\tau,p}|\ge a$ at all active weight indices and across tasks.
-Let $\Delta\mathbf W_{\mathrm{obs}}\in\mathbb R^{E\times T}$
+Let $\Delta\mathbf W\in\mathbb R^{E\times T}$
 collect their weight errors, each of magnitude at most $a/2$.
 The logarithm is Lipschitz with constant $2/a$ on the relevant
 magnitude intervals, so
 \begin{equation}
-    \|\mathbf E_Z\|_{\mathrm{op}}
-    \le\|\mathbf E_Z\|_{\mathrm F}
-    \le\frac2a\|\Delta\mathbf W_{\mathrm{obs}}\|_{\mathrm F}.
+    \|\Delta\mathbf Y\|_{\mathrm{op}}
+    \le\|\Delta\mathbf Y\|_{\mathrm F}
+    \le\frac2a\|\Delta\mathbf W\|_{\mathrm F}.
     \label{eq:appendix-theory-log-error}
 \end{equation}
 Together, \eqref{eq:appendix-theory-subspace-perturbation} and
 Proposition~\ref{prop:theory-stable-pairs} give the sufficient
 condition
 \begin{equation*}
-    \|\mathbf E_Z\|_{\mathrm{op}}
-    <\frac{\sigma_r(\mathbf Z)}{16\sqrt{n_{\max}}}.
+    \|\Delta\mathbf Y\|_{\mathrm{op}}
+    <\frac{\sigma_r(\mathbf Y)}{16\sqrt{n_{\max}}}.
 \end{equation*}
 The denominator captures group size, while the singular value
 captures excitation by the source tasks.
@@ -1188,7 +1007,7 @@ Section~\ref{sec:theory-complementarity}, suppose each estimated
 value has error at most $\varepsilon$. Equal groups then give
 an estimated difference of magnitude at most $2\varepsilon$.
 If the codes of different observed groups are separated by
-$\kappa>4\varepsilon$, their estimated difference exceeds
+more than $4\varepsilon$, their estimated difference exceeds
 $2\varepsilon$. This threshold therefore gives correct answers
 on tasks satisfying the error and separation bounds.
 Coincident codes or unavailable coordinates cannot be treated
@@ -1262,18 +1081,18 @@ Thus known code count and graph connectivity alone allow ambiguity.
         \end{aligned}
     \end{equation*}
     The function $f(\mathbf x):=\tfrac12\sum_{h=1}^4
-    \sigma(t_h(\mathbf x))$ belongs to the class for $\mathbf I$.
+    \rho(t_h(\mathbf x))$ belongs to the class for $\mathbf I$.
     It has four distinct lines with nonzero gradient jumps.
     Any representation by four ReLU neurons must assign exactly
     one neuron to each line. After matching the lines, each
-    contribution has the form $\tfrac12\sigma(t_h)$ or
-    $\tfrac12\sigma(-t_h)$: its jump fixes the product of
+    contribution has the form $\tfrac12\rho(t_h)$ or
+    $\tfrac12\rho(-t_h)$: its jump fixes the product of
     input scale and output coefficient.
 
     Let $F\subseteq\{1,\ldots,4\}$ contain the reversed
     contributions. Their change is
     $-\tfrac12\sum_{h\in F}t_h$, using
-    $\sigma(-t)-\sigma(t)=-t$.
+    $\rho(-t)-\rho(t)=-t$.
     For nonempty $F$, its coefficient of $x_1$ is
     $-|F|/2$, which an output constant cannot compensate.
     All four orientations must therefore agree with the
@@ -1293,17 +1112,12 @@ width and free biases and readout.
 \label{app:theory-sign-details}
 \label{app:theory-sign-proof}
 
-Signs provide complementary information because positive neuron
-rescaling preserves them. For each code $j$, write
-$\epsilon_{\tau,j}:=\operatorname{sign}(c_{\tau,j})$ and define
-its sign profile
-$\boldsymbol\epsilon_j:=(\epsilon_{\tau,j})_{\tau=1}^T
-    \in\{-1,1\}^T$.
-Similarly, write $b_{\tau,p}:=\operatorname{sign}(w_{\tau,p})$
-and $\mathbf b_p:=(b_{\tau,p})_{\tau=1}^T$ for the observed profile.
-Equation~\eqref{eq:theory-observation} gives
-$\mathbf b_p=\sigma_{\mathbf I,p}
-\boldsymbol\epsilon_{j_{\mathbf I}(p)}$.
+Positive neuron rescaling preserves signs. For code $j$, let
+$\boldsymbol\epsilon_j=(\epsilon_{\tau,j})_{\tau=1}^T$ be its raw
+sign profile, with $\epsilon_{\tau,j}=\operatorname{sign}(c_{\tau,j})$.
+At a position $p$ in group $j$, the raw weight profile of signs is
+$\sigma_p\boldsymbol\epsilon_j$ by~\eqref{eq:theory-observation}.
+The normalized profile $\mathbf b_p$ is defined in~\eqref{eq:theory-sign-profile}.
 
 \begin{proposition}[Recovery by sign profiles]
     \label{prop:theory-signs}
@@ -1317,18 +1131,14 @@ $\mathbf b_p=\sigma_{\mathbf I,p}
 \end{proposition}
 
 \begin{proof}[Proof of Proposition~\ref{prop:theory-signs}]
-    Assume $T\ge1$ and normalize each observed profile by its first
-    coordinate, defining $\overline{\mathbf b}_p:=b_{1,p}\mathbf b_p$.
-    The fixed sign $\sigma_{\mathbf I,p}$ cancels, and
-    $\overline{\mathbf b}_p
-    =\epsilon_{1,j_{\mathbf I}(p)}
-        \boldsymbol\epsilon_{j_{\mathbf I}(p)}$.
-    Distinct code profiles up to sign give exactly $m$ distinct
-    normalized profiles. Their equality therefore recovers the groups.
+    At a position $p$ in group $j$, multiplication by the first
+    observed sign gives
+    $\mathbf b_p=\epsilon_{1,j}\boldsymbol\epsilon_j$.
+    Code profiles distinct up to sign therefore yield exactly $m$
+    distinct normalized profiles, one per group. For any representative
+    $p_0$ of the group,
+    $\operatorname{sign}(w_{1,p}w_{1,p_0})=\sigma_p\sigma_{p_0}$.
 
-    If $p_0$ is a representative of the group containing $p$,
-    then $b_{1,p}b_{1,p_0}
-    =\sigma_{\mathbf I,p}\sigma_{\mathbf I,p_0}$.
     This recovers the relative signs. A representation with $m$
     codes needs a separate code for each of the $m$ normalized
     profiles. The only remaining choices are their names and
@@ -1359,7 +1169,7 @@ probability to be at most $\delta$ is
 This statement isolates sign diversity; the observation model
 still assumes correct support and neuron correspondence.
 
-For noisy profiles, let $d_H$ denote Hamming distance and define
+For noisy raw sign profiles, let $d_H$ denote Hamming distance and define
 distance up to a common sign by
 \begin{equation*}
     d_\pm(\mathbf u,\mathbf v)
@@ -1379,13 +1189,13 @@ relative orientations within each group.
 There is a corresponding exact description when every combination
 of nonzero real code values is allowed.
 Let $\mathbb F_2$ be the field with two elements, and let
-$\mathbf a_{\mathbf I}\in\mathbb F_2^E$ record the fixed signs at
+$\mathbf a\in\mathbb F_2^E$ record the fixed signs at
 each weight index, with bit zero for $+1$ and bit one for $-1$.
 The set of allowed sign vectors is the affine binary space
 \begin{equation}
-    \mathcal A_{\mathbf I}
-    :=\mathbf a_{\mathbf I}
-        +\operatorname{Im}_{\mathbb F_2}(\mathbf U_{\mathbf I}).
+    \mathcal A
+    :=\mathbf a
+        +\operatorname{Im}_{\mathbb F_2}(\mathbf U).
     \label{eq:appendix-theory-sign-space}
 \end{equation}
 
@@ -1404,17 +1214,17 @@ The set of allowed sign vectors is the affine binary space
     and signs. Positive neuron rescaling changes only the
     logarithmic part. Code magnitudes and signs vary independently,
     so the attainable pairs are exactly
-    $\mathcal S_{\mathbf I}\times\mathcal A_{\mathbf I}$.
+    $\mathcal S\times\mathcal A$.
 
-    Differences of elements of $\mathcal A_{\mathbf I}$ form
-    $\operatorname{Im}_{\mathbb F_2}(\mathbf U_{\mathbf I})$.
+    Differences of elements of $\mathcal A$ form
+    $\operatorname{Im}_{\mathbb F_2}(\mathbf U)$.
     For two weight indices, the corresponding coordinates are equal
     in every vector of this linear space exactly when both indices
     have the same code:
     different codes allow a sign change of only one of them.
     This recovers the partition.
     Within a group, the sum modulo two of two coordinates of
-    any vector in $\mathcal A_{\mathbf I}$ is constant and
+    any vector in $\mathcal A$ is constant and
     gives their relative sign. The remaining choice is one
     sign per code.
 \end{proof}
@@ -1423,56 +1233,44 @@ The set of allowed sign vectors is the affine binary space
 \label{app:theory-transfer}
 \label{sec:theory-transfer}
 
-Structural identifiability concerns which constraints the source
-representations reveal. Their usefulness on new tasks also depends
-on numerical fitting. To express this dependence, fix a training sample size
-$n$, a training budget $b$ and a numerical adaptation rule
-$\mathcal A_{\mathbf I,b}$ for each admissible indexator.
-Given a training sample $S$ of $n$ examples and independent
-initialization randomness $\zeta$, the rule returns a predictor
-$\mathcal A_{\mathbf I,b}(S,\zeta)$ after fitting all numbers anew.
-Define its adaptation risk by
+Fix a nonempty finite bank $\mathcal B$, a training sample size
+and a numerical fitting rule with a fixed budget for each candidate.
+As in Section~\ref{sec:method-selection}, $\widehat f_{\tau,\mathbf I}$
+denotes the predictor fitted with indexator $\mathbf I$ on task $\tau$.
+Any examples used to select a numerical fit count as fitting data.
+Writing $R_{\mathrm{adapt}}$ for adaptation risk, we average the
+population risk over a fresh task, its fitting data and independent
+fitting randomness.
 \begin{equation}
-    \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
-    :=\mathbb E_{\tau,S,\zeta}
-        \mathbb E_{(\mathbf x,y)\sim P_\tau}
-        \ell\bigl(\mathcal A_{\mathbf I,b}(S,\zeta)(\mathbf x),y\bigr),
+    R_{\mathrm{adapt}}(\mathbf I):=
+        \mathbb E\bigl[R_\tau(\widehat f_{\tau,\mathbf I})\bigr].
     \label{eq:theory-adaptation-risk}
 \end{equation}
-where $\tau\sim p(\tau)$ and $S$ is sampled conditionally on $\tau$
-as in Section~\ref{sec:tasks}.
 
-Consider selection on independent tasks after fixing a nonempty
-finite bank $\mathcal B$ and all adaptation rules.
-Let $\mathcal H$ contain $T_{\mathcal H}$ independent tasks drawn
-from $p(\tau)$, independently of bank construction.
-For each $\tau\in\mathcal H$, draw its training sample of size $n$,
-an independent validation sample
-and an independent initialization $\zeta_\tau$.
-The empirical selection risk is
+Draw $N$ selection tasks independently from the task environment,
+independently of bank construction. On each task draw a training
+sample of the prescribed size, an independent validation sample
+and independent fitting randomness. The empirical selection risk is
 \begin{equation}
-    \widehat{\mathcal R}_{\mathcal H}(\mathbf I)
-    :=\frac1{T_{\mathcal H}}\sum_{\tau\in\mathcal H}
-        \mathcal L_{S_\tau^{\mathrm{valid}}}
-        \bigl(\mathcal A_{\mathbf I,b}
-            (S_\tau^{\mathrm{train}},\zeta_\tau)\bigr).
+    \widehat R(\mathbf I):=\frac1N\sum_{\tau=1}^N
+        \mathcal L_{S_\tau^{\mathrm{valid}}}(\widehat f_{\tau,\mathbf I}).
     \label{eq:theory-meta-selection}
 \end{equation}
-Let $\widehat{\mathbf I}_{\mathcal H}$ minimize this quantity over
-$\mathcal B$, and let $\delta\in(0,1)$ be a failure probability.
+Let $\widehat{\mathbf I}_{\mathrm{dev}}$ minimize $\widehat R$
+over $\mathcal B$, and let $\delta\in(0,1)$ be a failure probability.
 
 \begin{theorem}[Selection on independent tasks]
     \label{thm:theory-transfer}
     Suppose the loss lies in $[0,L]$ for a fixed $L>0$.
     With probability at least $1-\delta$,
     \begin{equation}
-        \mathcal R_{n,b}^{\mathrm{adapt}}
-            (\widehat{\mathbf I}_{\mathcal H})
+        R_{\mathrm{adapt}}
+            (\widehat{\mathbf I}_{\mathrm{dev}})
         \le
         \min_{\mathbf I\in\mathcal B}
-            \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
+            R_{\mathrm{adapt}}(\mathbf I)
         +2L\sqrt{\frac{\log(2|\mathcal B|/\delta)}
-                         {2T_{\mathcal H}}}.
+                         {2N}}.
         \label{eq:theory-transfer-bound}
     \end{equation}
     This is a finite-family consequence of Hoeffding's inequality
@@ -1504,20 +1302,20 @@ separate requirements.
     Condition on the information used to construct the bank and
     fix the adaptation rules.
     For each candidate $\mathbf I$, its validation loss averaged
-    within task $\tau\in\mathcal H$ is an independent observation
+    within selection task $\tau$ is an independent observation
     in $[0,L]$ across tasks, with mean
-    $\mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)$.
+    $R_{\mathrm{adapt}}(\mathbf I)$.
     For any $a>0$, Hoeffding's inequality and a union bound give
     \begin{equation*}
         \Pr\left\{
             \max_{\mathbf I\in\mathcal B}
-            \left|\widehat{\mathcal R}_{\mathcal H}(\mathbf I)
-                -\mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)\right|
+            \left|\widehat R(\mathbf I)
+                -R_{\mathrm{adapt}}(\mathbf I)\right|
                 >a
             \right\}
-        \le 2|\mathcal B|\exp(-2T_{\mathcal H}a^2/L^2).
+        \le 2|\mathcal B|\exp(-2Na^2/L^2).
     \end{equation*}
-    Set $a=L\sqrt{\log(2|\mathcal B|/\delta)/(2T_{\mathcal H})}$.
+    Set $a=L\sqrt{\log(2|\mathcal B|/\delta)/(2N)}$.
     On the complementary event, replacing empirical risks by
     their true risks costs at most $a$ on each side of the
     empirical minimization inequality. This proves the bound.
@@ -1529,10 +1327,11 @@ separate requirements.
 For the source procedure in
 Section~\ref{sec:method-selection}, condition on the source tasks,
 all proposal data, the final bank and all fitted candidate predictors.
-Let $q_{\mathrm{str}}\ge1$ be the number of new independent
+Let $q\ge1$ be the number of new independent
 structure-selection examples per source task.
-Let $R_{\mathrm{src}}(\mathbf I)$ be the mean true validation loss
-of these fixed predictors on the $T$ source tasks, and let
+Their mean population risk on the $T$ source tasks is
+$R_{\mathrm{src}}(\mathbf I)=T^{-1}\sum_{\tau=1}^T
+R_\tau(\widehat f_{\tau,\mathbf I})$. Let
 $\widehat{\mathbf I}_{\mathrm{src}}$ minimize their empirical
 structure-selection loss.
 
@@ -1544,14 +1343,14 @@ structure-selection loss.
         R_{\mathrm{src}}(\widehat{\mathbf I}_{\mathrm{src}})
         \le \min_{\mathbf I\in\mathcal B}R_{\mathrm{src}}(\mathbf I)
             +2L\sqrt{\frac{\log(2|\mathcal B|/\delta)}
-                              {2Tq_{\mathrm{str}}}}.
+                              {2Tq}}.
         \label{eq:appendix-theory-source-selection}
     \end{equation}
 \end{proposition}
 
 \begin{proof}
     Conditional on the fixed tasks and predictors, the
-    $Tq_{\mathrm{str}}$ example losses are independent and
+    $Tq$ example losses are independent and
     bounded. Apply Hoeffding's inequality to each candidate,
     take a union bound, and use the empirical minimization
     argument in the proof of Theorem~\ref{thm:theory-transfer}.
@@ -1567,20 +1366,20 @@ error relative to the admissible indexators by
 \begin{equation*}
     \varepsilon_{\mathrm{bank}}
     :=\min_{\mathbf I\in\mathcal B}
-        \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
+        R_{\mathrm{adapt}}(\mathbf I)
         -\inf_{\mathbf I\in\mathcal I_K}
-        \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I).
+        R_{\mathrm{adapt}}(\mathbf I).
 \end{equation*}
 Subtracting the infimum from
 \eqref{eq:theory-transfer-bound} gives
 \begin{equation*}
-    \mathcal R_{n,b}^{\mathrm{adapt}}
-        (\widehat{\mathbf I}_{\mathcal H})
+    R_{\mathrm{adapt}}
+        (\widehat{\mathbf I}_{\mathrm{dev}})
         -\inf_{\mathbf I\in\mathcal I_K}
-            \mathcal R_{n,b}^{\mathrm{adapt}}(\mathbf I)
+            R_{\mathrm{adapt}}(\mathbf I)
     \le \varepsilon_{\mathrm{bank}}
         +2L\sqrt{\frac{\log(2|\mathcal B|/\delta)}
-                         {2T_{\mathcal H}}}.
+                         {2N}}.
 \end{equation*}
 The algebraic constraints in
 Theorem~\ref{thm:theory-cycle-equivalence} preserve every compatible
