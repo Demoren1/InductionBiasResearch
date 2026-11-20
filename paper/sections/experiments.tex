@@ -1,12 +1,13 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We evaluate whether aSRR recovers known groups and whether the learned
-groups improve transfer. We compare Ward-based aSRR with Dense,
+We evaluate recovery of known groups and transfer to new tasks.
+We compare aSRR and its hard Ward variant with Dense,
 WSR~\cite{shakerinava2024weight}, LUT-Q~\cite{cardinaux2018iteratively},
 Yeh's method~\cite{yeh2022equivariance}, and MSR-FC~\cite{zhou2021meta}.
 Within each experiment, all sharing methods have the same first-layer
-coefficient budget. Yeh (hard) transfers discrete assignments, while
+coefficient budget. A partial basis is stored and held fixed during
+target fitting. Yeh (hard) transfers discrete assignments, while
 Yeh (soft) and MSR-FC transfer continuous bases. Dense fits independent
 weights on the same network support. Each method fits fresh numerical
 parameters on the same target examples.
@@ -25,8 +26,9 @@ support examples on each new function.
 
 \input{sections/transfer_linear_results.tex}
 
-aSRR recovers all signed groups in six of six layouts, and WSR
-recovers five (Table~\ref{tab:transfer-linear}). With one example,
+Development selects hard Ward sharing in all six layouts and at
+both support sizes. It recovers all six indexators, and WSR recovers
+five (Table~\ref{tab:transfer-linear}). With one example,
 aSRR matches the true groups' MSE. The mean MSE reduction over WSR
 is $0.015$, with a paired 95\% interval of $[-0.023,0.052]$
 across layouts. With five examples, Dense can estimate each of the
@@ -44,22 +46,25 @@ HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} hold out
 participants. Appendix~\ref{app:transfer-details} describes the task
 splits and development selection.
 
+Development selects hard sharing on Aug-Omniglot and partial sharing
+on the other four datasets. The same Aug-Omniglot model uses one
+block of groups built from clean-query gradients and three built
+from transformed-query gradients. On the common test episodes in
+Table~\ref{tab:transfer-classification},
+aSRR gains 3.50 percentage points over Yeh (soft) on toroidal MNIST,
+1.48 and 2.40 on the two Aug-Omniglot query sets, and 6.57 on HAR.
+It gains 1.10 and 0.77 points over MSR-FC on FC100 and WISDM.
+All six paired 95\% intervals are above zero.
+
 \input{sections/transfer_classification_results.tex}
 
-The shuffled control changes which positions share codes while
-preserving the connections, signs, group sizes and numerical fitting
-rule. We average four shuffles using the same initialization seeds as
-aSRR. The accuracy difference therefore measures the value of the
-learned assignments at a fixed budget. The paired 95\% intervals
-are above zero on both Aug-Omniglot query sets, FC100, HAR and WISDM.
-On toroidal MNIST, the difference is $0.10$ percentage points
-($[-0.51,0.72]$).
-
-MSR-FC exceeds aSRR by 1.46 points on FC100 and 1.54 on WISDM.
-Yeh (soft) exceeds aSRR by 2.83 points on transformed Aug-Omniglot
-and has the highest mean on toroidal MNIST, with a paired interval
-for its gain of $[-0.53,3.73]$. aSRR has the highest means on clean
-Aug-Omniglot and HAR. Its gain over Yeh (soft) on HAR is $0.63$
-points ($[-1.09,2.35]$). On FC100, the difference between aSRR and
-Dense is $0.08$ points ($[-0.07,0.23]$).
+Hard Ward sharing leads by 0.98 points on clean Aug-Omniglot
+queries. The selected groups gain 5.70 points on transformed
+queries. We shuffle the assignments while preserving support, signs,
+group sizes and refit settings. For partial sharing we complete a new
+basis with the same source guide. Averaging four shuffles reduces
+accuracy by 5.60 and 6.59 points on the two Aug-Omniglot query sets
+and by 0.16 on FC100 (paired 95\% interval $[0.05,0.27]$). The
+intervals include zero on HAR and WISDM. On toroidal MNIST the shuffle
+gains 0.36 points.
 \FloatBarrier

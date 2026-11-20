@@ -9,9 +9,12 @@ with known active connections, we characterize when the observations
 uniquely determine the groups and give sufficient conditions for exact
 recovery by Sign--Ratio Recovery (SRR). For fitted dense networks,
 we propose Approximate Sign--Ratio Recovery (aSRR), which clusters
-normalized weight profiles across source tasks. We transfer the resulting
-indexator and train the numerical parameters from scratch on each
-new task. On a cross-correlation benchmark with known support, aSRR
-recovers all signed groups in six layouts. Across five real datasets,
-the learned groups improve accuracy over matched shuffled groups on
-four, using the same number of trainable coefficients.
+normalized weight profiles across source tasks. Validation after
+refitting selects between retaining all group directions and
+completing part of the basis from source statistics at the same
+code budget. On a cross-correlation benchmark with known support,
+aSRR selects hard sharing and recovers all signed groups in six
+layouts. On five real datasets, it outperforms the continuous
+baselines of Yeh et al.\ and MSR-FC at matched target coefficient
+budgets. Shuffled-group controls show how much of the gain depends
+on the recovered groups.

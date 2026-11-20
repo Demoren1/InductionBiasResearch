@@ -13,11 +13,51 @@ The paired intervals use the six layout means. Yeh and MSR-FC learn
 their representations by differentiating through ridge refits on
 source functions.
 
+\paragraph*{Source directions for partial sharing.}
+For each class in each source task, let $\mathbf a$ and $\mathbf b$
+be its means in the support and query samples, centered across
+classes within each sample. Let $C_S$ and $C_Q$ be the analogous
+class-centered sample covariance matrices. With
+$\operatorname{sym}(A)=(A+A^{\mathsf T})/2$, the two signals are
+\[
+    M_1=\operatorname{sym}\mathbb E[\mathbf a\mathbf b^{\mathsf T}],
+    \qquad
+    M_2=\operatorname{sym}\mathbb E[C_S C_Q],
+\]
+where the averages run over classes and source tasks. We use $M_1$
+or mix the two signals, each divided by its Frobenius norm, with
+weight $1/4$ on $M_2$. For the resulting signal $M$, we take the
+leading generalized eigenvectors of
+\[
+    M\mathbf u=\gamma
+        \bigl(\Sigma+0.03\,\operatorname{tr}(\Sigma)
+            \mathrm{Id}/d\bigr)\mathbf u,
+\]
+where $\Sigma$ is the pooled within-class covariance and $d$ is the
+input dimension at the site. We orthonormalize the retained
+directions. For the input-group variants we also build guides that
+keep $\max(2,\lfloor k/8\rfloor)$ signed directions from the
+per-site Ward basis, ranked by their signal-to-variance ratio,
+and solve the eigenproblem in their orthogonal complement. The
+moment-based bank includes a guide formed by concatenating the
+unconstrained and group-seeded bases, scaled by $\sqrt{3/4}$ and
+$\sqrt{1/4}$, respectively. Equation~\eqref{eq:asrr-partial-basis}
+uses these guides to complete Ward or Lloyd input groups.
+
+For HAR, we estimate eight input directions from the source
+fitting and structure-selection samples and lift them to the
+global weight space with separate coefficients for each of the
+16 neurons. We combine this guide with the signed global Ward
+groups. On cross-correlation, the guide instead uses the leading
+eigenvectors of the symmetrized cross moment of least-squares weight
+estimates from two halves of each source task on the fixed support.
+
+\paragraph*{Real-data episodes.}
 Toroidal MNIST and Aug-Omniglot use 64 hidden neurons. On MNIST, we
 split the 45 digit pairs into 25 source, 10 development and 10 test
 pairs and separate the original images before any transformations.
 We apply a random circular shift followed by the same fixed pixel
-permutation for every image. The test set has 800 two-way episodes.
+permutation for every image. The test set has 2,000 two-way episodes.
 Aug-Omniglot has 48 source tasks, 192 development episodes and
 768 test episodes with disjoint character pools. Its transformed
 queries use random resized crops, reflections and rotations of up to
@@ -30,26 +70,50 @@ On WISDM, we use 18 activities and nonoverlapping 64-sample windows
 of the three smartwatch acceleration axes and their magnitude. The
 32 hidden neurons are organized in four local time blocks. We use 27
 source, 7 development and 12 test participants after filtering for
-sufficient windows per activity. The 384 test episodes use early
-windows for fitting and later windows for queries. HAR uses the
-protocol in Appendix~\ref{app:asrr-tuning-details}.
+sufficient windows per activity. The 768 test episodes use early
+windows for fitting and later windows for queries. For HAR we draw
+360 episodes from the nine held-out participants and use the
+development protocol in Appendix~\ref{app:asrr-tuning-details}.
+These test episodes are drawn afresh from the same held-out pools
+used in the earlier comparisons.
 
-On the four panels other than HAR, development screens candidate
-groups and bases at learning rates 0.003 and 0.01 for 75 and 150 Adam
-steps. Up to three candidates per method proceed to a grid of rates
-0.001, 0.003, 0.01 and 0.03 and durations of 25, 75, 150 and 300 steps.
-We use two numerical starts on this grid, maximize mean development
-accuracy and break ties by cross-entropy. Aug-Omniglot uses the
-transformed queries for selection. Test accuracy averages two fresh
-starts, with the same rule and seeds for aSRR and its shuffles.
-For the input partitions, each shuffle permutes the input assignments
-jointly within a block. For global groups, it permutes labels within
-each neuron and sign.
-Paired intervals use participant means on HAR and WISDM, digit-pair
-means on toroidal MNIST and episodes conditional on the held-out class
-pools on FC100 and Aug-Omniglot.
+\paragraph*{Selection and comparisons.}
+On the four input-group benchmarks, aSRR screens candidates on
+about 48 development episodes at learning rates 0.003 and 0.01 for 75
+and 150 Adam steps. Up to two candidates per family proceed to the
+full development grid, with rates 0.001, 0.003, 0.01 and 0.03 and
+durations of 25, 75, 150 and 300 steps. We use two numerical starts,
+maximize mean development accuracy averaged equally over available
+query views, and break ties by cross-entropy. The screened bank
+also contains direct generalized-eigenvector completions with
+uniform or reallocated site ranks. The reported partial fits
+use the projected completions in~\eqref{eq:asrr-partial-basis}.
+On Aug-Omniglot, the gradient bank includes all mixed allocations of
+clean and transformed source queries across four blocks
+(Appendix~\ref{app:asrr-gradient}).
+Among the selected partial fits, toroidal MNIST uses Lloyd groups in
+16 blocks and the mixed moments guide. FC100 uses the class-mean
+guide with Ward groups shared across patches in two blocks, and
+WISDM uses the same signal with Ward groups in eight blocks.
 
-The four new panels use WSR and LUT-Q source proposals from eight
+The baselines retain their previously selected models and numerical
+settings. Their original four-panel screen forwarded up to three
+candidates per method to the same full Adam grid and used transformed
+queries for Aug-Omniglot selection. All methods are evaluated on
+the same new episodes. Test accuracy averages two fresh starts on
+the four input-group benchmarks. On HAR we use the selected numerical
+ensemble for each method. Paired intervals use participant means on
+HAR and WISDM, digit-pair means on toroidal MNIST and episodes
+conditional on the held-out class pools on FC100 and Aug-Omniglot.
+
+For each shuffled control, we permute the input assignments jointly
+within each block or the global labels within each neuron and sign.
+This preserves support, signs, and group sizes. In partial sharing,
+we fix the source guide and rebuild the completed basis with the
+permuted groups. We use the selected refit settings and the same
+initialization seeds for aSRR and its four shuffles.
+
+The four input-group panels use WSR and LUT-Q source proposals from eight
 Dense fits selected by source numerical-validation loss. We retain
 four Dense fits per source task on MNIST, Aug-Omniglot and WISDM, and
 three on FC100. WSR uses the proximal map with rewinding.

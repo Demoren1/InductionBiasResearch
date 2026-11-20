@@ -31,7 +31,6 @@ Once a structure has been selected, its connectivity and sharing
 constraints are held fixed while its codebook and remaining numerical
 parameters are initialized and learned anew on each target task.
 
-Our contributions are as follows:
 \begin{samepage}
 \begin{itemize}
     \item We characterize when exact, aligned ReLU weights on known
@@ -46,12 +45,15 @@ Our contributions are as follows:
     \item We propose Approximate Sign--Ratio Recovery (aSRR,
         Algorithm~\ref{alg:asrr}) for fitted dense networks. It
         aligns the hidden neurons, normalizes their weights and
-        clusters profiles across tasks at a prescribed code budget.
-        We compare candidate indexators by validation performance after
-        fitting their numerical parameters afresh.
+        clusters profiles across tasks. It can retain the group
+        directions or complete a basis of the same size from source
+        statistics. We select the basis by validation performance
+        after fitting its numerical parameters afresh.
     \item We measure signed-group recovery on synthetic cross-correlation
         and evaluate transfer on five real datasets. We compare sharing
-        methods at matched budgets and use shuffled assignments to
-        measure the contribution of the learned groups.
+        methods at matched target coefficient budgets. aSRR recovers
+        the synthetic groups and exceeds Yeh (soft) and MSR-FC on the
+        real-data panels. The shuffled controls measure the contribution
+        of the recovered groups within each selected basis.
 \end{itemize}
 \end{samepage}

@@ -71,7 +71,7 @@ def fit_batch(sx, sy, query, layout, structure, rate, steps, seed_blocks):
         basis = structure["basis"]
         size = basis.shape[0] * basis.shape[2]
         scale *= math.sqrt(layout.connections / size)
-    elif "index" in structure:
+    if "index" in structure:
         index = structure["index"]
         size = int(index.abs().max())
         labels, signs = index.abs().sub(1).clamp_min(0), index.sign()
@@ -95,7 +95,7 @@ def fit_batch(sx, sy, query, layout, structure, rate, steps, seed_blocks):
                 device=sx.device,
             )
         )
-    weights = torch.cat(weights).mul_(scale)
+    weights = torch.cat(weights).mul_(structure.get("initial_scale", scale))
     tail = torch.cat(tail)
     tail[..., : layout.hidden] *= 0.1
     tail[..., -layout.outputs :] = 0
@@ -164,8 +164,10 @@ def model_on_device(path, device):
     }
 
 
-def input_batches(dataset, phase, device, *, pack=1):
-    folder = panel_directory(dataset) / phase
+def input_batches(
+    dataset, phase, device, *, pack=1, include_clean=False, folder=None
+):
+    folder = panel_directory(dataset) / phase if folder is None else folder
     config = CONFIG["real"][dataset]
     layout = Layout(*config["layout"])
     shot = config["shot"]
@@ -187,7 +189,7 @@ def input_batches(dataset, phase, device, *, pack=1):
         )
         sy = data["sy"][:, :, :shot].reshape(len(sx), -1)
         queries = {"query": input_tensor(data["qx"], device)}
-        if phase == "test" and "qx_clean" in data:
+        if (phase == "test" or include_clean) and "qx_clean" in data:
             queries["clean"] = input_tensor(data["qx_clean"], device)
         yield (
             parts,

@@ -1,9 +1,10 @@
 \section{Conclusion}
 
-Approximate Sign--Ratio Recovery extracts a shared assignment by
-clustering profiles of aligned and normalized source weights. The
-assignment fixes the sharing groups on each new task, which learns
-its own numerical values.
+Approximate Sign--Ratio Recovery clusters aligned source weight
+profiles to propose sharing groups. Validation after fresh refits
+chooses between hard sharing and a basis that combines a group
+direction with directions estimated from source examples. Each
+target task learns its own coefficients in the selected basis.
 
 For aligned source weights with fixed active connections, we characterize
 exact recovery through scale-invariant magnitudes and sign profiles.
@@ -15,12 +16,12 @@ determine the groups jointly. Recovery from erroneous pairwise
 relations additionally requires sufficient redundancy between
 the observed parts.
 
-With known support, aSRR recovers the signed groups in all six
-cross-correlation layouts. On four of five real datasets, the learned
-assignments improve accuracy over shuffles at the same coefficient
-budget. The continuous bases of MSR-FC and Yeh (soft) attain higher
-accuracy in several settings, including FC100, WISDM and transformed
-Aug-Omniglot. The auxiliary sparse ReLU experiment illustrates the
-importance of the candidate support. For that teacher, the aSRR bank
-retains all edges, and its selected assignment has higher query error
+With known support, hard sharing recovers the signed groups in all
+six cross-correlation layouts. On the five real datasets, aSRR exceeds
+Yeh (soft) and MSR-FC at the same target coefficient budget. Shuffling
+reduces the accuracy of the hard groups on Aug-Omniglot and gives a
+smaller loss for partial sharing on FC100. Most of the transfer gains
+with partial sharing survive the shuffle. The auxiliary sparse ReLU
+experiment illustrates the role of the candidate support. With all
+edges retained, its selected hard assignment has higher query error
 than Dense.

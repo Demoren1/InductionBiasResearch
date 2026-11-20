@@ -73,10 +73,13 @@ def initialization(layout, connections, restarts, tasks, device, seed):
     return state.expand(tasks, -1, -1).clone().requires_grad_()
 
 
-def fit_dense(panel, layout, *, steps, restarts, device, seed):
+def fit_dense(panel, layout, *, steps, restarts, device, seed, anchor=None):
     sx, sy, qx, qy = panel
     n = layout.connections
     parameter = initialization(layout, n, restarts, len(sx), device, seed)
+    if anchor is not None:
+        with torch.no_grad():
+            parameter[..., :n].copy_(torch.as_tensor(anchor, device=device))
     optimizer = torch.optim.Adam([parameter], lr=0.003)
     generator = torch.Generator(device=device).manual_seed(seed + 2)
     best = torch.full(parameter.shape[:2], torch.inf, device=device)
