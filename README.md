@@ -8,8 +8,11 @@
 
 - [Статья](paper/main.pdf), [исходник](paper/main.tex) и
   [теория с отдельными исследовательскими заметками](paper/theory/README.md).
-- [Синтетика, Omniglot и UCI HAR](artifacts/compact_experiments_2026-11-18/REPORT.md):
-  эксперименты текущей статьи. [Omniglot с 64 нейронами](artifacts/omniglot64_2026-11-18/results_with_lutq.json)
+- [Основные эксперименты статьи](artifacts/paper_transfer_2026-11-20/REPORT.md)
+  включают синтетическую кросс-корреляцию и пять реальных наборов.
+- [Дополнительные сравнения](artifacts/compact_experiments_2026-11-18/REPORT.md)
+  включают разреженную ReLU-сеть, обычный Omniglot и подробные результаты
+  UCI HAR. [Omniglot с 64 нейронами](artifacts/omniglot64_2026-11-18/results_with_lutq.json)
   проверяет тот же режим при большем бюджете.
 - [FC100 и NinaPro DB2](artifacts/fc100_ninapro_2026-11-18/tuning/REPORT.md)
   и [проверка компенсированных слияний на FC100](paper/theory/ASRR_COMPENSATED_MERGING_FC100_2026-11-19.md)
@@ -25,9 +28,10 @@ python -m pip install -r requirements-reporting.txt
 python -m experiments.paper_compact_v1.evidence
 ```
 
-Команда проверяет контрольные суммы, пересчитывает MSE, точность,
-кросс-энтропию и доверительные интервалы из сохранённых предсказаний.
-GPU и исходные датасеты для этого не нужны.
+Команда проверяет контрольные суммы и пересчитывает метрики
+дополнительных сравнений из сохранённых предсказаний. GPU и исходные
+датасеты для этого не нужны. Для основных таблиц опубликованы
+протокол, сводка и парные интервалы.
 
 [Код экспериментов](experiments/README.md) описывает восстановление
 данных и повтор обучения. Тяжёлые кэши и сырые данные остаются

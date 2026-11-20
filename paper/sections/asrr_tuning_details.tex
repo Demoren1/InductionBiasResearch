@@ -1,13 +1,7 @@
-\subsection{Experimental protocols}
+\subsection{Fitting and timing for the earlier comparisons}
 \label{app:asrr-tuning-details}
 
-For the synthetic experiment, each target function has 2048 query
-examples. The shared numerical solver uses 18 Adam starts for 2000
-steps, retaining four for 48 Gauss--Newton updates. Numerical-selection
-loss chooses the final solution. The structural audit checks the signed
-assignment up to code relabeling and sign changes.
-
-Omniglot uses disjoint sets of 1028 source, 172 development and 423
+Unaugmented Omniglot uses disjoint sets of 1028 source, 172 development and 423
 target characters. We use 784--16--5 and 784--64--5 ReLU networks. Each target
 episode samples five characters and a rotation in multiples of 90
 degrees for each character. Its 20 drawings are divided into 10 fitting,
@@ -26,7 +20,12 @@ the numerical rule for each frozen or eligible 128-coordinate bank.
 We screen learning rates 0.001, 0.003, 0.01 and 0.03 with activation
 quantiles 0.1, 0.5 and 0.9 and up to 1000 Adam steps, then compare
 ensembles of 1, 4 and 16 predictions for the retained settings.
-The 180 test episodes are drawn after this selection.
+The four source tasks each pool four participants. Five other
+participants provide development episodes. The nine held-out
+participants provide 180 test episodes with three fitting and five
+query windows per activity. Table~\ref{tab:recovery-har} reports
+accuracy, cross-entropy and source construction times.
+\input{sections/recovery_har_results.tex}
 
 LUT-Q, Yeh and MSR-FC use fully connected adaptations with the same
 source observations. The respective source budgets are 2500 LUT-Q
@@ -47,7 +46,7 @@ several are available.
 
 Source times come from construction logs and replays of fixed
 configurations. aSRR and WSR start from saved Dense fits. The aSRR
-timing in the synthetic experiment covers both candidates. Yeh MAP
+timing in the sparse ReLU experiment covers both candidates. Yeh MAP
 and soft share one source run. Archived native times include profiling
 overhead. All times end at candidate generation, before selection and
 transfer.

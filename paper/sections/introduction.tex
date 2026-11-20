@@ -30,8 +30,6 @@ source solutions can improve learning from limited data on new tasks.
 Once a structure has been selected, its connectivity and sharing
 constraints are held fixed while its codebook and remaining numerical
 parameters are initialized and learned anew on each target task.
-We assess prediction on held-out data and report the cost of extracting
-the structure separately from the cost of training on new tasks.
 
 Our contributions are as follows:
 \begin{samepage}
@@ -51,10 +49,9 @@ Our contributions are as follows:
         clusters profiles across tasks at a prescribed code budget.
         We compare candidate indexators by validation performance after
         fitting their numerical parameters afresh.
-    \item We evaluate aSRR on a controlled synthetic problem and
-        test transfer to new characters on Omniglot and new
-        subjects on UCI HAR. We compare sharing methods at matched
-        numerical budgets and measure the time to construct their
-        source candidates.
+    \item We measure signed-group recovery on synthetic cross-correlation
+        and evaluate transfer on five real datasets. We compare sharing
+        methods at matched budgets and use shuffled assignments to
+        measure the contribution of the learned groups.
 \end{itemize}
 \end{samepage}

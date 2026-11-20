@@ -1,0 +1,60 @@
+\subsection{Transfer benchmark protocol}
+\label{app:transfer-details}
+
+For each cross-correlation layout we draw 96 source, 48 development
+and 160 test functions. Each source function has 96 Gaussian inputs
+and independent response noise with standard deviation 0.05. Source
+least-squares fits use 80 examples, with the remaining 16 for
+numerical validation. The output coordinates are observed, so aSRR
+clusters the fitted profiles in their given order and scale. Each
+target function has 96 noiseless query examples. For each support size,
+development selects the representation and ridge strength after refit.
+The paired intervals use the six layout means. Yeh and MSR-FC learn
+their representations by differentiating through ridge refits on
+source functions.
+
+Toroidal MNIST and Aug-Omniglot use 64 hidden neurons. On MNIST, we
+split the 45 digit pairs into 25 source, 10 development and 10 test
+pairs and separate the original images before any transformations.
+We apply a random circular shift followed by the same fixed pixel
+permutation for every image. The test set has 800 two-way episodes.
+Aug-Omniglot has 48 source tasks, 192 development episodes and
+768 test episodes with disjoint character pools. Its transformed
+queries use random resized crops, reflections and rotations of up to
+$30^\circ$.
+
+FC100 uses 16 local image patches, with eight hidden neurons per
+patch. Each patch is mean-pooled to $4\times4$ RGB values. We use 16
+source tasks, 384 development episodes and 2048 test episodes.
+On WISDM, we use 18 activities and nonoverlapping 64-sample windows
+of the three smartwatch acceleration axes and their magnitude. The
+32 hidden neurons are organized in four local time blocks. We use 27
+source, 7 development and 12 test participants after filtering for
+sufficient windows per activity. The 384 test episodes use early
+windows for fitting and later windows for queries. HAR uses the
+protocol in Appendix~\ref{app:asrr-tuning-details}.
+
+On the four panels other than HAR, development screens candidate
+groups and bases at learning rates 0.003 and 0.01 for 75 and 150 Adam
+steps. Up to three candidates per method proceed to a grid of rates
+0.001, 0.003, 0.01 and 0.03 and durations of 25, 75, 150 and 300 steps.
+We use two numerical starts on this grid, maximize mean development
+accuracy and break ties by cross-entropy. Aug-Omniglot uses the
+transformed queries for selection. Test accuracy averages two fresh
+starts, with the same rule and seeds for aSRR and its shuffles.
+For the input partitions, each shuffle permutes the input assignments
+jointly within a block. For global groups, it permutes labels within
+each neuron and sign.
+Paired intervals use participant means on HAR and WISDM, digit-pair
+means on toroidal MNIST and episodes conditional on the held-out class
+pools on FC100 and Aug-Omniglot.
+
+The four new panels use WSR and LUT-Q source proposals from eight
+Dense fits selected by source numerical-validation loss. We retain
+four Dense fits per source task on MNIST, Aug-Omniglot and WISDM, and
+three on FC100. WSR uses the proximal map with rewinding.
+LUT-Q updates a dictionary of nearest code values. Yeh learns
+blockwise probabilistic assignments through three inner updates.
+Its hard variant maximizes total assignment probability subject to
+using the prescribed number of codes. MSR-FC learns a factorized
+basis. The target fit uses the basis and learns fresh coefficients.

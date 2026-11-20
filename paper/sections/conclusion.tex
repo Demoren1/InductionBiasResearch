@@ -15,11 +15,12 @@ determine the groups jointly. Recovery from erroneous pairwise
 relations additionally requires sufficient redundancy between
 the observed parts.
 
-In the synthetic experiment, the full-support aSRR bank misses the
-sparse teacher's indexator and the selected assignment transfers with
-higher prediction error than Dense. On the real benchmarks,
-aSRR improves over Dense with 128 codes for HAR and with 1024 or 4096
-for Omniglot. On Omniglot, Yeh (soft) achieves the highest accuracy at
-width 16, and WSR leads at width 64. aSRR builds its grouping faster
-than WSR from saved Dense fits at both widths. The real-data results
-are conditional on the studied classes and subjects.
+With known support, aSRR recovers the signed groups in all six
+cross-correlation layouts. On four of five real datasets, the learned
+assignments improve accuracy over shuffles at the same coefficient
+budget. The continuous bases of MSR-FC and Yeh (soft) attain higher
+accuracy in several settings, including FC100, WISDM and transformed
+Aug-Omniglot. The auxiliary sparse ReLU experiment illustrates the
+importance of the candidate support. For that teacher, the aSRR bank
+retains all edges, and its selected assignment has higher query error
+than Dense.

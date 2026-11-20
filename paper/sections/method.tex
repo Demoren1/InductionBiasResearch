@@ -86,7 +86,8 @@ rows~\cite[Sec.~2.1]{zhou2023permutation}. Algorithm~\ref{alg:asrr}
 averages the aligned fits of each task, then permutes the average into
 the common neuron order. Write $\bar w_{\tau,ih}$ for entry $(i,h)$ of
 the resulting matrix $\overline{\mathbf W}_\tau$.
-Appendix~\ref{app:asrr-experiments} gives the numbers of retained fits.
+Appendices~\ref{app:transfer-details} and~\ref{app:asrr-experiments}
+give the numbers of retained fits.
 
 For global sharing, the profile at $p=(i,h)$ is
 $\mathbf z_p=(\bar w_{\tau,ih})_{\tau=1}^T\in\mathbb R^T$. Two positions using the
@@ -231,5 +232,5 @@ A bank can also be compared on separate development tasks after
 fresh numerical fitting on each task. The choice is fixed before
 test evaluation. Each test task receives only the indexator and
 learns a fresh codebook, biases and output weights.
-Appendix~\ref{app:asrr-tuning-details} specifies the experimental
-selection and fitting rules.
+Appendix~\ref{app:transfer-details} specifies the selection and fitting
+rules for the transfer benchmarks.

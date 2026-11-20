@@ -1,63 +1,65 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We study recovery with a known generating structure and evaluate transfer
-to new characters on Omniglot and new subjects on UCI HAR. We compare
-aSRR with Dense, LUT-Q~\cite{cardinaux2018iteratively}, Yeh's
-method~\cite{yeh2022equivariance}, MSR-FC~\cite{zhou2021meta} and
-weight-sharing regularization (WSR)~\cite{shakerinava2024weight}.
-
-Within each experiment, the sharing methods have the same budget of
-first-layer code values or latent coefficients. Yeh (MAP) transfers
-the most probable assignments. Yeh (soft) and MSR-FC transfer their
-continuous bases. All methods learn the numerical parameters, biases
-and output layer afresh on the same target examples. We report the
-wall time to build source candidates before their final selection.
-Appendix~\ref{app:asrr-tuning-details} gives the fitting and timing
-protocols.
+We evaluate whether aSRR recovers known groups and whether the learned
+groups improve transfer. We compare Ward-based aSRR with Dense,
+WSR~\cite{shakerinava2024weight}, LUT-Q~\cite{cardinaux2018iteratively},
+Yeh's method~\cite{yeh2022equivariance}, and MSR-FC~\cite{zhou2021meta}.
+Within each experiment, all sharing methods have the same first-layer
+coefficient budget. Yeh (hard) transfers discrete assignments, while
+Yeh (soft) and MSR-FC transfer continuous bases. Dense fits independent
+weights on the same network support. Each method fits fresh numerical
+parameters on the same target examples.
 
 \subsection{Synthetic recovery and transfer}
 
-The generating ReLU network has 16 inputs, 16 hidden units, one output,
-160 active first-layer connections and four shared codes. One source
-function supplies 4096 fitting,
-512 numerical-selection and 1024 structure-selection examples.
-The fitted Dense weights are available to aSRR and WSR. An audit
-after fitting checks the support and signed groups against the teacher.
+Following the cross-correlation experiments of
+\citet{zhou2021meta,yeh2022equivariance}, we regress 68 outputs on
+70 inputs. Each output uses three adjacent inputs. At each of the
+three offsets, 51 positions share one coefficient and 17 positions
+have their own, giving 54 independent coefficients. We draw six
+independent layouts of the exceptions and give every method the same
+support of 204 connections. Within each layout, the coefficients vary
+across functions. We fit them by ridge regression from one or five
+support examples on each new function.
 
-We fit fresh parameters to four new functions with the same generating
-structure, using 256 fitting and 64 numerical-selection examples per
-function. Each method uses the same Adam and Gauss--Newton solver.
-The aSRR candidates retain all 256 connections, so the sparse teacher's
-indexator lies outside this bank. The selected assignment obtains a
-mean query MSE of $1.43$, compared with $0.473$ for Dense
-(Table~\ref{tab:recovery-synthetic}).
-\input{sections/recovery_synthetic_results.tex}
+\input{sections/transfer_linear_results.tex}
 
-\input{sections/omniglot_wsr.tex}
+aSRR recovers all signed groups in six of six layouts, and WSR
+recovers five (Table~\ref{tab:transfer-linear}). With one example,
+aSRR matches the true groups' MSE. The mean MSE reduction over WSR
+is $0.015$, with a paired 95\% interval of $[-0.023,0.052]$
+across layouts. With five examples, Dense can estimate each of the
+three weights per output on the common support and reaches near-zero
+error on the noiseless targets.
 
-\FloatBarrier
-\subsection{Transfer between people on UCI HAR}
+\subsection{Transfer on real data}
 
-UCI HAR~\cite{reyes2013har} has six activity classes and 561 input
-features. The four source tasks each pool four training subjects.
-Five other subjects are used for development, and nine held-out subjects
-provide 180 test episodes. Each episode uses three fitting and five
-query windows per activity. Development fixes the numerical training
-rule for each method before transfer.
+We hold out digit pairs on toroidal MNIST, with cyclic shifts and a
+fixed pixel permutation following~\citet{shakerinava2024weight}.
+On Aug-Omniglot~\cite{zhou2021meta}, we adapt on clean images and
+evaluate the same query drawings in clean and transformed form.
+FC100~\cite{oreshkin2018tadam} holds out image superclasses. UCI
+HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} hold out
+participants. Appendix~\ref{app:transfer-details} describes the task
+splits and development selection.
 
-With 128 codes, aSRR reaches $91.50\%$ accuracy
-(Table~\ref{tab:recovery-har}). The paired gain is $5.07\pm2.17$
-percentage points over Dense and $6.48\pm2.48$ over WSR. Yeh (soft)
-is close to aSRR, with a paired difference of $0.63\pm1.72$ points
-in favor of aSRR. All intervals use the nine subject means.
+\input{sections/transfer_classification_results.tex}
 
-To measure the effect of the learned assignments, we shuffle group
-labels within each neuron among weights of the same sign. This
-preserves the active connections, signs and group sizes within each
-neuron. The control averages four such permutations using the same
-numerical settings and starts as aSRR. The learned groups improve
-accuracy by 4.88 percentage points (paired 95\% interval
-$[2.71,7.06]$).
-\input{sections/recovery_har_results.tex}
+The shuffled control changes which positions share codes while
+preserving the connections, signs, group sizes and numerical fitting
+rule. We average four shuffles using the same initialization seeds as
+aSRR. The accuracy difference therefore measures the value of the
+learned assignments at a fixed budget. The paired 95\% intervals
+are above zero on both Aug-Omniglot query sets, FC100, HAR and WISDM.
+On toroidal MNIST, the difference is $0.10$ percentage points
+($[-0.51,0.72]$).
+
+MSR-FC exceeds aSRR by 1.46 points on FC100 and 1.54 on WISDM.
+Yeh (soft) exceeds aSRR by 2.83 points on transformed Aug-Omniglot
+and has the highest mean on toroidal MNIST, with a paired interval
+for its gain of $[-0.53,3.73]$. aSRR has the highest means on clean
+Aug-Omniglot and HAR. Its gain over Yeh (soft) on HAR is $0.63$
+points ($[-1.09,2.35]$). On FC100, the difference between aSRR and
+Dense is $0.08$ points ($[-0.07,0.23]$).
 \FloatBarrier

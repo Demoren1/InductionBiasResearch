@@ -1,14 +1,26 @@
 \section{Implementation and experimental protocols}
 \label{app:relu-details}
 
-\subsection{Source fits and candidate construction}
+\input{sections/transfer_details.tex}
+
+\subsection{Source fits for earlier comparisons}
 \label{app:asrr-experiments}
 
-For Omniglot and HAR, Algorithm~\ref{alg:asrr} averages four
-retained Dense fits per source task. In the synthetic experiment
-we use the selected Dense fit of the single source task.
+For unaugmented Omniglot and HAR, Algorithm~\ref{alg:asrr} averages
+four retained Dense fits per source task. On HAR we transfer the
+128-code global cut. On unaugmented Omniglot we transfer input
+partitions at both widths.
 
-The synthetic comparison uses the four-code global cut and one
+\subsection{Auxiliary sparse ReLU benchmark}
+\label{app:relu-numerical}
+
+The generating ReLU network has 16 inputs, 16 hidden units, one output
+and 160 active first-layer connections with four shared codes. One
+source function supplies 4096 fitting, 512 numerical-selection and
+1024 structure-selection examples. aSRR and WSR start from the
+selected Dense fit.
+
+The aSRR bank contains the four-code global cut and one
 refinement seeded by that cut. In the refinement, weighted
 least-squares updates fit code values and positive neuron scales
 for the current groups. Reassignment uses a Student loss on
@@ -16,11 +28,7 @@ standardized weight residuals and keeps all four codes occupied.
 Direction uncertainty is floored at $0.0003$. The refinement stops
 when assignments stabilize or after 12 updates. Refitting on source
 examples and comparison on the separate structure-selection sample
-choose the original global cut. On HAR we transfer the 128-code
-global cut. On Omniglot we transfer input partitions at both widths.
-
-\subsection{Numerical refitting for synthetic regression}
-\label{app:relu-numerical}
+choose the original global cut.
 
 The synthetic solver refines selected Adam fits with damped
 Gauss--Newton steps on the squared training residual. At each
@@ -33,7 +41,19 @@ fixed assignments. The update tests step sizes $2^{-l}$ for
 $l=0,\ldots,11$ and accepts the first training-loss improvement.
 Numerical validation chooses the final iterate.
 
+We fit four new functions with 256 fitting, 64 numerical-selection
+and 2048 query examples per function. The shared numerical solver
+uses 18 Adam starts for 2000 steps and retains four for 48
+Gauss--Newton updates. The structural audit compares signed groups and
+support with the teacher up to code relabeling and groupwise sign
+changes. The aSRR bank retains all 256 connections, and its selected
+assignment yields a mean query MSE of $1.43$ versus $0.473$ for Dense
+(Table~\ref{tab:recovery-synthetic}).
+\input{sections/recovery_synthetic_results.tex}
+
+\input{sections/omniglot_wsr.tex}
 \input{sections/asrr_tuning_details.tex}
+\FloatBarrier
 
 \subsection{Group normalization and gradient-based proposals}
 \label{app:asrr-gradient}

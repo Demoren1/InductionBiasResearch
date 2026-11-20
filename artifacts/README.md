@@ -2,19 +2,20 @@
 
 | Проверка | Компактные данные |
 |---|---|
-| Текущая статья: синтетика, Omniglot, UCI HAR | [Протокол и итоги](compact_experiments_2026-11-18/REPORT.md) |
+| Основные таблицы статьи | [Отчёт](paper_transfer_2026-11-20/REPORT.md), [протокол](paper_transfer_2026-11-20/protocol.json), [численные результаты](paper_transfer_2026-11-20/summary.json) |
+| Дополнительные сравнения на синтетике, Omniglot и UCI HAR | [Протокол и итоги](compact_experiments_2026-11-18/REPORT.md) |
 | Omniglot, 64 нейрона | [Общее сравнение](omniglot64_2026-11-18/results_with_lutq.json), [кластеризация aSRR](omniglot64_2026-11-18/clustering_results.json) |
 | FC100 и NinaPro | [Подбор и парные сравнения](fc100_ninapro_2026-11-18/tuning/REPORT.md) |
 | Компенсированные слияния aSRR | [FC100](asrr_compensated_merging_2026-11-19/fc100/target_results.json), [синтетика](asrr_compensated_merging_2026-11-19/synthetic.json), [Omniglot](asrr_compensated_merging_2026-11-19/target_results.json) |
 | Дополнительные опыты | [Каталог отчётов](../paper/theory/README.md): совместимость групп, общий старт, сдвиг задач, градиентные предложения и сокращение бюджета |
 | Предыдущее сравнение | [Benchmark 7 ноября](benchmark_2026-11-07/README.md) |
 
-Архивы `scoring.npz` для текущей статьи содержат ответы и ровно те
+Архивы `scoring.npz` дополнительных сравнений содержат ответы и ровно те
 предсказания, по которым считались метрики. `scoring_lineage.json`
 сохраняет их контрольные суммы и происхождение. Архивы
 `selected_indexators.npz` содержат выбранные дискретные группы;
 полные непрерывные базисы и промежуточные состояния не публикуются.
-Пересчёт всех метрик статьи — из корня репозитория:
+Метрики этих сравнений можно пересчитать из корня репозитория.
 
 ```bash
 python -m experiments.paper_compact_v1.evidence
