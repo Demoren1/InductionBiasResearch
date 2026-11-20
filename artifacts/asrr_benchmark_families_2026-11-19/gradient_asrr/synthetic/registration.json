@@ -1,0 +1,48 @@
+{
+  "plan_sha256": "c9e7f089dcc2def26fed91818ad379cacae8b8e3760cddc534b190fbb693d475",
+  "code_sha256": "510741373fcdb36555fada5d88a6ff343540a000efa24e6c9465e67efc982e27",
+  "config": {
+    "inputs": 48,
+    "outputs": 4,
+    "group_sizes": [
+      12,
+      9,
+      8,
+      7,
+      5,
+      4,
+      2,
+      1
+    ],
+    "cases": [
+      "tied",
+      "scaled"
+    ],
+    "geometries": 8,
+    "samples_per_source_half": [
+      6,
+      32
+    ],
+    "source_tasks": 96,
+    "development_tasks": 96,
+    "test_tasks": 192,
+    "query_size": 96,
+    "target_shots": [
+      4,
+      12
+    ],
+    "noise": 0.15,
+    "msr_checkpoints": [
+      400,
+      1200
+    ],
+    "ridge": [
+      1e-05,
+      0.03,
+      0.3,
+      3.0,
+      30.0
+    ]
+  },
+  "protocol": "Nested source budgets, common test curves per geometry, no teacher input in the learnable models."
+}

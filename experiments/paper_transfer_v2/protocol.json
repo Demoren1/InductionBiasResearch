@@ -1,0 +1,54 @@
+{
+  "seed": 2026112000,
+  "synthetic": {
+    "geometries": 6,
+    "source_tasks": 96,
+    "source_examples": 96,
+    "development_tasks": 48,
+    "test_tasks": 160,
+    "query_examples": 96,
+    "source_noise": 0.05,
+    "exceptions_per_offset": 17,
+    "shots": [1, 5],
+    "ridge": [0.000001, 0.0001, 0.003, 0.03, 0.3, 3.0],
+    "outer_steps": 550,
+    "outer_rates": [0.003, 0.015]
+  },
+  "real": {
+    "mnist_torus": {"layout": [1, 784, 64, 2], "codes": 2048, "shot": 5},
+    "aug_omniglot": {"layout": [1, 784, 64, 5], "codes": 2048, "shot": 5},
+    "fc100": {"layout": [16, 48, 8, 5], "codes": 3072, "shot": 5},
+    "wisdm": {"layout": [4, 64, 8, 18], "codes": 288, "shot": 5}
+  },
+  "mnist": {
+    "source_per_class": 200,
+    "numerical_per_class": 50,
+    "development_per_pair": 20,
+    "test_per_pair": 80,
+    "query_per_class": 20,
+    "source_steps": 500,
+    "source_restarts": 4
+  },
+  "fc100": {"development": 384, "test": 2048},
+  "hard_source": {
+    "tasks": 8,
+    "rates": [0.001, 0.003],
+    "steps": 250,
+    "checkpoints": [0, 50, 125, 250]
+  },
+  "target": {
+    "rates": [0.001, 0.003, 0.01, 0.03],
+    "steps": [25, 75, 150, 300],
+    "batch_size": 32,
+    "seed_replicates": 2,
+    "shuffle_replicates": 4
+  },
+  "real_bilevel": {
+    "outer_steps": 800,
+    "checkpoints": [200, 400, 800],
+    "meta_batch": 8,
+    "query_per_task": 40,
+    "yeh_rates": [0.003, 0.012],
+    "msr_rates": [0.001, 0.003]
+  }
+}

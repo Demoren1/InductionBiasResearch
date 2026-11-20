@@ -1,0 +1,57 @@
+{
+  "source_sha256": "860187bed247db8a11eedbc78cb0797fa2016de3efc4d53c83395d254f03b0e5",
+  "code_sha256": "5cd9c4ad06827e3fa4a1c73b6bf63831f5d41a201b8e6e44202b498a009a8fa0",
+  "designs": [
+    [
+      1,
+      9
+    ],
+    [
+      1,
+      16
+    ],
+    [
+      1,
+      32
+    ],
+    [
+      4,
+      16
+    ],
+    [
+      4,
+      32
+    ],
+    [
+      1,
+      64
+    ]
+  ],
+  "source_steps": 1600,
+  "outer_rate": 0.001,
+  "meta_batch": 12,
+  "source": "One higher-order SGD update, alternating support budgets.",
+  "adaptation": "First-layer Kronecker factors on the matched classifier. Basis-only uses orthogonalized input factors and fresh Adam; initialization also transfers all numerical starts and SGD rates.",
+  "data": "Existing fixed panels. Aug-Omniglot source adaptation uses the clean drawings and outer updates use all the transformed drawings.",
+  "selection": "Same development episodes, maximize accuracy then minimize NLL.",
+  "native_steps": [
+    1,
+    3,
+    9
+  ],
+  "fresh_grid": {
+    "steps": [
+      25,
+      75,
+      150,
+      300
+    ],
+    "rates": [
+      0.003,
+      0.01
+    ],
+    "shuffle_repeats": 4,
+    "selection": "Mean balanced episode accuracy on independent development, then lower cross-entropy. Tune ordinary Ward, consistent groups, matched shuffle and unshared models separately on the same grid, selecting one compact topology per learned family and shot. The shuffle is an average of individual scores.",
+    "inference": "Paired t intervals, WISDM over subject means, Omniglot over paired episode differences conditional on the class pool. Five-shot is primary, the smaller support regime is secondary."
+  }
+}

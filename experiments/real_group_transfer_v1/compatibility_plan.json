@@ -1,0 +1,27 @@
+{
+  "question": "Can the all-task compatibility rule in manuscript Algorithm 2 identify restrictions beyond the candidate bank's common relations and improve transfer over the previous aSRR or unrestricted validation selection?",
+  "prediction": "If the bank universally implies the recovered relations, every candidate remains eligible and filtering cannot change the chosen indexator. If the filter excludes the best development candidate, either direction of the transfer effect is possible. Report held-out witness coverage of all maximal sets separately from fixed-model accuracy.",
+  "proposals": "Use the previously studied four-block candidates, with either the archived four input partitions or one positive shared value plus independent positions in each block. Use the existing balanced allocation and source residual score without retuning. On FC100 also offer the original global signed Ward as a complete alternative. Each of three source-only mask seeds defines one separate finite bank; all three and the controls are frozen before scoring.",
+  "proposal_seeds": [19470111, 19470211, 19470311],
+  "tolerance_half_multiclass_brier": 0.01,
+  "primary_coverage": 1.0,
+  "sensitivity_coverage": 0.9,
+  "discovery": "Compute all inclusion-maximal sets of actual signed weight equalities, including constraints shared by different types of candidates. A single candidate in each task must witness every equality in a set. Use fractions of tasks only for the prespecified sensitivity analysis.",
+  "completion": "On separate development tasks, select a full candidate extending at least one returned set. Maximize mean query accuracy after fitting on support, then minimize half-Brier and break remaining ties by candidate name. Apply the same ranking to the unrestricted bank and trimmed filter. Freeze all choices before generating target panels.",
+  "controls": ["archived ordinary aSRR", "unrestricted selection from the identical bank", "90 percent coverage", "uniform exceptions in the same selected blocks", "four archived uniform single-background masks at the same budget", "Dense", "FC100 archived covariance-compensated global aSRR"],
+  "estimation": "Average per-episode accuracies over the three fixed mask seeds, not predictions. Paired t intervals use independent FC100 batches with a shared numerical start or NinaPro participants. Two primary differences (strict minus archived ordinary aSRR), Bonferroni 97.5 percent per dataset; secondary intervals 95 percent. Intervals are conditional on the available class/participant pools and fixed mask seeds.",
+  "numeric_fit": "Unchanged local network, one fresh start, 200 full-support Adam steps at 0.01; share the numerical seed across all methods within a batch. Output query probabilities before reading query answers.",
+  "fc100": {
+    "codes": 3072,
+    "phase_counts": {"discovery": 192, "selection": 384, "target": 4096},
+    "episode_seeds": {"discovery": 19474001, "selection": 19474002, "target": 19474003},
+    "numeric_seeds": {"discovery": 19477000, "selection": 19479000, "target": 19482000},
+    "batch": 32,
+    "tasks": "5-way, 5 support and 15 query images per class. Independent episode draws on development superclasses for discovery and selection, disjoint test superclasses for the final comparison."
+  },
+  "ninapro": {
+    "codes": 1024,
+    "numeric_seeds": {"discovery": 19577000, "selection": 19579000, "target": 19582000},
+    "tasks": "NinaPro DB2, 12 gestures. In the deposited split order use the first four development participants only for discovery and the remaining four only for selection. Test on all 16 archived held-out participants. Within each participant average over all 15 assignments of two support and four query repetitions; each participant counts once. These are the historical benchmark participants, not new recordings."
+  }
+}

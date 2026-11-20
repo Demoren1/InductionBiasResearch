@@ -1,0 +1,256 @@
+{
+  "scalar_confirmation": {
+    "unique": {
+      "families": 16,
+      "recovered": {
+        "witness_cover": 15,
+        "round_robin": 15,
+        "uniform48": 5,
+        "local": 15,
+        "exhaustive": 15
+      },
+      "all_witnesses_retained": 16
+    },
+    "optional_core": {
+      "families": 16,
+      "recovered": {
+        "witness_cover": 15,
+        "round_robin": 14,
+        "uniform48": 1,
+        "local": 8,
+        "exhaustive": 15
+      },
+      "all_witnesses_retained": 16
+    },
+    "necessary_core": {
+      "families": 16,
+      "recovered": {
+        "witness_cover": 14,
+        "round_robin": 13,
+        "uniform48": 0,
+        "local": 8,
+        "exhaustive": 14
+      },
+      "all_witnesses_retained": 16
+    },
+    "two_full": {
+      "families": 16,
+      "recovered": {
+        "witness_cover": 14,
+        "round_robin": 14,
+        "uniform48": 0,
+        "local": 3,
+        "exhaustive": 14
+      },
+      "all_witnesses_retained": 16
+    },
+    "exclusive": {
+      "families": 16,
+      "recovered": {
+        "witness_cover": 15,
+        "round_robin": 14,
+        "uniform48": 0,
+        "local": 3,
+        "exhaustive": 14
+      },
+      "all_witnesses_retained": 16
+    }
+  },
+  "pattern": {
+    "proposals": 14,
+    "maximal_count": 1,
+    "selected": "proposal_0",
+    "exact_entry_errors": 0,
+    "sources_with_selected_witness": 12,
+    "good_per_task": [
+      6,
+      1,
+      4,
+      3,
+      1,
+      3,
+      3,
+      1,
+      2,
+      4,
+      2,
+      6
+    ],
+    "maximal_code_counts": [
+      4
+    ]
+  },
+  "fixed_indices": {
+    "mnist16": [
+      {
+        "index": "mnist16_61041801",
+        "seed": 61041801,
+        "policy": "1000"
+      },
+      {
+        "index": "mnist16_61041821",
+        "seed": 61041821,
+        "policy": "1000"
+      },
+      {
+        "index": "mnist16_61041841",
+        "seed": 61041841,
+        "policy": "1000"
+      }
+    ],
+    "omniglot10": [
+      {
+        "index": "omniglot10_61041801",
+        "seed": 61041801,
+        "policy": "0111"
+      },
+      {
+        "index": "omniglot10_61041821",
+        "seed": 61041821,
+        "policy": "0111"
+      },
+      {
+        "index": "omniglot10_61041841",
+        "seed": 61041841,
+        "policy": "0111"
+      }
+    ]
+  },
+  "transfer": {
+    "mnist16": {
+      "episodes": 1536,
+      "method": "1000",
+      "unrestricted_erm": "1000",
+      "accuracy": {
+        "fixed": 0.9342263454861118,
+        "0000": 0.9336263020833361,
+        "coverage": 0.933535156250004,
+        "neutral": 0.9342176649305577,
+        "erm": 0.9342263454861118
+      },
+      "paired_accuracy_intervals": {
+        "0000": [
+          0.0006000434027777788,
+          0.00025897359155589267,
+          0.0009411132139996649
+        ],
+        "coverage": [
+          0.0006911892361111154,
+          0.0003742522456862071,
+          0.0010081262265360237
+        ],
+        "neutral": [
+          8.680555555556768e-06,
+          -0.00014683669676474978,
+          0.00016419780787586333
+        ],
+        "erm": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "pilot_768_vs_asrr_ci95": [
+        0.0006705729166666664,
+        0.0001765060942467071,
+        0.0011646397390866258
+      ],
+      "one_stage_replication_1536_vs_asrr_ci975": [
+        -0.00020073784722222346,
+        -0.0006405339270786659,
+        0.00023905823263421896
+      ],
+      "per_mask_vs_asrr_ci95": [
+        [
+          0.0005664062499999997,
+          0.00022127963846121023,
+          0.0009115328615387893
+        ],
+        [
+          0.0004947916666666665,
+          0.00015750394952067376,
+          0.0008320793838126593
+        ],
+        [
+          0.0007389322916666663,
+          0.0004029456464876596,
+          0.0010749189368456729
+        ]
+      ]
+    },
+    "omniglot10": {
+      "episodes": 1536,
+      "method": "0111",
+      "unrestricted_erm": "0111",
+      "accuracy": {
+        "fixed": 0.8603125000000019,
+        "0000": 0.8440104166666665,
+        "coverage": 0.8598871527777795,
+        "neutral": 0.8602083333333356,
+        "erm": 0.8603125000000019,
+        "wsr_step_75": 0.8490885416666686,
+        "four_uniform_mean": 0.849765625
+      },
+      "paired_accuracy_intervals": {
+        "0000": [
+          0.016302083333333356,
+          0.013645703226427781,
+          0.01895846344023893
+        ],
+        "coverage": [
+          0.00042534722222222187,
+          -0.0016113680784919818,
+          0.0024620625229364256
+        ],
+        "neutral": [
+          0.00010416666666666777,
+          -0.0008455406775223121,
+          0.0010538740108556478
+        ],
+        "erm": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wsr_step_75": [
+          0.011223958333333358,
+          0.008794777773903093,
+          0.013653138892763624
+        ],
+        "four_uniform_mean": [
+          0.010546875000000025,
+          0.00850055767414249,
+          0.01259319232585756
+        ]
+      },
+      "pilot_768_vs_asrr_ci95": [
+        0.014791666666666668,
+        0.011149943015968887,
+        0.018433390317364448
+      ],
+      "one_stage_replication_1536_vs_asrr_ci975": [
+        0.016458333333333356,
+        0.013965583182780742,
+        0.01895108348388597
+      ],
+      "per_mask_vs_asrr_ci95": [
+        [
+          0.0153125,
+          0.012781730585671162,
+          0.017843269414328837
+        ],
+        [
+          0.017604166666666667,
+          0.015127759004193896,
+          0.02008057432913944
+        ],
+        [
+          0.01598958333333333,
+          0.013433368633393745,
+          0.018545798033272918
+        ]
+      ]
+    }
+  },
+  "intervals": "episode-paired mean, low, high in accuracy units, conditional on the fixed data pools and three mask seeds; 97.5% vs ordinary aSRR and 95% for secondary controls"
+}

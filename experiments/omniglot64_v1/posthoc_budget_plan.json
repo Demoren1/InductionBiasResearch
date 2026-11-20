@@ -1,0 +1,22 @@
+{
+  "task": "Post-hoc compression of an episode-trained wide Dense teacher on Omniglot",
+  "input": 784, "classes": 5, "teacher_width": 160,
+  "budgets": {"16": 11680, "32": 24320},
+  "source": {"episodes": 64, "seed": 337219, "fit_shots": 12, "validation_shots": 8, "restarts": 4, "updates": 600},
+  "teacher_dev": {"split": "val", "episodes": 128, "seed": 611371},
+  "policy_dev": {"split": "val", "episodes": 256, "seed": 735191},
+  "test": {"split": "test", "episodes_per_cohort": 512, "seeds": [891731, 271729]},
+  "target_shots": [5, 10],
+  "episodes": "Five distinct base characters, one random quarter-turn per character, without-replacement drawings. Nested supports, all unused drawings serve as shuffled queries. One model per episode. Numerical starts seeded independently of answers.",
+  "indexators": "Source-only input aSRR. Ward on aligned normalized Dense weight profiles, with either one partition for all hidden units or one per contiguous block of 40. Cut each tree at 73 or 152 groups. For 4 blocks match the target teacher to the source anchor by column cosine Hungarian assignment.",
+  "projection": "Mean raw weight per group and unit, teacher biases and readout. Report immediately, then repair the readout by centered ridge regression on teacher support logits and optionally finetune.",
+  "narrow_teacher_control": "Rank by support RMS activation times class-centered outgoing row norm. Keep the top units, rescale head to width, apply identical ridge repair and finetuning options.",
+  "lr": [0.003, 0.01],
+  "teacher_steps": [50, 150, 300],
+  "scratch_steps": [50, 150, 300, 600],
+  "warm_steps": [0, 50, 150, 300],
+  "warm_loss": "Equal parts hard-label CE and T-squared teacher KL on support, T=2. Ridge lambda=max(1e-6, 1e-3*trace(centered feature Gram)/width).",
+  "selection": "Freeze teacher on teacher_dev first. On policy_dev select each family's configuration separately for each shot and budget by mean episode accuracy, then lower CE, then fewer steps. Compare both dense controls, plus their validation-chosen winner. The 1/4-partition fresh-code control has its own validation selection.",
+  "shuffles": "Four common random permutations of pixel identities preserve every per-block group size and cross-block overlap. Use the selected warm aSRR configuration, including target alignment. Average metrics across four predictions scored separately.",
+  "evaluation": "Two co-primary 5-shot paired accuracy differences, aSRR minus from-scratch Dense, with Bonferroni 97.5% individual t intervals over episode differences. All further contrasts use pointwise 95% paired t intervals. Inference conditional on source bank, data split and fixed training procedure. Freeze settings, generate logits without query labels, then score. Record training/development loss and macro recall by update."
+}

@@ -1,0 +1,30 @@
+{
+  "criterion": "Sum over groups of the support-query gradient product divided by group size. Use positive input partitions and keep the latent rank per neuron fixed.",
+  "seed": 2026111907,
+  "synthetic": {
+    "inputs": 48,
+    "outputs": 4,
+    "group_sizes": [12, 9, 8, 7, 5, 4, 2, 1],
+    "cases": ["tied", "scaled"],
+    "geometries": 8,
+    "samples_per_source_half": [6, 32],
+    "source_tasks": 96,
+    "development_tasks": 96,
+    "test_tasks": 192,
+    "query_size": 96,
+    "target_shots": [4, 12],
+    "noise": 0.15,
+    "msr_checkpoints": [400, 1200],
+    "ridge": [0.00001, 0.03, 0.3, 3.0, 30.0]
+  },
+  "classification": {
+    "wisdm": {"blocks": 1, "rank": 9},
+    "aug_omniglot": {"blocks": 4, "rank": 32},
+    "source_draws": 8,
+    "source_adaptation_steps": 15,
+    "source_adaptation_rate": 0.01,
+    "search": ["start_tree", "start_refine", "adapted_tree", "adapted_refine"],
+    "validation": "Tune on the original development episodes, maximizing accuracy then minimizing NLL. Include the original 25/75/150/300 Adam-step grid and rates .003/.01 for all fresh fits.",
+    "test": "Reuse the prior episode inputs and labels exactly. Forecasts fixed before the new query metrics. Primary is five examples per class; report both versions of the Aug-Omniglot queries."
+  }
+}

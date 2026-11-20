@@ -1,0 +1,11 @@
+{
+  "question": "Supplementary same-source-information Dense comparison, registered before scoring any test predictions.",
+  "source": "Use exactly the 64 main source tasks and their saved 12/8 fit/selection drawings per character. Each narrow Dense has shared input weights and biases and 64 separate five-way heads. Optimize mean support cross-entropy, select a single shared layer by pooled source numerical cross-entropy.",
+  "widths": [16, 32], "starts": 4, "source_updates": 2400, "source_lr": 0.003, "tasks_per_update": 16,
+  "source_stopping_every": 50,
+  "new_task": "Initialize target readout by centered ridge on the same labeled support. Compare targets of four times one-hot vs. support logits from the same trained Dense-160 teacher. The former uses hard-label CE and the latter the same 50/50 soft/hard fine-tuning rule as aSRR. All compact weights can be trained. Discard source heads.",
+  "ridge": [0.001, 0.1],
+  "lr": [0.001, 0.003, 0.01],
+  "steps": [0, 10, 50, 150, 300, 600],
+  "selection": "Use the same 256 development episodes, select independently per budget and shot by accuracy, then lower CE and fewer steps. Seal predictions before scoring the identical 1024 paired test episodes. Use descriptive 95% paired intervals for aSRR minus source-trained narrow Dense."
+}

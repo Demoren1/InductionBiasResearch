@@ -1,0 +1,9 @@
+{
+  "question": "Does the source-learned four-code structure help learn new DeepSets functions?",
+  "archive": "theorem_pair_recovery_weighted_2026-11-12, three original 10 November DeepSets geometries, clean and 0.1 source noise",
+  "structures": "Use the frozen signature-only index and G34 from the same archive. This tests signed log-ratio proposals with the archived alignment and mask bank. It does not run the subsequent compatibility selector.",
+  "controls": "Compare four permutations of absolute code assignments independently within each neuron, keeping the learned active support, per-position signs, and the count of every code in every neuron. Also fit the same mask with independent weights, and the teacher index as a reference.",
+  "target": {"tasks_per_geometry": 16, "seed": 73133973, "query": 1024, "support": [64, 256], "numerical_validation_fraction": 0.25},
+  "fit": {"adam_updates": 1500, "adam_starts": 18, "gn_steps": 48, "gn_starts": 4, "seed": 73119001},
+  "evaluation": "Transfer the fixed index alone. Use fresh random initializations per target and the same fitting and selection budgets for all methods. Targets at both support sizes use nested samples and share queries. Source-noise conditions share identical target functions. Primary is clean-target query MSE with support 64, comparing signatures with a matched shuffle and with the learned mask alone. Report differences by geometry and pooled paired 95% intervals conditional on three frozen source families. Report support 256 as a secondary check."
+}

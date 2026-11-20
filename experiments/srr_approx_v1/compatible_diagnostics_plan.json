@@ -1,0 +1,26 @@
+{
+  "purpose": "Two prospective checks of the separating-task and misspecified-subspace predictions. No model selection or real-data tuning.",
+  "separation": {
+    "seed": 46111921,
+    "families": 1024,
+    "tasks": [2, 8, 16],
+    "informative_probability": [0.0, 0.05, 0.2, 0.5],
+    "train": 48,
+    "validation": 128,
+    "noise_sd": 0.1,
+    "tolerance": 0.01,
+    "model": "Two single-code signed relations w1=s*w2, s in {-1,+1}. The generating sign is sampled separately for each family. In uninformative sources x2=0. In informative sources both coordinates are independent standard Gaussian. The task coefficient is uniform on [0.7,1.3].",
+    "prediction": "The incorrect relation survives with probability (1-p)^T at population level. With p=0 both relations must survive. With p>0 compare the ordinary fitted compatibility procedure with the oracle event of receiving zero informative tasks."
+  },
+  "misspecification": {
+    "seed": 46111922,
+    "replicates": 8192,
+    "dimension": 6,
+    "constrained_dimension": 5,
+    "train": 16,
+    "noise_sd": 0.2,
+    "distance": [0.0, 0.04, 0.12],
+    "model": "Isotropic Gaussian linear regression, compare ordinary least squares with and without the signed relation w1=w2 on identical training examples.",
+    "prediction": "The gain in noiseless query MSE (Dense minus constrained) changes sign at b=1/15. Expected gains are 0.0066667, 0.0042667, -0.0149333 in the stated order. Evaluate conditional query risk exactly by the squared parameter error."
+  }
+}

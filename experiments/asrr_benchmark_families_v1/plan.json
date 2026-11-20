@@ -1,0 +1,33 @@
+{
+  "question": "Do consistent source-derived equalities improve learning new tasks after all numeric weights are refit from scratch?",
+  "procedure": "Compare ordinary Ward with a cut by source-consistency that leaves uncertain assignments independent. Choose the source candidate and numerical settings on development only. Compare the selected ties with shuffled assignments, untied weights on the same support, full Dense, and, where applicable, the teacher or a prescribed temporal grouping.",
+  "linear": {
+    "seed": 82111903, "inputs": 70, "filter_width": 3, "local_locations_per_tap": 17,
+    "source_tasks": 96, "source_samples": 96, "source_sigma": 0.05,
+    "dev_tasks": 48, "test_tasks": 160, "query": 96, "shots": [1, 5],
+    "relative_support_thresholds": [0.12, 0.25, 0.45],
+    "thresholds": [0.025, 0.08, 0.18, 0.32, 0.45],
+    "ridge_grid": [1e-7, 0.001, 0.03, 0.3, 3.0],
+    "msr_latents": [3, 16, 70]
+  },
+  "wisdm": {
+    "seed": 82111931, "subject_counts": [30, 9, 12], "device": "watch", "sensor": "accel",
+    "classes": "ABCDEFGHIJKLMOPQRS", "window": 64, "sites": 4, "hidden": 32,
+    "development_per_subject": 20, "test_per_subject": 32, "shots": [2, 5],
+    "source_steps": 450, "source_restarts": 4, "numeric_batch": 24,
+    "ward_budgets": [512, 1024, 1536], "partial_thresholds": [0.1, 0.25, 0.45],
+    "input_groups": [16, 32, 48], "input_thresholds": [0.18, 0.4, 0.65]
+  },
+  "aug_omniglot": {
+    "seed": 82111957, "source_tasks": 48, "dev_tasks": 192, "test_tasks": 768,
+    "hidden": 64, "source_steps": 500, "source_restarts": 4, "numeric_batch": 16,
+    "shots": [1, 5], "input_groups": [32, 64, 128], "input_thresholds": [0.18, 0.4, 0.65],
+    "blocks": [1, 4], "rotation_degrees": 30,
+    "augmentation": "MSR query-only affine pipeline: crop-resize, horizontal/vertical flips and up to 30 degree rotations. Source Dense proposals learn from distinct clean and transformed source observations. Use only clean target supports. Score on paired clean and augmented versions of the same held-out drawings."
+  },
+  "classification": {
+    "steps": [25, 75, 150, 300], "rates": [0.003, 0.01], "shuffle_repeats": 4,
+    "selection": "Mean balanced episode accuracy on independent development, then lower cross-entropy. Tune ordinary Ward, consistent groups, matched shuffle and unshared models separately on the same grid, selecting one compact topology per learned family and shot. The shuffle is an average of individual scores.",
+    "inference": "Paired t intervals, WISDM over subject means, Omniglot over paired episode differences conditional on the class pool. Five-shot is primary, the smaller support regime is secondary."
+  }
+}

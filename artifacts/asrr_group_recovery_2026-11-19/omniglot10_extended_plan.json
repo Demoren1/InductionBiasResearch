@@ -1,0 +1,45 @@
+{
+  "eligible": [
+    "adaptive_5",
+    "adaptive_15",
+    "adaptive_30",
+    "adaptive_50"
+  ],
+  "controls": [
+    "asrr",
+    "uniform",
+    "wsr",
+    "input_selected_coverage"
+  ],
+  "selection": "highest mean development query accuracy, then lowest CE, then name",
+  "development_seed": 191137,
+  "development_episodes": 96,
+  "target_seeds": [
+    191227,
+    191228,
+    191229,
+    191230,
+    191231,
+    191232,
+    191233,
+    191234
+  ],
+  "target_episodes_per_seed": 96,
+  "ref_files": {
+    "asrr": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/asrr_four_partitions.npz",
+    "uniform": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/balanced_random_mask_7611189541.npz",
+    "wsr": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/wsr_075.npz"
+  },
+  "source_dense_sha256": "6bea7ceb9fa6ddf5d4f4034babf45cc0cce37a16c5677e0b681711e57d96be8c",
+  "source_support_sha256": "bce8138c7dd37c581098025de057fa0217bccd607d1645d29b9599393ab9bc0d",
+  "index_archive_sha256": "30bf2280d95a2b8419a5a62ce9079d3c37cb945c16ee635b9c0478fa4c06da68",
+  "initial_winner": "joint_pooled",
+  "ablation": "same number of flipped nonsingletons per neuron, uniform placement",
+  "shared_candidates": [
+    "shared_root",
+    "shared_single",
+    "shared_four"
+  ],
+  "shared_ablation": "same group types and balanced coverage with neutral proposal scores",
+  "final_selection": "maximum development accuracy over the three rounds, then CE and name"
+}

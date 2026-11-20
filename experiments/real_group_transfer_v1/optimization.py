@@ -160,8 +160,8 @@ def fit_competitor(method, initial, panel, layout, codes, steps, device, seed):
     return saved, best, saved_steps, time.perf_counter() - started
 
 
-def fit_target(panel, layout, index, device, *, steps, seed):
-    sx, sy, qx, qy = panel
+def fit_target_logits(sx, sy, qx, layout, index, device, *, steps, seed):
+    """Refit on support and predict queries without access to query labels."""
     if index is None:
         size = layout.connections
     else:
@@ -197,10 +197,17 @@ def fit_target(panel, layout, index, device, *, steps, seed):
         weight = parameter[..., :size]
         if index is not None:
             weight = weight[..., position] * sign
-        value = predict(qx, weight, tail, layout)
-        return (
-            value[:, 0].argmax(-1).cpu().numpy(),
-            losses(value, qy)[:, 0].mean(-1).cpu().numpy(),
-            seconds,
-            memory,
-        )
+        return predict(qx, weight, tail, layout), seconds, memory
+
+
+def fit_target(panel, layout, index, device, *, steps, seed):
+    sx, sy, qx, qy = panel
+    value, seconds, memory = fit_target_logits(
+        sx, sy, qx, layout, index, device, steps=steps, seed=seed
+    )
+    return (
+        value[:, 0].argmax(-1).cpu().numpy(),
+        losses(value, qy)[:, 0].mean(-1).cpu().numpy(),
+        seconds,
+        memory,
+    )

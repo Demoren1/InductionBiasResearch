@@ -1,0 +1,54 @@
+{
+  "bank_sha256": "892acd5d0ea2bacfe47f45b72dd5b0d96b269f5f074fea568651412f0c1e2026",
+  "original_sha256": "ecdaadcc756f53703deb3d5f088bc31516aecdb1937de124dff8195abb5e07a2",
+  "candidates": [
+    "0000",
+    "0001",
+    "0010",
+    "0011",
+    "0100",
+    "0101",
+    "0110",
+    "0111",
+    "1000",
+    "1001",
+    "1010",
+    "1011",
+    "1100",
+    "1101",
+    "1110",
+    "1111"
+  ],
+  "controls": {
+    "uniform_block": "uniform allocation in the same four-block architecture",
+    "wsr_step_75": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/wsr_104.npz",
+    "balanced_random_mask_7611189541": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/balanced_random_mask_7611189541.npz",
+    "balanced_random_mask_7611189542": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/balanced_random_mask_7611189542.npz",
+    "balanced_random_mask_7611189543": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/balanced_random_mask_7611189543.npz",
+    "balanced_random_mask_7611189544": "artifacts/local/omniglot64_2026-11-18/banks/omniglot/models/balanced_random_mask_7611189544.npz"
+  },
+  "hidden": 64,
+  "codes": 4096,
+  "development_seeds": [
+    731119201,
+    731119202
+  ],
+  "target_seeds": [
+    731119311,
+    731119312,
+    731119313,
+    731119314,
+    731119315,
+    731119316,
+    731119317,
+    731119318
+  ],
+  "episodes_per_panel": 96,
+  "loss": "mean half multiclass Brier score in [0, 1]",
+  "tolerance": 0.01,
+  "coverage": 0.9,
+  "rule": "retain inclusion-maximal joint partials, then freeze the most frequently acceptable completion among their extensions; break ties by mean Brier and lexicographic order",
+  "primary": "fixed versus original accuracy, episode-paired",
+  "same_bank_control": "minimum mean development Brier",
+  "additional": "strict task coverage diagnostic at the same tolerance"
+}

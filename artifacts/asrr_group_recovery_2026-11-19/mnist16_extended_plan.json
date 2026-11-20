@@ -1,0 +1,41 @@
+{
+  "eligible": [
+    "adaptive_5",
+    "adaptive_15",
+    "adaptive_30",
+    "adaptive_50"
+  ],
+  "controls": [
+    "asrr",
+    "input_selected_coverage"
+  ],
+  "selection": "highest mean development query accuracy, then lowest CE, then name",
+  "development_seed": 191137,
+  "development_episodes": 96,
+  "target_seeds": [
+    191227,
+    191228,
+    191229,
+    191230,
+    191231,
+    191232,
+    191233,
+    191234
+  ],
+  "target_episodes_per_seed": 96,
+  "ref_files": {
+    "asrr": "artifacts/local/asrr_tuning_2026-11-17/banks/mnist/models/asrr_input_m2048.npz"
+  },
+  "source_dense_sha256": "1ca978d66be3b0578d4cd0ce9b4e42b4fd9f1087e11562215a1857552fa5d140",
+  "source_support_sha256": "7674f31333115dfadac8d3efc215403500313de4766239f09c8fb3d6b42bf7d6",
+  "index_archive_sha256": "330ca04b8eeadd42f5d1e01fb6364f7a4f1a262b0e3a19f60588d008ebd2b026",
+  "initial_winner": "joint_pooled",
+  "ablation": "same number of flipped nonsingletons per neuron, uniform placement",
+  "shared_candidates": [
+    "shared_root",
+    "shared_single",
+    "shared_four"
+  ],
+  "shared_ablation": "same group types and balanced coverage with neutral proposal scores",
+  "final_selection": "maximum development accuracy over the three rounds, then CE and name"
+}
