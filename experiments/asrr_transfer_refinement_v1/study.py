@@ -16,9 +16,9 @@ from experiments.paper_transfer_v2.panels import panel_directory
 from experiments.paper_transfer_v2.report import confidence, grouped
 from experiments.paper_transfer_v2.target import (
     fit_batch,
-    input_batches,
     metric,
     model_on_device,
+    panel_batches,
 )
 from experiments.real_group_transfer_v1.optimization import Layout
 from experiments.sharing_structure_research_v1.blind_contract import save_json
@@ -55,13 +55,41 @@ def evaluate(
     screen=False,
     folder=None,
 ):
-    layout = Layout(*CONFIG["real"][dataset]["layout"])
+    config = CONFIG["real"][dataset]
+    layout = Layout(*config["layout"])
     directory = panel_directory(dataset) / phase if folder is None else folder
+    return evaluate_panel(
+        directory,
+        layout,
+        config["shot"],
+        candidates,
+        device,
+        phase=phase,
+        rates=rates,
+        steps=steps,
+        replicates=replicates,
+        screen=screen,
+    )
+
+
+def evaluate_panel(
+    directory,
+    layout,
+    shot,
+    candidates,
+    device,
+    *,
+    phase,
+    rates,
+    steps,
+    replicates,
+    screen=False,
+):
     truth_path = directory / "answers.npz"
     truth = read_data(truth_path)["qy"]
     values = {}
-    parts = input_batches(
-        dataset, phase, device, pack=6, include_clean=True, folder=directory
+    parts = panel_batches(
+        directory, layout, shot, device, pack=6, include_clean=True
     )
     for seeds, rows, sx, sy, qx in parts:
         answers = truth[rows]

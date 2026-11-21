@@ -3,29 +3,30 @@
 \caption{Test accuracy (\%) on common episodes. HAR uses three fitting
 examples per class, and the other datasets use five. The budget counts
 the first-layer coefficients refitted by each sharing method. Bold and
-underlining mark the best and second-best transfer methods in each
-column, respectively. The final two rows use
-four permutations of the aSRR groups and give their mean accuracy and
-paired difference in percentage points.}
+underlining mark the best and second-best methods in each column.
+A dash indicates an unevaluated method. The last two rows give
+mean accuracy over four permutations of the aSRR groups and the paired
+difference in percentage points.}
 \label{tab:transfer-classification}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccccc@{}}
 \toprule
-& & \multicolumn{2}{c}{Aug-Omniglot} & & & \\
-\cmidrule(lr){3-4}
-Method & \shortstack{Toroidal\\MNIST} & Clean & Transformed & FC100 & UCI HAR & WISDM \\
+& & \multicolumn{2}{c}{Aug-Omniglot} & & \multicolumn{2}{c}{Aug-miniImageNet} & & \\
+\cmidrule(lr){3-4}\cmidrule(lr){6-7}
+Method & \shortstack{Toroidal\\MNIST} & Clean & Transformed & FC100 & Clean & Transformed & UCI HAR & WISDM \\
 \midrule
-First-layer budget & 2,048 & \multicolumn{2}{c}{2,048} & 3,072 & 128 & 288 \\
+First-layer budget & 2,048 & \multicolumn{2}{c}{2,048} & 3,072 & \multicolumn{2}{c}{3,072} & 128 & 288 \\
 \midrule
-Dense & 51.32 & 73.95 & 42.90 & 37.49 & 87.38 & 49.02 \\
-WSR & 51.67 & 55.47 & 38.35 & 37.55 & 84.24 & 47.10 \\
-LUT-Q & 51.07 & 70.49 & 41.05 & 37.57 & 90.09 & 48.26 \\
-Yeh (hard) & 51.90 & 73.50 & 44.19 & 37.25 & 89.57 & 49.33 \\
-Yeh (soft) & \underline{53.81} & \underline{74.78} & \underline{49.04} & 37.53 & \underline{90.69} & 50.92 \\
-MSR-FC & 51.90 & 70.81 & 47.34 & \underline{38.89} & 90.07 & \underline{55.69} \\
-aSRR & \textbf{56.16} & \textbf{77.39} & \textbf{50.16} & \textbf{40.11} & \textbf{96.92} & \textbf{56.21} \\
+Dense & 51.32 & 73.95 & 42.90 & 37.49 & 31.58 & 28.24 & 87.38 & 49.02 \\
+WSR & 51.67 & 55.47 & 38.35 & 37.55 & \textemdash & \textemdash & 84.24 & 47.10 \\
+LUT-Q & 51.07 & 70.49 & 41.05 & 37.57 & \textemdash & \textemdash & 90.09 & 48.26 \\
+Yeh (hard) & 51.90 & 73.50 & 44.19 & 37.25 & \textemdash & \textemdash & 89.57 & 49.33 \\
+Yeh (soft) & \underline{53.81} & \underline{74.78} & \underline{49.04} & 37.53 & 31.70 & 28.42 & \underline{90.69} & 50.92 \\
+MSR-FC & 51.90 & 70.81 & 47.34 & \underline{38.89} & \textbf{33.58} & \underline{30.33} & 90.07 & \underline{55.69} \\
+aSRR & \textbf{56.16} & \textbf{77.39} & \textbf{50.16} & \textbf{40.11} & \underline{33.40} & \textbf{30.88} & \textbf{96.92} & \textbf{56.21} \\
 \midrule
-Shuffled groups & 56.10 & 73.19 & 46.25 & 40.02 & 96.68 & 56.38 \\
-aSRR minus shuffle & $+0.06$ & $+4.20$ & $+3.91$ & $+0.09$ & $+0.24$ & $-0.17$ \\
+Shuffled groups & 56.10 & 73.19 & 46.25 & 40.02 & 33.24 & 30.69 & 96.68 & 56.38 \\
+aSRR minus shuffle & $+0.06$ & $+4.20$ & $+3.91$ & $+0.09$ & $+0.16$ & $+0.19$ & $+0.24$ & $-0.17$ \\
 \bottomrule
 \end{tabular*}
 \end{table}

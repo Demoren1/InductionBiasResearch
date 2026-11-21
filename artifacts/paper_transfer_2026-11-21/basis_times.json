@@ -1,0 +1,228 @@
+{
+  "seconds": "wall-clock seconds, one Tesla V100-PCIE-32GB and host CPU per run",
+  "scope": "The selected source recipes on prepared examples. Totals include the Dense source fits when used. Four shuffles is additional time from the already computed groups and source guide. Excludes input preprocessing, development selection and refits on target tasks.",
+  "har_dense_source": {
+    "provenance": "original Adam and L-BFGS source preparation",
+    "record": "artifacts/local/paper_asrr_2026-11-17/har/source/dense/polish_access_receipt.json"
+  },
+  "real": {
+    "mnist_torus": {
+      "asrr": {
+        "dataset": "mnist_torus",
+        "method": "asrr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "g0_mix_0.125_m0.25",
+        "basis_seconds": 9.900325508991955,
+        "dense_seconds": 1.8608056329831015,
+        "shuffle_seconds": 0.3139283040072769,
+        "uses_dense_source": true,
+        "model_sha256": "3076a8a4e149470f3d785b29c093dee28d3651b99ab136809f857294d653d26e",
+        "total_seconds": 11.761131141975056
+      },
+      "yeh_soft": {
+        "dataset": "mnist_torus",
+        "method": "yeh_soft",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "yeh_soft_dense_rate0.003_step400",
+        "basis_seconds": 9.896850641991477,
+        "choice_sha256": "663e9349a68f7baf64f71988b05dc32e7a8a3e19ce541abd559b5c29a42ac111",
+        "uses_dense_source": true,
+        "total_seconds": 11.757656274974579
+      },
+      "msr": {
+        "dataset": "mnist_torus",
+        "method": "msr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "f4_rate0.001_step200",
+        "basis_seconds": 2.899112602986861,
+        "choice_sha256": "992b12d2de8dc11d09b1d2d19f5fc5dca1cdf22e2140342f6e00f1fe775adad5",
+        "uses_dense_source": false,
+        "total_seconds": 2.899112602986861
+      }
+    },
+    "aug_omniglot": {
+      "asrr": {
+        "dataset": "aug_omniglot",
+        "method": "asrr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "g0.5_mix_1",
+        "basis_seconds": 10.569346778996987,
+        "dense_seconds": 73.7682910199801,
+        "shuffle_seconds": 0.004762525990372524,
+        "uses_dense_source": true,
+        "model_sha256": "46ffab83b0d17185855794be4d4732494677704c788cd93d3c69014d8cbd472a",
+        "total_seconds": 84.33763779897708
+      },
+      "yeh_soft": {
+        "dataset": "aug_omniglot",
+        "method": "yeh_soft",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "yeh_soft_dense_rate0.003_step800",
+        "basis_seconds": 18.42580640502274,
+        "choice_sha256": "1dc33244c474dd8aeba5b36b2aabc927060356a8263a4d0f0086a95eb7f47a54",
+        "uses_dense_source": true,
+        "total_seconds": 92.19409742500284
+      },
+      "msr": {
+        "dataset": "aug_omniglot",
+        "method": "msr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "archive_b4_r32",
+        "basis_seconds": 22.026403370022308,
+        "choice_sha256": "a73488074b8047737ab92e19bf2ce5085a01201e0ea705829fb628b4bbea9307",
+        "uses_dense_source": false,
+        "total_seconds": 22.026403370022308
+      }
+    },
+    "fc100": {
+      "asrr": {
+        "dataset": "fc100",
+        "method": "asrr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "g0.5_mix_0.125_m0",
+        "basis_seconds": 2.294052384007955,
+        "dense_seconds": 22.40160633798223,
+        "shuffle_seconds": 0.4427792299829889,
+        "uses_dense_source": true,
+        "model_sha256": "5166891d6dd3268e2340d747fc96b02c5469e8ece9b6cba2e50fa7db0e9b06f9",
+        "total_seconds": 24.695658721990185
+      },
+      "yeh_soft": {
+        "dataset": "fc100",
+        "method": "yeh_soft",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "yeh_soft_cold_rate0.012_step200",
+        "basis_seconds": 5.124202467006398,
+        "choice_sha256": "5a6b61e9d80b82b08b16c9e6f273eb7b8f14597981a12aafa8a106d2e8dede78",
+        "uses_dense_source": false,
+        "total_seconds": 5.124202467006398
+      },
+      "msr": {
+        "dataset": "fc100",
+        "method": "msr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "f16_rate0.003_step800",
+        "basis_seconds": 10.112882620014716,
+        "choice_sha256": "20ff40717a0ffe2345b3cbe9a74aeade00d5cea6f5f8289dd5bb031d2f703542",
+        "uses_dense_source": false,
+        "total_seconds": 10.112882620014716
+      }
+    },
+    "aug_miniimagenet": {
+      "asrr": {
+        "dataset": "aug_miniimagenet",
+        "method": "asrr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "g0.5_mix_0.125_m0",
+        "basis_seconds": 2.5819472649891395,
+        "dense_seconds": 21.67324661000748,
+        "shuffle_seconds": 0.4176659130025655,
+        "uses_dense_source": true,
+        "model_sha256": "ea1eb18d5a397ea7b9bda75065df2793498dd78ca1b0d64e0e981a3a81e20299",
+        "total_seconds": 24.25519387499662
+      },
+      "yeh_soft": {
+        "dataset": "aug_miniimagenet",
+        "method": "yeh_soft",
+        "device": "Tesla V100-PCIE-32GB",
+        "basis_seconds": 72.00752396599273,
+        "choice_sha256": "7dc964c7fbf137794c3756dfe0c377b72b4c10036ecc0e3cef93adc7fa20ab1a",
+        "candidate": "yeh_soft_warm1_rate0.003_step3200",
+        "uses_dense_source": true,
+        "total_seconds": 93.68077057600021
+      },
+      "msr": {
+        "dataset": "aug_miniimagenet",
+        "method": "msr",
+        "device": "Tesla V100-PCIE-32GB",
+        "basis_seconds": 649.0734981030109,
+        "choice_sha256": "7dc964c7fbf137794c3756dfe0c377b72b4c10036ecc0e3cef93adc7fa20ab1a",
+        "candidate": "msr_f16_rate0.003_seed5317_step51200",
+        "uses_dense_source": false,
+        "total_seconds": 649.0734981030109
+      }
+    },
+    "har": {
+      "asrr": {
+        "dataset": "har",
+        "method": "asrr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "g0_mix_0.125_m0",
+        "basis_seconds": 4.290325712994672,
+        "dense_seconds": 46.64817217923701,
+        "shuffle_seconds": 0.03363337699556723,
+        "uses_dense_source": true,
+        "model_sha256": "e610b11d375eca5ecb9ededb59b5cad011985e5f57618f4e5873fb0aa8e0d335",
+        "total_seconds": 50.93849789223168
+      },
+      "yeh_soft": {
+        "dataset": "har",
+        "method": "yeh_soft",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "r11",
+        "settings": {
+          "lr": 0.03,
+          "initialization": "dense_adam",
+          "entropy": 0.025,
+          "nuclear": 0.05,
+          "inner_lr": 0.01
+        },
+        "basis_seconds": 76.02483119399403,
+        "choice_sha256": "e86f1491de5bd788127f65f6d68f1a0d41ccd8842b79f9e0a077b32c9f1f873d",
+        "uses_dense_source": true,
+        "total_seconds": 122.67300337323104
+      },
+      "msr": {
+        "dataset": "har",
+        "method": "msr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "r10",
+        "settings": {
+          "lr": 0.003,
+          "initialization": "dense_adam",
+          "entropy": 0.0,
+          "nuclear": 0.0,
+          "inner_lr": 0.1
+        },
+        "basis_seconds": 22.49145899800351,
+        "choice_sha256": "3b6b29c099c9b909b319297b0ea6335ee62c293c1d60e126516b4d5fd62c9a93",
+        "uses_dense_source": true,
+        "total_seconds": 69.13963117724052
+      }
+    },
+    "wisdm": {
+      "asrr": {
+        "dataset": "wisdm",
+        "method": "asrr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "g0_mix_0.125_m0",
+        "basis_seconds": 1.5004057269834448,
+        "dense_seconds": 41.02791163499933,
+        "shuffle_seconds": 0.03566715097986162,
+        "uses_dense_source": true,
+        "model_sha256": "0161ca606b68feb7ce8c60d339e6b890e42f314948b3694b50b9a76faded99f0",
+        "total_seconds": 42.52831736198277
+      },
+      "yeh_soft": {
+        "dataset": "wisdm",
+        "method": "yeh_soft",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "yeh_soft_cold_rate0.012_step800",
+        "basis_seconds": 18.384882509009913,
+        "choice_sha256": "084cd135ee8fab399fa70b6e4ddd3d0572cbcaf236d04237d3d072c7fc3eed89",
+        "uses_dense_source": false,
+        "total_seconds": 18.384882509009913
+      },
+      "msr": {
+        "dataset": "wisdm",
+        "method": "msr",
+        "device": "Tesla V100-PCIE-32GB",
+        "candidate": "f1_rate0.003_step200",
+        "basis_seconds": 2.756997604999924,
+        "choice_sha256": "c97b982a5c51081b0e5c5582cc324a0b3ccc9f321baac0a254b4a213a6061e7d",
+        "uses_dense_source": false,
+        "total_seconds": 2.756997604999924
+      }
+    }
+  }
+}

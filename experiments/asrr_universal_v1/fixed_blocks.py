@@ -22,7 +22,7 @@ GRADIENT_WEIGHTS = (0.0, 0.5)
 MAX_BLOCKS_PER_SITE = 16
 
 
-def model_bank(folder, profiles, data, ordered, layout, rank, shot):
+def basis_inputs(profiles, data, ordered, layout, rank, shot):
     sx, sy, queries, qy = data
     blocks = max(
         b
@@ -52,6 +52,23 @@ def model_bank(folder, profiles, data, ordered, layout, rank, shot):
         for i in range(len(dense))
     ]
     guides = guide_bases(*class_signals(sx, sy, queries, qy, layout)[:3], rank)
+    return dense, paired, guides, allocation
+
+
+def fit_groups(dense, paired, rank, beta):
+    return np.stack(
+        [
+            signed_groups((1 - beta) * a + beta * k, rank)
+            for a, k in zip(dense, paired, strict=True)
+        ]
+    )
+
+
+def model_bank(folder, profiles, data, ordered, layout, rank, shot):
+    dense, paired, guides, allocation = basis_inputs(
+        profiles, data, ordered, layout, rank, shot
+    )
+    blocks = len(allocation)
     bank = {}
 
     def store(name, factors, moment, strength, beta, groups):
@@ -70,12 +87,7 @@ def model_bank(folder, profiles, data, ordered, layout, rank, shot):
     for moment, guide in guides.items():
         store(f"mix_0_m{moment:g}", guide, moment, 0.0, 0.0, None)
     for beta in GRADIENT_WEIGHTS:
-        groups = np.stack(
-            [
-                signed_groups((1 - beta) * a + beta * k, rank)
-                for a, k in zip(dense, paired, strict=True)
-            ]
-        )
+        groups = fit_groups(dense, paired, rank, beta)
         hard = f"g{beta:g}_mix_1"
         store(hard, groups, 0.0, 1.0, beta, hard)
         for strength in SHARES:
@@ -100,7 +112,7 @@ def model_bank(folder, profiles, data, ordered, layout, rank, shot):
         folder / "source.json",
         {
             "blocks_per_site": blocks,
-            "views": list(queries),
+            "views": list(data[2]),
             "allocation": allocation.tolist(),
         },
     )

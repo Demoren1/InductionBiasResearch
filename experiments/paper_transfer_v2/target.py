@@ -170,7 +170,17 @@ def input_batches(
     folder = panel_directory(dataset) / phase if folder is None else folder
     config = CONFIG["real"][dataset]
     layout = Layout(*config["layout"])
-    shot = config["shot"]
+    yield from panel_batches(
+        folder,
+        layout,
+        config["shot"],
+        device,
+        pack=pack,
+        include_clean=phase == "test" or include_clean,
+    )
+
+
+def panel_batches(folder, layout, shot, device, *, pack, include_clean):
     start = 0
     paths = sorted(folder.glob("inputs_*.npz"))
     for first in range(0, len(paths), pack):
@@ -189,7 +199,7 @@ def input_batches(
         )
         sy = data["sy"][:, :, :shot].reshape(len(sx), -1)
         queries = {"query": input_tensor(data["qx"], device)}
-        if (phase == "test" or include_clean) and "qx_clean" in data:
+        if include_clean and "qx_clean" in data:
             queries["clean"] = input_tensor(data["qx_clean"], device)
         yield (
             parts,

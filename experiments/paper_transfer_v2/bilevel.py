@@ -60,8 +60,28 @@ def sample_support(data, shot, generator, classes):
     return tasks, x, y, qx[tasks][:, q], qy[tasks][:, q]
 
 
-def train_msr(data, original, num_factors, rank, rate, shot, device):
-    generator = torch.Generator(device=device).manual_seed(SEED + 610)
+def train_msr(
+    data,
+    original,
+    num_factors,
+    rank,
+    rate,
+    shot,
+    device,
+    *,
+    checkpoints=None,
+    seed_offset=0,
+    state_path=None,
+    rate_at_step=None,
+):
+    if checkpoints is None:
+        outer_steps = CFG["outer_steps"]
+        checkpoints = CFG["checkpoints"]
+    else:
+        outer_steps = max(checkpoints)
+    generator = torch.Generator(device=device).manual_seed(
+        SEED + 610 + seed_offset
+    )
     factors = torch.randn(
         num_factors, original.fan_in, rank, device=device, generator=generator
     )
@@ -71,7 +91,7 @@ def train_msr(data, original, num_factors, rank, rate, shot, device):
         layout.sites, 1, 1
     )
     state = initialization(
-        layout, layout.connections, 1, 1, device, SEED + 611
+        layout, layout.connections, 1, 1, device, SEED + 611 + seed_offset
     )
     initial = state.detach().flatten()
     inner_rates = torch.full((4,), 0.4, device=device)
@@ -80,7 +100,22 @@ def train_msr(data, original, num_factors, rank, rate, shot, device):
     ]
     optimizer = torch.optim.Adam(trained, lr=rate, fused=True)
     classes = torch.arange(layout.outputs, device=device)
-    for step in range(1, CFG["outer_steps"] + 1):
+    first_step = 1
+    if state_path is not None and state_path.exists():
+        state = torch.load(state_path, map_location=device, weights_only=True)
+        with torch.no_grad():
+            for parameter, value in zip(
+                trained, state["parameters"], strict=True
+            ):
+                parameter.copy_(value)
+        optimizer.load_state_dict(state["optimizer"])
+        generator.set_state(state["generator"].cpu())
+        first_step = state["step"] + 1
+    if rate_at_step is None:
+        rate_at_step = {}
+    for step in range(first_step, outer_steps + 1):
+        if step in rate_at_step:
+            optimizer.param_groups[0]["lr"] = rate_at_step[step]
         _, sx, sy, qx, qy = sample_support(data, shot, generator, classes)
         fitted = predictions(
             project(sx, factors, original),
@@ -97,7 +132,7 @@ def train_msr(data, original, num_factors, rank, rate, shot, device):
         optimizer.zero_grad(set_to_none=True)
         risk.backward()
         optimizer.step()
-        if step in CFG["checkpoints"]:
+        if step in checkpoints:
             with torch.no_grad():
                 factor, triangular = torch.linalg.qr(factors)
                 if (triangular.diagonal(dim1=-2, dim2=-1).abs() < 1e-6).any():
@@ -107,9 +142,38 @@ def train_msr(data, original, num_factors, rank, rate, shot, device):
                         "The MSR output factors must be invertible"
                     )
             yield step, factor.cpu().numpy()
+            if state_path is not None:
+                temporary = state_path.with_suffix(".tmp")
+                torch.save(
+                    {
+                        "step": step,
+                        "parameters": [p.detach() for p in trained],
+                        "optimizer": optimizer.state_dict(),
+                        "generator": generator.get_state(),
+                    },
+                    temporary,
+                )
+                temporary.replace(state_path)
 
 
-def train_yeh(data, layout, exemplar, groups, codes, rate, warm, shot, device):
+def train_yeh(
+    data,
+    layout,
+    exemplar,
+    groups,
+    codes,
+    rate,
+    warm,
+    shot,
+    device,
+    *,
+    checkpoints=None,
+):
+    if checkpoints is None:
+        outer_steps = CFG["outer_steps"]
+        checkpoints = CFG["checkpoints"]
+    else:
+        outer_steps = max(checkpoints)
     generator = torch.Generator(device=device).manual_seed(SEED + 725)
     connections = layout.connections // groups
     rank = codes // groups
@@ -140,7 +204,7 @@ def train_yeh(data, layout, exemplar, groups, codes, rate, warm, shot, device):
     numeric = numeric.detach().clone()
     optimizer = torch.optim.Adam([logits], lr=rate, fused=True)
     classes = torch.arange(layout.outputs, device=device)
-    for step in range(1, CFG["outer_steps"] + 1):
+    for step in range(1, outer_steps + 1):
         tasks, sx, sy, qx, qy = sample_support(data, shot, generator, classes)
         basis = logits.softmax(-1)
         state = numeric[tasks].detach().requires_grad_()
@@ -162,7 +226,7 @@ def train_yeh(data, layout, exemplar, groups, codes, rate, warm, shot, device):
         (risk + 0.002 * entropy).backward()
         optimizer.step()
         numeric[tasks] = state.detach()
-        if step in CFG["checkpoints"]:
+        if step in checkpoints:
             with torch.no_grad():
                 probability = logits.softmax(-1)
                 orthogonal, triangular = torch.linalg.qr(probability)

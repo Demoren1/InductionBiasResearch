@@ -57,9 +57,17 @@ development episodes and 768 test episodes with disjoint character
 pools. Its transformed queries use random resized crops,
 reflections and rotations of up to $30^\circ$.
 
-FC100 uses 16 local image patches with eight neurons per patch and
-mean-pooled $4\times4$ RGB inputs. We use 16 source tasks, 384
-development episodes and 2,048 test episodes. On WISDM, we use 18
+FC100 and Aug-miniImageNet use 16 local image patches with eight
+neurons per patch and mean-pooled $4\times4$ RGB inputs. FC100 uses
+16 source tasks, 384 development episodes and 2,048 test episodes.
+Aug-miniImageNet follows the 64/16/20 class split of
+\citet{ravi2017optimization} and the same query transformations as
+Aug-Omniglot. Each of its 64 source tasks supplies 64 clean support
+images and 30 paired query images per class. We use 2,048 held-out
+five-way test episodes with 15 queries per class. The Dense model
+has 6,144 first-layer weights.
+
+On WISDM, we use 18
 activities and nonoverlapping 64-sample windows of the three smartwatch
 acceleration axes and their magnitude. The 32 hidden neurons are
 organized in four sites. We use 27 source, 7 development and 12 test
@@ -75,7 +83,7 @@ additional source windows. The latter supply source queries.
 Five participants supply 96 development episodes and nine
 held-out participants supply 360 test episodes. Each test episode
 has three fitting and five query windows per activity.
-All five datasets use new test draws from the held-out pools.
+All six datasets use new test draws from the held-out pools.
 
 \paragraph*{Numerical selection.}
 We evaluate the full aSRR grid on development episodes. For MNIST,
@@ -87,13 +95,20 @@ quantiles 0.1, 0.5 and 0.9 and up to 1,000 Adam steps. We retain
 three settings by query cross-entropy and compare ensembles of
 1, 4 and 16 predictions.
 
-The baselines retain their previously selected representations and
-refit settings. All methods refit on the same new episodes. Test
-accuracy averages two fresh starts on the four input-group
-benchmarks other than HAR, which uses each model's selected ensemble.
+On Aug-miniImageNet, we refine the source checkpoints and Adam
+settings on 1,152 fresh development episodes. The objective averages
+the two query accuracies. Training MSR-FC past 51,200 source updates
+through 76,800 updates gives no further development gain. The chosen
+refits use 12 updates at rate 0.03 for aSRR, 10 at 0.045 for MSR-FC,
+1,200 at 0.005 for Yeh (soft), and 300 at 0.01 for Dense.
+
+The baselines on the other datasets retain their previously selected
+representations and refit settings. All methods refit on the same
+new episodes. Test accuracy averages two fresh starts except on HAR,
+which uses each model's selected ensemble.
 Paired intervals use participant means on HAR and WISDM, digit-pair
 means on toroidal MNIST and episodes conditional on the held-out
-class pools on FC100 and Aug-Omniglot. For the additional WISDM
+class pools on FC100, Aug-Omniglot and Aug-miniImageNet. For the additional WISDM
 check, we partition the other eligible participants into three
 disjoint test sets. Both methods learn their representations afresh
 within each split and select settings on separate development
@@ -105,10 +120,10 @@ settings and with the same $\mathbf U$. This preserves group sizes
 and their signs. We average four permutations with matched refit
 settings and initialization seeds.
 
-We retain four Dense fits per source task on MNIST, Aug-Omniglot,
-HAR and WISDM, and three on FC100. On the input-group benchmarks
-other than HAR, WSR and LUT-Q generate proposals from eight Dense
-initializations selected by source numerical-validation loss.
+We retain three Dense fits per source task on FC100 and four per
+task on the other datasets. On MNIST, Aug-Omniglot, FC100 and WISDM,
+WSR and LUT-Q generate proposals from eight Dense initializations
+selected by source numerical-validation loss.
 WSR uses the proximal map with rewinding and LUT-Q updates a dictionary
 of nearest code values. Yeh learns blockwise probabilistic assignments
 through three inner updates. Its hard assignment maximizes total

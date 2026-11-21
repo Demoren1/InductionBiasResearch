@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+\centering\small
+\caption{Wall-clock seconds to obtain the selected shared basis on one
+Tesla V100 with its host CPU. Totals include Dense source fits whenever
+the method uses them. The aSRR columns show that cost and the subsequent
+basis construction separately. The last column is the extra time for
+all four shuffled bases. Timings start from prepared source examples
+and exclude development selection and target refits. The HAR Dense
+preparation time comes from its original run.}
+\label{tab:transfer-basis-times}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{aSRR} & Yeh (soft) & MSR-FC & Four shuffles \\
+\cmidrule(lr){2-4}
+Dataset & Dense fits & Basis & Total & Total & Total & Extra \\
+\midrule
+Toroidal MNIST & 1.9 & 9.9 & 11.8 & 11.8 & 2.9 & 0.31 \\
+Aug-Omniglot & 73.8 & 10.6 & 84.3 & 92.2 & 22.0 & $<0.01$ \\
+FC100 & 22.4 & 2.3 & 24.7 & 5.1 & 10.1 & 0.44 \\
+Aug-miniImageNet & 21.7 & 2.6 & 24.3 & 93.7 & 649.1 & 0.42 \\
+UCI HAR & 46.6 & 4.3 & 50.9 & 122.7 & 69.1 & 0.03 \\
+WISDM & 41.0 & 1.5 & 42.5 & 18.4 & 2.8 & 0.04 \\
+\bottomrule
+\end{tabular*}
+\end{table}

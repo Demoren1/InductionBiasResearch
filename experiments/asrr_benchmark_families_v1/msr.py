@@ -114,11 +114,13 @@ def source_panels(dataset, device, layout):
     return sx, qx, qy
 
 
-def fit_source(dataset, blocks, rank, device):
+def fit_source(dataset, blocks, rank, device, *, panel=None):
     cfg, original = PLAN[dataset], model_layout(dataset)
     generator = torch.Generator(device=device).manual_seed(cfg["seed"] + 19001)
     samples = torch.Generator(device=device).manual_seed(cfg["seed"] + 29140)
-    sx, qx, qy = source_panels(dataset, device, original)
+    if panel is None:
+        panel = source_panels(dataset, device, original)
+    sx, qx, qy = panel
     classes = torch.arange(original.outputs, device=device)
     if rank == original.fan_in:
         basis = torch.eye(rank, device=device).repeat(blocks, 1, 1)

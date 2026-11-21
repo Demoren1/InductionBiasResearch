@@ -38,15 +38,16 @@ per output on the known support and reaches near-zero query error.
 
 We hold out digit pairs on toroidal MNIST, with cyclic shifts and a
 fixed pixel permutation following~\citet{shakerinava2024weight}.
-On Aug-Omniglot~\cite{zhou2021meta}, we adapt on clean images and
-evaluate the same query drawings in clean and transformed form.
+On Aug-Omniglot and Aug-miniImageNet~\cite{zhou2021meta}, we adapt
+on clean images and evaluate the same query images in clean and
+transformed form.
 FC100~\cite{oreshkin2018tadam} holds out image superclasses. UCI
 HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} hold out
 participants. Appendix~\ref{app:transfer-details} gives the splits
 and refit protocol.
 
 The common development rule selects $\lambda=1$ on Aug-Omniglot
-and $\lambda=1/8$ on the other four datasets. The query allocation
+and $\lambda=1/8$ on the other five datasets. The query allocation
 uses four clean and twelve transformed blocks on Aug-Omniglot.
 On the common test episodes in Table~\ref{tab:transfer-classification},
 aSRR improves over Yeh (soft) by 2.35 percentage points on toroidal
@@ -56,14 +57,25 @@ on WISDM. The paired 95\% interval on WISDM is $[-0.18,1.23]$.
 In three additional splits covering 34 other test participants,
 both methods are retrained and aSRR gains 0.79 points
 with interval $[0.50,1.09]$.
+On Aug-miniImageNet, MSR-FC leads by 0.18 points on clean queries
+($[0.01,0.36]$), and aSRR leads by 0.55 on transformed queries
+($[0.37,0.73]$). Averaging both views gives aSRR a 0.18-point
+advantage ($[0.05,0.32]$).
 
 \input{sections/transfer_classification_results.tex}
 
 Rebuilding the basis after permuting the groups reduces accuracy
 by 4.20 and 3.91 points on the clean and transformed Aug-Omniglot
 queries and by 0.24 on HAR. The corresponding paired 95\% intervals
-are $[3.90,4.50]$, $[3.58,4.23]$ and $[0.09,0.39]$. The intervals
-include zero on toroidal MNIST, FC100 and WISDM. The positive
-differences on Aug-Omniglot and HAR identify a benefit from the
-locations of the learned ties at the same coefficient budget.
+are $[3.90,4.50]$, $[3.58,4.23]$ and $[0.09,0.39]$. On
+Aug-miniImageNet the reductions are 0.16 points on clean queries
+($[0.04,0.27]$) and 0.19 on transformed queries ($[0.08,0.31]$).
+These differences measure the contribution of the learned group
+assignments at the same coefficient budget. The paired intervals
+include zero on toroidal MNIST, FC100 and WISDM.
+
+Table~\ref{tab:transfer-basis-times} reports the one-time cost of
+obtaining the shared bases at the selected source checkpoints. Dense
+fits independent weights directly on each new task.
+\input{sections/transfer_basis_times.tex}
 \FloatBarrier
