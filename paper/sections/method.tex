@@ -126,7 +126,11 @@ with separate coefficients for each neuron. Divide the neurons into
 equal contiguous blocks, using the largest divisor of the site width
 up to 16 as the block count. The row $\mathbf z_i^{\mathsf T}$ of $\mathbf Z$
 collects the aligned weights from input $i$ across tasks and neurons
-in the block. Each local basis has $r=m/H$ columns. We repeat the
+in the block. A zero log-ratio row in each neuron, as
+in~\eqref{eq:method-srr-ratio}, with a common relative sign gives
+profiles equal up to that sign. Profile proximity therefore provides
+evidence for a signed tie.
+Each local basis has $r=m/H$ columns. We repeat the
 basis for each neuron in its block and assemble these copies
 block-diagonally in $\mathbf B$. For regression with observed outputs
 and a fixed support, there is one block of active weight positions,
