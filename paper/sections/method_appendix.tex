@@ -3,188 +3,36 @@
 
 \input{sections/transfer_details.tex}
 
-\subsection{Source fits for earlier comparisons}
-\label{app:asrr-experiments}
+\subsection{Compatibility among alternative indexators}
+\label{app:relational-compatibility}
 
-For the earlier unaugmented Omniglot and HAR comparisons, the
-hard-sharing stage of Algorithm~\ref{alg:asrr} averages four
-retained Dense fits per source task. The earlier HAR evaluation
-transfers the 128-code global cut. On unaugmented Omniglot we
-transfer input partitions at both widths.
+Consider a bank of indexators in a common neuron order and let
+$V_\tau$ retain all candidates within $\varepsilon$ of the best
+held-out loss on task $\tau$ after refitting. For an indexator
+$\mathbf I$, let $\mathcal R(\mathbf I)$ be its fixed zero
+connections and signed equalities. Write $\operatorname{Max}$
+for the inclusion-maximal sets of a family. The maximal
+compatible sets in Equation~\eqref{eq:method-joint-relations}
+can be found by
+\[
+    \begin{aligned}
+        \mathcal A_1&=\operatorname{Max}
+            \{\mathcal R(\mathbf I)\mid\mathbf I\in V_1\},\\
+        \mathcal A_\tau&=\operatorname{Max}
+            \{A\cap\mathcal R(\mathbf I)\mid
+               A\in\mathcal A_{\tau-1},\,\mathbf I\in V_\tau\}.
+    \end{aligned}
+\]
+If one set is contained in another, intersecting both with the
+same relations preserves inclusion. This justifies pruning at
+every step.
 
-\subsection{Auxiliary sparse ReLU benchmark}
-\label{app:relu-numerical}
-
-The generating ReLU network has 16 inputs, 16 hidden units, one output
-and 160 active first-layer connections with four shared codes. One
-source function supplies 4096 fitting, 512 numerical-selection and
-1024 structure-selection examples. aSRR and WSR start from the
-selected Dense fit.
-
-The aSRR bank contains the four-code global cut and one
-refinement seeded by that cut. In the refinement, weighted
-least-squares updates fit code values and positive neuron scales
-for the current groups. Reassignment uses a Student loss on
-standardized weight residuals and keeps all four codes occupied.
-Direction uncertainty is floored at $0.0003$. The refinement stops
-when assignments stabilize or after 12 updates. Refitting on source
-examples and comparison on the separate structure-selection sample
-choose the original global cut.
-
-The synthetic solver refines selected Adam fits with damped
-Gauss--Newton steps on the squared training residual. At each
-iterate and line-search trial it solves for the output layer by
-ridge least squares on the hidden activations and intercept. It
-also divides the codes and hidden biases by the root mean square of
-the codes when this scale is positive and multiplies the output
-weights by the same scale. This preserves the predictor and its
-fixed assignments. The update tests step sizes $2^{-l}$ for
-$l=0,\ldots,11$ and accepts the first training-loss improvement.
-Numerical validation chooses the final iterate.
-
-We fit four new functions with 256 fitting, 64 numerical-selection
-and 2048 query examples per function. The shared numerical solver
-uses 18 Adam starts for 2000 steps and retains four for 48
-Gauss--Newton updates. The structural audit compares signed groups and
-support with the teacher up to code relabeling and groupwise sign
-changes. The aSRR bank retains all 256 connections, and its selected
-assignment yields a mean query MSE of $1.43$ versus $0.473$ for Dense
-(Table~\ref{tab:recovery-synthetic}).
-\input{sections/recovery_synthetic_results.tex}
-
-\input{sections/omniglot_wsr.tex}
-\input{sections/asrr_tuning_details.tex}
-\FloatBarrier
-
-\subsection{Group normalization and gradient-based proposals}
-\label{app:asrr-gradient}
-
-Gradient-based proposals use input partitions within blocks of hidden
-neurons. For one block, let $\mathbf g_{S,i}$ and $\mathbf g_{Q,i}$ be
-the gradients of the support and query losses with respect to the
-weights from input $i$. We evaluate both at the same network parameters
-and average the score below over source tasks and support draws.
-\begin{equation}
-    F(G)=
-    \frac{\left\langle
-        \sum_{i\in G}\mathbf g_{S,i},
-        \sum_{i\in G}\mathbf g_{Q,i}
-    \right\rangle}{|G|}.
-    \label{eq:asrr-gradient-group-score}
-\end{equation}
-The sum over groups gives the initial rate of decrease in query loss
-for a support gradient descent step projected onto the group weight
-space. The denominator comes from the unit-norm group directions in
-Section~\ref{sec:method-selection}. Starting from Ward, we reassign
-inputs whenever a move increases the sum and keeps every group
-nonempty. We also test building a partition by greedy merges before
-reassignment. Development compares the candidates after fresh
-numerical fitting.
-
-In a linear control with eight true input groups and 32 coefficients,
-12 source examples per task and four fitting examples on each new task
-give mean squared errors of 0.640 for Ward, 0.534 for the same groups
-with normalization and 0.545 for gradient-based groups. On
-WISDM~\cite{weiss2019wisdm}, we use windows of 64 smartwatch acceleration
-samples and 32 hidden neurons in four local time blocks. With 288 codes
-and five fitting windows per activity, these three methods attain
-53.20\%, 53.50\% and 54.06\%, respectively, on 384 episodes from
-12 held-out subjects.
-
-In the earlier Aug-Omniglot comparison~\cite[Appendix~D.3]{zhou2021meta},
-each episode has five
-classes, with five clean fitting images and 15 query drawings per class.
-We evaluate the query drawings with and without random resized crops,
-reflections and rotations of up to $30^\circ$. The 64 hidden neurons
-form four blocks of 16, with 32 input groups per block and 2,048 codes in total. For
-each of 48 source tasks, we compute gradients using eight support
-draws and reference parameters obtained by 15 Adam steps with the
-normalized Ward partition. Each block can be refined using either
-clean or transformed queries. A second control mixes the two query
-gradients in each block, with a 70\% clean weight selected from
-25 values on development.
-
-We compare all 14 block assignments that use both query types on
-192 development episodes. We tune the Adam rate over 0.003 and
-0.01 and the number of updates over 25, 75, 150 and 300.
-We select the assignment with the highest
-transformed-query accuracy among those reaching normalized Ward's
-clean-query accuracy. This chooses two blocks of each type. We fix
-the indexator before test evaluation and fit fresh numerical
-parameters from the clean fitting images on each episode.
-Table~\ref{tab:asrr-gradient-aug-omniglot} shows gains over normalized
-Ward of 0.85 points on clean queries and 1.30 on transformed queries,
-with paired 95\% intervals $[0.51,1.19]$ and $[0.92,1.68]$.
-
-\begin{table}[htbp]
-\centering\small
-\caption{Aug-Omniglot accuracy (\%) on 768 common test episodes with
-five fitting examples per class. The two query sets use the same
-drawings. MSR-FC transfers its first-layer basis.}
-\label{tab:asrr-gradient-aug-omniglot}
-\begin{tabular}{@{}lrrr@{}}
-\toprule
-Method & First-layer budget & Clean & Transformed \\
-\midrule
-Dense & 50,176 & 74.32 & 42.81 \\
-aSRR (Ward) & 2,048 & 75.44 & 45.39 \\
-aSRR (Ward with group normalization) & 2,048 & 77.70 & 47.16 \\
-aSRR (transformed-query gradients) & 2,048 & 69.80 & 54.39 \\
-aSRR (mixed query gradients) & 2,048 & 78.69 & 46.20 \\
-aSRR (two blocks per query type) & 2,048 & 78.55 & 48.45 \\
-MSR-FC (basis only) & 2,048 & 72.57 & 47.05 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\clearpage
-\subsection{Compatible relations and Pattern recovery}
-\label{app:asrr-compatibility}
-
-Algorithm~\ref{alg:asrr-compatible} enumerates the maximal sets
-satisfying~\eqref{eq:method-joint-relations}. The bank can include both
-assignments when source fits suggest different signs for a tie.
-Independently learned candidates are aligned to the common neuron
-order. The operator
-$\operatorname{Max}_{\subseteq}$ retains the inclusion-maximal sets.
-Pruning at each step is valid because intersecting two nested sets with
-the next candidate's relations preserves their inclusion.
-
-\begin{algorithm}[H]
-    \small
-    \DontPrintSemicolon
-    \SetAlgoNoEnd
-    \caption{Finding shared relations among alternative indexators}
-    \label{alg:asrr-compatible}
-    \KwIn{Bank $\mathcal B$, per-task losses $L_\tau(\mathbf I)$,
-        tolerance $\varepsilon\geq0$.}
-    \KwOut{Maximal compatible sets $\mathcal A$.}
-    \For{$\tau=1,\ldots,T$}{
-        $V_\tau\gets\{\mathbf I\in\mathcal B:
-            L_\tau(\mathbf I)\leq\min_{\mathbf J\in\mathcal B}
-            L_\tau(\mathbf J)+\varepsilon\}$\;
-    }
-    $\mathcal A\gets\operatorname{Max}_{\subseteq}
-        \{\mathcal R(\mathbf I):\mathbf I\in V_1\}$\;
-    \For{$\tau=2,\ldots,T$}{
-        $\mathcal A\gets\operatorname{Max}_{\subseteq}
-            \{A\cap\mathcal R(\mathbf I): A\in\mathcal A,\ \mathbf I\in V_\tau\}$\;
-    }
-    \Return $\mathcal A$\;
-\end{algorithm}
-
-Each returned set admits a full indexator on every source task. For
-transfer, a single full indexator can be selected from the extensions
-of a returned set by fresh refitting on separate development tasks.
-
-Each Pattern task asks whether an 11-bit input contains a particular
-4-bit substring. The shared teacher has eight hidden neurons. We build
-a bank of 14 four-code indexators from Dense fits and proposals extracted
-from source responses. For each of 12 tasks, we fit the numerical
-parameters on 768 examples and score the binary Brier loss on
-384 held-out examples. With $\varepsilon=0.01$,
-Algorithm~\ref{alg:asrr-compatible} returns one maximal set. After
-fixing the result, we compare with the teacher and find a match at
-all 88 positions up to neuron permutation, code relabeling and
-groupwise sign flips. This includes 32 active weights and 56 fixed
-zeros. The result is recovery within the proposal bank.
+In Pattern, a task asks whether an 11-bit input contains a given
+4-bit substring. The source bank contains 14 four-code indexators
+from Dense fits and source responses. For each of 12 tasks, we fit
+on 768 examples and score the binary Brier loss on 384 held-out
+examples. With $\varepsilon=0.01$, the recurrence returns one
+maximal set. It matches the teacher at all 88 positions up to
+neuron permutation, code relabeling and groupwise sign flips.
+These positions comprise 32 active weights and 56 fixed zeros.
+The result is recovery within the proposal bank.

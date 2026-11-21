@@ -21,7 +21,7 @@ Weight tying and quantization also learn equality groups.
 Soft weight tying~\cite{nowlan1991adaptive}, trained quantization
 \cite{han2016deep}, LUT-Q~\cite{cardinaux2018iteratively} and
 weight-sharing regularization~\cite{shakerinava2024weight} learn these
-groups during numerical training. aSRR clusters aligned weight
-profiles from already fitted source models. Its partial variant
-uses these groups to constrain one basis direction and estimates the
-remaining directions from source statistics.
+groups during numerical training. aSRR constructs signed groups
+using weight profiles from fitted source models and paired gradients.
+It combines their directions with source statistics to obtain a
+fixed basis for transfer.

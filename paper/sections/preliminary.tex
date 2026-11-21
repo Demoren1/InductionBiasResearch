@@ -51,10 +51,7 @@ weights, code values and predictor. We restore it when comparing tasks.
 We encode the constraints using an \emph{indexator}, an integer vector
 $\mathbf I=(I_p)_{p=1}^P$ whose entries are labels in $\{0,\ldots,K\}$.
 The label at each position selects a weight from the task's
-\emph{codebook} $\mathbf C=(C_0,\ldots,C_K)^{\mathsf T}$. We use
-the index and centroid notation of \citet[Sec.~3.3]{han2016deep},
-with label zero reserved for an inactive connection. This is the
-dictionary lookup used in LUT-Q~\cite{cardinaux2018iteratively}.
+\emph{codebook} $\mathbf C=(C_0,\ldots,C_K)^{\mathsf T}$.
 \begin{equation}
     w_p=C_{I_p},\qquad C_0=0.
     \label{eq:indexator-weights}
@@ -77,17 +74,8 @@ parameters afresh and optimizes them on the task's training sample.
 
 Let $\mathcal{I}_K:=\{0,\ldots,K\}^{P}$ denote the set of indexators.
 
-\begin{definition}[Functional equivalence of indexators]
-    Two indexators $\mathbf{I},\mathbf{J}\in\mathcal{I}_K$ are
-    functionally equivalent, written $\mathbf{I}\sim\mathbf{J}$, if
-    $\mathcal{F}_{\mathbf{I}}=\mathcal{F}_{\mathbf{J}}$.
-    We write $[\mathbf{I}]$ for the equivalence class of $\mathbf{I}$
-    and $\mathcal{I}_K/{\sim}$ for the set of these classes.
-\end{definition}
-
-Following the hypothesis-space formulation of
-\citet[Eq.~(6)]{baxter2000model}, the optimal risk on task $\tau$
-for a fixed indexator $\mathbf I$ is
+For a fixed indexator $\mathbf I$, its optimal
+risk~\cite[Eq.~(6)]{baxter2000model} on task $\tau$ is
 \begin{equation}
     R_\tau^\star(\mathbf I):=\inf_{f\in\mathcal F_{\mathbf I}}R_\tau(f).
     \label{eq:optimal-task-risk}
@@ -96,25 +84,18 @@ The infimum optimizes task-specific numerical parameters with respect
 to the true task distribution, giving an ideal measure of the
 predictive capacity of $\mathbf{I}$. Generalization from finite training
 samples and numerical convergence also depend on the fitting procedure.
-Equivalent indexators have the same optimal task risk, so this
-criterion is independent of the representative within each class.
-The population objective minimizes the expected optimal task risk
-over equivalence classes.
+
+We choose an indexator to minimize the expected optimal risk on a
+new task drawn from the same environment.
 \begin{equation}
-    [\mathbf{I}^\star]
-    \in\operatorname*{arg\,min}_{[\mathbf{I}]\in\mathcal{I}_K/{\sim}}
+    \mathbf I^\star
+    \in\operatorname*{arg\,min}_{\mathbf I\in\mathcal I_K}
     \mathbb E_\tau R_\tau^\star(\mathbf I).
     \label{eq:optimal-structure}
 \end{equation}
-The expectation concerns a new task drawn from the same task
-environment, and any representative of $[\mathbf{I}]$ can be used
-to evaluate the objective. Structure learning is thus defined up to
-functional equivalence. Distinct equivalence classes may still attain
-the same optimum; identifying a unique optimal class requires suitable
-assumptions on the task family and network parameterization.
 
 With $T$ source tasks, the corresponding ideal empirical objective
-averages the best training loss in the same class on each task.
+averages the best training loss on each task under a fixed indexator.
 \begin{equation}
     \widehat{\mathbf I}\in\operatorname*{arg\,min}_{\mathbf I\in\mathcal I_K}
         \frac1T\sum_{\tau=1}^T

@@ -19,41 +19,27 @@ More generally, a single task may admit multiple near-optimal structures, and it
 Our focus is on discovering connectivity and weight-sharing constraints that remain useful across tasks, with numerical values learned from scratch for each new task.
 
 In this paper, we study multi-task structure learning by extracting
-shared constraints from solutions to related tasks. We represent a
-structure by an indexator that specifies which connections are active
-and which weights share a code value, with a fixed sign at each active
-position. The codebook supplies the task-specific values, while the
-remaining numerical parameters can adapt freely to each task.
+shared constraints from solutions to related tasks. For exact recovery,
+an indexator specifies the active connections, shared code values and
+fixed signs. For transfer from fitted networks, we construct a shared
+first-layer basis whose span can include the signed group directions.
 
 Our central hypothesis is that structural regularities shared across
 source solutions can improve learning from limited data on new tasks.
-Once a structure has been selected, its connectivity and sharing
-constraints are held fixed while its codebook and remaining numerical
-parameters are initialized and learned anew on each target task.
+Once a structure has been selected, we hold it fixed and fit fresh
+coefficients and other numerical parameters on each target task.
 
 \begin{samepage}
+\noindent\textbf{Our contribution}:
 \begin{itemize}
-    \item We characterize when exact, aligned ReLU weights on known
-        active connections uniquely determine their sharing groups.
-        Sign--Ratio Recovery (SRR) uses within-neuron ratios to cancel
-        unknown neuron scales and checks relative signs. We prove that
-        it recovers the groups and their relative signs when the ratios
-        distinguish ordered code pairs and repeated pairs link the
-        occurrences of each code across neurons. We also show how
-        partial observations from several tasks can identify groups
-        that no individual task identifies.
+    \item We characterize when aligned ReLU weights on known active
+        connections determine the sharing groups. We give conditions
+        for exact recovery by Sign--Ratio Recovery (SRR) and for
+        recovering groups from partial observations across tasks.
     \item We propose Approximate Sign--Ratio Recovery (aSRR,
-        Algorithm~\ref{alg:asrr}) for fitted dense networks. It
-        aligns the hidden neurons, normalizes their weights and
-        clusters profiles across tasks. It can retain the group
-        directions or complete a basis of the same size from source
-        statistics. We select the basis by validation performance
-        after fitting its numerical parameters afresh.
-    \item We measure signed-group recovery on synthetic cross-correlation
-        and evaluate transfer on five real datasets. We compare sharing
-        methods at matched target coefficient budgets. aSRR recovers
-        the synthetic groups and exceeds Yeh (soft) and MSR-FC on the
-        real-data panels. The shuffled controls measure the contribution
-        of the recovered groups within each selected basis.
+        Algorithm~\ref{alg:asrr}). It combines signed groups estimated
+        from aligned weights and gradients with directions estimated from
+        source examples. A single spectral rule constructs the shared
+        basis at the target coefficient budget.
 \end{itemize}
 \end{samepage}

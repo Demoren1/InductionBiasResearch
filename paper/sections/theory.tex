@@ -6,7 +6,7 @@ Section~\ref{sec:theory-observations} separates the information in
 magnitudes and signs that is preserved by neuron rescaling.
 Section~\ref{sec:theory-recovery} gives an exact identification
 criterion, conditions for recovery by SRR and a guarantee for the
-input-sharing variant of aSRR.
+signed merges used by aSRR.
 Section~\ref{sec:theory-graph} gives a graph condition for uniqueness
 and explains the role of a neuron containing three or more codes.
 Section~\ref{sec:theory-complementarity} shows how partial information
@@ -218,7 +218,7 @@ is connected.
 \begin{theorem}[Recovery by SRR from repeated code pairs]
     \label{thm:theory-pair-recovery}
     Suppose the centered observations $\mathbf y_1,\ldots,\mathbf y_T$
-    span $\mathcal S$. The blocks returned by SRR are
+    span $\mathcal S$. The groups returned by Algorithm~\ref{alg:srr} are
     exactly the occurrences of each code $j$ in each connected
     component of $G_j$. If all these graphs are connected,
     SRR recovers the indexator up to code renaming and a choice of
@@ -234,36 +234,45 @@ for SRR. Any accidental zero or equality of distinct ordered
 log-code differences imposes one of finitely many proper hyperplane
 constraints. Appendix~\ref{app:theory-pairs} proves both claims.
 
-For the input-sharing variant of aSRR, the relevant observations
-are the input profiles $\mathbf Z_i$ of Section~\ref{sec:method-asrr}.
-With one exact source fit per task and positive assignment signs,
-two input groups have distinct profiles as soon as their code
-values differ in one neuron on one task. Both values in that
-column are divided by the same positive scale.
+For a block of Algorithm~\ref{alg:asrr}, the profiles $\mathbf z_i$
+are known after alignment and normalization. When two inputs have
+the same fixed signed relation in each neuron of the block, both
+coordinates of their profiles are divided by the same scale in each
+neuron and task.
 
-\begin{lemma}[Exact input recovery by aSRR]
-    \label{lem:theory-input-ward}
-    Suppose the inputs have $k$ nonempty groups, with a separate
-    code for each group in each neuron and all assignment signs
-    positive. If the observed profiles $\mathbf Z_i$ are identical
-    within each group and any two groups differ for at least one
-    neuron on one task, the input-sharing Ward proposal used by
-    Algorithm~\ref{alg:asrr} at budget $m=Hk$ recovers the indexator
-    up to code renaming.
+\begin{lemma}[Exact recovery by signed merging]
+    \label{lem:theory-signed-merge}
+    Suppose the profiles in a block satisfy
+    $\mathbf z_i=\sigma_i\boldsymbol\mu_j$ for each $i$ in group $j$,
+    with $r$ nonempty groups, $\sigma_i\in\{-1,1\}$ and
+    $\boldsymbol\mu_j\ne\mathbf0$. Suppose also that
+    $\|\boldsymbol\mu_j\pm\boldsymbol\mu_k\|_2>0$ for $j\ne k$.
+    At $\beta=0$,
+    $\operatorname{SignedMerge}_r$ recovers the partition and its
+    relative signs. At $\lambda=1$, the block basis enforces exactly
+    those signed ties.
 \end{lemma}
 
 \begin{proof}
-    For two clusters of sizes $a,b$ and vectorized profile means
-    $\boldsymbol\mu,\boldsymbol\nu$, Ward's increase in the
-    within-cluster sum of squares is
-    $\frac{ab}{a+b}\|\boldsymbol\mu-\boldsymbol\nu\|_2^2$.
-    Starting from singletons, a merge within a true group costs
-    zero, and a merge between pure clusters from distinct groups
-    costs strictly more. While more than $k$ clusters remain, some
-    true group is split and hence admits a zero-cost merge. The cut
-    at $k$ therefore gives the true input groups. Assigning one
-    code per group and neuron gives the stated indexator.
+    For the profile Gram matrix, a merge with relative sign
+    $s\in\{-1,1\}$ has cost proportional to
+    $\frac{|C||E|}{|C|+|E|}\|\boldsymbol\mu_C-s\boldsymbol\mu_E\|_2^2$,
+    where the means use the current signs. Equation~\eqref{eq:asrr-merge}
+    minimizes this cost over $s$. If both clusters lie in one true group
+    and their signs are correct up to a common flip in each cluster,
+    the correct relative sign gives zero cost. A wrong sign or a
+    merge across true groups has strictly positive cost. Starting
+    from singletons, at least one zero-cost merge is available until
+    there are $r$ groups. Induction gives the true groups and their
+    relative signs. At $\lambda=1$, Equation~\eqref{eq:asrr-basis}
+    gives their indicator basis with one free coefficient per group.
 \end{proof}
+
+A signed merge removes one direction from the span of the current
+indicators. Adding a symmetric perturbation to the merge matrix
+therefore changes each gain by at most its operator norm. The same
+recovery follows if the gap between the best correct and incorrect
+merge at every step exceeds twice that norm.
 
 \subsection{A structural condition for uniqueness}
 \label{sec:theory-graph}
@@ -375,7 +384,19 @@ For erroneous pairwise relations, Appendix~\ref{app:theory-partial-noise}
 gives a necessary and sufficient redundancy condition for two groups.
 
 A Dense fit can exhibit a signed relation even when its task leaves
-the sign undetermined. Consider three tasks with target
+the sign undetermined. For a bank of indexators, let $V_\tau$ contain
+the candidates within $\varepsilon$ of the best loss on task $\tau$.
+Let $\mathcal R(\mathbf I)$ denote the fixed zeros and signed
+equalities enforced by indexator $\mathbf I$. A set $A$ of relations
+is compatible across source tasks when
+\begin{equation}
+    \forall\,\tau,\quad
+    \exists\,\mathbf I\in V_\tau\quad\text{with}\quad
+    A\subseteq\mathcal R(\mathbf I).
+    \label{eq:method-joint-relations}
+\end{equation}
+
+Consider three tasks with target
 $f(\mathbf x)=\rho(x_1+x_2)$, one hidden neuron and a budget of one
 code. On the first two tasks $x_2=0$, so incoming weights $(1,1)$ and
 $(1,-1)$ give the same predictions. On the third task all four inputs
@@ -387,15 +408,16 @@ coordinate profiles in Algorithm~\ref{alg:asrr} are
     \mathbf z_1=(1,1,1)^{\mathsf T}/\sqrt{2},\qquad
     \mathbf z_2=(-1,-1,1)^{\mathsf T}/\sqrt{2}.
 \]
-Their inner product is $-1/2$, so the global Ward proposal assigns opposite
-signs to the two weights that share the code. The resulting network
+Their inner product is $-1/2$, so the profile-only merge assigns
+opposite signs to the two weights that share the code. The resulting network
 depends on $x_1-x_2$ alone and gives the same prediction at $(0,0)$
 and $(1,1)$, where the
 targets are $0$ and $2$. With both signs in the bank and $\varepsilon=0$,
 both assignments attain zero population squared loss on the first two
-tasks, and only $w_1=w_2$ does so on the third. Thus
-Algorithm~\ref{alg:asrr-compatible} recovers the shared sign even
-though two of the three Dense fits use the other sign.
+tasks, and only $w_1=w_2$ does so on the third. The compatibility
+criterion recovers the shared sign despite the two alternative
+Dense fits. Appendix~\ref{app:relational-compatibility} gives a
+recurrence for maximal compatible sets and a Pattern example.
 
 \begin{proposition}[When a task rules out a proposed relation]
     \label{prop:theory-distinguishing-task}

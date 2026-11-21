@@ -1,13 +1,12 @@
 \section{Method}
 \label{sec:method}
 
-Sign--Ratio Recovery (SRR) uses within-neuron weight ratios to
-recover sharing groups from exact source observations. Approximate
-Sign--Ratio Recovery (aSRR, Algorithm~\ref{alg:asrr}) builds candidate
-groups from fitted Dense networks. It can retain all the group
-directions or use one group direction per block and complete the
-basis using source data. We select the structure at a fixed code
-budget by refitting its numerical parameters on development tasks.
+Sign--Ratio Recovery (SRR, Algorithm~\ref{alg:srr}) uses within-neuron
+weight ratios to recover sharing groups from exact source observations.
+Approximate Sign--Ratio Recovery (aSRR, Algorithm~\ref{alg:asrr})
+uses fitted Dense networks and source examples to learn a shared
+first-layer basis. We select its numerical settings by refitting
+coefficients on development tasks at a fixed budget.
 
 \subsection{ReLU model and signed groups}
 \label{sec:method-relu-instance}
@@ -37,7 +36,7 @@ uses lookup index $j$ at positive assignments and $m+j$ at negative
 assignments. Thus $w_p=C_{I_p}=\sigma_p c_{g(p)}$. The zero label
 removes a connection. The grouping $g$ and the signs are shared
 across tasks. Each task learns its own $\mathbf c$.
-We use full first-layer support in the aSRR experiments.
+In the experiments, the first-layer support is given by the architecture.
 
 \subsection{Sign--Ratio Recovery (SRR)}
 \label{sec:method-srr}
@@ -59,101 +58,139 @@ On a task where the two positions use code values $c_j,c_k$,
 the common scale cancels and the entry is $\log|c_j/c_k|$.
 Thus two neurons that use the same ordered pair of codes give the same vector.
 
-Start with one block per active position. A zero vector $\mathbf r_{pq}$
-proposes joining $p$ and $q$. A common nonzero vector for two ordered
-pairs $(p,q)$ and $(u,v)$ proposes joining $p$ with $u$ and $q$ with
-$v$. Accept a match if the relative sign
-$\operatorname{sign}(w_{\tau,a}w_{\tau,b})$ is constant across tasks
-for each proposed join $(a,b)$. Take the transitive closure of the
-accepted joins. In each resulting block choose a representative $p_0$
-and assign each member $p$ the relative sign
-$\sigma_p=\operatorname{sign}(w_{1,p}w_{1,p_0})$.
-Theorem~\ref{thm:theory-pair-recovery} gives conditions under which
-the procedure recovers every group.
+A zero ratio vector proposes joining $p$ and $q$ within a neuron.
+Matching nonzero vectors $\mathbf r_{pq}$ and $\mathbf r_{uv}$ propose
+joining $p$ with $u$ and $q$ with $v$. A proposal becomes a set of edges
+in the graph on active positions only if every proposed join has a
+constant relative sign across tasks.
+
+\begin{algorithm}[H]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \caption{Sign--Ratio Recovery (SRR)}
+    \label{alg:srr}
+    \KwIn{Aligned weights $w_{\tau,p}\ne0$ for $T$ source tasks,
+        common active positions $\mathcal E$, and their neurons $h(p)$.}
+    \KwOut{A signed indexator $\mathbf I$ and its code count $m$.}
+    $\mathbf r_{pq}\gets(\log|w_{\tau,p}/w_{\tau,q}|)_{\tau=1}^T
+        \quad(p,q\in\mathcal E,\ p\ne q,\ h(p)=h(q))$\;
+    $\mathcal A\gets\bigl\{\{(p,q)\}:\mathbf r_{pq}=\mathbf0\bigr\}$\;
+    $\mathcal A\gets\mathcal A\cup
+        \bigl\{\{(p,u),(q,v)\}:\mathbf r_{pq}=\mathbf r_{uv}\ne\mathbf0,\,
+        (p,q)\ne(u,v)\bigr\}$\;
+    $\mathcal J\gets\varnothing$\;
+    \ForEach{$A\in\mathcal A$}{
+        \lIf{$\operatorname{sign}(w_{\tau,a}w_{\tau,b})$ is constant in $\tau$
+            for every $(a,b)\in A$}{$\mathcal J\gets\mathcal J\cup A$}
+    }
+    $(G_1,\ldots,G_m)\gets\operatorname{Components}(\mathcal E,\mathcal J)$\;
+    $\mathbf I\gets\mathbf0$ \tcp*[r]{label zero for inactive positions}
+    \ForEach{$G_j$}{
+        choose $p_0\in G_j$ \tcp*[r]{the representative has sign $+1$}
+        \lForEach{$p\in G_j$}{
+            $I_p\gets j+m\,\mathbf1_{\{w_{1,p}w_{1,p_0}<0\}}$}
+    }
+    \Return $(\mathbf I,m)$\;
+\end{algorithm}
+
+The number of components gives $m$, counting each isolated active
+position as a singleton. Theorem~\ref{thm:theory-pair-recovery}
+guarantees recovery of the indexator up to code renaming and a common
+sign flip within each group. This holds when the centered log magnitudes
+span the contrast space and, for each code, its neurons are connected
+through repeated code pairs.
 
 \subsection{Approximate Sign--Ratio Recovery (aSRR)}
 \label{sec:method-asrr}
 
-Ratios estimated from fitted networks can differ even for repeated
-code pairs. aSRR uses the variation of fitted weights across tasks
-to propose groups at a specified budget. Let $\mathbf W_{\tau r}$ and
-$\ell_{\tau r}$ be the first-layer matrix and numerical-validation loss
-of retained Dense fit $r$ on source task $\tau$. After normalizing the
-columns, we use the Hungarian algorithm to find the permutation matrix
-$P(X,Y)$ that puts the columns of $X$ in the order of $Y$.
-A permutation of the hidden neurons preserves the predictor when
-applied jointly to the incoming columns, hidden biases and outgoing
-rows~\cite[Sec.~2.1]{zhou2023permutation}. Algorithm~\ref{alg:asrr}
-averages the aligned fits of each task, then permutes the average into
-the common neuron order. Write $\bar w_{\tau,ih}$ for entry $(i,h)$ of
-the resulting matrix $\overline{\mathbf W}_\tau$.
-Appendices~\ref{app:transfer-details} and~\ref{app:asrr-experiments}
-give the numbers of retained fits.
+aSRR estimates a matrix $\mathbf B$ from source tasks. On a new task
+$\tau$, the first-layer weights on the chosen support are
+$\mathbf w_\tau=\mathbf B\mathbf c_\tau$, with $m$ fitted coefficients.
+Algorithm~\ref{alg:asrr} combines directions from signed groups with
+directions estimated from source examples.
 
-For global sharing, the profile at $p=(i,h)$ is
-$\mathbf z_p=(\bar w_{\tau,ih})_{\tau=1}^T\in\mathbb R^T$. Two positions using the
-same code in one neuron have equal exact profiles up to sign. Across
-neurons, their normalized profiles can still have different scale
-factors on each task. To group approximately equal or opposite
-profiles, we use the sign-invariant map
+Let $\mathbf W_{\tau s}$ be the first-layer matrix of retained Dense
+fit $s$ on source task $\tau$, with numerical-validation loss
+$\ell_{\tau s}$. $\operatorname{ColNorm}$ divides each column by its
+Euclidean norm, floored at $10^{-12}$. The permutation $P(X,Y)$
+maximizes $\langle XP,Y\rangle_F$ and is computed by the Hungarian
+algorithm. We first align the fits within each task to its best fit.
+We then align each task's mean to the best fit overall. Permutations
+are restricted to neurons at the same site. They preserve the
+predictor when applied jointly to the incoming columns, hidden biases
+and outgoing rows~\cite[Sec.~2.1]{zhou2023permutation}.
+
+Within each site, a block shares an input basis across its neurons,
+with separate coefficients for each neuron. Divide the neurons into
+equal contiguous blocks, using the largest divisor of the site width
+up to 16 as the block count. The row $\mathbf z_i^{\mathsf T}$ of $\mathbf Z$
+collects the aligned weights from input $i$ across tasks and neurons
+in the block. Each local basis has $r=m/H$ columns. We repeat the
+basis for each neuron in its block and assemble these copies
+block-diagonally in $\mathbf B$. For regression with observed outputs
+and a fixed support, there is one block of active weight positions,
+with $r=m$. Column normalization leaves those weights unchanged and
+$P(X,Y)$ is the identity.
+
+Write $\mathcal N(M)=M/\max(\|M\|_F,10^{-12})$ and
+$\operatorname{sym}(M)=(M+M^{\mathsf T})/2$. For a query view $v$,
+let $\mathbf g_S$ and $\mathbf g_v$ be the support and query gradients
+on the block's coordinates at the same reference network. The
+expectation below averages source tasks, support draws and, for an
+input block, its neurons. Let $\pi_v$ be the weight of view $v$ for
+this block, specified in Appendix~\ref{app:transfer-details}. We use
 \begin{equation}
-    \Phi(\mathbf z)=\mathbf z\mathbf z^{\mathsf T}/\|\mathbf z\|_2
-        \quad(\mathbf z\ne\mathbf0),\qquad \Phi(\mathbf0)=\mathbf0 .
-    \label{eq:asrr-profile-map}
+    \mathbf A=\mathcal N(\mathbf Z\mathbf Z^{\mathsf T}),\qquad
+    \mathbf K=\sum_v\pi_v\,\mathcal N\!\left(
+        \operatorname{sym}\mathbb E[\mathbf g_S\mathbf g_v^{\mathsf T}]
+    \right).
+    \label{eq:asrr-affinities}
 \end{equation}
-We apply Ward's minimum-variance criterion to the vectorized
-matrices~\cite{ward1963hierarchical} and cut the tree at $m$ groups.
-For each group $G_j$, initialize its center $\boldsymbol\mu$ to
-the profile of largest norm and apply four updates
-\[
-    \sigma_p \gets \operatorname{sign}(\mathbf z_p^{\mathsf T}\boldsymbol\mu),
-    \qquad
-    \boldsymbol\mu \gets \frac{1}{|G_j|}\sum_{p\in G_j}\sigma_p\mathbf z_p,
-\]
-where $\operatorname{sign}(0)=+1$. The signed groups define the
-indexator of Section~\ref{sec:method-relu-instance}.
-
-For input sharing, collect the profiles leaving input $i$ into a
-matrix $\mathbf Z_i$ whose column $h$ is $\mathbf z_{(i,h)}$.
-Within each block of hidden neurons, Ward or Lloyd
-$k$-means~\cite{lloyd1982quantization} compares the corresponding
-vectorized matrices. With $k$ input groups, each neuron has its
-own $k$ codes, with positive signs and total budget $m=Hk$.
-Lemma~\ref{lem:theory-input-ward} gives a sufficient condition for
-the Ward proposal to recover the groups. We also use support and
-query gradients to propose input groups for hard sharing
-(Appendix~\ref{app:asrr-gradient}).
-
-\paragraph*{Hard and partial sharing.}
-Write $\mathbf G$ for the matrix of signed group indicators in a
-block, with column $j$ divided by $\sqrt{|G_j|}$. For global
-sharing, the rows index active connections. For input sharing, the
-rows index inputs and each neuron in the block has its own code
-vector. Hard sharing uses the span of $\mathbf G$ for the weights.
-With $k$ columns in $\mathbf G$, partial sharing retains one
-direction $\mathbf a$ from this span and fills the other $k-1$ slots
-with directions estimated from source observations.
-
-Let $\mathbf U$ collect directions obtained from source-task
-contrasts between classes. Appendix~\ref{app:transfer-details}
-describes the estimators based on independent samples of class
-means and covariances, and the analogous regression estimator.
-Let $\operatorname{Left}_j$ return the leading $j$ left singular
-vectors. We construct the partial basis as
+For a partition with fixed signs $\sigma_i$, column $j$ of $\mathbf G$
+has value $\sigma_i/\sqrt{|G_j|}$ at $i\in G_j$ and zero elsewhere.
+The term $\mathbf g_v^{\mathsf T}\mathbf G\mathbf G^{\mathsf T}\mathbf g_S$
+gives the first-order reduction in query loss per unit step along
+the projected support gradient.
+Given a symmetric matrix $M$, $\operatorname{SignedMerge}_r(M)$
+starts from singletons and greedily merges to $r$ groups. For current
+groups $C,E$, write $S_{CE}=\sum_{i\in C,\,j\in E}\sigma_i\sigma_j M_{ij}$.
+Choose the pair with the largest gain in
+$\operatorname{tr}(\mathbf G^{\mathsf T}M\mathbf G)$,
 \begin{equation}
-    \mathbf a=\mathbf G\operatorname{Left}_1(\mathbf G^{\mathsf T}\mathbf U),
-    \qquad
-    \mathbf B=\bigl[\mathbf a,\,
-        \operatorname{Left}_{k-1}\bigl((\mathrm{Id}-\mathbf a\mathbf a^{\mathsf T})
-        \mathbf U\bigr)\bigr].
-    \label{eq:asrr-partial-basis}
+    \Delta(C,E)=
+      \frac{S_{CC}+S_{EE}+2|S_{CE}|}{|C|+|E|}
+        -\frac{S_{CC}}{|C|}-\frac{S_{EE}}{|E|}.
+    \label{eq:asrr-merge}
 \end{equation}
-The first direction captures the most energy of $\mathbf U$ among
-unit vectors in the group span. The completion captures the
-leading residual directions orthogonal to $\mathbf a$. The target
-weights are $\mathbf w=\mathbf B\mathbf c$ with the same number of
-free coefficients as hard sharing. Each candidate fixes its
-basis before any target fit.
+The merge multiplies the signs in $E$ by $\operatorname{sign}(S_{CE})$,
+with $+1$ at zero. With the profile signal alone this is Ward's
+criterion with a relative sign for each merge~\cite{ward1963hierarchical}.
+Lemma~\ref{lem:theory-signed-merge} gives an exact recovery condition.
+
+Let $M_1,M_2$ denote the normalized source signals from class means
+and covariances, and $\Sigma$ the regularized within-class covariance
+(Appendix~\ref{app:transfer-details}). $\operatorname{GEV}_r$ returns
+the leading $r$ generalized eigenvectors for a signal and $\Sigma$.
+We orthonormalize them to obtain $\mathbf U$. Let $\operatorname{Top}_r$
+return the leading $r$ orthonormal eigenvectors of a symmetric matrix,
+and let $\Omega$ be diagonal with $r$ equally spaced entries from
+$1$ to $0.9$. The block basis is
+\begin{equation}
+    \mathbf B_{\rm block}
+    =\operatorname{Top}_r\!\left(
+        (1-\lambda)\mathbf U\Omega\mathbf U^{\mathsf T}
+        +\lambda\mathbf G\Omega\mathbf G^{\mathsf T}\right).
+    \label{eq:asrr-basis}
+\end{equation}
+At $\lambda=1$ we take $\mathbf B_{\rm block}=\mathbf G$, so the weights
+obey the signed equalities of the groups. Smaller weights on the
+groups allow the basis to admit variation within them at the same
+rank. We choose $(\alpha,\beta,\lambda)$ from a common grid for
+the covariance, gradient and group weights. The grid uses
+$\alpha\in\{0,1/4\}$, $\beta\in\{0,1/2\}$, and
+$\lambda\in\{1/8,1/2,1\}$, with a single $\alpha$ at $\lambda=1$.
+Regression uses only the first moment and sets $\alpha=0$.
 
 \begin{algorithm}[H]
     \small
@@ -161,94 +198,59 @@ basis before any target fit.
     \SetAlgoNoEnd
     \caption{Approximate Sign--Ratio Recovery (aSRR)}
     \label{alg:asrr}
-    \KwIn{Retained fits $(\mathbf W_{\tau r},\ell_{\tau r})$, source samples $\mathcal S$,
-        development episodes $\mathcal V$, code budget $m$ and fit settings $\Lambda$.}
-    \KwOut{A fixed weight basis $\widehat{\mathbf B}$ and fit setting $\widehat\lambda$.}
-    \lForEach{column $\mathbf w$ of every $\mathbf W_{\tau r}$}{
-        $\mathbf w\gets\mathbf w/\max(\|\mathbf w\|_2,10^{-12})$}
-    $r_\tau\in\operatorname*{arg\,min}_r\ell_{\tau r},\quad
-        \mathbf U_\tau\gets\mathbf W_{\tau r_\tau}\quad(\tau=1,\ldots,T)$\;
-    $\tau_*\in\operatorname*{arg\,min}_\tau\ell_{\tau r_\tau}$\;
-    $P(X,Y)\in\operatorname*{arg\,max}_{\Pi}\langle X\Pi,Y\rangle_F
-        \quad(\Pi\text{ a permutation matrix})$\;
-    \For{$\tau=1,\ldots,T$}{
-        $\overline{\mathbf W}_\tau\gets
-            \operatorname{mean}_r\bigl[\mathbf W_{\tau r}P(\mathbf W_{\tau r},\mathbf U_\tau)\bigr]$
-            \tcp*[r]{within task}
-        $\overline{\mathbf W}_\tau\gets
-            \overline{\mathbf W}_\tau P(\mathbf U_\tau,\mathbf U_{\tau_*})$
-            \tcp*[r]{across tasks}
-    }
-    $\mathcal G\gets\operatorname{GroupProposals}((\overline{\mathbf W}_\tau)_\tau,
-        \mathcal S;m),\quad \mathcal B\gets\mathcal G$\;
-    \ForEach{eligible $\mathbf G\in\mathcal G$ and $\mathbf U$ from $\mathcal S$}{
-        \ForEach{block with $k$ group directions}{
-            $\mathbf a\gets \mathbf G\operatorname{Left}_1(\mathbf G^{\mathsf T}\mathbf U)$\;
-            $\mathbf B_{\rm block}\gets\bigl[\mathbf a,\,
-              \operatorname{Left}_{k-1}((\mathrm{Id}-\mathbf a\mathbf a^{\mathsf T})
-              \mathbf U)\bigr]$\;
+    \KwIn{Retained fits $(\mathbf W_{\tau s},\ell_{\tau s})$, source samples,
+        layer geometry, coefficient budget $m$, development episodes
+        $\mathcal V$ and refit settings $\mathcal H$.}
+    \KwOut{A shared basis $\mathbf B$ and its refit setting $\widehat\eta$.}
+    $\mathbf X_{\tau s}\gets\operatorname{ColNorm}(\mathbf W_{\tau s})$,
+        $\quad s_\tau\gets\arg\min_s\ell_{\tau s}$,
+        $\quad\tau_*\gets\arg\min_\tau\ell_{\tau s_\tau}$\;
+    $\widetilde{\mathbf W}_\tau\gets\operatorname{mean}_s
+        [\mathbf X_{\tau s}P(\mathbf X_{\tau s},\mathbf X_{\tau s_\tau})]$
+        \tcp*[r]{within task}
+    $\overline{\mathbf W}_\tau\gets\widetilde{\mathbf W}_\tau
+        P(\widetilde{\mathbf W}_\tau,\mathbf X_{\tau_*s_{\tau_*}})$
+        \tcp*[r]{across tasks}
+    \ForEach{block}{
+        $\mathbf A\gets\mathcal N(\mathbf Z\mathbf Z^{\mathsf T}),\quad
+        \mathbf K\gets\sum_v\pi_v\,\mathcal N\!\left(
+            \operatorname{sym}\mathbb E[\mathbf g_S\mathbf g_v^{\mathsf T}]
+        \right)$\;
+        $M_1,M_2,\Sigma\gets\text{source moments}$\;
+        \ForEach{$\theta=(\alpha,\beta,\lambda)$ in the grid}{
+            $\mathbf G\gets\operatorname{SignedMerge}_r
+                ((1-\beta)\mathbf A+\beta\mathbf K)$\;
+            $\mathbf U\gets\operatorname{orth}\bigl(
+                \operatorname{GEV}_r((1-\alpha)M_1+\alpha M_2,\Sigma)\bigr)$\;
+            $\mathbf B_{\theta,\rm block}\gets\operatorname{Top}_r\bigl(
+                (1-\lambda)\mathbf U\Omega\mathbf U^{\mathsf T}
+                +\lambda\mathbf G\Omega\mathbf G^{\mathsf T}\bigr)$\;
         }
-        $\mathbf B\gets\operatorname{Assemble}((\mathbf B_{\rm block})_{\rm blocks}),
-            \quad\mathcal B\gets\mathcal B\cup\{\mathbf B\}$\;
     }
-    $(\widehat{\mathbf B},\widehat\lambda)\in
-        \operatorname*{arg\,min}_{\mathbf B\in\mathcal B,\,\lambda\in\Lambda}
-        L_{\rm sel}(\operatorname{Refit}(\mathbf B,\lambda);\mathcal V)$\;
-    \Return $(\widehat{\mathbf B},\widehat\lambda)$\;
+    $\mathbf B_\theta\gets\operatorname{Assemble}
+        ((\mathbf B_{\theta,\rm block})_{\rm blocks})$\;
+    $(\widehat\theta,\widehat\eta)\gets
+        \arg\min_{\theta,\,\eta\in\mathcal H}
+        L_{\rm sel}(\operatorname{Refit}(\mathbf B_\theta,\eta);\mathcal V)$\;
+    \Return $(\mathbf B_{\widehat\theta},\widehat\eta)$\;
 \end{algorithm}
 
-Several indexators can fit a source task comparably well while tying
-different weights. To identify shared relations, consider a bank of
-hard indexators at a fixed budget and in a common hidden-neuron order.
-Let $V_\tau$ contain the candidates whose held-out loss $L_\tau(\mathbf I)$
-after refitting is within $\varepsilon$ of the best loss on task $\tau$
-(Section~\ref{sec:method-selection}).
-Write $\mathcal R(\mathbf I)$ for the signed equalities $w_p=\pm w_q$ between
-distinct positions and the fixed zeros $w_p=0$ that $\mathbf I$
-imposes for every choice of code values. A set $A$ of such relations
-is compatible across the source tasks when
-\begin{equation}
-    \forall\,\tau\in\{1,\ldots,T\},\quad
-    \exists\,\mathbf I\in V_\tau\quad\text{such that}\quad
-    A\subseteq\mathcal R(\mathbf I).
-    \label{eq:method-joint-relations}
-\end{equation}
-Each task must admit a candidate that enforces all relations in $A$.
-The candidate can vary across tasks. Appendix~\ref{app:asrr-compatibility}
-gives Algorithm~\ref{alg:asrr-compatible} for finding maximal compatible
-sets and evaluates it on Pattern.
-
-\subsection{Refitting and selecting structures}
+\subsection{Refitting and selection}
 \label{sec:method-selection}
 
-For a fixed basis $\mathbf B$ and fit setting $\lambda$,
-$\operatorname{Refit}(\mathbf B,\lambda)$ initializes and fits fresh
-code values, biases and output weights on the support of each
-development episode. The setting can specify a learning rate and
-number of steps or the strength of ridge regularization. When
-numerical validation is available within a task, it can also
-select a fit checkpoint.
-
-In a group-normalized refit, we optimize $\widetilde c_j$ with
-$c_j=\widetilde c_j/\sqrt{|G_j|}$ for each nonempty weight group
-$G_j$. This gives each group a unit-norm weight direction while
-preserving the predictors available to the indexator. We consider
-both hard code parameterizations and use orthonormal directions
-for partial sharing.
-
-Write $Q_v$ for the query set of development episode $v$, and
-$\widehat f_v$ for the predictor refitted on its support. We use
+For a fixed basis $\mathbf B$ and numerical setting $\eta$,
+$\operatorname{Refit}(\mathbf B,\eta)$ fits fresh coefficients,
+biases and output weights on each development support. The
+setting specifies the optimizer and fit duration or the ridge
+strength. Let $\widehat f_v$ be the refitted predictor on episode $v$
+and $Q_v$ its query set. We select by
 \begin{equation}
-    L_{\rm sel}(\operatorname{Refit}(\mathbf B,\lambda);\mathcal V)
+    L_{\rm sel}(\operatorname{Refit}(\mathbf B,\eta);\mathcal V)
         = \frac{1}{|\mathcal V|}\sum_{v\in\mathcal V}
           \mathcal L_{Q_v}(\widehat f_v).
     \label{eq:method-structure-selection}
 \end{equation}
-For classification, the loss is the error rate, averaged equally
-over query views when there are several. For regression it is mean
-squared error. A hard-indexator bank can also be evaluated on
-separate structure-selection samples from the source tasks using
-the same refit-and-score rule. The final basis and fit setting are
-fixed before test evaluation. Each target fit learns fresh numerical
-parameters from its own support. Appendix~\ref{app:transfer-details}
-gives the benchmark-specific fitting grids.
+The loss is the classification error, with equal weight for the
+query views, or the mean squared error for regression. The selected
+basis and fit setting are fixed before testing. Each test task learns
+its own numerical parameters on its support.

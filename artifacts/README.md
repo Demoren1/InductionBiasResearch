@@ -2,7 +2,7 @@
 
 | Проверка | Компактные данные |
 |---|---|
-| Основные таблицы статьи | [Отчёт и протокол](paper_transfer_2026-11-20/REPORT.md), [численные результаты](paper_transfer_2026-11-20/unified_summary.json) |
+| Основные таблицы статьи | [Результаты единого aSRR](paper_transfer_2026-11-21/summary.json), [описание алгоритма и протокол](../paper/theory/ASRR_UNIVERSAL_2026-11-21.md) |
 | Дополнительные сравнения на синтетике, Omniglot и UCI HAR | [Протокол и итоги](compact_experiments_2026-11-18/REPORT.md) |
 | Omniglot, 64 нейрона | [Общее сравнение](omniglot64_2026-11-18/results_with_lutq.json), [кластеризация aSRR](omniglot64_2026-11-18/clustering_results.json) |
 | FC100 и NinaPro | [Подбор и парные сравнения](fc100_ninapro_2026-11-18/tuning/REPORT.md) |

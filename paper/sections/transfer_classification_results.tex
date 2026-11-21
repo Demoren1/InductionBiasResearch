@@ -2,10 +2,11 @@
 \centering\small
 \caption{Test accuracy (\%) on common episodes. HAR uses three fitting
 examples per class, and the other datasets use five. The budget counts
-the first-layer coefficients refitted by each sharing method. Bold
-marks the best algorithm in each column. The final row
-gives the paired difference between aSRR and its shuffled control
-in percentage points.}
+the first-layer coefficients refitted by each sharing method. Bold and
+underlining mark the best and second-best transfer methods in each
+column, respectively. The final two rows use
+four permutations of the aSRR groups and give their mean accuracy and
+paired difference in percentage points.}
 \label{tab:transfer-classification}
 \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
 \toprule
@@ -15,17 +16,16 @@ Method & \shortstack{Toroidal\\MNIST} & Clean & Transformed & FC100 & UCI HAR & 
 \midrule
 First-layer budget & 2,048 & \multicolumn{2}{c}{2,048} & 3,072 & 128 & 288 \\
 \midrule
-Dense & 51.20 & 74.14 & 42.86 & 37.42 & 86.67 & 49.23 \\
-WSR & 51.74 & 55.86 & 38.78 & 37.42 & 83.61 & 47.14 \\
-LUT-Q & 51.19 & 70.38 & 40.96 & 37.43 & 89.25 & 48.35 \\
-Yeh (hard) & 51.83 & 73.54 & 44.34 & 37.22 & 89.01 & 49.34 \\
-Yeh (soft) & 53.78 & 74.98 & 49.42 & 37.40 & 90.05 & 51.01 \\
-MSR-FC & 51.84 & 70.90 & 47.44 & 38.94 & 89.66 & 55.62 \\
-Ward-aSRR & 51.99 & \textbf{77.43} & 46.12 & 37.42 & 91.20 & 54.02 \\
-aSRR & \textbf{57.28} & 76.46 & \textbf{51.82} & \textbf{40.03} & \textbf{96.62} & \textbf{56.39} \\
-Shuffled aSRR & 57.64 & 70.86 & 45.23 & 39.87 & 96.59 & 56.60 \\
+Dense & 51.32 & 73.95 & 42.90 & 37.49 & 87.38 & 49.02 \\
+WSR & 51.67 & 55.47 & 38.35 & 37.55 & 84.24 & 47.10 \\
+LUT-Q & 51.07 & 70.49 & 41.05 & 37.57 & 90.09 & 48.26 \\
+Yeh (hard) & 51.90 & 73.50 & 44.19 & 37.25 & 89.57 & 49.33 \\
+Yeh (soft) & \underline{53.81} & \underline{74.78} & \underline{49.04} & 37.53 & \underline{90.69} & 50.92 \\
+MSR-FC & 51.90 & 70.81 & 47.34 & \underline{38.89} & 90.07 & \underline{55.69} \\
+aSRR & \textbf{56.16} & \textbf{77.39} & \textbf{50.16} & \textbf{40.11} & \textbf{96.92} & \textbf{56.21} \\
 \midrule
-aSRR minus shuffle & $-0.36$ & $+5.60$ & $+6.59$ & $+0.16$ & $+0.03$ & $-0.21$ \\
+Shuffled groups & 56.10 & 73.19 & 46.25 & 40.02 & 96.68 & 56.38 \\
+aSRR minus shuffle & $+0.06$ & $+4.20$ & $+3.91$ & $+0.09$ & $+0.24$ & $-0.17$ \\
 \bottomrule
 \end{tabular*}
 \end{table}

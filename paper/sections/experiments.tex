@@ -2,15 +2,14 @@
 \label{sec:experiments}
 
 We evaluate recovery of known groups and transfer to new tasks.
-We compare aSRR and its hard Ward variant with Dense,
-WSR~\cite{shakerinava2024weight}, LUT-Q~\cite{cardinaux2018iteratively},
-Yeh's method~\cite{yeh2022equivariance}, and MSR-FC~\cite{zhou2021meta}.
-Within each experiment, all sharing methods have the same first-layer
-coefficient budget. A partial basis is stored and held fixed during
-target fitting. Yeh (hard) transfers discrete assignments, while
-Yeh (soft) and MSR-FC transfer continuous bases. Dense fits independent
-weights on the same network support. Each method fits fresh numerical
-parameters on the same target examples.
+We compare aSRR with Dense, WSR~\cite{shakerinava2024weight},
+LUT-Q~\cite{cardinaux2018iteratively}, Yeh's method
+\cite{yeh2022equivariance}, and MSR-FC~\cite{zhou2021meta}.
+All sharing methods use the same first-layer coefficient budget
+within each experiment. Yeh (hard) transfers discrete assignments.
+Yeh (soft), MSR-FC and aSRR transfer fixed bases. Dense fits an
+independent weight at every active position. Each method fits
+fresh numerical parameters on the same target examples.
 
 \subsection{Synthetic recovery and transfer}
 
@@ -20,20 +19,20 @@ Following the cross-correlation experiments of
 three offsets, 51 positions share one coefficient and 17 positions
 have their own, giving 54 independent coefficients. We draw six
 independent layouts of the exceptions and give every method the same
-support of 204 connections. Within each layout, the coefficients vary
-across functions. We fit them by ridge regression from one or five
-support examples on each new function.
+support of 204 connections. The coefficients vary across functions.
+We fit them by ridge regression from one or five support examples
+on each new function.
 
 \input{sections/transfer_linear_results.tex}
 
-Development selects hard Ward sharing in all six layouts and at
-both support sizes. It recovers all six indexators, and WSR recovers
-five (Table~\ref{tab:transfer-linear}). With one example,
-aSRR matches the true groups' MSE. The mean MSE reduction over WSR
-is $0.015$, with a paired 95\% interval of $[-0.023,0.052]$
-across layouts. With five examples, Dense can estimate each of the
-three weights per output on the common support and reaches near-zero
-error on the noiseless targets.
+Development selects $\lambda=1$ and $\beta=0$ in all six layouts
+at both support sizes. aSRR recovers every signed pair in all six
+layouts, and WSR recovers five layouts
+(Table~\ref{tab:transfer-linear}). With one example, mean query
+MSE is 0.1566 for aSRR and 0.1743 for MSR-FC. The paired reduction
+is 0.0177 with a 95\% interval of $[0.0159,0.0194]$ across layouts.
+With five examples, Dense can estimate each of the three weights
+per output on the known support and reaches near-zero query error.
 
 \subsection{Transfer on real data}
 
@@ -43,28 +42,28 @@ On Aug-Omniglot~\cite{zhou2021meta}, we adapt on clean images and
 evaluate the same query drawings in clean and transformed form.
 FC100~\cite{oreshkin2018tadam} holds out image superclasses. UCI
 HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} hold out
-participants. Appendix~\ref{app:transfer-details} describes the task
-splits and development selection.
+participants. Appendix~\ref{app:transfer-details} gives the splits
+and refit protocol.
 
-Development selects hard sharing on Aug-Omniglot and partial sharing
-on the other four datasets. The same Aug-Omniglot model uses one
-block of groups built from clean-query gradients and three built
-from transformed-query gradients. On the common test episodes in
-Table~\ref{tab:transfer-classification},
-aSRR gains 3.50 percentage points over Yeh (soft) on toroidal MNIST,
-1.48 and 2.40 on the two Aug-Omniglot query sets, and 6.57 on HAR.
-It gains 1.10 and 0.77 points over MSR-FC on FC100 and WISDM.
-All six paired 95\% intervals are above zero.
+The common development rule selects $\lambda=1$ on Aug-Omniglot
+and $\lambda=1/8$ on the other four datasets. The query allocation
+uses four clean and twelve transformed blocks on Aug-Omniglot.
+On the common test episodes in Table~\ref{tab:transfer-classification},
+aSRR improves over Yeh (soft) by 2.35 percentage points on toroidal
+MNIST, 2.61 and 1.12 on the two Aug-Omniglot query sets, and 6.22 on
+HAR. It improves over MSR-FC by 1.22 points on FC100 and by 0.53
+on WISDM. The paired 95\% interval on WISDM is $[-0.18,1.23]$.
+In three additional splits covering 34 other test participants,
+both methods are retrained and aSRR gains 0.79 points
+with interval $[0.50,1.09]$.
 
 \input{sections/transfer_classification_results.tex}
 
-Hard Ward sharing leads by 0.98 points on clean Aug-Omniglot
-queries. The selected groups gain 5.70 points on transformed
-queries. We shuffle the assignments while preserving support, signs,
-group sizes and refit settings. For partial sharing we complete a new
-basis with the same source guide. Averaging four shuffles reduces
-accuracy by 5.60 and 6.59 points on the two Aug-Omniglot query sets
-and by 0.16 on FC100 (paired 95\% interval $[0.05,0.27]$). The
-intervals include zero on HAR and WISDM. On toroidal MNIST the shuffle
-gains 0.36 points.
+Rebuilding the basis after permuting the groups reduces accuracy
+by 4.20 and 3.91 points on the clean and transformed Aug-Omniglot
+queries and by 0.24 on HAR. The corresponding paired 95\% intervals
+are $[3.90,4.50]$, $[3.58,4.23]$ and $[0.09,0.39]$. The intervals
+include zero on toroidal MNIST, FC100 and WISDM. The positive
+differences on Aug-Omniglot and HAR identify a benefit from the
+locations of the learned ties at the same coefficient budget.
 \FloatBarrier

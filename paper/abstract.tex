@@ -2,19 +2,18 @@ The connectivity and parameter-sharing structure of a neural network
 influences how well it generalizes from limited data. We study how
 solutions to related tasks can reveal structural constraints that
 remain useful when numerical parameters are learned afresh. We
-represent these constraints by an indexator specifying active
+represent exact sharing by an indexator specifying active
 connections and signed groups of shared weights, with task-specific
 values supplied by a trainable codebook. For aligned ReLU weights
 with known active connections, we characterize when the observations
 uniquely determine the groups and give sufficient conditions for exact
 recovery by Sign--Ratio Recovery (SRR). For fitted dense networks,
-we propose Approximate Sign--Ratio Recovery (aSRR), which clusters
-normalized weight profiles across source tasks. Validation after
-refitting selects between retaining all group directions and
-completing part of the basis from source statistics at the same
-code budget. On a cross-correlation benchmark with known support,
-aSRR selects hard sharing and recovers all signed groups in six
-layouts. On five real datasets, it outperforms the continuous
+we propose Approximate Sign--Ratio Recovery (aSRR). It combines
+directions from signed groups and source-task statistics into a
+single weight basis. Each new task fits its own coefficients in
+that basis. On a cross-correlation benchmark with known support,
+aSRR recovers all signed groups in six layouts. On five real
+datasets, it attains higher mean accuracy than the continuous
 baselines of Yeh et al.\ and MSR-FC at matched target coefficient
-budgets. Shuffled-group controls show how much of the gain depends
-on the recovered groups.
+budgets. Permuting the group assignments reduces accuracy on
+Aug-Omniglot and UCI HAR.
