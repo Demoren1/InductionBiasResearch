@@ -22,7 +22,7 @@ In this paper, we study multi-task structure learning by extracting
 shared constraints from solutions to related tasks. For exact recovery,
 an indexator specifies permitted connections, weight-sharing groups and
 fixed signs. For transfer from fitted networks, we construct a shared
-weight basis whose span can include the signed group directions.
+weight basis by relaxing the ties inferred from source tasks.
 
 Our central hypothesis is that structural regularities shared across
 source solutions can improve learning from limited data on new tasks.
@@ -39,7 +39,7 @@ coefficients and other numerical parameters on each target task.
     \item We propose Approximate Sign--Ratio Recovery (aSRR,
         Algorithm~\ref{alg:asrr}). It combines signed groups estimated
         from aligned weights and gradients with directions estimated from
-        source examples. A single spectral rule constructs the shared
-        basis at the target coefficient budget.
+        source examples. A rotation of the group basis controls the
+        relaxation at the target coefficient budget.
 \end{itemize}
 \end{samepage}

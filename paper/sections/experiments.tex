@@ -27,9 +27,8 @@ on each new function.
 
 \input{sections/transfer_linear_results.tex}
 
-Development selects $\lambda=1$ and $\beta=0$ in all six layouts
-at both training sample sizes. aSRR recovers every signed pair in all six
-layouts, and WSR recovers five layouts
+Development retains the unrotated signed basis in all six layouts.
+aSRR recovers every signed pair in all six layouts, and WSR recovers five
 (Table~\ref{tab:transfer-linear}). With one training example, mean test
 MSE is 0.1566 for aSRR, 0.1743 for MSR-FC and 0.1742 for
 Meta-SP~\citep{zhang2026metasp}. The paired 95\% intervals for the
@@ -50,47 +49,28 @@ UCI HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} split by
 participant. Appendix~\ref{app:transfer-details} gives the splits and
 refit protocol.
 
-The common development rule selects $\lambda=1$ on Aug-Omniglot
-and $\lambda=1/8$ on the other five datasets. On Aug-Omniglot,
-four blocks use clean validation images and twelve use transformed
-validation images.
+Development accepts the proposed rotation on all six datasets. On
+Aug-Omniglot, four blocks use clean validation images and twelve use
+transformed validation images to compute both source signals.
 On the common test episodes in Table~\ref{tab:transfer-classification},
-aSRR improves over the statistical basis by 1.25 percentage points on
-toroidal MNIST, 0.73 on FC100 and 0.33 on HAR. On WISDM, aSRR improves
-over MSR-FC by 0.53 points with a paired 95\% interval of $[-0.18,1.23]$.
-In three additional splits covering 34 other test participants,
-both methods are retrained and aSRR gains 0.79 points
-with interval $[0.50,1.09]$.
-
-On Aug-Omniglot, aSRR leads Dense SVD by 0.32 points on clean test images
-($[0.07,0.58]$). The statistical basis leads aSRR by 2.54 points on
-transformed test images ($[2.05,3.03]$), while aSRR leads by 14.72 points
-on clean test images.
-With a common frozen Dense anchor, aTLAS gains 1.55 percentage
-points over aSRR on transformed Aug-Omniglot test images, with a
-difference of $-0.05$ points on clean test images
-(Table~\ref{tab:aug-omniglot-anchored}).
-On Aug-miniImageNet, MSR-FC leads by 0.18 points on clean test images
-($[0.01,0.36]$), and aSRR leads by 0.55 on transformed test images
-($[0.37,0.73]$). Averaging both views gives aSRR a 0.18-point
-advantage ($[0.05,0.32]$).
-At the same budget, aSRR improves over the statistical basis $\mathbf U$
-by 0.75 points on clean test images and 0.71 on transformed test
-images. The gains over Dense SVD are 1.61 and 2.36 points, respectively.
-Table~\ref{tab:bolt-diagonal} gives the results of diagonal BOLT with
-128 coefficients and a fixed Dense anchor.
+aSRR leads on six of eight conditions. The statistical basis leads
+on transformed Aug-Omniglot images by 0.64 percentage points, and
+MSR-FC leads on clean Aug-miniImageNet images by 0.15 points. With
+equal weight on the clean and transformed results, aSRR has the
+highest mean accuracy on both augmented datasets.
+Tables~\ref{tab:bolt-diagonal} and~\ref{tab:aug-omniglot-anchored}
+report comparisons with a common frozen Dense anchor.
 
 \input{sections/transfer_classification_results.tex}
 
-Rebuilding the basis after permuting the groups reduces accuracy
-by 4.20 and 3.91 points on the clean and transformed Aug-Omniglot
-test images and by 0.24 on HAR. The corresponding paired 95\% intervals
-are $[3.90,4.50]$, $[3.58,4.23]$ and $[0.09,0.39]$. On
-Aug-miniImageNet the reductions are 0.16 points on clean test images
-($[0.04,0.27]$) and 0.19 on transformed test images ($[0.08,0.31]$).
-These differences measure the contribution of the learned group
-assignments at the same coefficient budget. The paired intervals
-include zero on toroidal MNIST, FC100 and WISDM.
+Permuting the group assignments reduces accuracy on Aug-Omniglot by
+3.31 points on clean images and 0.71 on transformed images, with paired
+95\% intervals of $[3.02,3.59]$ and $[0.39,1.02]$. The reductions on
+FC100, WISDM and transformed Aug-miniImageNet are 0.13, 0.32 and 0.18
+points, with intervals of $[0.02,0.24]$, $[0.05,0.60]$ and $[0.07,0.29]$.
+The other paired intervals include zero. This control measures the
+contribution of assigning the learned signed groups to specific
+inputs at the same coefficient budget.
 
 Table~\ref{tab:transfer-basis-times} reports the one-time cost of
 obtaining the shared bases at the selected source checkpoints. Dense

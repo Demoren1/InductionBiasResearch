@@ -8,7 +8,7 @@ Dense SVD is the spectral control inspired by BOLT. Bold and
 underlining mark first and second place among the methods above the
 shuffle rows. The last two rows give mean accuracy over four
 permutations of the aSRR groups and the paired difference in
-percentage points.}
+percentage points, computed before rounding.}
 \label{tab:transfer-classification}
 \setlength{\tabcolsep}{3pt}
 \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccccc@{}}
@@ -27,10 +27,10 @@ First-layer budget & 2,048 & \multicolumn{2}{c}{2,048} & 3,072 & \multicolumn{2}
 \href{https://arxiv.org/abs/2007.02933}{MSR-FC}~\citep{zhou2021meta} & 51.90 & 70.81 & 47.34 & 38.89 & \textbf{33.58} & \underline{30.33} & 90.07 & \underline{55.69} \\
 \hyperref[app:spectral-controls]{Dense SVD}~\citep{park2026bolt} & 51.55 & \underline{77.07} & 46.94 & 37.69 & 31.79 & 28.52 & 93.28 & 52.56 \\
 \hyperref[app:spectral-controls]{Statistical basis} & \underline{54.91} & 62.67 & \textbf{52.70} & \underline{39.38} & 32.65 & 30.17 & \underline{96.58} & 54.51 \\
-\hyperref[alg:asrr]{aSRR} & \textbf{56.16} & \textbf{77.39} & \underline{50.16} & \textbf{40.11} & \underline{33.40} & \textbf{30.88} & \textbf{96.92} & \textbf{56.21} \\
+\hyperref[alg:asrr]{aSRR} & \textbf{58.10} & \textbf{77.91} & \underline{52.06} & \textbf{40.10} & \underline{33.43} & \textbf{31.05} & \textbf{96.86} & \textbf{57.38} \\
 \midrule
-\hyperref[app:shuffle-control]{Shuffled groups} & 56.10 & 73.19 & 46.25 & 40.02 & 33.24 & 30.69 & 96.68 & 56.38 \\
-aSRR minus shuffle & $+0.06$ & $+4.20$ & $+3.91$ & $+0.09$ & $+0.16$ & $+0.19$ & $+0.24$ & $-0.17$ \\
+\hyperref[app:shuffle-control]{Shuffled groups} & 58.19 & 74.60 & 51.35 & 39.97 & 33.36 & 30.87 & 96.86 & 57.05 \\
+aSRR minus shuffle & $-0.09$ & $+3.31$ & $+0.71$ & $+0.13$ & $+0.08$ & $+0.18$ & $0.00$ & $+0.32$ \\
 \bottomrule
 \end{tabular*}
 \end{table}

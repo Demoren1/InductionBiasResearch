@@ -8,14 +8,14 @@ values supplied by a trainable codebook. For aligned ReLU weight matrices
 with nonzero entries in the same positions, we characterize when the observations
 uniquely determine the groups and give sufficient conditions for exact
 recovery by Sign--Ratio Recovery (SRR). For fitted dense networks,
-we propose Approximate Sign--Ratio Recovery (aSRR). It combines
-directions from signed groups and source-task statistics into a
-single weight basis. Each new task fits its own coefficients in
+we propose Approximate Sign--Ratio Recovery (aSRR). It rotates
+the basis of signed groups toward directions estimated from source
+examples. Each new task fits its own coefficients in
 that basis. On a cross-correlation benchmark with known connections,
 aSRR recovers all signed groups in six layouts. On six real datasets,
 it attains the highest mean accuracy among the compared methods at
 matched sharing budgets, averaging the two test views on the
 augmented datasets. The statistical basis leads on transformed
 Aug-Omniglot test images, and MSR-FC leads on clean Aug-miniImageNet
-test images. Permuting the group assignments reduces accuracy on both
-augmented datasets and UCI HAR.
+test images. The largest drop under group permutations occurs on
+clean Aug-Omniglot images.

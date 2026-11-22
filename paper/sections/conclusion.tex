@@ -1,9 +1,9 @@
 \section{Conclusion}
 
-Approximate Sign--Ratio Recovery builds a shared weight basis
-from signed groups and directions estimated from source examples.
-Validation sets the strength of the group constraint after fresh
-refits. Each new task learns its own coefficients in the selected basis.
+Approximate Sign--Ratio Recovery builds a shared weight basis by
+rotating signed group directions toward directions estimated from
+source examples. Validation after fresh refits sets the rotation.
+Each new task learns its own coefficients in the selected basis.
 
 For aligned source matrices with nonzero weights in the same positions,
 we characterize exact recovery through scale-invariant magnitudes and sign profiles.
@@ -21,5 +21,6 @@ highest mean accuracy on the six real datasets when both test views
 are averaged on the augmented datasets. The statistical basis leads
 on transformed Aug-Omniglot test images, and MSR-FC leads on clean
 Aug-miniImageNet test images.
-Permuting group assignments reduces accuracy on Aug-Omniglot,
-Aug-miniImageNet and HAR.
+Permuting group assignments has its largest effect on Aug-Omniglot,
+with smaller drops on FC100, WISDM and transformed Aug-miniImageNet
+images.

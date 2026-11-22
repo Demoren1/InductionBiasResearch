@@ -218,10 +218,9 @@ constraints. Appendix~\ref{app:theory-pairs} proves both claims.
     for a grouping $g$ of the inputs into $r$ nonempty groups, with
     $\sigma_i\in\{-1,1\}$ and $\boldsymbol\mu_j\ne\mathbf0$. Suppose also that
     $\|\boldsymbol\mu_j\pm\boldsymbol\mu_k\|_2>0$ for $j\ne k$.
-    At $\beta=0$,
+    Applied to the weight score $\mathbf A$,
     $\operatorname{SignedMerge}_r$ recovers the partition and its
-    relative signs. At $\lambda=1$, the block basis enforces exactly
-    those signed ties.
+    relative signs.
 \end{lemma}
 
 \begin{proof}
@@ -235,16 +234,74 @@ constraints. Appendix~\ref{app:theory-pairs} proves both claims.
     merge across true groups has strictly positive cost. Starting
     from singletons, at least one zero-cost merge is available until
     there are $r$ groups. Induction gives the true groups and their
-    relative signs. At $\lambda=1$, the construction in
-    Section~\ref{sec:method-asrr} uses $\mathbf B_g$ as the local basis,
-    with one free coefficient per group.
+    relative signs. The recovered basis $\mathbf B_g$ enforces these
+    ties with one coefficient per group.
 \end{proof}
 
-A signed merge removes one direction from the span of the current
-indicators. Adding a symmetric perturbation to the merge matrix
-therefore changes each gain by at most its operator norm. The same
-recovery follows if the gap between the best correct and incorrect
-merge at every step exceeds twice that norm.
+\begin{proposition}[Recovery of SRR ties within a neuron]
+    \label{prop:theory-asrr-ties}
+    Consider a block whose input weights all have indices in $\mathcal E$.
+    Suppose SRR on the exact source weights recovers the true ties within
+    each neuron, and these ties give the same partition and relative
+    signs throughout the block. Assume $r$ equals the number of groups
+    in this partition. Let $\mathbf A_\star$ be the weight score in
+    Algorithm~\ref{alg:asrr} computed from the exact profiles, and assume
+    the profiles of different groups differ under either relative sign.
+
+    A correct merge joins parts of one true group with its relative sign.
+    Let $\Delta$ be the smallest gap under $\mathbf A_\star$ between the
+    best correct and best incorrect merge over all intermediate signed
+    partitions obtainable by correct merges before reaching $r$ groups.
+    Take $\Delta=+\infty$ when no merges are needed. If
+    \[
+        2\lVert\mathbf A+\mathbf K-\mathbf A_\star\rVert_2<\Delta,
+    \]
+    then aSRR recovers the same groups and relative signs as SRR within
+    each neuron before rotation. For any such tie with sign
+    $s\in\{-1,1\}$, the rotated weights
+    $\mathbf w=\mathbf B_b(\mathbf t)\mathbf c$ satisfy
+    \[
+        |w_i-s w_k|\le
+        \sqrt{2}\sin\bigl(\max_j\phi_j\bigr)\lVert\mathbf c\rVert_2,
+    \]
+    where $\phi_j$ are the angles in~\eqref{eq:asrr-rotation}.
+    At zero rotation, all these ties hold exactly for every $\mathbf c$.
+\end{proposition}
+
+\begin{proof}
+    Normalizing a column multiplies both members of a tie by the same
+    positive factor. The exact profiles therefore satisfy the conditions
+    of Lemma~\ref{lem:theory-signed-merge}. Its proof shows that a correct
+    merge has zero cost under $\mathbf A_\star$ and an incorrect merge
+    has positive cost.
+
+    Each candidate signed merge removes one unit direction from the
+    current span. Its gain is the negative quadratic form of the score
+    matrix on that direction, so changing the matrix from
+    $\mathbf A_\star$ to $\mathbf A+\mathbf K$ changes the gain by at most
+    $\lVert\mathbf A+\mathbf K-\mathbf A_\star\rVert_2$. The gap condition
+    therefore makes a correct merge preferable at every step. The
+    factor $1/2$ in Algorithm~\ref{alg:asrr} preserves the ordering.
+    Starting from singletons, induction gives the correct $r$ groups and
+    signs in $\mathbf B_g$.
+
+    Let $P_g$ and $P$ be the projectors onto $\mathbf B_g$ and
+    $\mathbf B_b(\mathbf t)$. On each principal plane with $\theta_j>0$,
+    the difference of the two rank-one projectors has eigenvalues
+    $\pm\sin\phi_j$, and it vanishes on the remaining directions. Thus
+    $\lVert P-P_g\rVert_2=\sin(\max_j\phi_j)$. The recovered tie makes
+    $\mathbf e_i-s\mathbf e_k$ orthogonal to $\mathbf B_g$, so
+    \[
+        w_i-s w_k=(\mathbf e_i-s\mathbf e_k)^{\mathsf T}(P-P_g)\mathbf w.
+    \]
+    The bound follows from $\lVert\mathbf e_i-s\mathbf e_k\rVert_2=\sqrt{2}$
+    and $\lVert\mathbf w\rVert_2=\lVert\mathbf c\rVert_2$, since the
+    rotated basis has orthonormal columns.
+\end{proof}
+
+Theorem~\ref{thm:theory-pair-recovery} also characterizes code reuse
+across neurons. The aSRR basis shares directions within each block
+and gives each neuron its own coefficients.
 
 \subsection{A structural condition for uniqueness}
 \label{sec:theory-graph}

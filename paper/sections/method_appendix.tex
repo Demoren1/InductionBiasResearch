@@ -9,10 +9,13 @@ and Frobenius normalization. At each site, we divide the neurons into
 equal contiguous blocks. The block count is the largest divisor of the
 site width up to $16$.
 
-The diagonal of $\Omega$ has $r$ equally spaced entries from $1$ to $0.9$.
-The candidate grid uses $\alpha\in\{0,1/4\}$, $\beta\in\{0,1/2\}$ and
-$\lambda\in\{1/8,1/2,1\}$, with a single $\alpha$ at $\lambda=1$.
-Regression uses the first moment with $\alpha=0$.
+We optimize the four rotation fractions for 144 simultaneous
+perturbation updates and average the last 24 iterates. Each
+classification update uses 64 development episodes and compares
+refits at Adam rates 0.003 and 0.03 after 12, 75 and 300 steps.
+The two perturbations and the signed basis use the same episodes
+and starting values. Final selection evaluates the full development
+sample with the numerical refit settings below.
 
 \paragraph*{Alignment.}
 The $\operatorname{Align}$ step in Algorithm~\ref{alg:asrr} uses

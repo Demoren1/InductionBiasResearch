@@ -11,9 +11,10 @@ $\mathbf Q_1$, we split the 96 examples into training and validation
 halves.
 
 Each development or test function has 96 noiseless evaluation
-examples. Development selects the basis and ridge strength separately
-for each training sample size. Paired intervals use the six layout
-means. Yeh and MSR-FC differentiate through source ridge refits.
+examples. For aSRR we select one rotation using both training sample
+sizes and choose a ridge strength for each sample size. Paired
+intervals use the six layout means. Yeh and MSR-FC differentiate
+through source ridge refits.
 Meta-SP uses 80 training examples per source function and alternates
 updates of size $0.9/L$ on the source loss with SVD projections to rank
 54 over the given connections. Here $L$ is the largest eigenvalue
@@ -67,11 +68,10 @@ episode uses three training and five test windows per activity.
 \subsubsection{Source signals for classification}
 
 We retain three Dense fits per source task on FC100 and four on the
-other classification datasets. Let $v=1,\ldots,V$ index versions of
-the source validation sample. On Aug-Omniglot and Aug-miniImageNet,
-the two versions contain the same images before and after augmentation.
-The averages in~\eqref{eq:asrr-moments} include all versions. We set
-$\varepsilon=0.03\max\{\operatorname{tr}(\Sigma_0)/d,10^{-8}\}$.
+other classification datasets. On Aug-Omniglot and Aug-miniImageNet,
+the two validation samples contain the same images before and after
+augmentation. For Equation~\eqref{eq:asrr-moments}, we set
+$\varepsilon=0.03\max\{\operatorname{tr}(\sum_v\pi_v\Sigma_v)/d,10^{-8}\}$.
 
 For each of eight training draws per source task at the target sample
 size, we fit a reference network for 15 Adam steps at rate 0.01. Its
@@ -79,9 +79,10 @@ basis uses signed groups from $\mathbf A$ at the same rank, with at
 most four equal blocks per site. We compute the training gradient and
 the validation gradient for each version $v$ at that fit.
 
-For a given block, $\pi_v$ is the coefficient of the normalized
-gradient matrix for version $v$. Let $v_*$ index the version with the
-highest mean validation loss at the reference fits and set
+For a given block, $\pi_v$ weights validation sample $v$ in both the
+gradient and class statistics. Let $V$ be the number of validation
+samples and let $v_*$ index the one with the highest mean loss at the
+reference fits. Set
 $\omega_v=1/(2V)+\mathbf1_{\{v=v_*\}}/2$. At each site with at least
 $V$ blocks, assign one block to each version. Assign the $b$th
 block thereafter to the version maximizing $b\omega_v-n_v$, where $n_v$ is
@@ -93,29 +94,24 @@ the number of blocks already assigned to that version. We use
         \omega_v, & \text{fewer than $V$ blocks at the site}.
     \end{cases}
 \]
-The block's gradient matrix is
-\[
-    \widetilde{\mathbf K}_v=\operatorname{sym}\mathbb E[
-        \mathbf g_{\mathrm{train}}\mathbf g_{\mathrm{valid},v}^{\mathsf T}],
-    \qquad
-    \mathbf K=\sum_{v=1}^V\pi_v\,\frac{\widetilde{\mathbf K}_v}{\lVert\widetilde{\mathbf K}_v\rVert_F}.
-\]
 
 \subsubsection{Classification refits and evaluation}
 
-We compare the aSRR grid on development episodes, weighting the
-validation views equally. On MNIST, Aug-Omniglot, FC100 and WISDM, the
-Adam rates are 0.001, 0.003, 0.01 and 0.03, with 25, 75, 150 or 300
-steps. We average accuracy over two starts and break ties by validation
-cross-entropy. HAR uses the same rates, activation quantiles 0.1, 0.5
+For the final aSRR refit on MNIST, Aug-Omniglot, FC100 and WISDM,
+we compare Adam rates 0.001, 0.003, 0.01 and 0.03 with 25, 75, 150
+or 300 steps. We average accuracy over two starts. We break ties in
+the smallest improvement across validation samples by mean accuracy
+and then by validation cross-entropy. HAR uses the same rates,
+activation quantiles 0.1, 0.5
 and 0.9, and up to 1,000 steps. We retain three settings by validation
 cross-entropy and compare ensembles of 1, 4 and 16 predictions.
 
 For Aug-miniImageNet, we refine source checkpoints and refits on 1,152
-fresh development episodes. MSR-FC gains no further validation
-accuracy from 51,200 to 76,800 source updates. The selected refits use
-12 steps at rate 0.03 for aSRR, 10 at 0.045 for MSR-FC, 1,200 at 0.005
-for Yeh (soft) and 300 at 0.01 for Dense. For WSR, LUT-Q and Yeh (hard),
+development episodes. For the final aSRR refit we compare rates
+0.02, 0.03, 0.045 and 0.06 with 5, 8, 10, 12, 16, 25 or 75 steps.
+Development selects 8 steps at rate 0.045. The selected refits use
+10 steps at rate 0.045 for MSR-FC, 1,200 at 0.005 for Yeh (soft) and
+300 at 0.01 for Dense. For WSR, LUT-Q and Yeh (hard),
 we first select three indexators per method by mean validation
 accuracy and then refine the Adam rate and duration.
 
@@ -123,11 +119,7 @@ All methods refit on the same test episodes. Accuracy averages two
 fresh starts, with HAR using the selected ensemble. Paired intervals
 use participant means on HAR and WISDM, digit-pair means on toroidal
 MNIST and episodes conditional on the test class pools on FC100,
-Aug-Omniglot and Aug-miniImageNet. For the additional WISDM comparison,
-we split the remaining eligible participants into three disjoint test
-sets. aSRR and MSR-FC relearn their representations in each split and
-select settings on separate development participants. The training
-participants can overlap across splits.
+Aug-Omniglot and Aug-miniImageNet.
 
 \subsubsection{Classification baselines and controls}
 
@@ -172,15 +164,19 @@ matrix whose columns are the normalized, aligned task means, following
 the use of singular directions in BOLT~\citep{park2026bolt}. If the task means
 provide too few directions, we subtract each task mean from its
 aligned fits and take leading left singular vectors of the residuals
-after projection orthogonal to the means. The statistical basis uses
-$\lambda=0$ with $\mathbf U$ from the selected aSRR model. Both controls
-tune their refits on the common development episodes.
+after projection orthogonal to the means. The statistical basis uses a
+single generalized eigenspace per site, pooling the validation samples.
+On toroidal MNIST, its signal combines the normalized mean moment at
+weight $3/4$ with the normalized paired moment of centered class
+covariances at weight $1/4$. Both controls tune their refits on the
+common development episodes.
 
 \phantomsection\label{app:shuffle-control}
 The shuffled control permutes rows of $\mathbf B_g$ within each
-block, preserving group sizes and signs. We recompute the local basis
-with the same $\mathbf U$ and settings and average four permutations
-with matched refit settings and initialization seeds.
+block, preserving group sizes and signs. We recompute the principal
+angles to the same $\mathbf U$ and apply the selected rotation fractions.
+We average four permutations with matched refit settings and
+initialization seeds.
 
 \subsubsection{Frozen-anchor comparisons}
 
@@ -212,8 +208,8 @@ BOLT (diagonal) & 128 & 32.12 & 29.06 & 0.027 & 43.00 \\
 \end{tabular*}
 \end{table}
 
-On Aug-Omniglot, aSRR parameterizes the update with its basis from
-Table~\ref{tab:transfer-classification}. For aTLAS, we fit a Dense
+On Aug-Omniglot, the signed-group control parameterizes the update
+with the unrotated basis $\mathbf B(\mathbf 0)$ from aSRR. For aTLAS, we fit a Dense
 model from the anchor on each of the 48 source tasks and select 32
 updates by pivoted QR of their normalized vectors. Each neuron fits
 its own mixture at the original update scales. EigenLoRAx fits one
@@ -226,9 +222,9 @@ We select the EigenLoRAx dimensions and refits by averaging accuracy
 across both views on 192 development episodes. On each test episode,
 all three methods start from a zero update and fit its coefficients,
 hidden biases and the classifier on five clean training examples per
-class. The refits use 75 Adam steps at rates 0.03 for aSRR, 0.01 for
+class. The refits use 75 Adam steps at rates 0.03 for the signed groups, 0.01 for
 aTLAS and 0.003 for EigenLoRAx. The paired 95\% intervals for aTLAS
-minus aSRR are $[-0.28,0.19]$ points on clean images and $[1.29,1.81]$
+minus signed groups are $[-0.28,0.19]$ points on clean images and $[1.29,1.81]$
 on transformed images.
 
 \begin{table}[htbp]
@@ -242,7 +238,7 @@ $2{,}048$ first-layer parameters.}
 \toprule
 Method & Clean & Transformed \\
 \midrule
-\hyperref[alg:asrr]{aSRR with anchor} & \textbf{77.56} & \underline{49.98} \\
+\hyperref[alg:signed-merge]{Signed groups with anchor} & \textbf{77.56} & \underline{49.98} \\
 \href{https://arxiv.org/abs/2407.02880}{aTLAS}~\citep{zhang2024atlas} & \underline{77.51} & \textbf{51.53} \\
 \href{https://arxiv.org/abs/2502.04700}{EigenLoRAx}~\citep{kaushik2025eigenlorax} & 70.91 & 48.21 \\
 \bottomrule
