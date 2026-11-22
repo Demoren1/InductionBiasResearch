@@ -126,8 +126,7 @@ We look for ties among the input weights of a neuron that recur across
 neurons with the same inputs. The partition $\mathcal B$ specifies the
 blocks of neurons over which we pool this evidence. Each neuron has
 $r=m/H$ coefficients and uses the $d\times r$ basis of its block,
-where $d$ is its number of inputs. For linear regression we use one block
-over the given connections and set $r=m$.
+where $d$ is its number of inputs.
 
 \begin{algorithm}[H]
     \small
@@ -140,14 +139,13 @@ over the given connections and set $r=m$.
         episodes $\mathcal V$ and refit settings $\mathcal H$.}
     \KwOut{Shared basis $\mathbf B$ and refit setting $\widehat\eta$.}
     $(\overline{\mathbf W}_\tau)_\tau\gets
-        \operatorname{Align}(\text{column-normalized source fits})
-        \quad(\text{network})$\nllabel{line:asrr-align}\;
-    $r\gets m/H\quad(\text{network}),\qquad r\gets m\quad(\text{regression})$\;
+        \operatorname{Align}(\text{column-normalized source fits})$
+        \nllabel{line:asrr-align}\;
+    $r\gets m/H$\;
     Estimate the paired gradients and block weights $\pi_v$
         (Appendix~\ref{app:transfer-details})\;
     \ForEach{$b\in\mathcal B$}{
-        $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b),
-            \qquad Z_{p,\tau}\gets w_{\tau,p}\quad(\text{regression})$
+        $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b)$
             \nllabel{line:asrr-profiles}\;
         $\mathbf A\gets
             \dfrac{\mathbf Z\mathbf Z^{\mathsf T}}{\lVert\mathbf Z\mathbf Z^{\mathsf T}\rVert_F},
@@ -156,17 +154,13 @@ over the given connections and set $r=m$.
             \nllabel{line:asrr-affinities}\;
         $\mathbf B_g\gets\operatorname{SignedMerge}_r((\mathbf A+\mathbf K)/2)$
             \nllabel{line:asrr-groups}\;
-        $(\mathbf Q,\Sigma)\gets \text{\eqref{eq:asrr-moments}}
-            \quad(\text{classification}),\qquad
-            (\mathbf Q,\Sigma)\gets(\mathbf K,\mathbf I_d)
-            \quad(\text{regression})$\;
+        $(\mathbf Q,\Sigma)\gets \text{\eqref{eq:asrr-moments}}$\;
         $\mathbf U\gets\operatorname{GEV}_r(\mathbf Q,\Sigma),
             \qquad\mathbf B_b(\mathbf t)\gets\text{\eqref{eq:asrr-rotation}}$
             \nllabel{line:asrr-basis}\;
     }
     $\mathbf B(\mathbf t)\gets\displaystyle\bigoplus_{h=1}^H
-        \mathbf B_{b(h)}(\mathbf t)\quad(\text{network}),\qquad
-        \mathbf B(\mathbf t)\gets\mathbf B_b(\mathbf t)\quad(\text{regression})$
+        \mathbf B_{b(h)}(\mathbf t)$
         \nllabel{line:asrr-assemble}\;
     $\widehat{\mathbf t}\gets\operatorname{SPSA}(F,\mathbf 0)$
         \tcp*[r]{Section~\ref{sec:method-selection}}
@@ -288,11 +282,7 @@ validation data to estimate its ties and the directions for relaxing them.
 The expectation averages over source tasks and classes. We use the
 solutions to $\mathbf Q\mathbf u=\nu\Sigma\mathbf u$ with the $r$
 largest eigenvalues, favoring class differences relative to within-class
-variation. Their orthonormalized span gives $\mathbf U$. For linear
-regression, the squared-loss
-gradients at zero give the input--response moments. We use their paired
-matrix $\mathbf K$ in place of the class statistics and use the identity
-for $\Sigma$.
+variation. Their orthonormalized span gives $\mathbf U$.
 
 In line~\ref{line:asrr-basis}, we change the group basis gradually so
 that the number of fitted coefficients stays fixed. The SVD
@@ -341,11 +331,7 @@ improvement over that basis among the validation samples.
             -\operatorname{Acc}_v(\mathbf B(\mathbf0);\eta_0)\bigr].
     \label{eq:method-structure-selection}
 \end{equation}
-This favors rotations that help across the validation samples. For
-regression, we use the log ratio of the signed basis's mean squared
-error to that of the rotated basis, with ridge strength selected for
-each training sample size. We take the smallest improvement across
-the sample sizes.
+This favors rotations that help across the validation samples.
 
 Starting at zero, we estimate how to change the four fractions from
 opposite perturbations on the same development episodes with matched

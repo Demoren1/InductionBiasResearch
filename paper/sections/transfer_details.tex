@@ -6,15 +6,21 @@
 For each layout, we draw 96 source, 48 development and 160 test
 functions. Each source function has 96 Gaussian input vectors and
 independent response noise with standard deviation 0.05. We use 80
-examples for each least-squares source fit. For $\mathbf K$ and
-$\mathbf Q_1$, we split the 96 examples into training and validation
-halves.
+examples for each least-squares source fit.
+
+For this benchmark, aSRR uses all permitted connections as one block
+with $r=m$. Each source fit gives one column of $\mathbf Z$ in the
+connection order of the layout. We compute $\mathbf K$ from squared-loss
+gradients at zero, splitting the 96 examples into training and validation
+halves. The statistical directions use $\mathbf Q=\mathbf K$ and
+$\Sigma=\mathbf I_d$.
 
 Each development or test function has 96 noiseless evaluation
-examples. For aSRR we select one rotation using both training sample
-sizes and choose a ridge strength for each sample size. Paired
-intervals use the six layout means. Yeh and MSR-FC differentiate
-through source ridge refits.
+examples. For aSRR we select the ridge strength for each training sample
+size. We score a rotation by the smaller of the two log ratios of
+signed-basis to rotated-basis mean squared error. Paired intervals use
+the six layout means. Yeh and MSR-FC differentiate through source
+ridge refits.
 Meta-SP uses 80 training examples per source function and alternates
 updates of size $0.9/L$ on the source loss with SVD projections to rank
 54 over the given connections. Here $L$ is the largest eigenvalue

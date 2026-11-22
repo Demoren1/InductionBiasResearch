@@ -30,16 +30,21 @@ Once a structure has been selected, we hold it fixed and fit fresh
 coefficients and other numerical parameters on each target task.
 
 \begin{samepage}
-\noindent\textbf{Our contribution}:
+\noindent\textbf{Contributions}
 \begin{itemize}
-    \item We characterize when aligned ReLU matrices with nonzero weights
-        in the same positions determine the sharing groups. We give conditions
-        for exact recovery by Sign--Ratio Recovery (SRR) and for
-        recovering groups from partial observations across tasks.
-    \item We propose Approximate Sign--Ratio Recovery (aSRR,
-        Algorithm~\ref{alg:asrr}). It combines signed groups estimated
-        from aligned weights and gradients with directions estimated from
-        source examples. A rotation of the group basis controls the
-        relaxation at the target coefficient budget.
+    \item We give a necessary and sufficient criterion for when observed
+        weights across tasks uniquely determine the sharing groups among
+        candidate groupings, allowing task-specific coefficients and
+        unknown scales. We also show when partial observations across
+        tasks can determine the groups jointly.
+    \item We develop Sign--Ratio Recovery (SRR) and prove that it exactly
+        recovers all sharing groups and their relative signs under
+        conditions on the observed weight ratios and the co-occurrence
+        of codes.
+    \item We develop Approximate Sign--Ratio Recovery (aSRR) to turn
+        inferred sharing structure into a shared basis for fitting new
+        tasks at a fixed coefficient budget. We give conditions under
+        which aSRR recovers the ties found by SRR within a neuron and
+        bound their deviation after rotating the basis.
 \end{itemize}
 \end{samepage}

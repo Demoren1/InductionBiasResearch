@@ -1,21 +1,13 @@
-The connectivity and parameter-sharing structure of a neural network
-influences how well it generalizes from limited data. We study how
-solutions to related tasks can reveal structural constraints that
-remain useful when numerical parameters are learned afresh. We
-represent exact sharing by an indexator specifying permitted
-connections and signed groups of shared weights, with task-specific
-values supplied by a trainable codebook. For aligned ReLU weight matrices
-with nonzero entries in the same positions, we characterize when the observations
-uniquely determine the groups and give sufficient conditions for exact
-recovery by Sign--Ratio Recovery (SRR). For fitted dense networks,
-we propose Approximate Sign--Ratio Recovery (aSRR). It rotates
-the basis of signed groups toward directions estimated from source
-examples. Each new task fits its own coefficients in
-that basis. On a cross-correlation benchmark with known connections,
-aSRR recovers all signed groups in six layouts. On six real datasets,
-it attains the highest mean accuracy among the compared methods at
-matched sharing budgets, averaging the two test views on the
-augmented datasets. The statistical basis leads on transformed
-Aug-Omniglot test images, and MSR-FC leads on clean Aug-miniImageNet
-test images. The largest drop under group permutations occurs on
-clean Aug-Omniglot images.
+Inductive biases shape how neural networks generalize from limited
+data. Encoding these biases in network structure often requires domain
+expertise. Our central hypothesis is that structural regularities shared
+across solutions to related tasks provide an inductive bias for learning
+new tasks. We represent such structure by permitted connections and
+groups of weights tied up to sign. For aligned source weights with
+known connections, we characterize when the tasks jointly determine
+the groups despite neuron rescaling and give sufficient conditions for
+exact recovery by Sign--Ratio Recovery (SRR). For fitted networks,
+Approximate Sign--Ratio Recovery (aSRR) estimates the signed groups and
+rotates their basis toward directions learned from source examples,
+allowing the weights to deviate from exact ties. Each new task fits its
+own coefficients in the transferred basis.
