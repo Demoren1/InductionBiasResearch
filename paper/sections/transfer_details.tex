@@ -1,132 +1,250 @@
 \subsection{Transfer benchmark protocol}
 \label{app:transfer-details}
 
-\paragraph*{Source signals.}
-For each class in each source task, let $\mathbf a,\mathbf b$ be the
-support and query means, centered across classes within each sample.
-Let $C_S,C_Q$ be the analogous class-centered sample covariance
-matrices. Using the normalization and symmetrization in
-Equation~\eqref{eq:asrr-affinities}, we compute
+\subsubsection{Cross-correlation regression}
+
+For each layout, we draw 96 source, 48 development and 160 test
+functions. Each source function has 96 Gaussian input vectors and
+independent response noise with standard deviation 0.05. We use 80
+examples for each least-squares source fit. For $\mathbf K$ and
+$\mathbf Q_1$, we split the 96 examples into training and validation
+halves.
+
+Each development or test function has 96 noiseless evaluation
+examples. Development selects the basis and ridge strength separately
+for each training sample size. Paired intervals use the six layout
+means. Yeh and MSR-FC differentiate through source ridge refits.
+Meta-SP uses 80 training examples per source function and alternates
+updates of size $0.9/L$ on the source loss with SVD projections to rank
+54 over the given connections. Here $L$ is the largest eigenvalue
+across the normalized Gram blocks. We select its checkpoint and ridge
+strength on the same development functions.
+
+\subsubsection{Classification architecture and data splits}
+
+The classification network uses one hidden layer with coordinatewise
+ReLU $\rho(t)=\max\{t,0\}$,
 \[
-    M_1=\mathcal N\bigl(\operatorname{sym}\mathbb E[
-          \mathbf a\mathbf b^{\mathsf T}]\bigr),
-    \qquad
-    M_2=\mathcal N\bigl(\operatorname{sym}\mathbb E[C_S C_Q]\bigr).
+    f(\mathbf x)=\mathbf W_2^{\mathsf T}
+        \rho(\mathbf W_1^{\mathsf T}\mathbf x+\mathbf b_1)+\mathbf b_2,
 \]
-The averages include classes, source tasks and query views. At a
-site with $d$ inputs, let $\Sigma_0$ be the pooled within-class
-covariance. We use
-$\Sigma=\Sigma_0+0.03\max\{\operatorname{tr}(\Sigma_0)/d,10^{-8}\}\mathrm{Id}$.
+and sharing applies to the permitted connections in $\mathbf W_1$.
+A site consists of neurons that receive the same input coordinates.
 
-For the gradient signal, we draw eight support sets per source task at
-the target shot count. On each draw, we fit a reference network for
-15 Adam steps at rate 0.01. Its basis is the signed grouping from
-$\mathbf A$ alone, with the same rank and at most four equal blocks
-per site. We evaluate the gradients of the support and each query
-loss at the fitted weights. With $V$ query views, assign view $v$
-mass $\omega_v=1/(2V)+\mathbf1_{\{v=v_*\}}/2$, where $v_*$ has the
-largest mean query loss at these reference fits. If there are at
-least $V$ blocks, give one block to each view. For the $b$th block
-after that, give it to the view maximizing $b\omega_v-n_v$, where
-$n_v$ is its current count. This sets $\pi_v=1$ for the assigned view
-and zero for the others. With fewer than $V$ blocks, use
-$\pi_v=\omega_v$ in every block.
+Toroidal MNIST and Aug-Omniglot use 64 hidden neurons. We divide the 45
+MNIST digit pairs into 25 source, 10 development and 10 test pairs,
+splitting original images before applying a random circular shift and
+a fixed pixel permutation. We draw 2,000 two-way test episodes.
+Aug-Omniglot uses 48 source tasks, 192 development episodes and 768
+test episodes with disjoint character pools. Transformed images in
+validation and test use random resized crops, reflections and rotations up
+to $30^\circ$.
 
-\paragraph*{Cross-correlation.}
-For each layout we draw 96 source, 48 development and 160 test
-functions. Each source function has 96 Gaussian inputs and independent
-response noise with standard deviation 0.05. We fit its least-squares
-weights using 80 examples. For the gradient kernel and $M_1$, we
-evaluate squared-loss gradients at zero weights on two disjoint halves
-of the 96 examples. Each vector consists of input-response moments
-on the known support, up to the common loss constant. We use the
-normalized cross moment for both signals and an identity covariance.
-Each target function has 96 noiseless query examples. Development
-selects the basis and ridge strength separately for each support
-size. Paired intervals use the six layout means. Yeh and MSR-FC
-learn their representations by differentiating through ridge refits
-on source functions.
+FC100 and Aug-miniImageNet use 16 patches with eight neurons per patch
+and mean-pooled $4\times4$ RGB inputs. FC100 uses 16 source tasks,
+384 development episodes and 2,048 test episodes. Aug-miniImageNet
+uses the 64/16/20 class split of \citet{ravi2017optimization} and the
+same transformations as Aug-Omniglot. Each of 64 source tasks supplies
+64 clean training images and 30 validation images per class. Each
+validation image has a clean and a transformed view. We draw 2,048
+five-way test episodes with 15 test images per class.
 
-\paragraph*{Real-data episodes.}
-Toroidal MNIST and Aug-Omniglot use 64 hidden neurons. On MNIST we
-split the 45 digit pairs into 25 source, 10 development and 10 test
-pairs and separate the original images before applying a random
-circular shift and a fixed pixel permutation. The test set has
-2,000 two-way episodes. Aug-Omniglot uses 48 source tasks, 192
-development episodes and 768 test episodes with disjoint character
-pools. Its transformed queries use random resized crops,
-reflections and rotations of up to $30^\circ$.
+WISDM uses 18 activities and nonoverlapping 64-sample windows of the
+three smartwatch acceleration axes and their magnitude. The network
+has 32 hidden neurons across four sites. We use 27 source, 7
+development and 12 test participants with sufficient windows per
+activity. The 768 test episodes use early windows for training and
+later windows for testing.
 
-FC100 and Aug-miniImageNet use 16 local image patches with eight
-neurons per patch and mean-pooled $4\times4$ RGB inputs. FC100 uses
-16 source tasks, 384 development episodes and 2,048 test episodes.
-Aug-miniImageNet follows the 64/16/20 class split of
-\citet{ravi2017optimization} and the same query transformations as
-Aug-Omniglot. Each of its 64 source tasks supplies 64 clean support
-images and 30 paired query images per class. We use 2,048 held-out
-five-way test episodes with 15 queries per class. The Dense model
-has 6,144 first-layer weights.
+UCI HAR uses the original features and widths 561--16--6. We retain
+every second window within each subject and activity. Each of four
+source tasks pools four participants and uses 366 training windows
+and two separate validation samples of 78 windows for selecting Dense
+fits and building the shared structure, respectively. Five participants supply 96
+development episodes and nine supply 360 test episodes. Each test
+episode uses three training and five test windows per activity.
 
-On WISDM, we use 18
-activities and nonoverlapping 64-sample windows of the three smartwatch
-acceleration axes and their magnitude. The 32 hidden neurons are
-organized in four sites. We use 27 source, 7 development and 12 test
-participants after filtering for sufficient windows per activity.
-The 768 test episodes use early windows for fitting and later windows
-for queries.
+\subsubsection{Source signals for classification}
 
-On UCI HAR a 561--16--6 ReLU network receives the original features.
-We retain every second window within each subject and activity
-before drawing episodes. Each of four source tasks pools four
-participants and uses 366 fitting, 78 numerical-selection and 78
-additional source windows. The latter supply source queries.
-Five participants supply 96 development episodes and nine
-held-out participants supply 360 test episodes. Each test episode
-has three fitting and five query windows per activity.
-All six datasets use new test draws from the held-out pools.
+We retain three Dense fits per source task on FC100 and four on the
+other classification datasets. Let $v=1,\ldots,V$ index versions of
+the source validation sample. On Aug-Omniglot and Aug-miniImageNet,
+the two versions contain the same images before and after augmentation.
+The averages in~\eqref{eq:asrr-moments} include all versions. We set
+$\varepsilon=0.03\max\{\operatorname{tr}(\Sigma_0)/d,10^{-8}\}$.
 
-\paragraph*{Numerical selection.}
-We evaluate the full aSRR grid on development episodes. For MNIST,
-Aug-Omniglot, FC100 and WISDM we compare Adam rates 0.001, 0.003,
-0.01 and 0.03 and durations of 25, 75, 150 and 300 updates, averaging
-accuracy over two starts. We break accuracy ties by query
-cross-entropy. HAR uses the same four rates with activation
-quantiles 0.1, 0.5 and 0.9 and up to 1,000 Adam steps. We retain
-three settings by query cross-entropy and compare ensembles of
-1, 4 and 16 predictions.
+For each of eight training draws per source task at the target sample
+size, we fit a reference network for 15 Adam steps at rate 0.01. Its
+basis uses signed groups from $\mathbf A$ at the same rank, with at
+most four equal blocks per site. We compute the training gradient and
+the validation gradient for each version $v$ at that fit.
 
-On Aug-miniImageNet, we refine the source checkpoints and Adam
-settings on 1,152 fresh development episodes. The objective averages
-the two query accuracies. Training MSR-FC past 51,200 source updates
-through 76,800 updates gives no further development gain. The chosen
-refits use 12 updates at rate 0.03 for aSRR, 10 at 0.045 for MSR-FC,
-1,200 at 0.005 for Yeh (soft), and 300 at 0.01 for Dense.
+For a given block, $\pi_v$ is the coefficient of the normalized
+gradient matrix for version $v$. Let $v_*$ index the version with the
+highest mean validation loss at the reference fits and set
+$\omega_v=1/(2V)+\mathbf1_{\{v=v_*\}}/2$. At each site with at least
+$V$ blocks, assign one block to each version. Assign the $b$th
+block thereafter to the version maximizing $b\omega_v-n_v$, where $n_v$ is
+the number of blocks already assigned to that version. We use
+\[
+    \pi_v=
+    \begin{cases}
+        \mathbf1_{\{v\text{ assigned to the block}\}}, & \text{at least $V$ blocks at the site},\\
+        \omega_v, & \text{fewer than $V$ blocks at the site}.
+    \end{cases}
+\]
+The block's gradient matrix is
+\[
+    \widetilde{\mathbf K}_v=\operatorname{sym}\mathbb E[
+        \mathbf g_{\mathrm{train}}\mathbf g_{\mathrm{valid},v}^{\mathsf T}],
+    \qquad
+    \mathbf K=\sum_{v=1}^V\pi_v\,\frac{\widetilde{\mathbf K}_v}{\lVert\widetilde{\mathbf K}_v\rVert_F}.
+\]
 
-The baselines on the other datasets retain their previously selected
-representations and refit settings. All methods refit on the same
-new episodes. Test accuracy averages two fresh starts except on HAR,
-which uses each model's selected ensemble.
-Paired intervals use participant means on HAR and WISDM, digit-pair
-means on toroidal MNIST and episodes conditional on the held-out
-class pools on FC100, Aug-Omniglot and Aug-miniImageNet. For the additional WISDM
-check, we partition the other eligible participants into three
-disjoint test sets. Both methods learn their representations afresh
-within each split and select settings on separate development
-participants. The training participants can overlap across splits.
+\subsubsection{Classification refits and evaluation}
 
-For a shuffled control, we permute the rows of $\mathbf G$ within
-each block and recompute Equation~\eqref{eq:asrr-basis} at the same
-settings and with the same $\mathbf U$. This preserves group sizes
-and their signs. We average four permutations with matched refit
-settings and initialization seeds.
+We compare the aSRR grid on development episodes, weighting the
+validation views equally. On MNIST, Aug-Omniglot, FC100 and WISDM, the
+Adam rates are 0.001, 0.003, 0.01 and 0.03, with 25, 75, 150 or 300
+steps. We average accuracy over two starts and break ties by validation
+cross-entropy. HAR uses the same rates, activation quantiles 0.1, 0.5
+and 0.9, and up to 1,000 steps. We retain three settings by validation
+cross-entropy and compare ensembles of 1, 4 and 16 predictions.
 
-We retain three Dense fits per source task on FC100 and four per
-task on the other datasets. On MNIST, Aug-Omniglot, FC100 and WISDM,
-WSR and LUT-Q generate proposals from eight Dense initializations
-selected by source numerical-validation loss.
-WSR uses the proximal map with rewinding and LUT-Q updates a dictionary
-of nearest code values. Yeh learns blockwise probabilistic assignments
-through three inner updates. Its hard assignment maximizes total
-probability at the prescribed code count. MSR-FC learns a factorized
-basis. Both continuous baselines transfer the basis and fit fresh
-coefficients.
+For Aug-miniImageNet, we refine source checkpoints and refits on 1,152
+fresh development episodes. MSR-FC gains no further validation
+accuracy from 51,200 to 76,800 source updates. The selected refits use
+12 steps at rate 0.03 for aSRR, 10 at 0.045 for MSR-FC, 1,200 at 0.005
+for Yeh (soft) and 300 at 0.01 for Dense. For WSR, LUT-Q and Yeh (hard),
+we first select three indexators per method by mean validation
+accuracy and then refine the Adam rate and duration.
+
+All methods refit on the same test episodes. Accuracy averages two
+fresh starts, with HAR using the selected ensemble. Paired intervals
+use participant means on HAR and WISDM, digit-pair means on toroidal
+MNIST and episodes conditional on the test class pools on FC100,
+Aug-Omniglot and Aug-miniImageNet. For the additional WISDM comparison,
+we split the remaining eligible participants into three disjoint test
+sets. aSRR and MSR-FC relearn their representations in each split and
+select settings on separate development participants. The training
+participants can overlap across splits.
+
+\subsubsection{Classification baselines and controls}
+
+On the image datasets and WISDM, WSR and LUT-Q propose indexators from
+the best Dense fit on each of the eight source tasks with lowest
+validation loss. WSR uses the isotonic proximal map with
+rewinding~\citep{shakerinava2024weight}. We set the sparsity penalty to
+zero and select the proximal strength at each update to match the code
+budget. LUT-Q uses quantized forward passes and straight-through
+gradients. Each update reassigns weights to their nearest entries and
+recomputes dictionary means~\citep{cardinaux2018iteratively}. Both
+methods transfer indexators that occupy every code. The HAR LUT-Q
+dictionary uses signed copies of each coefficient and a fixed zero.
+
+Yeh's method~\citep{yeh2022equivariance} optimizes validation loss
+through source refits. On image datasets and WISDM, we differentiate
+through three inner updates and use entropy-regularized rectangular
+assignments per block. Hard decoding maximizes total assignment
+probability subject to occupying every code. The soft variant
+transfers an orthonormal basis of the learned span. On Aug-miniImageNet,
+the hard variant compares warm and random initializations, rates
+0.003 and 0.012, and checkpoints from 800 through 6,400 source
+updates. HAR uses signed assignments with a fixed zero, a 20-term
+Neumann hypergradient approximation and rowwise maximum-probability
+hard decoding. The selected HAR soft variant uses entropy and
+nuclear-norm penalties.
+
+MSR-FC~\citep{zhou2021meta} learns a first-layer reparameterization by
+differentiating validation loss through source refits. On image
+datasets and WISDM, it learns separable input and output factors. At
+transfer, we orthonormalize the input factors and absorb the invertible
+output factors into the coefficients. HAR uses an unconstrained basis.
+On Aug-Omniglot, development selects four input factors over one. Each
+$784\times32$ factor serves 16 neurons with separate coefficients.
+The original augmentation experiments use reparameterized convolutional
+networks with meta-learned initial values and SGD rates. Our
+Aug-miniImageNet source objective uses both validation views.
+
+\phantomsection\label{app:spectral-controls}
+For each neuron, Dense SVD takes leading left singular vectors of the
+matrix whose columns are the normalized, aligned task means, following
+the use of singular directions in BOLT~\citep{park2026bolt}. If the task means
+provide too few directions, we subtract each task mean from its
+aligned fits and take leading left singular vectors of the residuals
+after projection orthogonal to the means. The statistical basis uses
+$\lambda=0$ with $\mathbf U$ from the selected aSRR model. Both controls
+tune their refits on the common development episodes.
+
+\phantomsection\label{app:shuffle-control}
+The shuffled control permutes rows of $\mathbf B_g$ within each
+block, preserving group sizes and signs. We recompute the local basis
+with the same $\mathbf U$ and settings and average four permutations
+with matched refit settings and initialization seeds.
+
+\subsubsection{Frozen-anchor comparisons}
+
+Both comparisons use the Dense source fit with lowest validation loss
+as a fixed anchor. On Aug-miniImageNet, diagonal BOLT~\citep{park2026bolt}
+initializes 64 source refits from that anchor. For each of 16 patch
+matrices, we take one singular direction from each of the first eight
+updates, orthogonalize the left and right factors separately and
+initialize the diagonal from the projected updates of all 64 fits.
+BOLT fits a nonnegative diagonal on each target episode. Both methods
+fit fresh hidden biases and output weights. Development selects a
+diagonal initialization scale of 10 and 150 Adam steps at rate 0.09
+for BOLT, and 300 steps at 0.24 for the fixed anchor.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Diagonal BOLT on the Aug-miniImageNet episodes of
+Table~\ref{tab:transfer-classification}. Both methods transfer the same
+fixed Dense anchor. The budget counts adaptable first-layer
+coefficients. Preparation time includes the required source fits.}
+\label{tab:bolt-diagonal}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrrrr@{}}
+\toprule
+Method & Coefficients & Clean (\%) & Transformed (\%) & Basis (s) & Preparation (s) \\
+\midrule
+Fixed Dense anchor & 0 & 32.37 & 29.05 & \textemdash & 21.67 \\
+BOLT (diagonal) & 128 & 32.12 & 29.06 & 0.027 & 43.00 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+On Aug-Omniglot, aSRR parameterizes the update with its basis from
+Table~\ref{tab:transfer-classification}. For aTLAS, we fit a Dense
+model from the anchor on each of the 48 source tasks and select 32
+updates by pivoted QR of their normalized vectors. Each neuron fits
+its own mixture at the original update scales. EigenLoRAx fits one
+LoRA adapter per source task and applies centered PCA to the input and
+hidden factors separately. The selected rank and the number of
+principal directions per factor are both 32, giving two $32\times32$
+coefficient matrices.
+
+We select the EigenLoRAx dimensions and refits by averaging accuracy
+across both views on 192 development episodes. On each test episode,
+all three methods start from a zero update and fit its coefficients,
+hidden biases and the classifier on five clean training examples per
+class. The refits use 75 Adam steps at rates 0.03 for aSRR, 0.01 for
+aTLAS and 0.003 for EigenLoRAx. The paired 95\% intervals for aTLAS
+minus aSRR are $[-0.28,0.19]$ points on clean images and $[1.29,1.81]$
+on transformed images.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Test accuracy (\%) with a common frozen Dense anchor on
+the 768 Aug-Omniglot episodes of
+Table~\ref{tab:transfer-classification}. Each method fits
+$2{,}048$ first-layer parameters.}
+\label{tab:aug-omniglot-anchored}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrr@{}}
+\toprule
+Method & Clean & Transformed \\
+\midrule
+\hyperref[alg:asrr]{aSRR with anchor} & \textbf{77.56} & \underline{49.98} \\
+\href{https://arxiv.org/abs/2407.02880}{aTLAS}~\citep{zhang2024atlas} & \underline{77.51} & \textbf{51.53} \\
+\href{https://arxiv.org/abs/2502.04700}{EigenLoRAx}~\citep{kaushik2025eigenlorax} & 70.91 & 48.21 \\
+\bottomrule
+\end{tabular*}
+\end{table}

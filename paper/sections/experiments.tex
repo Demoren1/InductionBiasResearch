@@ -7,9 +7,11 @@ LUT-Q~\cite{cardinaux2018iteratively}, Yeh's method
 \cite{yeh2022equivariance}, and MSR-FC~\cite{zhou2021meta}.
 All sharing methods use the same first-layer coefficient budget
 within each experiment. Yeh (hard) transfers discrete assignments.
-Yeh (soft), MSR-FC and aSRR transfer fixed bases. Dense fits an
-independent weight at every active position. Each method fits
-fresh numerical parameters on the same target examples.
+Yeh (soft), MSR-FC and aSRR transfer fixed bases. Dense SVD and the
+statistical basis transfer directions from Dense fits and source
+statistics, respectively. Dense fits an independent weight for every
+permitted connection. Each method fits fresh numerical parameters on the
+same target examples.
 
 \subsection{Synthetic recovery and transfer}
 
@@ -19,57 +21,73 @@ Following the cross-correlation experiments of
 three offsets, 51 positions share one coefficient and 17 positions
 have their own, giving 54 independent coefficients. We draw six
 independent layouts of the exceptions and give every method the same
-support of 204 connections. The coefficients vary across functions.
-We fit them by ridge regression from one or five support examples
+204 permitted connections. The coefficients vary across functions.
+We fit them by ridge regression from one or five training examples
 on each new function.
 
 \input{sections/transfer_linear_results.tex}
 
 Development selects $\lambda=1$ and $\beta=0$ in all six layouts
-at both support sizes. aSRR recovers every signed pair in all six
+at both training sample sizes. aSRR recovers every signed pair in all six
 layouts, and WSR recovers five layouts
-(Table~\ref{tab:transfer-linear}). With one example, mean query
-MSE is 0.1566 for aSRR and 0.1743 for MSR-FC. The paired reduction
-is 0.0177 with a 95\% interval of $[0.0159,0.0194]$ across layouts.
-With five examples, Dense can estimate each of the three weights
-per output on the known support and reaches near-zero query error.
+(Table~\ref{tab:transfer-linear}). With one training example, mean test
+MSE is 0.1566 for aSRR, 0.1743 for MSR-FC and 0.1742 for
+Meta-SP~\citep{zhang2026metasp}. The paired 95\% intervals for the
+reduction with aSRR are $[0.0159,0.0194]$ against MSR-FC and
+$[0.0160,0.0194]$ against Meta-SP across layouts.
+With five training examples, Dense can estimate all three permitted
+weights per output and reaches near-zero test MSE.
 
 \subsection{Transfer on real data}
 
-We hold out digit pairs on toroidal MNIST, with cyclic shifts and a
-fixed pixel permutation following~\citet{shakerinava2024weight}.
-On Aug-Omniglot and Aug-miniImageNet~\cite{zhou2021meta}, we adapt
-on clean images and evaluate the same query images in clean and
-transformed form.
-FC100~\cite{oreshkin2018tadam} holds out image superclasses. UCI
-HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} hold out
-participants. Appendix~\ref{app:transfer-details} gives the splits
-and refit protocol.
+On toroidal MNIST, we split tasks by digit pair, using cyclic shifts
+and a fixed pixel permutation following~\citet{shakerinava2024weight}.
+On Aug-Omniglot and Aug-miniImageNet~\cite{zhou2021meta}, we fit on
+clean training images. We evaluate clean and transformed views of
+each validation image and each test image.
+FC100~\cite{oreshkin2018tadam} splits tasks by image superclass.
+UCI HAR~\cite{reyes2013har} and WISDM~\cite{weiss2019wisdm} split by
+participant. Appendix~\ref{app:transfer-details} gives the splits and
+refit protocol.
 
 The common development rule selects $\lambda=1$ on Aug-Omniglot
-and $\lambda=1/8$ on the other five datasets. The query allocation
-uses four clean and twelve transformed blocks on Aug-Omniglot.
+and $\lambda=1/8$ on the other five datasets. On Aug-Omniglot,
+four blocks use clean validation images and twelve use transformed
+validation images.
 On the common test episodes in Table~\ref{tab:transfer-classification},
-aSRR improves over Yeh (soft) by 2.35 percentage points on toroidal
-MNIST, 2.61 and 1.12 on the two Aug-Omniglot query sets, and 6.22 on
-HAR. It improves over MSR-FC by 1.22 points on FC100 and by 0.53
-on WISDM. The paired 95\% interval on WISDM is $[-0.18,1.23]$.
+aSRR improves over the statistical basis by 1.25 percentage points on
+toroidal MNIST, 0.73 on FC100 and 0.33 on HAR. On WISDM, aSRR improves
+over MSR-FC by 0.53 points with a paired 95\% interval of $[-0.18,1.23]$.
 In three additional splits covering 34 other test participants,
 both methods are retrained and aSRR gains 0.79 points
 with interval $[0.50,1.09]$.
-On Aug-miniImageNet, MSR-FC leads by 0.18 points on clean queries
-($[0.01,0.36]$), and aSRR leads by 0.55 on transformed queries
+
+On Aug-Omniglot, aSRR leads Dense SVD by 0.32 points on clean test images
+($[0.07,0.58]$). The statistical basis leads aSRR by 2.54 points on
+transformed test images ($[2.05,3.03]$), while aSRR leads by 14.72 points
+on clean test images.
+With a common frozen Dense anchor, aTLAS gains 1.55 percentage
+points over aSRR on transformed Aug-Omniglot test images, with a
+difference of $-0.05$ points on clean test images
+(Table~\ref{tab:aug-omniglot-anchored}).
+On Aug-miniImageNet, MSR-FC leads by 0.18 points on clean test images
+($[0.01,0.36]$), and aSRR leads by 0.55 on transformed test images
 ($[0.37,0.73]$). Averaging both views gives aSRR a 0.18-point
 advantage ($[0.05,0.32]$).
+At the same budget, aSRR improves over the statistical basis $\mathbf U$
+by 0.75 points on clean test images and 0.71 on transformed test
+images. The gains over Dense SVD are 1.61 and 2.36 points, respectively.
+Table~\ref{tab:bolt-diagonal} gives the results of diagonal BOLT with
+128 coefficients and a fixed Dense anchor.
 
 \input{sections/transfer_classification_results.tex}
 
 Rebuilding the basis after permuting the groups reduces accuracy
 by 4.20 and 3.91 points on the clean and transformed Aug-Omniglot
-queries and by 0.24 on HAR. The corresponding paired 95\% intervals
+test images and by 0.24 on HAR. The corresponding paired 95\% intervals
 are $[3.90,4.50]$, $[3.58,4.23]$ and $[0.09,0.39]$. On
-Aug-miniImageNet the reductions are 0.16 points on clean queries
-($[0.04,0.27]$) and 0.19 on transformed queries ($[0.08,0.31]$).
+Aug-miniImageNet the reductions are 0.16 points on clean test images
+($[0.04,0.27]$) and 0.19 on transformed test images ($[0.08,0.31]$).
 These differences measure the contribution of the learned group
 assignments at the same coefficient budget. The paired intervals
 include zero on toroidal MNIST, FC100 and WISDM.

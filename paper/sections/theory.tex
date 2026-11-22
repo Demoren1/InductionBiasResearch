@@ -18,36 +18,13 @@ stability and selection on new tasks.
 \subsection{Information preserved by neuron rescaling}
 \label{sec:theory-observations}
 
-Consider the ReLU layer of Section~\ref{sec:method-relu-instance},
-with the source neurons already correctly aligned across tasks.
-Fix the set $\mathcal E$ of active input--neuron connections and
-give its $E=|\mathcal E|$ positions a fixed ordering. A position
-$p=(i,h)$ connects input $i$ to neuron $h$. We write $h(p)$ for
-its neuron when comparing positions. We retain only neurons with an
-active incoming connection and number them $1,\ldots,H$.
-
-For each of the $T\ge1$ source tasks, write
-$\mathbf w_\tau\in(\mathbb R\setminus\{0\})^E$ for the observed
-weights at these active indices after alignment. These are the
-source observations used by SRR in Section~\ref{sec:method-srr}.
-
-The unknown indexator has grouping $g$ and signs $\sigma_p$ as in
-Section~\ref{sec:method-relu-instance}. Each of the $m$ groups is
-nonempty. On any one task, let $c_j\ne0$ be the value of code $j$
-and $s_h>0$ the scale of neuron $h$. At a position $p=(i,h)$ in
-group $j=g(p)$, the observed weight satisfies
-\begin{equation}
-    w_p=\frac{C_{I_p}}{s_h}=\frac{\sigma_p c_j}{s_h}.
-    \label{eq:theory-observation}
-\end{equation}
-Each task has its own code values and scales. The scale accounts for
-the positive rescaling of a ReLU neuron's incoming weights and bias
-with reciprocal rescaling of its outgoing weights
-\cite[Sec.~2.3]{stock2022embedding}. Column normalization changes
-only this scale. With one code per active position ($m=E$), setting
-all signs and scales to $1$ and taking $c_p=w_p$ fits any observations.
-The structural assumption is that one grouping explains every task
-within the prescribed code budget.
+We use the observation model~\eqref{eq:theory-observation} from
+Section~\ref{sec:method-srr}. Fix an ordering of $\mathcal E$ and
+collect the $E=|\mathcal E|$ nonzero weights on task $\tau$ in
+$\mathbf w_\tau\in(\mathbb R\setminus\{0\})^E$. Column normalization
+changes only the scales. With one code per index ($m=E$),
+setting all signs and scales to $1$ and taking $c_p=w_p$ fits any
+observations.
 
 For $\mathbf x\in\mathbb R^E$, define the centering operator
 $\boldsymbol\Pi:\mathbb R^E\to\mathbb R^E$ by
@@ -55,7 +32,7 @@ $\boldsymbol\Pi:\mathbb R^E\to\mathbb R^E$ by
     (\boldsymbol\Pi\mathbf x)_p
         :=x_p-\operatorname{mean}_{q:\,h(q)=h(p)}x_q ,
 \end{equation*}
-where $q$ ranges over active weight indices.
+where $q$ ranges over $\mathcal E$.
 Applied to log magnitudes, it removes the unknown neuron scales.
 The centered observations are
 \begin{equation}
@@ -95,8 +72,8 @@ Thus indices in the same group have the same normalized profile.
 \subsection{Exact and generic identification}
 \label{sec:theory-recovery}
 
-Let $\mathcal G$ be a finite family of candidate groupings of the
-active positions, including the true grouping $g$. Group labels are
+Let $\mathcal G$ be a finite family of candidate groupings of
+$\mathcal E$, including the true grouping $g$. Group labels are
 arbitrary. We compare partitions up to renaming. For a candidate
 $g'$, we use primes on quantities built from that grouping. Thus
 $m'$ is its number of groups and $\mathcal S'$ is the space
@@ -111,7 +88,7 @@ in~\eqref{eq:theory-contrast-space} with $g'$ in place of $g$.
     \begin{equation*}
         w_{\tau,p}=\frac{\sigma'_p c_{\tau,j}}{s_{\tau,h}}
     \end{equation*}
-    at every active position $p=(i,h)$ with candidate label $j=g'(p)$.
+    at every $p=(i,h)\in\mathcal E$ with candidate label $j=g'(p)$.
     Code values and scales are fitted separately on each task for this partition.
 \end{definition}
 
@@ -171,7 +148,7 @@ first estimating $\mathcal S$.
 For a grouping $g$, define its bipartite
 \emph{calibration graph} $G$ as follows.
 Its parts are the $m$ code groups and the $H$ neurons.
-Each active weight index $p$ gives an edge joining its code vertex
+Each index $p\in\mathcal E$ gives an edge joining its code vertex
 $g(p)$ to its neuron vertex $h(p)$.
 Distinct weight indices give separate edges even when their endpoints
 coincide.
@@ -223,8 +200,8 @@ is connected.
     component of $G_j$. If all these graphs are connected,
     SRR recovers the indexator up to code renaming and a choice of
     sign for each group. Under this connectivity condition the
-    contrast space alone determines the groups among groupings of
-    the same active positions and neurons with $m$ used codes.
+    contrast space alone identifies the grouping among partitions of
+    $\mathcal E$ into $m$ groups with the same neuron assignment.
 \end{theorem}
 
 Full span rules out accidental coincidences between log ratios of
@@ -234,18 +211,12 @@ for SRR. Any accidental zero or equality of distinct ordered
 log-code differences imposes one of finitely many proper hyperplane
 constraints. Appendix~\ref{app:theory-pairs} proves both claims.
 
-For a block of Algorithm~\ref{alg:asrr}, the profiles $\mathbf z_i$
-are known after alignment and normalization. When two inputs have
-the same fixed signed relation in each neuron of the block, both
-coordinates of their profiles are divided by the same scale in each
-neuron and task.
-
 \begin{lemma}[Exact recovery by signed merging]
     \label{lem:theory-signed-merge}
-    Suppose the profiles in a block satisfy
-    $\mathbf z_i=\sigma_i\boldsymbol\mu_j$ for each $i$ in group $j$,
-    with $r$ nonempty groups, $\sigma_i\in\{-1,1\}$ and
-    $\boldsymbol\mu_j\ne\mathbf0$. Suppose also that
+    Suppose the rows of $\mathbf Z$ in a block of Algorithm~\ref{alg:asrr}
+    satisfy $\mathbf Z_{i,\cdot}=\sigma_i\boldsymbol\mu_{g(i)}^{\mathsf T}$
+    for a grouping $g$ of the inputs into $r$ nonempty groups, with
+    $\sigma_i\in\{-1,1\}$ and $\boldsymbol\mu_j\ne\mathbf0$. Suppose also that
     $\|\boldsymbol\mu_j\pm\boldsymbol\mu_k\|_2>0$ for $j\ne k$.
     At $\beta=0$,
     $\operatorname{SignedMerge}_r$ recovers the partition and its
@@ -254,9 +225,9 @@ neuron and task.
 \end{lemma}
 
 \begin{proof}
-    For the profile Gram matrix, a merge with relative sign
+    For the Gram matrix $\mathbf A$, merging groups $C$ and $C'$ with relative sign
     $s\in\{-1,1\}$ has cost proportional to
-    $\frac{|C||E|}{|C|+|E|}\|\boldsymbol\mu_C-s\boldsymbol\mu_E\|_2^2$,
+    $\frac{|C||C'|}{|C|+|C'|}\|\boldsymbol\mu_C-s\boldsymbol\mu_{C'}\|_2^2$,
     where the means use the current signs. Equation~\eqref{eq:asrr-merge}
     minimizes this cost over $s$. If both clusters lie in one true group
     and their signs are correct up to a common flip in each cluster,
@@ -264,8 +235,9 @@ neuron and task.
     merge across true groups has strictly positive cost. Starting
     from singletons, at least one zero-cost merge is available until
     there are $r$ groups. Induction gives the true groups and their
-    relative signs. At $\lambda=1$, Equation~\eqref{eq:asrr-basis}
-    gives their indicator basis with one free coefficient per group.
+    relative signs. At $\lambda=1$, the construction in
+    Section~\ref{sec:method-asrr} uses $\mathbf B_g$ as the local basis,
+    with one free coefficient per group.
 \end{proof}
 
 A signed merge removes one direction from the span of the current
@@ -360,9 +332,8 @@ $f_\tau(\mathbf x)=\rho
     (\mathbf w_\tau^{\mathsf T}\mathbf x)$
 on four input coordinates, with at most two positive weight codes.
 Let $\mathbf e_p$ denote the $p$th coordinate vector.
-Task $\tau\in\{1,2,3\}$ has input support
-$\{\mathbf e_\tau,\mathbf e_{\tau+1}\}$, and its function is known
-there with values
+The possible inputs for task $\tau\in\{1,2,3\}$ are
+$\{\mathbf e_\tau,\mathbf e_{\tau+1}\}$, with known responses
 $$
     f_\tau(\mathbf e_\tau)=1,\qquad
     f_\tau(\mathbf e_{\tau+1})=2.
@@ -402,13 +373,16 @@ code. On the first two tasks $x_2=0$, so incoming weights $(1,1)$ and
 $(1,-1)$ give the same predictions. On the third task all four inputs
 in $\{0,1\}^2$ have positive probability. Suppose the retained Dense
 fits use $(1,-1)$ on the first two tasks and $(1,1)$ on the third.
-All three fits are exact. After column normalization, the two
-coordinate profiles in Algorithm~\ref{alg:asrr} are
+All three fits are exact. After column normalization, Algorithm~\ref{alg:asrr}
+uses
 \[
-    \mathbf z_1=(1,1,1)^{\mathsf T}/\sqrt{2},\qquad
-    \mathbf z_2=(-1,-1,1)^{\mathsf T}/\sqrt{2}.
+    \mathbf Z=\frac{1}{\sqrt{2}}
+    \begin{pmatrix}
+        1&1&1\\
+        -1&-1&1
+    \end{pmatrix}.
 \]
-Their inner product is $-1/2$, so the profile-only merge assigns
+The rows have inner product $-1/2$, so with $\beta=0$ the merge assigns
 opposite signs to the two weights that share the code. The resulting network
 depends on $x_1-x_2$ alone and gives the same prediction at $(0,0)$
 and $(1,1)$, where the

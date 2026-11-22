@@ -1,9 +1,9 @@
 \section{Proofs and structural details}
 \label{app:theory-proofs}
 
-The analysis uses the active weight indices and neuron correspondence
-of Section~\ref{sec:theory-observations}. Active code values are
-nonzero, scales are positive, and every used code has a nonempty group.
+The analysis uses the nonzero weight indices $\mathcal E$ and neuron
+assignment $h(p)$ from Section~\ref{sec:method-srr}. Code values are
+nonzero, scales are positive, and every group is nonempty.
 Write $g$ for the true grouping and $g'$ for a candidate grouping.
 On a single task write
 $u_j=\log|c_j|$ and $v_h=\log s_h$ for log code magnitudes and
@@ -33,8 +33,8 @@ With $\mathrm{Id}$ the identity on $\mathbb R^E$, the centering matrix
         (\mathbf N^{\mathsf T}\mathbf N)^{-1}\mathbf N^{\mathsf T}
     \label{eq:theory-centering}
 \end{equation}
-subtracts from each entry the mean of all entries associated with
-active incoming connections of the same neuron.
+subtracts from each entry the mean over the indices in $\mathcal E$
+that belong to the same neuron.
 Define $\mathbf M:=\boldsymbol\Pi\mathbf U$, so
 $\mathcal S=\operatorname{Im}\mathbf M$. Before centering, the space
 of log magnitudes is $\mathcal V:=\operatorname{Im}[\mathbf U,-\mathbf N]$.
@@ -333,8 +333,8 @@ no repeated code pairs.
 
 \begin{corollary}[Identification from a sufficiently diverse source set]
     \label{cor:theory-task-diversity}
-    Let $\mathcal G$ be a finite set of candidate groupings on the
-    fixed active weight indices and neurons, containing $g$.
+    Let $\mathcal G$ be a finite set of candidate groupings of
+    $\mathcal E$, including $g$, with the neuron assignment fixed.
     Suppose each candidate uses $m$ codes and has contrast dimension
     $r$, every $G_j$ is connected, and
     $\operatorname{rank}\mathbf Y=r$.
@@ -424,8 +424,9 @@ no repeated code pairs.
     have the same image as $\mathbf D$, and $G'_{\mathrm{code}}$ is
     connected. Their real cycle spaces on the labelled edges agree.
 
-    Minimal nonempty supports in a real cycle space are the simple
-    cycles. Hence the edge correspondence preserves cycles.
+    The minimal nonempty sets of edges with nonzero coordinates in
+    real cycle vectors are the edge sets of simple cycles. Hence the
+    edge correspondence preserves cycles.
     The shared cycles place all edges of $G'_{\mathrm{code}}$ in one
     2-connected block, and every vertex is used.
     Whitney's theorem for a 3-connected graph makes this
@@ -436,9 +437,9 @@ no repeated code pairs.
     where $\mathbf F$ is diagonal with entries in $\{-1,1\}$.
 
     Equality of incidence images makes the cycle space invariant
-    under $\mathbf F$. On a simple cycle, the cycle vectors
-    supported there form a one-dimensional space, so all entries
-    of $\mathbf F$ on that cycle agree.
+    under $\mathbf F$. Cycle vectors with zeros outside a given simple
+    cycle form a one-dimensional space, so all entries of $\mathbf F$
+    on that cycle agree.
     In a 2-connected graph all edges are linked by common cycles;
     thus $\mathbf F$ is either the identity or its negative.
 
@@ -493,7 +494,7 @@ $$
         g' &: (1,2,3),\ (4,2),\ (1,4).
     \end{aligned}
 $$
-The lists refer to the same active weight indices in each neuron.
+The lists refer to the same nonzero weight indices in each neuron.
 Number the neurons $1,2,3$. Keep $u_1,u_2,u_3,v_1$ and set
 \[
     u'_4=u_1+u_2-u_4,\qquad
@@ -537,7 +538,7 @@ Orient every edge of $G$ from its code to its neuron,
 choose a spanning forest, and consider the cycle formed by each
 edge outside that forest.
 The cycle matrix $\mathbf R$ has $E-m-H+\kappa$ rows, one per
-fundamental cycle, and one column per active position. Each row
+fundamental cycle, and one column per index in $\mathcal E$. Each row
 has coefficient $+1$ or $-1$ on its cycle according to the edge
 orientation and zero elsewhere. These signs record traversal
 direction. The assignment sign at a position is $\sigma_p$.
@@ -558,7 +559,7 @@ Equality can be tested in the reverse direction with a rank check:
 
 \begin{theorem}[Exact criterion for magnitude equivalence]
     \label{thm:theory-cycle-equivalence}
-    On the fixed active weight indices and neurons,
+    For fixed $\mathcal E$ and $h(p)$,
     \begin{equation}
         \mathcal S'=\mathcal S
         \quad\Longleftrightarrow\quad
@@ -663,8 +664,8 @@ Equal groups at the two observed indices would force equal
 responses, contradicting the values $1$ and $2$.
 Conversely, any assignment of different groups to those indices
 fits the two responses by choosing its own codes as $1$ and $2$.
-The remaining weights do not affect the function on that task's
-input support. Hence each task supplies exactly one neighbouring
+The remaining weights do not affect the function at the two inputs
+of that task. Hence each task supplies exactly one neighbouring
 difference. The three tasks form a connected path and determine
 the two groups. They admit a common realization: tasks $1$ and $3$
 use code $1$ on odd indices and code $2$ on even indices; task $2$
@@ -911,7 +912,7 @@ For spaces of equal rank, the residual projector norm equals
 the norm of the difference of projectors.
 
 To control the logarithmic error, let $a>0$ satisfy
-$|w_{\tau,p}|\ge a$ at all active weight indices and across tasks.
+$|w_{\tau,p}|\ge a$ for all $p\in\mathcal E$ and all tasks $\tau$.
 Let $\Delta\mathbf W\in\mathbb R^{E\times T}$
 collect their weight errors, each of magnitude at most $a/2$.
 The logarithm is Lipschitz with constant $2/a$ on the relevant
@@ -931,7 +932,7 @@ condition
 \end{equation*}
 The denominator captures group size, while the singular value
 captures excitation by the source tasks.
-Small active weights amplify logarithmic errors.
+Small weight magnitudes amplify logarithmic errors.
 Using this condition for fitted models requires an error bound
 for their aligned weights.
 
@@ -1039,8 +1040,7 @@ Consider two unsigned assignments on two inputs and four neurons:
     \label{eq:appendix-theory-ambiguous-pair}
 \end{equation}
 Both calibration graphs are connected and use three codes.
-Identifying a vector indexed by active connections with a $2\times4$ matrix,
-their common contrast space consists of
+In the $2\times4$ matrix layout, their common contrast space is
 \begin{equation*}
     \left\{
     \begin{pmatrix}
@@ -1166,8 +1166,8 @@ probability to be at most $\delta$ is
         \log_2\frac{\binom m2}{\delta}
         \right\rceil.
 \end{equation*}
-This statement isolates sign diversity; the observation model
-still assumes correct support and neuron correspondence.
+The observation model assumes the correct set of weight indices
+$\mathcal E$ and neuron correspondence.
 
 For noisy raw sign profiles, let $d_H$ denote Hamming distance and define
 distance up to a common sign by
@@ -1201,7 +1201,7 @@ The set of allowed sign vectors is the affine binary space
 
 \begin{proposition}[Complete oriented weight information]
     \label{prop:theory-complete-signs}
-    With fixed active weight indices and neurons, two models have the
+    With fixed $\mathcal E$ and $h(p)$, two models have the
     same families of nonzero weights modulo positive neuron
     scales exactly when both their contrast spaces and their
     affine sign spaces agree.

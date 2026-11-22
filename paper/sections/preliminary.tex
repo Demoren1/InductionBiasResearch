@@ -20,11 +20,13 @@ pairs $(\mathbf x,y)$. Source and target tasks share input and output
 spaces and are drawn independently from a common task environment
 \cite{baxter2000model}. We learn sharing constraints on the source
 tasks and assess their transfer on the target tasks.
-For each task, a \emph{training sample} $S_\tau^{\mathrm{train}}$ is used to
-fit numerical parameters, and an independent \emph{validation sample}
-$S_\tau^{\mathrm{valid}}$ is used to compare the fitted predictors
-\cite{finn2017model,zhou2021meta}. Conditional on $\tau$, both samples
-consist of independent draws from $P_\tau$.
+For a task $\tau$, we fit numerical parameters on the \emph{training
+sample} $S_\tau^{\mathrm{train}}$. We compare fitted predictors on a
+\emph{validation sample} $S_\tau^{\mathrm{valid}}$ during structure
+learning and selection~\cite{finn2017model,zhou2021meta}. We report
+final performance on a separate \emph{test sample} $S_\tau^{\mathrm{test}}$.
+Conditional on $\tau$, the samples consist of independent draws from
+$P_\tau$.
 For a predictor $f$ and a loss $\ell$, the population risk
 $R_\tau(f)$ and empirical loss $\mathcal L_S(f)$ average that loss
 over the task distribution and a sample $S$, respectively.
@@ -106,6 +108,7 @@ averages the best training loss on each task under a fixed indexator.
 On each target task the corresponding fitting objective is
 $\inf_{f\in\mathcal F_{\widehat{\mathbf I}}}\mathcal L_{S^{\mathrm{train}}}(f)$.
 Each task has its own numerical parameters, so these optima can be
-averaged over target tasks. We measure transfer by the mean validation
-loss of the predictors obtained after fitting. Section~\ref{sec:method-selection}
-gives the selection rule used with a finite bank and a numerical solver.
+averaged over target tasks. Section~\ref{sec:method-selection} gives
+the selection rule based on validation loss after fitting with a
+finite bank and a numerical solver. We measure final transfer on the
+test samples.

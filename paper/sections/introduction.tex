@@ -20,9 +20,9 @@ Our focus is on discovering connectivity and weight-sharing constraints that rem
 
 In this paper, we study multi-task structure learning by extracting
 shared constraints from solutions to related tasks. For exact recovery,
-an indexator specifies the active connections, shared code values and
+an indexator specifies permitted connections, weight-sharing groups and
 fixed signs. For transfer from fitted networks, we construct a shared
-first-layer basis whose span can include the signed group directions.
+weight basis whose span can include the signed group directions.
 
 Our central hypothesis is that structural regularities shared across
 source solutions can improve learning from limited data on new tasks.
@@ -32,8 +32,8 @@ coefficients and other numerical parameters on each target task.
 \begin{samepage}
 \noindent\textbf{Our contribution}:
 \begin{itemize}
-    \item We characterize when aligned ReLU weights on known active
-        connections determine the sharing groups. We give conditions
+    \item We characterize when aligned ReLU matrices with nonzero weights
+        in the same positions determine the sharing groups. We give conditions
         for exact recovery by Sign--Ratio Recovery (SRR) and for
         recovering groups from partial observations across tasks.
     \item We propose Approximate Sign--Ratio Recovery (aSRR,

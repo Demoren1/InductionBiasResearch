@@ -1,6 +1,39 @@
 \section{Implementation and experimental protocols}
 \label{app:relu-details}
 
+\subsection{aSRR implementation settings}
+\label{app:asrr-construction}
+
+We use a denominator floor of $10^{-12}$ for both column normalization
+and Frobenius normalization. At each site, we divide the neurons into
+equal contiguous blocks. The block count is the largest divisor of the
+site width up to $16$.
+
+The diagonal of $\Omega$ has $r$ equally spaced entries from $1$ to $0.9$.
+The candidate grid uses $\alpha\in\{0,1/4\}$, $\beta\in\{0,1/2\}$ and
+$\lambda\in\{1/8,1/2,1\}$, with a single $\alpha$ at $\lambda=1$.
+Regression uses the first moment with $\alpha=0$.
+
+\paragraph*{Alignment.}
+The $\operatorname{Align}$ step in Algorithm~\ref{alg:asrr} uses
+neuron permutations within each site~\cite[Sec.~2.1]{zhou2023permutation}.
+For weight matrices $X,Y$, let $P(X,Y)$ be the within-site permutation
+maximizing $\langle XP,Y\rangle_F$, computed by the Hungarian algorithm.
+Write $s_\tau=\arg\min_s\ell_{\tau s}$ and
+$\tau_*=\arg\min_\tau\ell_{\tau s_\tau}$ for the reference indices. The
+routine returns the aligned means
+\[
+    \begin{aligned}
+        \widetilde{\mathbf W}_\tau
+            &=\operatorname{mean}_s\!
+                \left[\mathbf X_{\tau s}P(\mathbf X_{\tau s},
+                    \mathbf X_{\tau s_\tau})\right],\\
+        \overline{\mathbf W}_\tau
+            &=\widetilde{\mathbf W}_\tau
+                P(\widetilde{\mathbf W}_\tau,\mathbf X_{\tau_*s_{\tau_*}}).
+    \end{aligned}
+\]
+
 \input{sections/transfer_details.tex}
 
 \subsection{Compatibility among alternative indexators}
@@ -8,7 +41,7 @@
 
 Consider a bank of indexators in a common neuron order and let
 $V_\tau$ retain all candidates within $\varepsilon$ of the best
-held-out loss on task $\tau$ after refitting. For an indexator
+validation loss on task $\tau$ after refitting. For an indexator
 $\mathbf I$, let $\mathcal R(\mathbf I)$ be its fixed zero
 connections and signed equalities. Write $\operatorname{Max}$
 for the inclusion-maximal sets of a family. The maximal
@@ -30,9 +63,9 @@ every step.
 In Pattern, a task asks whether an 11-bit input contains a given
 4-bit substring. The source bank contains 14 four-code indexators
 from Dense fits and source responses. For each of 12 tasks, we fit
-on 768 examples and score the binary Brier loss on 384 held-out
+on 768 training examples and score the binary Brier loss on 384 validation
 examples. With $\varepsilon=0.01$, the recurrence returns one
 maximal set. It matches the teacher at all 88 positions up to
 neuron permutation, code relabeling and groupwise sign flips.
-These positions comprise 32 active weights and 56 fixed zeros.
+The teacher has 32 permitted connections and 56 weights fixed at zero.
 The result is recovery within the proposal bank.

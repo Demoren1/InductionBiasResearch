@@ -1,12 +1,12 @@
 \section{Conclusion}
 
-Approximate Sign--Ratio Recovery builds a shared first-layer basis
+Approximate Sign--Ratio Recovery builds a shared weight basis
 from signed groups and directions estimated from source examples.
 Validation sets the strength of the group constraint after fresh
 refits. Each new task learns its own coefficients in the selected basis.
 
-For aligned source weights with fixed active connections, we characterize
-exact recovery through scale-invariant magnitudes and sign profiles.
+For aligned source matrices with nonzero weights in the same positions,
+we characterize exact recovery through scale-invariant magnitudes and sign profiles.
 A condition on the graph of co-occurring codes gives uniqueness even
 when no pair of codes repeats across neurons.
 For partial observations, a completion criterion and a functional
@@ -15,10 +15,11 @@ determine the groups jointly. Recovery from erroneous pairwise
 relations additionally requires sufficient redundancy between
 the observed parts.
 
-With known support, aSRR recovers the signed groups in all six
+With known connections, aSRR recovers the signed groups in all six
 cross-correlation layouts. At matched sharing budgets, aSRR has the
-highest mean accuracy on the six real datasets when both query views
-are averaged on the augmented datasets. On Aug-miniImageNet, aSRR
-leads on transformed queries and MSR-FC leads on clean queries.
+highest mean accuracy on the six real datasets when both test views
+are averaged on the augmented datasets. The statistical basis leads
+on transformed Aug-Omniglot test images, and MSR-FC leads on clean
+Aug-miniImageNet test images.
 Permuting group assignments reduces accuracy on Aug-Omniglot,
 Aug-miniImageNet and HAR.
