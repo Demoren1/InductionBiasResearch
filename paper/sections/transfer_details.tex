@@ -79,27 +79,29 @@ the two validation samples contain the same images before and after
 augmentation. For Equation~\eqref{eq:asrr-moments}, we set
 $\varepsilon=0.03\max\{\operatorname{tr}(\sum_v\pi_v\Sigma_v)/d,10^{-8}\}$.
 
-For each of eight training draws per source task at the target sample
-size, we fit a reference network for 15 Adam steps at rate 0.01. Its
-basis uses signed groups from $\mathbf A$ at the same rank, with at
-most four equal blocks per site. We compute the training gradient and
-the validation gradient for each version $v$ at that fit.
+For the preliminary bases in Algorithm~\ref{alg:asrr}, each site
+uses the largest of $1,2,4$ that divides its number of neurons as the
+number of equal blocks. For each of eight training draws per source
+task at the target sample size, we fit a network in these bases for
+15 Adam steps at rate 0.01. At that fit, we compute the training
+gradient and the gradient for each validation sample $v$.
 
 For a given block, $\pi_v$ weights validation sample $v$ in both the
 gradient and class statistics. Let $V$ be the number of validation
 samples and let $v_*$ index the one with the highest mean loss at the
 reference fits. Set
 $\omega_v=1/(2V)+\mathbf1_{\{v=v_*\}}/2$. At each site with at least
-$V$ blocks, assign one block to each version. Assign the $b$th
-block thereafter to the version maximizing $b\omega_v-n_v$, where $n_v$ is
+$V$ blocks, assign one block to each version. Assign the $j$th
+block thereafter to the version maximizing $j\omega_v-n_v$, where $n_v$ is
 the number of blocks already assigned to that version. We use
-\[
+\begin{equation}
     \pi_v=
     \begin{cases}
         \mathbf1_{\{v\text{ assigned to the block}\}}, & \text{at least $V$ blocks at the site},\\
         \omega_v, & \text{fewer than $V$ blocks at the site}.
     \end{cases}
-\]
+    \label{eq:asrr-block-weights}
+\end{equation}
 
 \subsubsection{Classification refits and evaluation}
 

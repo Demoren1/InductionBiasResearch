@@ -104,15 +104,86 @@ relative to a representative.
     \Return $(\mathbf I,m)$\;
 \end{algorithm}
 
+\subsection{Greedy signed merging}
+\label{sec:method-signed-merge}
+
+Fitting errors perturb the ratios used by SRR. A symmetric score matrix
+$M\in\mathbb R^{d\times d}$ lets us compare candidate ties at a budget of
+$r$ codes. Both indices of $M_{ij}$ refer to positions in a neuron's
+weight column. Algorithm~\ref{alg:signed-merge} assigns each position
+to one of $r$ groups and gives it a sign.
+
+Increasing the code for a group $C$ by one changes weight $i$ by
+$\sigma_i\in\{-1,1\}$ if $i\in C$ and by zero otherwise. We divide this
+change by its length $\sqrt{|C|}$ to compare unit changes across groups.
+Call the resulting vector $\mathbf u_C$. We score it by
+\[
+    \mathbf u_C^{\mathsf T}M\mathbf u_C
+        =\frac{1}{|C|}\sum_{i,j\in C}\sigma_i M_{ij}\sigma_j.
+\]
+Each entry $M_{ij}$ is multiplied by the changes at both positions
+$i$ and $j$. This leaves the square submatrix indexed by $C$, with
+$M_{ij}$ added for equal signs and subtracted for opposite signs.
+The two factors of $1/\sqrt{|C|}$ give the denominator $|C|$.
+
+The total score adds the scores of the current groups. To join $C$ and
+$C'$, we keep the signs in $C$ and multiply all the signs in $C'$ by $s$.
+The choices $s=1$ and $s=-1$ keep and reverse the signs in $C'$,
+respectively. Both choices preserve the relative signs within each
+group. The merged direction $\mathbf u_s$ and the change in total score
+are
+\begin{equation}
+    \begin{aligned}
+        \mathbf u_s&=
+            \frac{\sqrt{|C|}\,\mathbf u_C+s\sqrt{|C'|}\,\mathbf u_{C'}}
+            {\sqrt{|C|+|C'|}},\qquad s\in\{-1,1\},\\
+        \Delta_s(C,C')&=\mathbf u_s^{\mathsf T}M\mathbf u_s
+            -\mathbf u_C^{\mathsf T}M\mathbf u_C
+            -\mathbf u_{C'}^{\mathsf T}M\mathbf u_{C'}.
+    \end{aligned}
+    \label{eq:asrr-merge}
+\end{equation}
+We start with one group and sign $+1$ per weight. At each step we try
+both values of $s$ for every pair of current groups, then accept the
+pair and sign with the largest $\Delta_s(C,C')$. We stop at $r$ groups.
+
+The algorithm orders the final groups by their smallest weight index
+and returns their directions as the columns of $\mathbf B_g$.
+Row $i$ has one nonzero entry. Its column gives the group $g(i)$ and
+its sign gives $\sigma_i$. For one neuron, the label in the signed
+indexator of Section~\ref{sec:method-srr} is
+$g(i)+r\mathbf 1_{\{\sigma_i=-1\}}$.
+
+\begin{algorithm}[H]
+    \small
+    \DontPrintSemicolon
+    \SetAlgoNoEnd
+    \caption{Greedy signed merging}
+    \label{alg:signed-merge}
+    \KwIn{Symmetric $M\in\mathbb R^{d\times d}$ and group count $r$.}
+    \KwOut{Signed group basis $\mathbf B_g\in\mathbb R^{d\times r}$.}
+    $\mathcal C\gets\{\{i\}:1\le i\le d\},\qquad
+        \mathbf u_{\{i\}}\gets\mathbf e_i$\;
+    \While{$|\mathcal C|>r$}{
+        $(C,C',s)\gets\arg\max_{C,C'\in\mathcal C,\,\min C<\min C',\,
+            s\in\{-1,1\}}\Delta_s(C,C')$\;
+        $\mathbf u_{C\cup C'}\gets\mathbf u_s$\;
+        $\mathcal C\gets(\mathcal C\setminus\{C,C'\})\cup\{C\cup C'\}$\;
+    }
+    \Return $[\mathbf u_C]_{C\in\mathcal C}$ in order of smallest index\;
+\end{algorithm}
+
 \subsection{Approximate Sign--Ratio Recovery (aSRR)}
 \label{sec:method-asrr}
 
-SRR tests exact matches of log ratios. When the source weights are fitted
-from data, even small errors can break those matches. aSRR scores how well
-the fitted weights support the same signed ties. It also uses the source
-examples to find directions in which relaxing those ties may improve
-refitting. Algorithm~\ref{alg:asrr} starts from the signed groups and
-selects how far to rotate their basis on separate development tasks.
+Algorithm~\ref{alg:asrr} first uses signed merging
+(Section~\ref{sec:method-signed-merge}) to form groups from fitted
+source weights. It refits on the source tasks with those groups and
+measures training and validation gradients at these fits. The final
+groups use both the weight and gradient scores. The algorithm rotates
+their basis toward directions estimated from source examples to let
+weights within a group change by different amounts at the same budget.
+Refits on separate development tasks determine how far to rotate.
 
 Stack the $P$ connection weights of $\mathbf W_\tau$ column by column
 to form $\mathbf w_\tau$. The algorithm returns a shared basis
@@ -122,31 +193,46 @@ the parameterization
 \[
     \mathbf w_\tau=\mathbf B\mathbf c_\tau.
 \]
-We look for ties among the input weights of a neuron that recur across
+We look for ties among the weights of a neuron that recur across
 neurons with the same inputs. The partition $\mathcal B$ specifies the
 blocks of neurons over which we pool this evidence. Each neuron has
 $r=m/H$ coefficients and uses the $d\times r$ basis of its block,
-where $d$ is its number of inputs.
+where $d$ counts the weights in its column.
 
-\begin{algorithm}[H]
+\begin{algorithm}[t]
     \small
     \DontPrintSemicolon
     \SetAlgoNoEnd
     \caption{Approximate Sign--Ratio Recovery (aSRR)}
     \label{alg:asrr}
     \KwIn{Dense source fits and their validation losses, source training and
-        validation samples, blocks $\mathcal B$, budget $m$, development
-        episodes $\mathcal V$ and refit settings $\mathcal H$.}
+        validation samples, preliminary blocks, final blocks $\mathcal B$,
+        budget $m$, development episodes $\mathcal V$ and refit settings $\mathcal H$.}
     \KwOut{Shared basis $\mathbf B$ and refit setting $\widehat\eta$.}
     $(\overline{\mathbf W}_\tau)_\tau\gets
         \operatorname{Align}(\text{column-normalized source fits})$
         \nllabel{line:asrr-align}\;
     $r\gets m/H$\;
-    Estimate the paired gradients and block weights $\pi_v$
-        (Appendix~\ref{app:transfer-details})\;
+    \ForEach{preliminary block $b$ (Appendix~\ref{app:transfer-details})}{
+        $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b)$\;
+        $\mathbf A\gets
+            \dfrac{\mathbf Z\mathbf Z^{\mathsf T}}{\lVert\mathbf Z\mathbf Z^{\mathsf T}\rVert_F},
+            \qquad\mathbf B_{\mathrm{ref},b}\gets\operatorname{SignedMerge}_r(\mathbf A)$
+            \nllabel{line:asrr-reference-groups}\;
+    }
+    $f_{\mathrm{ref}}(S)\gets\operatorname{Refit}((\mathbf B_{\mathrm{ref},b})_b,S)$
+        \nllabel{line:asrr-reference-refit}\tcp*[r]{each source train draw $S$}
+    $(\mathbf g_{\rm train},\mathbf g_v)_{S,h}\gets
+        \bigl(\nabla_{\mathbf W_{\cdot h}}\mathcal L_S(f_{\mathrm{ref}}(S)),
+        \ \nabla_{\mathbf W_{\cdot h}}\mathcal L_{S_v^{\mathrm{valid}}}(f_{\mathrm{ref}}(S))\bigr)$\;
+    $v_*\gets\arg\max_v\mathbb E_S[\mathcal L_{S_v^{\mathrm{valid}}}(f_{\mathrm{ref}}(S))]$\;
     \ForEach{$b\in\mathcal B$}{
         $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b)$
             \nllabel{line:asrr-profiles}\;
+        $\widetilde{\mathbf K}_v\gets\operatorname{sym}\mathbb E_{S,\,h\in b}
+            [\mathbf g_{\rm train}\mathbf g_v^{\mathsf T}],
+            \qquad\pi_v\gets\text{\eqref{eq:asrr-block-weights}}$
+            \nllabel{line:asrr-gradient-moment}\;
         $\mathbf A\gets
             \dfrac{\mathbf Z\mathbf Z^{\mathsf T}}{\lVert\mathbf Z\mathbf Z^{\mathsf T}\rVert_F},
             \qquad \mathbf K\gets\displaystyle\sum_v\pi_v\,
@@ -170,94 +256,78 @@ where $d$ is its number of inputs.
     \Return $(\mathbf B(\gamma\widehat{\mathbf t}),\widehat\eta)$\;
 \end{algorithm}
 
-Line~\ref{line:asrr-align} removes the positive column scale that cancels
-in SRR's ratios. For a nonzero column, define
+Line~\ref{line:asrr-align} of Algorithm~\ref{alg:asrr} removes the
+positive column scale that cancels in SRR's ratios. For a nonzero column,
+define
 \[
     \bigl(\operatorname{ColNorm}(\mathbf W)\bigr)_{\cdot h}
         =\frac{\mathbf W_{\cdot h}}{\lVert\mathbf W_{\cdot h}\rVert_2}.
 \]
 For a zero column the result is zero. The alignment puts all fits in
 a common neuron order and returns one average matrix per task
-(Appendix~\ref{app:asrr-construction}). In line~\ref{line:asrr-profiles},
-each row of $\mathbf Z$ collects the weights of one input across tasks and
-neurons in the block. If two inputs pass SRR's zero-log-ratio test
+(Appendix~\ref{app:asrr-construction}).
+
+Line~\ref{line:asrr-profiles} builds one matrix $\mathbf Z$ per block
+$b$. From each $\overline{\mathbf W}_\tau$ we take the submatrix with
+columns indexed by $b$ and rows for their $d$ common inputs.
+Placing these $T$ submatrices of size $d\times\lvert b\rvert$ side by
+side gives $\mathbf Z\in\mathbb R^{d\times(T\lvert b\rvert)}$.
+For a fully connected layer with equal blocks, this gives
+$D$ rows and $TH/\lvert\mathcal B\rvert$ columns. Each row contains
+the weights of one input across all tasks and neurons in $b$. If two
+inputs pass SRR's zero-log-ratio test
 \eqref{eq:method-srr-ratio} with the same relative sign in every neuron of
 the block, their rows agree up to that sign. This is the relation we
 approximate when we group the rows.
 
-For a group $C=\{i:g(i)=j\}$, one coefficient changes all the weights in
-$C$ with their fixed signs $\sigma_i$. Dividing this vector of signs by
-its length makes the corresponding column a unit direction
-\[
-    (\mathbf B_g)_{ij}=\frac{\sigma_i\,\mathbf 1_{\{g(i)=j\}}}{\sqrt{|C|}},
-    \qquad \sigma_i\in\{-1,1\}.
-\]
-The groups are disjoint, so $\mathbf B_g\mathbf B_g^{\mathsf T}$ projects
-onto the weights satisfying the ties. The contribution from $\mathbf A$
-in line~\ref{line:asrr-groups} scores how well this projection reconstructs
-$\mathbf Z$.
+The score matrix $\mathbf A$ measures how well signed groups
+reconstruct the fitted weights in $\mathbf Z$. For a unit group
+direction $\mathbf u_C$, its score
+$\mathbf u_C^{\mathsf T}\mathbf A\mathbf u_C$ is proportional to
+$\|\mathbf u_C^{\mathsf T}\mathbf Z\|_2^2$. This squared norm is the
+reduction in squared reconstruction error from fitting one coefficient
+along $\mathbf u_C$ to each column of $\mathbf Z$. The group directions
+are orthonormal, so the reductions add across groups.
 
 A tie can fit the source weights well and still obstruct learning on a
 new task. We therefore also score the predicted change in validation
-loss after a training step along a group direction $\mathbf u$. At the
-same reference fit, write $\mathbf g_{\rm train}$ and $\mathbf g_v$ for
-the gradients with respect to the weights of one neuron on the training sample and
-on validation sample $v$. The first-order decrease per unit step is
-$(\mathbf u^{\mathsf T}\mathbf g_{\rm train})
-(\mathbf u^{\mathsf T}\mathbf g_v)$. Averaging over tasks, training
-draws and neurons gives the score $\mathbf u^{\mathsf T}
-\widetilde{\mathbf K}_v\mathbf u$, where
+loss after a training step along a group direction $\mathbf u$.
+
+Line~\ref{line:asrr-reference-groups} uses $\mathbf A$ in
+Algorithm~\ref{alg:signed-merge} to form the preliminary groups. With
+group $g(i)$ and sign $\sigma_i$ at row $i$ in neuron $h$'s block, the
+signed indexator assigns
 \[
-    \widetilde{\mathbf K}_v=\operatorname{sym}\mathbb E[
-        \mathbf g_{\rm train}\mathbf g_v^{\mathsf T}],
-    \qquad \operatorname{sym}(X)=(X+X^{\mathsf T})/2.
+    I_{ih}=(h-1)r+g(i)+m\,\mathbf 1_{\{\sigma_i=-1\}}.
 \]
-The reference fit uses groups from the aligned weights and is fitted on
-the training sample. Line~\ref{line:asrr-affinities} normalizes the
-weight score and each paired moment by their Frobenius norms, taking a
-zero matrix to itself. The weights $\pi_v$ assign validation samples
+The offset $(h-1)r$ gives each neuron its own codes. The normalization
+by $\sqrt{|C|}$ is absorbed into the code values.
+
+For each source training draw $S$, $\operatorname{Refit}$ in
+line~\ref{line:asrr-reference-refit} fits
+fresh parameters on $S$ in these bases using the short optimization
+schedule in Appendix~\ref{app:transfer-details}. At this fit,
+$\mathbf g_{\rm train}$ and $\mathbf g_v$ are the gradients with
+respect to the weights of neuron $h$ on $S$ and on its validation
+sample $S_v^{\mathrm{valid}}$. The first-order decrease per unit step is
+$(\mathbf u^{\mathsf T}\mathbf g_{\rm train})
+(\mathbf u^{\mathsf T}\mathbf g_v)$. Line~\ref{line:asrr-gradient-moment}
+averages this score over source draws and neurons in the block, giving
+$\mathbf u^{\mathsf T}\widetilde{\mathbf K}_v\mathbf u$ with
+$\operatorname{sym}(X)=(X+X^{\mathsf T})/2$.
+Line~\ref{line:asrr-affinities} normalizes the weight score and each
+paired moment by their Frobenius norms, taking a zero matrix to itself.
+The weights $\pi_v$ assign validation samples
 to blocks. Half of the allocation is uniform across samples and half
 goes to the sample with the highest reference loss. With one
 validation sample, its weight is one.
 
-Algorithm~\ref{alg:signed-merge} merges two groups at a time to maximize
-the increase of the total score $\operatorname{tr}(\mathbf B_g^{\mathsf T}
-M\mathbf B_g)$, with $M=(\mathbf A+\mathbf K)/2$. For groups $C,C'$
-with unit directions $\mathbf u,\mathbf u'$, the merged direction and
-score change for relative sign $s$ are
-\begin{equation}
-    \begin{aligned}
-        \mathbf u_s&=\frac{\sqrt{|C|}\,\mathbf u+s\sqrt{|C'|}\,\mathbf u'}
-            {\sqrt{|C|+|C'|}},\qquad s\in\{-1,1\},\\
-        \Delta_s&=\mathbf u_s^{\mathsf T}M\mathbf u_s
-            -\mathbf u^{\mathsf T}M\mathbf u
-            -\mathbf u'^{\mathsf T}M\mathbf u'.
-    \end{aligned}
-    \label{eq:asrr-merge}
-\end{equation}
-This leaves $r$ signed groups. With the weight score alone, the rule
-reduces to Ward's criterion with a relative sign
-\citep{ward1963hierarchical}. Lemma~\ref{lem:theory-signed-merge}
-states when it recovers the groups exactly.
-
-\begin{algorithm}[H]
-    \small
-    \DontPrintSemicolon
-    \SetAlgoNoEnd
-    \caption{Greedy signed merging}
-    \label{alg:signed-merge}
-    \KwIn{Symmetric $M\in\mathbb R^{d\times d}$ and group count $r$.}
-    \KwOut{Signed group basis $\mathbf B_g\in\mathbb R^{d\times r}$.}
-    $\mathcal C\gets\{\{i\}:1\le i\le d\},\qquad
-        \mathbf u_{\{i\}}\gets\mathbf e_i$\;
-    \While{$|\mathcal C|>r$}{
-        $(C,C',s)\gets\arg\max_{C,C'\in\mathcal C,\,\min C<\min C',\,
-            s\in\{-1,1\}}\Delta_s$\;
-        $\mathbf u_{C\cup C'}\gets\mathbf u_s$\;
-        $\mathcal C\gets(\mathcal C\setminus\{C,C'\})\cup\{C\cup C'\}$\;
-    }
-    \Return $[\mathbf u_C]_{C\in\mathcal C}$ in order of smallest index\;
-\end{algorithm}
+Line~\ref{line:asrr-groups} calls Algorithm~\ref{alg:signed-merge} again
+with $M=(\mathbf A+\mathbf K)/2$. Each block uses its own $\mathbf A$
+and $\mathbf K$ and obtains its own groups. With $M=\mathbf A$, the
+merging rule gives Ward's criterion with a relative sign
+\citep{ward1963hierarchical}. Lemma~\ref{lem:theory-signed-merge} states
+when it recovers the groups exactly.
 
 Allowing weights within a group to change by different amounts can help
 when a new task needs distinctions that the source ties suppress. We
