@@ -184,28 +184,28 @@ per group gives the neuron's weight column.
 \subsection{Approximate Sign--Ratio Recovery (aSRR)}
 \label{sec:method-asrr}
 
-Algorithm~\ref{alg:asrr} first uses signed merging
-(Section~\ref{sec:method-signed-merge}) to form groups from fitted
-source weights. It refits on the source tasks with those groups and
-measures training and validation gradients at these fits. The final
-groups use both the weight and gradient scores. The algorithm rotates
-their basis toward directions estimated from source examples to let
-weights within a group change by different amounts at the same budget.
-Refits on separate development tasks determine how far to rotate.
+aSRR estimates the within-neuron ties of SRR from Dense fits on source
+tasks. It scores how well a shared coefficient represents the fitted
+weights and how much updating that coefficient on train is predicted
+to lower validation loss. Algorithm~\ref{alg:asrr} uses these scores for
+signed merging (Section~\ref{sec:method-signed-merge}) and then rotates
+the group basis to relax the ties at a fixed budget of $m$ coefficients.
 
-Stack the $P$ connection weights of $\mathbf W_\tau$ column by column
-to form $\mathbf w_\tau$. The algorithm returns a shared basis
-$\mathbf B\in\mathbb R^{P\times m}$, which is fixed when we fit
-$\mathbf c_\tau\in\mathbb R^m$ on a new task's training sample under
-the parameterization
+We collect the $P$ weights to be constrained in a vector
+$\mathbf w_\tau\in\mathbb R^P$, in the column order of $\mathbf W_\tau$.
+The output is a basis $\mathbf B\in\mathbb R^{P\times m}$ shared across
+tasks. On a new task, we fix $\mathbf B$ and fit
+$\mathbf c_\tau\in\mathbb R^m$ on its training sample under the
+parameterization
 \[
     \mathbf w_\tau=\mathbf B\mathbf c_\tau.
 \]
-We look for ties among the weights of a neuron that recur across
-neurons with the same inputs. The partition $\mathcal B$ specifies the
-blocks of neurons over which we pool this evidence. Each neuron has
-$r=m/H$ coefficients and uses the $d\times r$ basis of its block,
-where $d$ counts the weights in its column.
+
+We pool evidence for ties across neurons with the same input positions.
+Let $\mathcal B$ be the partition into these blocks and $b(h)$ the block
+containing neuron $h$. Each block provides a $d\times r$ basis, where
+$d$ counts its common input positions and $r=m/H$ is the number of
+coefficients per neuron.
 
 \begin{algorithm}[t]
     \small
@@ -215,47 +215,39 @@ where $d$ counts the weights in its column.
     \label{alg:asrr}
     \KwIn{Dense source fits and their validation losses, source training and
         validation samples, preliminary blocks, final blocks $\mathcal B$,
-        budget $m$, development episodes $\mathcal V$ and refit settings $\mathcal H$.}
+        budget $m$, development episodes and refit settings $\mathcal H$.}
     \KwOut{Shared basis $\mathbf B$ and refit setting $\widehat\eta$.}
     $(\overline{\mathbf W}_\tau)_\tau\gets
-        \operatorname{Align}(\text{column-normalized source fits})$
-        \nllabel{line:asrr-align}\;
+        \operatorname{Align}(\text{column-normalized source fits})$\;
     $r\gets m/H$\;
     \ForEach{preliminary block $b$ (Appendix~\ref{app:transfer-details})}{
         $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b)$\;
         $\mathbf A\gets
             \dfrac{\mathbf Z\mathbf Z^{\mathsf T}}{\lVert\mathbf Z\mathbf Z^{\mathsf T}\rVert_F},
-            \qquad\mathbf B_{\mathrm{ref},b}\gets\operatorname{SignedMerge}_r(\mathbf A)$
-            \nllabel{line:asrr-reference-groups}\;
+            \qquad\mathbf B_{\mathrm{ref},b}\gets\operatorname{SignedMerge}_r(\mathbf A)$\;
     }
     $f_{\mathrm{ref}}(S)\gets\operatorname{Refit}((\mathbf B_{\mathrm{ref},b})_b,S)$
-        \nllabel{line:asrr-reference-refit}\tcp*[r]{each source train draw $S$}
+        \tcp*[r]{each source train draw $S$}
     $(\mathbf g_{\rm train},\mathbf g_v)_{S,h}\gets
         \bigl(\nabla_{\mathbf W_{\cdot h}}\mathcal L_S(f_{\mathrm{ref}}(S)),
         \ \nabla_{\mathbf W_{\cdot h}}\mathcal L_{S_v^{\mathrm{valid}}}(f_{\mathrm{ref}}(S))\bigr)$\;
     $v_*\gets\arg\max_v\mathbb E_S[\mathcal L_{S_v^{\mathrm{valid}}}(f_{\mathrm{ref}}(S))]$\;
     \ForEach{$b\in\mathcal B$}{
-        $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b)$
-            \nllabel{line:asrr-profiles}\;
+        $Z_{i,(\tau,h)}\gets(\overline{\mathbf W}_\tau)_{ih}\quad(h\in b)$\;
         $\widetilde{\mathbf K}_v\gets\operatorname{sym}\mathbb E_{S,\,h\in b}
             [\mathbf g_{\rm train}\mathbf g_v^{\mathsf T}],
-            \qquad\pi_v\gets\text{\eqref{eq:asrr-block-weights}}$
-            \nllabel{line:asrr-gradient-moment}\;
+            \qquad\pi_v\gets\text{\eqref{eq:asrr-block-weights}}$\;
         $\mathbf A\gets
             \dfrac{\mathbf Z\mathbf Z^{\mathsf T}}{\lVert\mathbf Z\mathbf Z^{\mathsf T}\rVert_F},
             \qquad \mathbf K\gets\displaystyle\sum_v\pi_v\,
-            \dfrac{\widetilde{\mathbf K}_v}{\lVert\widetilde{\mathbf K}_v\rVert_F}$
-            \nllabel{line:asrr-affinities}\;
-        $\mathbf B_g\gets\operatorname{SignedMerge}_r((\mathbf A+\mathbf K)/2)$
-            \nllabel{line:asrr-groups}\;
+            \dfrac{\widetilde{\mathbf K}_v}{\lVert\widetilde{\mathbf K}_v\rVert_F}$\;
+        $\mathbf B_g\gets\operatorname{SignedMerge}_r((\mathbf A+\mathbf K)/2)$\;
         $(\mathbf Q,\Sigma)\gets \text{\eqref{eq:asrr-moments}}$\;
         $\mathbf U\gets\operatorname{GEV}_r(\mathbf Q,\Sigma),
-            \qquad\mathbf B_b(\mathbf t)\gets\text{\eqref{eq:asrr-rotation}}$
-            \nllabel{line:asrr-basis}\;
+            \qquad\mathbf B_b(\mathbf t)\gets\text{\eqref{eq:asrr-rotation}}$\;
     }
     $\mathbf B(\mathbf t)\gets\displaystyle\bigoplus_{h=1}^H
-        \mathbf B_{b(h)}(\mathbf t)$
-        \nllabel{line:asrr-assemble}\;
+        \mathbf B_{b(h)}(\mathbf t)$\;
     $\widehat{\mathbf t}\gets\operatorname{SPSA}(F,\mathbf 0)$
         \tcp*[r]{Section~\ref{sec:method-selection}}
     $\gamma\gets\max\bigl(\{2^{-j}:0\le j\le 8,\,
@@ -264,89 +256,88 @@ where $d$ counts the weights in its column.
     \Return $(\mathbf B(\gamma\widehat{\mathbf t}),\widehat\eta)$\;
 \end{algorithm}
 
-Line~\ref{line:asrr-align} of Algorithm~\ref{alg:asrr} removes the
-positive column scale that cancels in SRR's ratios. For a nonzero column,
-define
-\[
-    \bigl(\operatorname{ColNorm}(\mathbf W)\bigr)_{\cdot h}
-        =\frac{\mathbf W_{\cdot h}}{\lVert\mathbf W_{\cdot h}\rVert_2}.
-\]
-For a zero column the result is zero. The alignment puts all fits in
-a common neuron order and returns one average matrix per task
+We normalize each fitted weight column to remove the positive scale that
+cancels in SRR's ratios. A nonzero column $\mathbf W_{\cdot h}$ becomes
+$\mathbf W_{\cdot h}/\lVert\mathbf W_{\cdot h}\rVert_2$, and a zero column
+contributes zero. We align and average the normalized fits within each
+task, then put the task averages in a common neuron order. This gives
+one matrix $\overline{\mathbf W}_\tau$ per source task
 (Appendix~\ref{app:asrr-construction}).
 
-Line~\ref{line:asrr-profiles} builds one matrix $\mathbf Z$ per block
-$b$. From each $\overline{\mathbf W}_\tau$ we take the submatrix with
-columns indexed by $b$ and rows for their $d$ common inputs.
-Placing these $T$ submatrices of size $d\times\lvert b\rvert$ side by
-side gives $\mathbf Z\in\mathbb R^{d\times(T\lvert b\rvert)}$.
-For a fully connected layer with equal blocks, this gives
-$D$ rows and $TH/\lvert\mathcal B\rvert$ columns. Each row contains
-the weights of one input across all tasks and neurons in $b$. If two
-inputs pass SRR's zero-log-ratio test
-\eqref{eq:method-srr-ratio} with the same relative sign in every neuron of
-the block, their rows agree up to that sign. This is the relation we
-approximate when we group the rows.
-
-The score matrix $\mathbf A$ measures how well signed groups
-reconstruct the fitted weights in $\mathbf Z$. For a unit group
-direction $\mathbf u_E$, its score
-$\mathbf u_E^{\mathsf T}\mathbf A\mathbf u_E$ is proportional to
-$\|\mathbf u_E^{\mathsf T}\mathbf Z\|_2^2$. This squared norm is the
-reduction in squared reconstruction error from fitting one coefficient
-along $\mathbf u_E$ to each column of $\mathbf Z$. The group directions
-are orthonormal, so the reductions add across groups.
-
-A tie can fit the source weights well and still obstruct learning on a
-new task. We therefore also score the predicted change in validation
-loss after a training step along a group direction $\mathbf u$.
-
-Line~\ref{line:asrr-reference-groups} uses $\mathbf A$ in
-Algorithm~\ref{alg:signed-merge} to form the preliminary groups. With
-group $g(i)$ and sign $\sigma_i$ at row $i$ in neuron $h$'s block, the
-signed indexator assigns
+For a block $b$, take the columns $h\in b$ and their $d$ common input
+rows from each $\overline{\mathbf W}_\tau$. Concatenate the $T$
+submatrices side by side to give
 \[
-    I_{ih}=(h-1)r+g(i)+m\,\mathbf 1_{\{\sigma_i=-1\}}.
+    Z_{i,(\tau,h)}=(\overline{\mathbf W}_\tau)_{ih},
+    \qquad \mathbf Z\in\mathbb R^{d\times(T\lvert b\rvert)}.
 \]
-The offset $(h-1)r$ gives each neuron its own codes. Each code value is
-the corresponding basis coefficient divided by the square root of its
-group size.
+Each row lists weights at the same input position across all source
+tasks and neurons in the block. For a fully connected layer with equal
+blocks, $\mathbf Z$ has $D$ rows and $TH/\lvert\mathcal B\rvert$ columns.
 
-For each source training draw $S$, $\operatorname{Refit}$ in
-line~\ref{line:asrr-reference-refit} fits
-fresh parameters on $S$ in these bases using the short optimization
-schedule in Appendix~\ref{app:transfer-details}. At this fit,
-$\mathbf g_{\rm train}$ and $\mathbf g_v$ are the gradients with
-respect to the weights of neuron $h$ on $S$ and on its validation
-sample $S_v^{\mathrm{valid}}$. The first-order decrease per unit step is
+Two positions that satisfy SRR's zero-log-ratio test
+\eqref{eq:method-srr-ratio} with the same relative sign in every neuron
+of the block give rows that agree up to that sign. We score approximate
+agreement with the normalized Gram matrix
+\[
+    \mathbf A=\frac{\mathbf Z\mathbf Z^{\mathsf T}}
+        {\lVert\mathbf Z\mathbf Z^{\mathsf T}\rVert_F}.
+\]
+Each Frobenius normalization in this section maps a zero matrix to zero.
+For a unit group vector $\mathbf u_E$, the score
+$\mathbf u_E^{\mathsf T}\mathbf A\mathbf u_E$ is proportional to
+$\lVert\mathbf u_E^{\mathsf T}\mathbf Z\rVert_2^2$, the sum of squares
+captured by projecting the columns of $\mathbf Z$ onto that vector.
+Signed merging with $\mathbf A$ gives Ward's criterion with a choice
+of relative sign~\citep{ward1963hierarchical}.
+Lemma~\ref{lem:theory-signed-merge} gives conditions for exact recovery
+with this score.
+
+To measure the effect of a tie on refitting, we first use the weight
+score to build preliminary bases
+$\mathbf B_{\mathrm{ref},b}=\operatorname{SignedMerge}_r(\mathbf A)$
+on the preliminary blocks in Appendix~\ref{app:transfer-details}.
+For each training draw $S$ from a source task, we fit fresh coefficients,
+biases and output weights for a short run on $S$ with these bases fixed.
+Call the fitted predictor $f_{\mathrm{ref}}(S)$. At that fit, let
+$\mathbf g_{\rm train}$ and $\mathbf g_v$ be the gradients with respect
+to the weight column of neuron $h$ on $S$ and on the task's validation
+sample $S_v^{\mathrm{valid}}$.
+
+A training gradient step restricted to a unit direction $\mathbf u$
+predicts a first-order decrease in validation loss per unit step size of
 $(\mathbf u^{\mathsf T}\mathbf g_{\rm train})
-(\mathbf u^{\mathsf T}\mathbf g_v)$. Line~\ref{line:asrr-gradient-moment}
-averages this score over source draws and neurons in the block, giving
-$\mathbf u^{\mathsf T}\widetilde{\mathbf K}_v\mathbf u$ with
-$\operatorname{sym}(X)=(X+X^{\mathsf T})/2$.
-Line~\ref{line:asrr-affinities} normalizes the weight score and each
-paired moment by their Frobenius norms, taking a zero matrix to itself.
-The weights $\pi_v$ assign validation samples
-to blocks. Half of the allocation is uniform across samples and half
-goes to the sample with the highest reference loss. With one
-validation sample, its weight is one.
+(\mathbf u^{\mathsf T}\mathbf g_v)$. Averaging over the training draws
+and neurons in a final block gives the score
+$\mathbf u^{\mathsf T}\widetilde{\mathbf K}_v\mathbf u$, where
+\[
+    \widetilde{\mathbf K}_v
+        =\operatorname{sym}\mathbb E_{S,\,h\in b}
+        [\mathbf g_{\rm train}\mathbf g_v^{\mathsf T}],
+    \qquad \operatorname{sym}(X)=\frac{X+X^{\mathsf T}}{2}.
+\]
 
-Line~\ref{line:asrr-groups} calls Algorithm~\ref{alg:signed-merge} again
-with $M=(\mathbf A+\mathbf K)/2$. Each block uses its own $\mathbf A$
-and $\mathbf K$ and obtains its own groups. With $M=\mathbf A$, the
-merging rule gives Ward's criterion with a relative sign
-\citep{ward1963hierarchical}. Lemma~\ref{lem:theory-signed-merge} states
-when it recovers the groups exactly.
+In each final block, the weights $\pi_v$ assigned to the validation
+samples sum to one. The allocation across blocks favors the sample with
+the highest mean loss at the preliminary fits
+(Appendix~\ref{app:transfer-details}). We pool the normalized gradient
+scores and combine them with the weight score of the same block,
+\[
+    \mathbf K=\sum_v\pi_v\,
+        \frac{\widetilde{\mathbf K}_v}{\lVert\widetilde{\mathbf K}_v\rVert_F},
+    \qquad
+    \mathbf B_g=\operatorname{SignedMerge}_r\bigl((\mathbf A+\mathbf K)/2\bigr).
+\]
 
-Allowing weights within a group to change by different amounts can help
-when a new task needs distinctions that the source ties suppress. We
-estimate the directions of these changes from class differences that
-repeat on train and valid. Let $\boldsymbol\mu_{\rm train}$ and
-$\boldsymbol\mu_v$ be the corresponding class means, centered across
-classes within a task. Let $\Sigma_v$ average the within-class
-covariances of train and validation sample $v$. We pool these statistics
-with the same $\pi_v$ as the gradients, so each block uses the same
-validation data to estimate its ties and the directions for relaxing them.
+We use class differences that recur on train and valid to find directions
+for relaxing the ties. For each source task and class, let
+$\boldsymbol\mu_{\rm train}$ and $\boldsymbol\mu_v$ be the class means on
+the block's inputs after subtracting the mean across classes in the
+respective sample. Let $\Sigma_v$ average the train and validation
+covariances of the inputs centered within their classes. We pool these
+statistics with the same weights $\pi_v$ as the gradient scores. The
+expectation averages over tasks and classes, and $\varepsilon>0$
+regularizes the covariance.
 \begin{equation}
     \begin{aligned}
         \widetilde{\mathbf Q}_v
@@ -358,19 +349,29 @@ validation data to estimate its ties and the directions for relaxing them.
     \end{aligned}
     \label{eq:asrr-moments}
 \end{equation}
-The expectation averages over source tasks and classes. We use the
-solutions to $\mathbf Q\mathbf u=\nu\Sigma\mathbf u$ with the $r$
-largest eigenvalues, favoring class differences relative to within-class
-variation. Their orthonormalized span gives $\mathbf U$.
 
-In line~\ref{line:asrr-basis}, we change the group basis gradually so
-that the number of fitted coefficients stays fixed. The SVD
-$\mathbf B_g^{\mathsf T}\mathbf U
-=\mathbf L\operatorname{diag}(\cos\theta)\mathbf R^{\mathsf T}$
-pairs the columns $\mathbf x_j=(\mathbf B_g\mathbf L)_{\cdot j}$ and
-$\mathbf y_j=(\mathbf U\mathbf R)_{\cdot j}$ at angles
-$\theta_1\le\cdots\le\theta_r$. We rotate each $\mathbf x_j$ toward its
-partner by the angle $\phi_j$.
+We favor directions with a high ratio
+$\frac{\mathbf u^{\mathsf T}\mathbf Q\mathbf u}{\mathbf u^{\mathsf T}\Sigma\mathbf u}$,
+which compares repeatable class differences with within-class variation.
+The operator $\operatorname{GEV}_r(\mathbf Q,\Sigma)$ takes the eigenvectors
+for the $r$ largest $\nu$ in $\mathbf Q\mathbf u=\nu\Sigma\mathbf u$ and
+orthonormalizes them to obtain the statistical basis $\mathbf U$.
+
+The columns of $\mathbf B_g$ and $\mathbf U$ are orthonormal. To pair
+directions in the two bases, we compute the SVD
+\[
+    \mathbf B_g^{\mathsf T}\mathbf U
+    =\mathbf L\operatorname{diag}(\cos\theta_1,\ldots,\cos\theta_r)
+        \mathbf R^{\mathsf T}.
+\]
+The vectors $\mathbf x_j=(\mathbf B_g\mathbf L)_{\cdot j}$ and
+$\mathbf y_j=(\mathbf U\mathbf R)_{\cdot j}$ form pairs at angles
+$\theta_1\le\cdots\le\theta_r$.
+
+We rotate $\mathbf x_j$ toward $\mathbf y_j$ through a fraction of
+$\theta_j$. The four fractions $\mathbf t\in[0,1]^4$ are shared across
+blocks. Each quarter of the ordered angles uses one fraction. This gives
+the rotated basis $\mathbf B_b(\mathbf t)$ of block $b$.
 \begin{equation}
     \begin{aligned}
         \phi_j&=t_{1+\lfloor 4(j-1)/r\rfloor}\,\theta_j,\\
@@ -383,15 +384,26 @@ partner by the angle $\phi_j$.
     \end{aligned}
     \label{eq:asrr-rotation}
 \end{equation}
-At $\theta_j=0$, we keep $\mathbf x_j$. The four fractions in
-$\mathbf t\in[0,1]^4$ are shared across blocks, with one fraction for
-each quarter of the ordered angles. At $\mathbf t=\mathbf 0$ we recover
-the signed basis $\mathbf B_g$ exactly.
-Proposition~\ref{prop:theory-asrr-ties} gives conditions for
-$\mathbf B_g$ to recover the ties identified by SRR within a neuron
-and bounds their deviation after rotation. The direct sum in
-line~\ref{line:asrr-assemble} gives each neuron its own coefficients in
-the basis of its block.
+At $\theta_j=0$, we keep $\mathbf x_j$. The factor $\mathbf L^{\mathsf T}$
+returns to the group coefficient coordinates, so
+$\mathbf B_b(\mathbf 0)=\mathbf B_g$.
+Proposition~\ref{prop:theory-asrr-ties} gives conditions for the signed
+basis to recover the within-neuron ties of SRR and bounds the deviation
+from those ties after rotation.
+
+We assemble the network basis by placing the basis of $b(h)$ on the
+diagonal for each neuron $h$,
+\[
+    \mathbf B(\mathbf t)=\bigoplus_{h=1}^H\mathbf B_{b(h)}(\mathbf t).
+\]
+This gives each neuron its own coefficients.
+
+We select the rotation and refit setting on separate development tasks.
+For each candidate rotation and numerical refit setting from
+$\mathcal H$, we fit fresh parameters on train and measure accuracy on
+valid. Section~\ref{sec:method-selection} defines the development score
+$F$ and the rule for choosing the shared basis $\mathbf B$ and its
+refit setting $\widehat\eta$.
 
 \subsection{Refitting and selection}
 \label{sec:method-selection}
