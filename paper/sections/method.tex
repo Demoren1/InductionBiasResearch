@@ -130,6 +130,28 @@ $\mathbf u_E^{\mathsf T}M\mathbf u_E$, where the unit vector
 $\mathbf u_E$ has entries $\sigma_i/\sqrt{|E|}$ for $i\in E$ and zero
 elsewhere.
 
+For any partition of the weights into signed groups, we represent the
+indexator by a matrix $\mathbf B_g$ whose columns are the unit vectors
+$\mathbf u_E$ of its groups. The single nonzero entry in row $i$ lies
+in the column of the group containing weight $i$ and carries its
+assigned sign. Multiplying $\mathbf B_g$ by a vector with one coefficient
+per group gives the neuron's weight column.
+
+The matrix $\mathbf B_g\mathbf B_g^{\mathsf T}$ expresses the signed
+indexator in terms of pairs of weights. Its $(i,k)$ entry equals
+$\sigma_i\sigma_k/|E|$ when both weights belong to group $E$, and zero
+when they belong to different groups. The squared error of approximating
+$M$ by this matrix is
+\[
+    \lVert M-\mathbf B_g\mathbf B_g^{\mathsf T}\rVert_F^2
+        =\lVert M\rVert_F^2+\lVert\mathbf B_g\mathbf B_g^{\mathsf T}\rVert_F^2
+        -2\sum_E\mathbf u_E^{\mathsf T}M\mathbf u_E.
+\]
+The second term on the right equals the number of groups because
+their directions are orthonormal. The sum in the last term is the
+total score of the partition. Thus, for a fixed number of groups,
+maximizing the total score minimizes the squared error of approximating $M$.
+
 To score the union of two groups $E$ and $E'$, we keep the signs in
 $E$ and either keep the signs in $E'$ ($s=1$) or reverse them together
 ($s=-1$). The unit vector of the merged group is
@@ -141,9 +163,8 @@ $E$ and either keep the signs in $E'$ ($s=1$) or reverse them together
 The score of the merged group is $\mathbf u_s^{\mathsf T}M\mathbf u_s$.
 
 Initially, the partition $\mathcal P$ has one group per weight, each
-with sign $+1$. The total score is the sum of the current group scores.
-A candidate merge replaces the scores of its two groups with the score
-of their union, giving the change
+with sign $+1$. A candidate merge replaces the scores of its two
+groups with the score of their union, giving the change
 \begin{equation}
     \Delta_s(E,E')=\mathbf u_s^{\mathsf T}M\mathbf u_s
         -\mathbf u_E^{\mathsf T}M\mathbf u_E
@@ -154,13 +175,6 @@ At each step we evaluate $\Delta_s(E,E')$ for every pair of current
 groups and both values of $s$. We merge the pair that attains the
 largest $\Delta_s(E,E')$, multiplying the signs in $E'$ by the
 corresponding $s$. We stop when $r$ groups remain.
-
-We represent the signed indexator by a matrix
-$\mathbf B_g\in\mathbb R^{d\times r}$ whose columns are the unit vectors
-$\mathbf u_E$ of the final groups. The single nonzero entry in row $i$
-lies in the column of the group containing weight $i$ and carries its
-assigned sign. Multiplying $\mathbf B_g$ by a vector with one coefficient
-per group gives the neuron's weight column.
 
 \begin{algorithm}[H]
     \small
